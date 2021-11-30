@@ -1,4 +1,4 @@
-# SMR API
+# SMR API [![build](https://github.com/satisfactorymodding/smr-api/actions/workflows/build.yml/badge.svg)](https://github.com/satisfactorymodding/smr-api/actions/workflows/build.yml)
 
 The Satisfactory Mod Repository backend API
 
