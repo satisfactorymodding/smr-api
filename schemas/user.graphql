@@ -1,0 +1,76 @@
+### Types
+
+scalar UserID
+
+type UserRoles {
+    approveMods: Boolean!
+    approveVersions: Boolean!
+    deleteContent: Boolean!
+    editContent: Boolean!
+    editUsers: Boolean!
+    editSMLVersions: Boolean!
+    editBootstrapVersions: Boolean!
+}
+
+type Group {
+    id: String!
+    name: String!
+}
+
+type User {
+    id: UserID!
+    email: String @canEditUser(field: "ID", object: true) @isLoggedIn
+    username: String!
+    avatar: String
+    created_at: Date!
+
+    github_id: String @canEditUser(field: "ID", object: true) @isLoggedIn
+    google_id: String @canEditUser(field: "ID", object: true) @isLoggedIn
+    facebook_id: String @canEditUser(field: "ID", object: true) @isLoggedIn
+
+    roles: UserRoles! @canEditUser(field: "ID", object: true) @isLoggedIn
+    groups: [Group!]! @canEditUser(field: "ID", object: true) @isLoggedIn
+
+    mods: [UserMod!]!
+    guides: [Guide!]!
+}
+
+type UserSession {
+    token: String!
+}
+
+type UserMod {
+    user_id: UserID!
+    mod_id: ModID!
+    role: String!
+
+    user: User!
+    mod: Mod!
+}
+
+### Inputs
+
+input UpdateUser {
+    avatar: Upload
+    groups: [String!] @canEditUsers @isLoggedIn
+    username: String
+}
+
+### Queries
+
+extend type Query {
+    getMe: User @isLoggedIn
+    getUser(userId: UserID!): User
+    getUsers(userIds: [UserID!]!): [User]!
+}
+
+### Mutations
+
+extend type Mutation {
+    updateUser(userId: UserID!, input: UpdateUser!): User! @canEditUser(field: "userId", object: false) @isLoggedIn
+    logout: Boolean! @isLoggedIn
+
+    oAuthGithub(code: String!, state: String!): UserSession @isNotLoggedIn
+    oAuthGoogle(code: String!, state: String!): UserSession @isNotLoggedIn
+    oAuthFacebook(code: String!, state: String!): UserSession @isNotLoggedIn
+}

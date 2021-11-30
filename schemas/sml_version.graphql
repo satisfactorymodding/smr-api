@@ -1,0 +1,76 @@
+### Types
+
+scalar SMLVersionID
+
+type SMLVersion {
+    id: SMLVersionID!
+    version: String!
+    satisfactory_version: Int!
+    stability: VersionStabilities!
+    link: String!
+    changelog: String!
+    date: Date!
+    bootstrap_version: String
+
+    updated_at: Date!
+    created_at: Date!
+}
+
+type GetSMLVersions {
+    sml_versions: [SMLVersion!]!
+    count: Int!
+}
+
+enum SMLVersionFields {
+    name
+    created_at
+    updated_at
+    satisfactory_version
+    date
+}
+
+### Inputs
+
+input NewSMLVersion {
+    version: String!
+    satisfactory_version: Int!
+    stability: VersionStabilities!
+    link: String!
+    changelog: String!
+    date: Date!
+    bootstrap_version: String
+}
+
+input UpdateSMLVersion {
+    version: String
+    satisfactory_version: Int
+    stability: VersionStabilities
+    link: String
+    changelog: String
+    date: Date
+    bootstrap_version: String
+}
+
+input SMLVersionFilter {
+    limit: Int
+    offset: Int
+    order_by: SMLVersionFields
+    order: Order
+    search: String
+    ids: [String!]
+}
+
+### Queries
+
+extend type Query {
+    getSMLVersion(smlVersionID: SMLVersionID!): SMLVersion
+    getSMLVersions(filter: SMLVersionFilter): GetSMLVersions!
+}
+
+### Mutations
+
+extend type Mutation {
+    createSMLVersion(smlVersion: NewSMLVersion!): SMLVersion @isLoggedIn
+    updateSMLVersion(smlVersionId: SMLVersionID!, smlVersion: UpdateSMLVersion!): SMLVersion! @canEditSMLVersions @isLoggedIn
+    deleteSMLVersion(smlVersionId: SMLVersionID!): Boolean! @canEditSMLVersions @isLoggedIn
+}

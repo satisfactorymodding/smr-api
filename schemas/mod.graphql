@@ -1,0 +1,113 @@
+### Types
+
+scalar ModID
+scalar ModReference
+
+enum ModFields {
+    created_at
+    updated_at
+    name
+    views
+    downloads
+    hotness
+    popularity
+    last_version_date
+    search
+}
+
+type Mod {
+    id: ModID!
+    name: String!
+    short_description: String!
+    full_description: String
+    logo: String
+    source_url: String
+    creator_id: UserID!
+    approved: Boolean!
+    views: Int!
+    downloads: Int!
+    hotness: Int!
+    popularity: Int!
+    updated_at: Date!
+    created_at: Date!
+    last_version_date: Date
+    mod_reference: ModReference!
+    hidden: Boolean!
+
+    authors: [UserMod!]!
+    version(version: String!): Version
+    versions(filter: VersionFilter): [Version!]!
+    latestVersions: LatestVersions!
+}
+
+type GetMods {
+    mods: [Mod!]!
+    count: Int!
+}
+
+type GetMyMods {
+    mods: [Mod!]!
+    count: Int!
+}
+
+### Inputs
+
+input ModFilter {
+    limit: Int
+    offset: Int
+    order_by: ModFields
+    order: Order
+    search: String
+    ids: [String!]
+    references: [String!]
+    hidden: Boolean
+}
+
+input NewMod {
+    name: String!
+    short_description: String!
+    full_description: String
+    logo: Upload
+    source_url: String
+    mod_reference: ModReference!
+    hidden: Boolean
+}
+
+input UpdateMod {
+    name: String
+    short_description: String
+    full_description: String
+    logo: Upload
+    source_url: String
+    mod_reference: ModReference
+    authors: [UpdateUserMod!]
+    hidden: Boolean
+}
+
+input UpdateUserMod {
+    user_id: UserID!
+    role: String!
+}
+
+### Queries
+
+extend type Query {
+    getMod(modId: ModID!): Mod
+    getModByReference(modReference: ModReference!): Mod
+    getMods(filter: ModFilter): GetMods!
+    getUnapprovedMods(filter: ModFilter): GetMods! @canApproveMods @isLoggedIn
+
+    getMyMods(filter: ModFilter): GetMyMods! @isLoggedIn
+    getMyUnapprovedMods(filter: ModFilter): GetMyMods! @isLoggedIn
+}
+
+### Mutations
+
+extend type Mutation {
+    createMod(mod: NewMod!): Mod @isLoggedIn
+    updateMod(modId: ModID!, mod: UpdateMod!): Mod! @canEditMod(field: "modId") @isLoggedIn
+    deleteMod(modId: ModID!): Boolean! @canEditMod(field: "modId") @isLoggedIn
+
+    approveMod(modId: ModID!): Boolean! @canApproveMods @isLoggedIn
+    denyMod(modId: ModID!): Boolean! @canApproveMods @isLoggedIn
+}

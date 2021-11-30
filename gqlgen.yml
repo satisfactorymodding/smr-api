@@ -1,0 +1,138 @@
+skip_mod_tidy: true
+
+schema:
+  - schemas/*.graphql
+
+exec:
+  filename: ./generated/generated.go
+
+model:
+  filename: ./generated/models_gen.go
+
+resolver:
+  filename: ./gql/resolver.go
+  type: Resolver
+
+models:
+
+  NewMod:
+    model: github.com/satisfactorymodding/smr-api/generated.NewMod
+  UpdateMod:
+    model: github.com/satisfactorymodding/smr-api/generated.UpdateMod
+
+  VersionFilter:
+    model: "map[string]interface{}"
+  ModFilter:
+    model: "map[string]interface{}"
+  GuideFilter:
+    model: "map[string]interface{}"
+  SMLVersionFilter:
+    model: "map[string]interface{}"
+  BootstrapVersionFilter:
+    model: "map[string]interface{}"
+
+  User:
+    fields:
+      mods:
+        resolver: true
+      guides:
+        resolver: true
+      roles:
+        resolver: true
+      groups:
+        resolver: true
+
+  Mod:
+    fields:
+      authors:
+        resolver: true
+      version:
+        resolver: true
+      versions:
+        resolver: true
+      latestVersions:
+        resolver: true
+
+  UserMod:
+    fields:
+      user:
+        resolver: true
+      mod:
+        resolver: true
+
+  Version:
+    fields:
+      link:
+        resolver: true
+      mod:
+        resolver: true
+      dependencies:
+        resolver: true
+
+  GetMods:
+    fields:
+      mods:
+        resolver: true
+      count:
+        resolver: true
+
+  GetMyMods:
+    fields:
+      mods:
+        resolver: true
+      count:
+        resolver: true
+
+  GetVersions:
+    fields:
+      versions:
+        resolver: true
+      count:
+        resolver: true
+
+  GetMyVersions:
+    fields:
+      versions:
+        resolver: true
+      count:
+        resolver: true
+
+  GetUnapprovedMods:
+    fields:
+      mods:
+        resolver: true
+      count:
+        resolver: true
+
+  GetUnapprovedVersions:
+    fields:
+      versions:
+        resolver: true
+      count:
+        resolver: true
+
+  GetGuides:
+    fields:
+      guides:
+        resolver: true
+      count:
+        resolver: true
+
+  Guide:
+    fields:
+      user:
+        resolver: true
+
+  GetSMLVersions:
+    fields:
+      sml_versions:
+        resolver: true
+      count:
+        resolver: true
+
+  GetBootstrapVersions:
+    fields:
+      bootstrap_versions:
+        resolver: true
+      count:
+        resolver: true

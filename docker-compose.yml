@@ -1,0 +1,39 @@
+version: '2'
+
+services:
+  api:
+    build: .
+    restart: always
+    env_file: .env
+    ports:
+      - 53266:5020
+    networks:
+      internal:
+        ipv4_address: 172.16.239.10
+
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      internal:
+        ipv4_address: 172.16.239.2
+
+  postgres:
+    image: postgres:alpine
+    command: postgres -N 500 -B 4096MB
+    restart: always
+    env_file: .env
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    networks:
+      internal:
+        ipv4_address: 172.16.239.3
+
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.239.0/24
+          gateway: 172.16.239.1

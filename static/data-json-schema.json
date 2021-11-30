@@ -1,0 +1,133 @@
+{
+  "definitions": {
+    "mod_reference_pattern": {
+      "pattern": "^([a-zA-Z][a-zA-Z0-9_]*)$"
+    },
+    "dependency_version_pattern": {
+      "pattern": "^(<=|<|>|>=|\\^)?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "name",
+    "version",
+    "description",
+    "authors",
+    "objects",
+    "dependencies",
+    "mod_reference"
+  ],
+  "properties": {
+    "mod_reference": {
+      "type": "string",
+      "title": "Mod reference chosen by the developer. Must be unique",
+      "default": "",
+      "examples": [
+        "base_mod"
+      ],
+      "pattern": "^([a-zA-Z][a-zA-Z0-9_]*)$"
+    },
+    "name": {
+      "type": "string",
+      "title": "Mod Name",
+      "default": "",
+      "examples": [
+        "BaseMod"
+      ],
+      "pattern": "^([^\\n]*)$"
+    },
+    "version": {
+      "type": "string",
+      "title": "Mod Version",
+      "default": "",
+      "examples": [
+        "3.4.21"
+      ],
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
+    "description": {
+      "type": "string",
+      "title": "Mod Description",
+      "default": "",
+      "examples": [
+        "A basic mod created to showcase SML's functionality."
+      ],
+      "pattern": "^((?:.|\\n)*)$"
+    },
+    "authors": {
+      "type": "array",
+      "title": "Mod Authors",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "title": "The Items Schema",
+        "default": "",
+        "examples": [
+          "Nomnom",
+          "SuperCoder79"
+        ],
+        "pattern": "^([^\\n]*)$"
+      }
+    },
+    "objects": {
+      "type": "array",
+      "title": "Objects within the ZIP",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "type"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path of object from root",
+            "default": "",
+            "examples": [
+              "SDF.dll"
+            ],
+            "pattern": "^(.*)\\.(pak|dll)$"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type of object",
+            "default": "",
+            "examples": [
+              "sml_mod"
+            ],
+            "enum": [
+              "sml_mod",
+              "pak"
+            ]
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "title": "Mod Dependencies",
+      "required": [
+        "SML"
+      ],
+      "propertyNames": {
+        "$ref": "#/definitions/mod_reference_pattern"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/dependency_version_pattern"
+      }
+    },
+    "optional_dependencies": {
+      "type": "object",
+      "title": "Mod Optional Dependencies",
+      "propertyNames": {
+        "$ref": "#/definitions/mod_reference_pattern"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/dependency_version_pattern"
+      }
+    }
+  }
+}

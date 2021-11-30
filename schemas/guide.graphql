@@ -1,0 +1,66 @@
+### Types
+
+scalar GuideID
+
+enum GuideFields {
+    name
+    created_at
+    updated_at
+    views
+}
+
+type Guide {
+    id: GuideID!
+    name: String!
+    short_description: String!
+    guide: String!
+    views: Int!
+    user_id: UserID!
+    updated_at: Date!
+    created_at: Date!
+
+    user: User!
+}
+
+type GetGuides {
+    guides: [Guide!]!
+    count: Int!
+}
+
+### Inputs
+
+input NewGuide {
+    name: String!
+    short_description: String!
+    guide: String!
+}
+
+input UpdateGuide {
+    name: String
+    short_description: String
+    guide: String
+}
+
+input GuideFilter {
+    limit: Int
+    offset: Int
+    order_by: GuideFields
+    order: Order
+    search: String
+    ids: [String!]
+}
+
+### Queries
+
+extend type Query {
+    getGuide(guideId: GuideID!): Guide
+    getGuides(filter: GuideFilter): GetGuides!
+}
+
+### Mutations
+
+extend type Mutation {
+    createGuide(guide: NewGuide!): Guide @isLoggedIn
+    updateGuide(guideId: GuideID!, guide: UpdateGuide!): Guide! @canEditGuide(field: "guideId") @isLoggedIn
+    deleteGuide(guideId: GuideID!): Boolean! @canEditGuide(field: "guideId") @isLoggedIn
+}

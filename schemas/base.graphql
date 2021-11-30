@@ -1,0 +1,22 @@
+scalar Upload
+
+scalar Date
+
+enum Order {
+    asc
+    desc
+}
+
+type OAuthOptions {
+    github: String!
+    google: String!
+    facebook: String!
+}
+
+type Query {
+    getOAuthOptions(callback_url: String!): OAuthOptions!
+}
+
+type Mutation {
+    discourseSSO(sso: String!, sig: String!): String @isLoggedIn
+}

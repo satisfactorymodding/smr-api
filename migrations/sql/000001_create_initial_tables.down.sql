@@ -1,0 +1,8 @@
+DROP TABLE IF EXISTS guides;
+DROP TABLE IF EXISTS mods;
+DROP TABLE IF EXISTS user_mods;
+DROP TABLE IF EXISTS user_sessions;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS versions;
+
+DROP TYPE version_stability;
