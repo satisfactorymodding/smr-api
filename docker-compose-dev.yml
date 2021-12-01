@@ -19,7 +19,8 @@ services:
     ports:
       - 9000:9000
       - 9001:9001
-    command: -c 'mkdir -p /export/smr && /usr/bin/minio server /export'
+    entrypoint: sh
+    command: -c 'mkdir -p /data/smr && /usr/bin/docker-entrypoint.sh minio server /data --console-address ":9001"'
     environment:
       MINIO_ACCESS_KEY: REPLACE_ME_KEY
       MINIO_SECRET_KEY: REPLACE_ME_SECRET
