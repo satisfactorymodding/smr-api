@@ -5,9 +5,6 @@ services:
     image: redis:alpine
     ports:
       - 6379:6379
-    networks:
-      internal:
-        ipv4_address: 172.16.239.2
 
   postgres:
     image: postgres:alpine
@@ -16,15 +13,13 @@ services:
       POSTGRES_PASSWORD: REPLACE_ME
     ports:
       - 5432:5432
-    networks:
-      internal:
-        ipv4_address: 172.16.239.3
 
-networks:
-  internal:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.16.239.0/24
-          gateway: 172.16.239.1
+  minio:
+    image: minio/minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    command: -c 'mkdir -p /export/smr && /usr/bin/minio server /export'
+    environment:
+      MINIO_ACCESS_KEY: REPLACE_ME_KEY
+      MINIO_SECRET_KEY: REPLACE_ME_SECRET

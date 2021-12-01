@@ -26,13 +26,18 @@ go run cmd/api/serve.go
 
 Running the API has a lot of pre-requisites.
 
+To run the API, you will need to have a working Postgres, Redis and Storage. There is a dev composefile that you can start via:
+```bash
+docker-compose -f docker-compose.dev.yml up -d
+```
+
 It is suggested you create a configuration file at `config.json` (but you can also use environment variables).
 
 Main configuration options:
 
-1. Postgres (started with `docker-compose -f docker-compose-dev.yml up -d`)
-2. Redis (started with `docker-compose -f docker-compose-dev.yml up -d`)
-3. B2 or S3 (or anything S3-compatible e.g. minio)
+1. Postgres (started with dev composefile)
+2. Redis (started with dev composefile)
+3. B2 or S3 (or anything S3-compatible e.g. minio (started with dev composefile))
 4. GitHub OAuth (https://github.com/settings/developers)
 5. Google OAuth (https://console.developers.google.com/)
 6. Facebook OAuth (https://developers.facebook.com/apps/)
