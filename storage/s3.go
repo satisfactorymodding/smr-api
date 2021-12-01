@@ -154,20 +154,6 @@ func (s3o *S3) CompleteMultipartUpload(key string) error {
 	return errors.Wrap(err, "failed to complete multipart upload")
 }
 
-func (s3o *S3) CopyObjectFromOldBucket(key string) error {
-	// Ignored
-	return nil
-}
-
-func (s3o *S3) CopyObjectToOldBucket(key string) error {
-	// Ignored
-	return nil
-}
-
-func (s3o *S3) ScheduleCopyAllObjectsFromOldBucket(scheduler func(string)) {
-	// Ignored
-}
-
 func (s3o *S3) Rename(from string, to string) error {
 	cleanedKey := strings.TrimPrefix(to, "/")
 

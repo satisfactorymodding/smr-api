@@ -7,12 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/satisfactorymodding/smr-api/redis"
-	"github.com/satisfactorymodding/smr-api/redis/jobs"
-
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/satisfactorymodding/smr-api/redis"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -21,8 +19,6 @@ import (
 )
 
 type B2 struct {
-	//Client    *b2.Client
-	//Bucket    *b2.Bucket
 	BaseURL   string
 	S3Client  *s3.S3
 	S3Session *session.Session
@@ -30,21 +26,6 @@ type B2 struct {
 }
 
 func initializeB2(ctx context.Context, config Config) *B2 {
-	//ctx := context.Background()
-	//client, err := b2.NewClient(ctx, config.OldKey, config.OldSecret)
-	//
-	//if err != nil {
-	//	log.Ctx(ctx).Error().Msgf("Failed to create client %s", err.Error())
-	//	return nil
-	//}
-	//
-	//bucket, err := client.Bucket(ctx, config.OldBucket)
-	//
-	//if err != nil {
-	//	log.Ctx(ctx).Error().Msgf("Failed to create session %s", err.Error())
-	//	return nil
-	//}
-
 	s3Config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(config.Key, config.Secret, ""),
 		Endpoint:         aws.String("https://s3." + config.Region + ".backblazeb2.com"),
@@ -62,8 +43,6 @@ func initializeB2(ctx context.Context, config Config) *B2 {
 	s3Client := s3.New(newSession)
 
 	return &B2{
-		//Client:    client,
-		//Bucket:    bucket,
 		BaseURL:   config.BaseURL,
 		S3Client:  s3Client,
 		S3Session: newSession,
@@ -99,8 +78,6 @@ func (b2o *B2) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 	if err != nil {
 		return cleanedKey, errors.Wrap(err, "failed to upload file")
 	}
-
-	jobs.SubmitJobCopyObjectToOldBucketTask(ctx, key)
 
 	return key, nil
 }
@@ -172,67 +149,6 @@ func (b2o *B2) CompleteMultipartUpload(key string) error {
 	})
 
 	return errors.Wrap(err, "failed to complete multipart upload")
-}
-
-func (b2o *B2) CopyObjectFromOldBucket(key string) error {
-	//cleanedKey := strings.TrimPrefix(key, "/")
-	//obj := b2o.Bucket.Object(cleanedKey)
-	//reader := obj.NewReader(context.Background())
-	//
-	//log.Ctx(ctx).Info("Copying file from old bucket: ", key)
-	//
-	//uploader := s3manager.NewUploader(b2o.S3Session)
-	//
-	//_, err := uploader.Upload(&s3manager.UploadInput{
-	//	Body:   reader,
-	//	Bucket: aws.String(b2o.Config.Bucket),
-	//	Key:    aws.String(cleanedKey),
-	//})
-	//
-	//return err
-	return errors.New("oh no")
-}
-
-func (b2o *B2) CopyObjectToOldBucket(key string) error {
-	//cleanedKey := strings.TrimPrefix(key, "/")
-	//
-	//log.Ctx(ctx).Info("Copying file to old bucket: ", key)
-	//
-	//object, err := b2o.S3Client.GetObject(&s3.GetObjectInput{
-	//	Bucket: aws.String(b2o.Config.Bucket),
-	//	Key:    aws.String(cleanedKey),
-	//})
-	//
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//obj := b2o.Bucket.Object(cleanedKey)
-	//
-	//writer := obj.NewWriter(context.Background())
-	//_, err = io.Copy(writer, object.Body)
-	//
-	//if err != nil {
-	//	_ = writer.Close()
-	//	return err
-	//}
-	//
-	//err = writer.Close()
-	//
-	//if err != nil {
-	//	_ = writer.Close()
-	//	return err
-	//}
-	//
-	//return err
-	return nil
-}
-
-func (b2o *B2) ScheduleCopyAllObjectsFromOldBucket(scheduler func(string)) {
-	//iterator := b2o.Bucket.List(context.Background())
-	//for iterator.Next() {
-	//	scheduler(iterator.Object().Name())
-	//}
 }
 
 func (b2o *B2) Rename(from string, to string) error {

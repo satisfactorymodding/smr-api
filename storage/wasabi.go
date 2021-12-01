@@ -113,17 +113,6 @@ func (wasabi *Wasabi) CompleteMultipartUpload(key string) error {
 	return errors.New("Unsupported")
 }
 
-func (wasabi *Wasabi) CopyObjectFromOldBucket(key string) error {
-	return errors.New("Unsupported")
-}
-
-func (wasabi *Wasabi) CopyObjectToOldBucket(key string) error {
-	return errors.New("Unsupported")
-}
-
-func (wasabi *Wasabi) ScheduleCopyAllObjectsFromOldBucket(scheduler func(string)) {
-}
-
 func (wasabi *Wasabi) Rename(from string, to string) error {
 	return errors.New("Unsupported")
 }

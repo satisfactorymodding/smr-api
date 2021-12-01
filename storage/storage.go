@@ -6,9 +6,10 @@ import (
 	"io"
 	"strings"
 
+	"github.com/avast/retry-go/v3"
+
 	"github.com/pkg/errors"
 
-	"github.com/avast/retry-go/v3"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -21,9 +22,6 @@ type Storage interface {
 	StartMultipartUpload(key string) error
 	UploadPart(key string, part int64, data io.ReadSeeker) error
 	CompleteMultipartUpload(key string) error
-	CopyObjectFromOldBucket(key string) error
-	CopyObjectToOldBucket(key string) error
-	ScheduleCopyAllObjectsFromOldBucket(scheduler func(key string))
 	Rename(from string, to string) error
 	Delete(key string) error
 	Meta(key string) (*ObjectMeta, error)
@@ -35,33 +33,26 @@ type ObjectMeta struct {
 }
 
 type Config struct {
-	Type      string `json:"type"`
-	OldBucket string `json:"old_bucket"`
-	OldKey    string `json:"old_key"`
-	OldSecret string `json:"old_secret"`
-	Bucket    string `json:"bucket"`
-	Key       string `json:"key"`
-	Secret    string `json:"secret"`
-	BaseURL   string `json:"base_url"`
-	Endpoint  string `json:"endpoint"`
-	Region    string `json:"region"`
+	Type     string `json:"type"`
+	Bucket   string `json:"bucket"`
+	Key      string `json:"key"`
+	Secret   string `json:"secret"`
+	BaseURL  string `json:"base_url"`
+	Endpoint string `json:"endpoint"`
+	Region   string `json:"region"`
 }
 
 var storage Storage
-var mirrorStorage Storage
 
 func InitializeStorage(ctx context.Context) {
 	baseConfig := Config{
-		Type:      viper.GetString("storage.type"),
-		OldBucket: viper.GetString("storage.old_bucket"),
-		OldKey:    viper.GetString("storage.old_key"),
-		OldSecret: viper.GetString("storage.old_secret"),
-		Bucket:    viper.GetString("storage.bucket"),
-		Key:       viper.GetString("storage.key"),
-		Secret:    viper.GetString("storage.secret"),
-		BaseURL:   viper.GetString("storage.base_url"),
-		Endpoint:  viper.GetString("storage.endpoint"),
-		Region:    viper.GetString("storage.region"),
+		Type:     viper.GetString("storage.type"),
+		Bucket:   viper.GetString("storage.bucket"),
+		Key:      viper.GetString("storage.key"),
+		Secret:   viper.GetString("storage.secret"),
+		BaseURL:  viper.GetString("storage.base_url"),
+		Endpoint: viper.GetString("storage.endpoint"),
+		Region:   viper.GetString("storage.region"),
 	}
 
 	storage = configToStorage(ctx, baseConfig)
@@ -71,29 +62,6 @@ func InitializeStorage(ctx context.Context) {
 	}
 
 	log.Ctx(ctx).Info().Msgf("Storage initialized: %s", baseConfig.Type)
-
-	if viper.IsSet("storage.mirror.type") {
-		mirrorConfig := Config{
-			Type:      viper.GetString("storage.mirror.type"),
-			OldBucket: viper.GetString("storage.mirror.old_bucket"),
-			OldKey:    viper.GetString("storage.mirror.old_key"),
-			OldSecret: viper.GetString("storage.mirror.old_secret"),
-			Bucket:    viper.GetString("storage.mirror.bucket"),
-			Key:       viper.GetString("storage.mirror.key"),
-			Secret:    viper.GetString("storage.mirror.secret"),
-			BaseURL:   viper.GetString("storage.mirror.base_url"),
-			Endpoint:  viper.GetString("storage.mirror.endpoint"),
-			Region:    viper.GetString("storage.mirror.region"),
-		}
-
-		mirrorStorage = configToStorage(ctx, mirrorConfig)
-
-		if mirrorStorage == nil {
-			panic("Failed to initialize storage!")
-		}
-
-		log.Ctx(ctx).Info().Msgf("Mirror storage initialized: %s", mirrorConfig.Type)
-	}
 }
 
 func configToStorage(ctx context.Context, config Config) Storage {
@@ -247,27 +215,17 @@ func CompleteMultipartUpload(key string) error {
 }
 
 func CopyObjectFromOldBucket(key string) error {
-	if storage == nil {
-		return errors.New("storage not initialized")
-	}
-
-	return errors.Wrap(storage.CopyObjectFromOldBucket(key), "failed to copy object from old bucket")
+	// Ignored
+	return nil
 }
 
 func CopyObjectToOldBucket(key string) error {
-	if storage == nil {
-		return errors.New("storage not initialized")
-	}
-
-	return errors.Wrap(storage.CopyObjectToOldBucket(key), "failed to copy object to old bucket")
+	// Ignored
+	return nil
 }
 
 func ScheduleCopyAllObjectsFromOldBucket(scheduler func(string)) {
-	if storage == nil {
-		return
-	}
-
-	storage.ScheduleCopyAllObjectsFromOldBucket(scheduler)
+	// Ignored
 }
 
 func Get(key string) (io.ReadCloser, error) {

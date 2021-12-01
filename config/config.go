@@ -60,23 +60,12 @@ func initializeDefaults() {
 	viper.SetDefault("database.postgres.db", "postgres")
 
 	viper.SetDefault("storage.type", "wasabi")
-	viper.SetDefault("storage.old_bucket", "satisfactory-mods-staging")
-	viper.SetDefault("storage.old_key", "")
-	viper.SetDefault("storage.old_secret", "")
 	viper.SetDefault("storage.bucket", "satisfactory-mods-staging")
 	viper.SetDefault("storage.key", "")
 	viper.SetDefault("storage.secret", "")
 	viper.SetDefault("storage.endpoint", "https://s3.eu-central-1.wasabisys.com")
 	viper.SetDefault("storage.region", "eu-central-1")
 	viper.SetDefault("storage.base_url", "")
-
-	viper.SetDefault("storage.mirror.type", "wasabi")
-	viper.SetDefault("storage.mirror.bucket", "satisfactory-mods-staging")
-	viper.SetDefault("storage.mirror.key", "")
-	viper.SetDefault("storage.mirror.secret", "")
-	viper.SetDefault("storage.mirror.endpoint", "https://s3.eu-central-1.wasabisys.com")
-	viper.SetDefault("storage.mirror.region", "eu-central-1")
-	viper.SetDefault("storage.mirror.base_url", "")
 
 	viper.SetDefault("oauth.github.client_id", "")
 	viper.SetDefault("oauth.github.client_secret", "")
