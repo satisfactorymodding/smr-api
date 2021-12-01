@@ -60,7 +60,7 @@ func initializeDefaults() {
 	viper.SetDefault("database.postgres.db", "postgres")
 
 	viper.SetDefault("storage.type", "s3")
-	viper.SetDefault("storage.bucket", "satisfactory-mods-staging")
+	viper.SetDefault("storage.bucket", "smr")
 	viper.SetDefault("storage.key", "REPLACE_ME_KEY")
 	viper.SetDefault("storage.secret", "REPLACE_ME_SECRET")
 	viper.SetDefault("storage.endpoint", "http://localhost:9000")
