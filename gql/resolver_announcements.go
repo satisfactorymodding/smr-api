@@ -12,7 +12,7 @@ import (
 )
 
 func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement generated.NewAnnouncement) (*generated.Announcement, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "createGuide")
+	wrapper, newCtx := WrapMutationTrace(ctx, "createAnnouncement")
 	defer wrapper.end()
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
@@ -33,7 +33,7 @@ func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement 
 }
 
 func (r *mutationResolver) DeleteAnnouncement(ctx context.Context, announcementID string) (bool, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "deleteGuide")
+	wrapper, newCtx := WrapMutationTrace(ctx, "deleteAnnouncement")
 	defer wrapper.end()
 
 	dbAnnouncement := postgres.GetAnnouncementByID(announcementID, &newCtx)

@@ -2,11 +2,6 @@
 
 scalar AnnouncementID
 
-enum AnnouncementFields {
-    message
-    importance
-}
-
 type Announcement {
     id: AnnouncementID!
     message: String!

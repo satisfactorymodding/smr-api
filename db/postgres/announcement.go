@@ -48,7 +48,7 @@ func GetAnnouncements(ctx *context.Context) []Announcement {
 }
 
 func GetAnnouncementsByImportance(importance string, ctx *context.Context) []Announcement {
-	cacheKey := "GetAnnouncementsByImportance"
+	cacheKey := "GetAnnouncementsByImportance_" + importance
 
 	if announcements, ok := dbCache.Get(cacheKey); ok {
 		return announcements.([]Announcement)
