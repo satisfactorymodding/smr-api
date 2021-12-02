@@ -22,7 +22,7 @@ func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement 
 
 	dbAnnouncement := &postgres.Announcement{
 		Message:    announcement.Message,
-		Importance: announcement.Importance,
+		Importance: string(announcement.Importance),
 	}
 
 	resultAnnouncement, err := postgres.CreateAnnouncement(dbAnnouncement, &newCtx)
@@ -63,7 +63,7 @@ func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementI
 	}
 
 	SetStringINNOE(announcement.Message, &dbAnnouncement.Message)
-	SetStringINNOE(announcement.Importance, &dbAnnouncement.Importance)
+	SetStringINNOE((*string)(announcement.Importance), &dbAnnouncement.Importance)
 
 	postgres.Save(&dbAnnouncement, &newCtx)
 
@@ -88,11 +88,11 @@ func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]*generated.Anno
 	return DBAnnouncementsToGeneratedSlice(announcements), nil
 }
 
-func (r *queryResolver) GetAnnouncementsByImportance(ctx context.Context, importance string) ([]*generated.Announcement, error) {
+func (r *queryResolver) GetAnnouncementsByImportance(ctx context.Context, importance generated.AnnouncementImportance) ([]*generated.Announcement, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncementsByImportance")
 	defer wrapper.end()
 
-	announcements := postgres.GetAnnouncementsByImportance(importance, &newCtx)
+	announcements := postgres.GetAnnouncementsByImportance(string(importance), &newCtx)
 
 	return DBAnnouncementsToGeneratedSlice(announcements), nil
 }
