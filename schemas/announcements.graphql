@@ -2,22 +2,29 @@
 
 scalar AnnouncementID
 
+enum AnnouncementImportance {
+    Fix
+    Info
+    Warning
+    Alert
+}
+
 type Announcement {
     id: AnnouncementID!
     message: String!
-    importance: String!
+    importance: AnnouncementImportance!
 }
 
 ### Inputs
 
 input NewAnnouncement {
     message: String!
-    importance: String!
+    importance: AnnouncementImportance!
 }
 
 input UpdateAnnouncement {
     message: String
-    importance: String
+    importance: AnnouncementImportance
 }
 
 ### Queries
@@ -25,7 +32,7 @@ input UpdateAnnouncement {
 extend type Query {
     getAnnouncement(announcementId: AnnouncementID!): Announcement
     getAnnouncements: [Announcement!]!
-    getAnnouncementsByImportance(importance: String!): [Announcement!]!
+    getAnnouncementsByImportance(importance: AnnouncementImportance!): [Announcement!]!
 }
 
 ### Mutations

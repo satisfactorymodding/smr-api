@@ -167,7 +167,7 @@ func DBAnnouncementToGenerated(announcement *postgres.Announcement) *generated.A
 	return &generated.Announcement{
 		ID:         announcement.ID,
 		Message:    announcement.Message,
-		Importance: announcement.Importance,
+		Importance: generated.AnnouncementImportance(announcement.Importance),
 	}
 }
 
