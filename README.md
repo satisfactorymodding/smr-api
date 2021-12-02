@@ -26,7 +26,9 @@ go run cmd/api/serve.go
 
 Running the API has a lot of pre-requisites.
 
-To run the API, you will need to have a working Postgres, Redis and Storage. There is a dev composefile that you can start via:
+To run the API, you will need to have a working Postgres, Redis and Storage. There is a dev composefile that you can
+start via:
+
 ```bash
 docker-compose -f docker-compose.dev.yml up -d
 ```
@@ -53,4 +55,10 @@ Before contributing, please run the [linter](https://golangci-lint.run/) to ensu
 
 ```bash
 golangci-lint run
+```
+
+For some simple formatting issues you can use the `--fix` flag, but for more complex issues you will need to fix the code:
+
+```bash
+golangci-lint run --fix
 ```
