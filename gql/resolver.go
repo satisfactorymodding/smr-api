@@ -49,10 +49,6 @@ func (r *Resolver) GetBootstrapVersions() generated.GetBootstrapVersionsResolver
 	return &getBootstrapVersionsResolver{r}
 }
 
-//func (r *Resolver) GetAnnouncements() generated.GetAnnouncementsResolver {
-//	return &getAnnouncementsResolver{r}
-//}
-
 type mutationResolver struct{ *Resolver }
 
 type queryResolver struct{ *Resolver }

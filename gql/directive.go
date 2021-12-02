@@ -27,7 +27,7 @@ func MakeDirective() generated.DirectiveRoot {
 		CanEditUsers:             canEditUsers,
 		CanEditSMLVersions:       canEditSMLVersions,
 		CanEditBootstrapVersions: canEditBootstrapVersions,
-		CanEditAnnouncements: canEditAnnouncements,
+		CanEditAnnouncements:     canEditAnnouncements,
 	}
 }
 

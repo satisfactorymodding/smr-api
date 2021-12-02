@@ -152,6 +152,6 @@ type BootstrapVersion struct {
 type Announcement struct {
 	SMRModel
 
-	Message string
+	Message    string
 	Importance string
 }

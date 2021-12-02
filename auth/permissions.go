@@ -41,7 +41,7 @@ var (
 		Description: "Allows user to bootstrap versions",
 	}
 	RoleEditAnnouncements = &Role{
-		ID:          "7",
+		ID:          "8",
 		Description: "Allows user to manage announcements",
 	}
 )

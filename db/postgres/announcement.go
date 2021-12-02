@@ -2,20 +2,15 @@ package postgres
 
 import (
 	"context"
+
 	"github.com/patrickmn/go-cache"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func CreateAnnouncement(announcement *Announcement, ctx *context.Context) (*Announcement, error) {
 	announcement.ID = util.GenerateUniqueID()
-
 	DBCtx(ctx).Create(&announcement)
-
 	return announcement, nil
-}
-
-func DeleteAnnouncement(announcementID string, ctx *context.Context) {
-	DBCtx(ctx).Delete(Mod{}, "id = ?", announcementID)
 }
 
 func GetAnnouncementByID(announcementID string, ctx *context.Context) *Announcement {
