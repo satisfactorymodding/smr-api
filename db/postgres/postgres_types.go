@@ -148,3 +148,10 @@ type BootstrapVersion struct {
 	Link                string
 	Changelog           string
 }
+
+type Announcement struct {
+	SMRModel
+
+	Message    string
+	Importance string
+}

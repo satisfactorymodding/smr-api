@@ -22,5 +22,7 @@ services:
     entrypoint: sh
     command: -c 'mkdir -p /data/smr && /usr/bin/docker-entrypoint.sh minio server /data --console-address ":9001"'
     environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
       MINIO_ACCESS_KEY: REPLACE_ME_KEY
       MINIO_SECRET_KEY: REPLACE_ME_SECRET

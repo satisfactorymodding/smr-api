@@ -158,3 +158,23 @@ func DBVersionDependencyToGenerated(versionDependency *postgres.VersionDependenc
 		Optional:  versionDependency.Optional,
 	}
 }
+
+func DBAnnouncementToGenerated(announcement *postgres.Announcement) *generated.Announcement {
+	if announcement == nil {
+		return nil
+	}
+
+	return &generated.Announcement{
+		ID:         announcement.ID,
+		Message:    announcement.Message,
+		Importance: announcement.Importance,
+	}
+}
+
+func DBAnnouncementsToGeneratedSlice(announcements []postgres.Announcement) []*generated.Announcement {
+	converted := make([]*generated.Announcement, len(announcements))
+	for i, announcement := range announcements {
+		converted[i] = DBAnnouncementToGenerated(&announcement)
+	}
+	return converted
+}

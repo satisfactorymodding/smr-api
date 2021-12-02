@@ -1,0 +1,37 @@
+### Types
+
+scalar AnnouncementID
+
+type Announcement {
+    id: AnnouncementID!
+    message: String!
+    importance: String!
+}
+
+### Inputs
+
+input NewAnnouncement {
+    message: String!
+    importance: String!
+}
+
+input UpdateAnnouncement {
+    message: String
+    importance: String
+}
+
+### Queries
+
+extend type Query {
+    getAnnouncement(announcementId: AnnouncementID!): Announcement
+    getAnnouncements: [Announcement!]!
+    getAnnouncementsByImportance(importance: String!): [Announcement!]!
+}
+
+### Mutations
+
+extend type Mutation {
+    createAnnouncement(announcement: NewAnnouncement!): Announcement @canEditAnnouncements @isLoggedIn
+    updateAnnouncement(announcementId: AnnouncementID!, announcement: UpdateAnnouncement!): Announcement! @canEditAnnouncements @isLoggedIn
+    deleteAnnouncement(announcementId: AnnouncementID!): Boolean! @canEditAnnouncements @isLoggedIn
+}
