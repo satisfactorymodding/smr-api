@@ -28,6 +28,7 @@ func MakeDirective() generated.DirectiveRoot {
 		CanEditSMLVersions:       canEditSMLVersions,
 		CanEditBootstrapVersions: canEditBootstrapVersions,
 		CanEditAnnouncements:     canEditAnnouncements,
+		CanEditModTags:           canEditModTags,
 	}
 }
 
@@ -218,6 +219,16 @@ func canEditAnnouncements(ctx context.Context, obj interface{}, next graphql.Res
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	if user.Has(ctx, auth.RoleEditAnnouncements) {
+		return next(ctx)
+	}
+
+	return nil, errors.New("user not authorized to perform this action")
+}
+
+func canEditModTags(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+
+	if user.Has(auth.RoleEditModTags, &ctx) {
 		return next(ctx)
 	}
 

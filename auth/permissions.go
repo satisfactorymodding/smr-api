@@ -44,6 +44,10 @@ var (
 		ID:          "8",
 		Description: "Allows user to manage announcements",
 	}
+	RoleEditModTags = &Role{
+		ID:          "9",
+		Description: "Allows user to manage mod tags",
+	}
 )
 
 var (
@@ -59,6 +63,7 @@ var (
 			RoleEditSMLVersions,
 			RoleEditBootstrapVersions,
 			RoleEditAnnouncements,
+			RoleEditModTags,
 		},
 	}
 	GroupModerator = &Group{
@@ -68,6 +73,7 @@ var (
 			RoleApproveMods,
 			RoleApproveVersions,
 			RoleEditAnnouncements,
+			RoleEditModTags,
 		},
 	}
 	GroupSMLDev = &Group{

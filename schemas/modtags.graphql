@@ -1,0 +1,25 @@
+scalar ModTagName
+
+type ModTag {
+    name: ModTagName!
+}
+
+input ModTagFilter {
+    limit: Int
+    offset: Int
+    order: Order
+    search: String
+}
+
+extend type Query {
+    getModTag(tagName: ModTagName!): Announcement
+    getModTags: [Announcement!]!
+}
+
+### Mutations
+
+extend type Mutation {
+    createModTag(ModTagName: ModTagName!): ModTag @canEditModTags @isLoggedIn
+    updateModTag(ModTagName: ModTagName!, NewName: ModTagName!): ModTag! @canEditModTags @isLoggedIn
+    deleteModTag(ModTagName: ModTagName!): Boolean! @canEditModTags @isLoggedIn
+}

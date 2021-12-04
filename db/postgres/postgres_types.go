@@ -64,6 +64,8 @@ type Mod struct {
 
 	Users []User `gorm:"many2many:user_mods;"`
 
+	Tags []ModTag `gorm:"many2many:mod_modtags"`
+
 	Versions []Version
 }
 
@@ -154,4 +156,19 @@ type Announcement struct {
 
 	Message    string
 	Importance string
+}
+
+type ModTag struct {
+	SMRDates
+
+	Name string `gorm:"primary_key;type:varchar(20)"`
+
+	Mods []Mod `gorm:"many2many:mod_modtags"`
+}
+
+type ModModTag struct {
+	SMRDates
+
+	ModtagName string `gorm:"primary_key;type:varchar(20)"`
+	ModID      string `gorm:"primary_key;type:varchar(16)"`
 }
