@@ -12,8 +12,8 @@ input ModTagFilter {
 }
 
 extend type Query {
-    getModTag(tagName: ModTagName!): Announcement
-    getModTags: [Announcement!]!
+    getModTag(tagName: ModTagName!): ModTag
+    getModTags(filter: ModTagFilter): [ModTag!]!
 }
 
 ### Mutations
