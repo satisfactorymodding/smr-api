@@ -179,20 +179,20 @@ func DBAnnouncementsToGeneratedSlice(announcements []postgres.Announcement) []*g
 	return converted
 }
 
-func DBModTagToGenerated(modTag *postgres.ModTag) *generated.ModTag {
-	if modTag == nil {
+func DBTagToGenerated(tag *postgres.Tag) *generated.Tag {
+	if tag == nil {
 		return nil
 	}
 
-	return &generated.ModTag{
-		Name: modTag.Name,
+	return &generated.Tag{
+		Name: tag.Name,
 	}
 }
 
-func DBModTagsToGeneratedSlice(modTags []postgres.ModTag) []*generated.ModTag {
-	converted := make([]*generated.ModTag, len(modTags))
-	for i, modTag := range modTags {
-		converted[i] = DBModTagToGenerated(&modTag)
+func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
+	converted := make([]*generated.Tag, len(tags))
+	for i, tag := range tags {
+		converted[i] = DBTagToGenerated(&tag)
 	}
 	return converted
 }
