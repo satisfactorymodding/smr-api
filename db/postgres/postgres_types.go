@@ -64,7 +64,7 @@ type Mod struct {
 
 	Users []User `gorm:"many2many:user_mods;"`
 
-	Tags []ModTag `gorm:"many2many:mod_modtags"`
+	Tags []Tag `gorm:"many2many:mod_tags"`
 
 	Versions []Version
 }
@@ -106,6 +106,7 @@ type Guide struct {
 	ShortDescription string `gorm:"type:varchar(128)"`
 	Guide            string
 	Views            uint
+	Tags             []Tag `gorm:"many2many:guide_tags"`
 
 	UserID string
 	User   User
@@ -158,17 +159,24 @@ type Announcement struct {
 	Importance string
 }
 
-type ModTag struct {
-	SMRDates
+type Tag struct {
+	SMRModel
 
 	Name string `gorm:"primary_key;type:varchar(20)"`
 
-	Mods []Mod `gorm:"many2many:mod_modtags"`
+	Mods []Mod `gorm:"many2many:mod_tags"`
 }
 
-type ModModTag struct {
-	SMRDates
+type ModTag struct {
+	SMRModel
 
-	ModtagName string `gorm:"primary_key;type:varchar(20)"`
-	ModID      string `gorm:"primary_key;type:varchar(16)"`
+	TagID string `gorm:"primary_key;type:varchar(20)"`
+	ModID string `gorm:"primary_key;type:varchar(16)"`
+}
+
+type GuideTag struct {
+	SMRModel
+
+	TagID   string `gorm:"primary_key;type:varchar(20)"`
+	GuideID string `gorm:"primary_key;type:varchar(16)"`
 }
