@@ -20,6 +20,9 @@ import (
 )
 
 func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
+	l := log.With().Str("mod_id", mod.ID).Str("version_id", versionID).Logger()
+
+	l.Info().Msg("Creating multipart upload")
 	success, _ := storage.CompleteUploadMultipartMod(ctx, mod.ID, mod.Name, versionID)
 
 	if !success {
@@ -163,6 +166,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
 	} else {
+		l.Info().Msg("Submitting version job for virus scan")
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)
 	}
 

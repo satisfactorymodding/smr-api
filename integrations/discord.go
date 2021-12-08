@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"runtime/debug"
 	"strings"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -79,6 +80,8 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 }
 
 func NewVersion(ctx context.Context, version *postgres.Version) {
+	log.Ctx(ctx).Info().Str("stack", string(debug.Stack())).Msg("new version discord webhook")
+
 	if version == nil {
 		return
 	}
