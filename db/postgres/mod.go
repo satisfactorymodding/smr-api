@@ -250,7 +250,51 @@ func NewModQuery(filter *models.ModFilter, unapproved bool, ctx *context.Context
 		if filter.Fields != nil && len(filter.Fields) > 0 {
 			query = query.Select(filter.Fields)
 		}
+
+		if filter.Tags != nil && len(filter.Tags) > 0 {
+			sub := DBCtx(ctx).Table("mod_tags")
+			sub.Select("mod_id").Where("tag_id in (?)", filter.Tags)
+
+			query.Where("id IN (?)", sub)
+		}
 	}
 
 	return query
+}
+
+func ClearModTags(mod *Mod, ctx *context.Context) error {
+	r := DBCtx(ctx).Delete(&ModTag{ModID: mod.ID})
+	return r.Error
+}
+
+func SetModTags(mod *Mod, tagIDs []string, ctx *context.Context) error {
+	for _, tag := range tagIDs {
+		err := AddModTag(mod, tag, ctx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ResetModTags(mod *Mod, tagIDs []string, ctx *context.Context) error {
+	err := ClearModTags(mod, ctx)
+	if err != nil {
+		return err
+	}
+	err = SetModTags(mod, tagIDs, ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AddModTag(mod *Mod, tagID string, ctx *context.Context) error {
+	r := DBCtx(ctx).Create(&ModTag{ModID: mod.ID, TagID: tagID})
+	return r.Error
+}
+
+func RemoveModTag(mod *Mod, tagID string, ctx *context.Context) error {
+	r := DBCtx(ctx).Delete(&ModTag{ModID: mod.ID, TagID: tagID})
+	return r.Error
 }

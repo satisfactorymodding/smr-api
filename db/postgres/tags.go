@@ -5,13 +5,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/satisfactorymodding/smr-api/util"
+
 	"github.com/finnbear/moderation"
 
 	"github.com/patrickmn/go-cache"
 )
 
 func ValidateTagName(tag string) error {
-	if len(tag) < 21 {
+	if len(tag) > 20 {
 		return errors.New("Tag name is over 20 characters long")
 	}
 	if moderation.IsInappropriate(tag) {
@@ -28,8 +30,9 @@ func CreateTag(tag *Tag, ctx *context.Context, ratelimit bool) (*Tag, error) {
 
 	exists := GetTagByName(tag.Name, ctx)
 	if exists != nil {
-		return nil, errors.New(fmt.Sprintf("Tag '%v' already exists", tag.Name))
+		return nil, fmt.Errorf("Tag '%v' already exists", tag.Name)
 	}
+	tag.ID = util.GenerateUniqueID()
 
 	DBCtx(ctx).Create(&tag)
 	return tag, nil
@@ -46,6 +49,25 @@ func GetTagByName(tagName string, ctx *context.Context) *Tag {
 	DBCtx(ctx).Find(&tag, "name = ?", tagName)
 
 	if tag.Name == "" {
+		return nil
+	}
+
+	dbCache.Set(cacheKey, tag, cache.DefaultExpiration)
+
+	return &tag
+}
+
+func GetTagByID(tagId string, ctx *context.Context) *Tag {
+	cacheKey := "GetTagById_" + tagId
+
+	if tag, ok := dbCache.Get(cacheKey); ok {
+		return tag.(*Tag)
+	}
+
+	var tag Tag
+	DBCtx(ctx).Find(&tag, "id = ?", tagId)
+
+	if tag.ID == "" {
 		return nil
 	}
 

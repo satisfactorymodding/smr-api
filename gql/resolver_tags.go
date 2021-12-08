@@ -45,11 +45,11 @@ func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tagNames []st
 	return DBTagsToGeneratedSlice(resultTags), nil
 }
 
-func (r *mutationResolver) DeleteTag(ctx context.Context, tagName string) (bool, error) {
+func (r *mutationResolver) DeleteTag(ctx context.Context, id string) (bool, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteTag")
 	defer wrapper.end()
 
-	dbTag := postgres.GetTagByName(tagName, &newCtx)
+	dbTag := postgres.GetTagByID(id, &newCtx)
 
 	if dbTag == nil {
 		return false, errors.New("Tag not found")
@@ -60,17 +60,17 @@ func (r *mutationResolver) DeleteTag(ctx context.Context, tagName string) (bool,
 	return true, nil
 }
 
-func (r *mutationResolver) UpdateTag(ctx context.Context, tagName string, newName string) (*generated.Tag, error) {
+func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName string) (*generated.Tag, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "updateTag")
 	defer wrapper.end()
 
-	dbTag := postgres.GetTagByName(tagName, &newCtx)
+	dbTag := postgres.GetTagByID(id, &newCtx)
 
 	if dbTag == nil {
 		return nil, errors.New("Tag not found")
 	}
 
-	err := postgres.ValidateTagName(tagName)
+	err := postgres.ValidateTagName(dbTag.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -82,11 +82,11 @@ func (r *mutationResolver) UpdateTag(ctx context.Context, tagName string, newNam
 	return DBTagToGenerated(dbTag), nil
 }
 
-func (r *queryResolver) GetTag(ctx context.Context, tagName string) (*generated.Tag, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getTag")
+func (r *queryResolver) GetTag(ctx context.Context, id string) (*generated.Tag, error) {
+	wrapper, newCtx := WrapQueryTrace(ctx, "getTag_"+id)
 	defer wrapper.end()
 
-	tag := postgres.GetTagByName(tagName, &newCtx)
+	tag := postgres.GetTagByID(id, &newCtx)
 
 	return DBTagToGenerated(tag), nil
 }
