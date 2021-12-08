@@ -106,6 +106,7 @@ type ModFilter struct {
 	References []string             `json:"references" validate:"omitempty,max=100"`
 	Hidden     *bool                `json:"hidden"`
 	Fields     []string             `json:"-"`
+	Tags       []string             `json:"tags"`
 }
 
 func DefaultModFilter() *ModFilter {
@@ -141,7 +142,8 @@ func (f *ModFilter) AddField(name string) {
 		"created_at",
 		"last_version_date",
 		"mod_reference",
-		"hidden":
+		"hidden",
+		"tags":
 		f.Fields = append(f.Fields, "mods."+name)
 	}
 }

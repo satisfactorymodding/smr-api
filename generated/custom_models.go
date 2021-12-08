@@ -10,6 +10,7 @@ type NewMod struct {
 	SourceURL        *string         `json:"source_url"`
 	ModReference     string          `json:"mod_reference"`
 	Hidden           *bool           `json:"hidden"`
+	Tags             []string        `json:"tags"`
 }
 
 type UpdateMod struct {
@@ -21,4 +22,5 @@ type UpdateMod struct {
 	ModReference     *string         `json:"mod_reference"`
 	Hidden           *bool           `json:"hidden"`
 	Authors          []UpdateUserMod `json:"authors"`
+	Tags             []string        `json:"tags"`
 }
