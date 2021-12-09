@@ -34,7 +34,7 @@ func GenerateUniqueID() string {
 
 	randMutex.Lock()
 	defer randMutex.Unlock()
-	
+
 	_, _ = io.ReadAtLeast(crand.Reader, randBuffer[:], len(randBuffer))
 	copy(result[6:], randBuffer[:])
 
