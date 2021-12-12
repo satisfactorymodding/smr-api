@@ -42,7 +42,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 						var entities []postgres.VersionDependency
 						reqCtx := c.Request().Context()
-						postgres.DBCtx(&reqCtx).Where("version_id IN ?", fetchIds).Find(&entities)
+						postgres.DBCtx(reqCtx).Where("version_id IN ?", fetchIds).Find(&entities)
 
 						for _, entity := range entities {
 							byID[entity.VersionID] = append(byID[entity.VersionID], entity)
@@ -73,7 +73,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 						var entities []postgres.UserMod
 						reqCtx := c.Request().Context()
-						postgres.DBCtx(&reqCtx).Where("mod_id IN ?", fetchIds).Find(&entities)
+						postgres.DBCtx(reqCtx).Where("mod_id IN ?", fetchIds).Find(&entities)
 
 						for _, entity := range entities {
 							byID[entity.ModID] = append(byID[entity.ModID], entity)
@@ -109,7 +109,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 						var entities []postgres.Version
 						reqCtx := c.Request().Context()
-						postgres.DBCtx(&reqCtx).Where("approved = ? AND denied = ? AND mod_id IN ?", true, false, fetchIds).Order("created_at desc").Find(&entities)
+						postgres.DBCtx(reqCtx).Where("approved = ? AND denied = ? AND mod_id IN ?", true, false, fetchIds).Order("created_at desc").Find(&entities)
 
 						for _, entity := range entities {
 							byID[entity.ModID] = append(byID[entity.ModID], entity)
@@ -145,7 +145,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 						var entities []postgres.Version
 						reqCtx := c.Request().Context()
-						postgres.DBCtx(&reqCtx).Select(
+						postgres.DBCtx(reqCtx).Select(
 							"id",
 							"created_at",
 							"updated_at",
@@ -202,7 +202,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 						var entities []postgres.User
 						reqCtx := c.Request().Context()
-						postgres.DBCtx(&reqCtx).Where("id IN ?", fetchIds).Find(&entities)
+						postgres.DBCtx(reqCtx).Where("id IN ?", fetchIds).Find(&entities)
 
 						for _, entity := range entities {
 							tempEntity := entity

@@ -17,7 +17,7 @@ func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(p
 	orderDesc := generated.OrderDesc
 
 	for {
-		mods := postgres.GetMods(100, offset, "created_at", "asc", "", false, &ctx)
+		mods := postgres.GetMods(ctx, 100, offset, "created_at", "asc", "", false)
 		offset += 100
 
 		if len(mods) == 0 {
@@ -34,12 +34,12 @@ func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(p
 			}
 
 			for {
-				versions := postgres.GetModVersionsNew(mod.ID, &models.VersionFilter{
+				versions := postgres.GetModVersionsNew(ctx, mod.ID, &models.VersionFilter{
 					Limit:   &limit,
 					Offset:  &versionOffset,
 					OrderBy: &createdAt,
 					Order:   &orderDesc,
-				}, false, &ctx)
+				}, false)
 
 				versionOffset += len(versions)
 

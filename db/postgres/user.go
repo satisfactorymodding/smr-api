@@ -7,7 +7,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func GetUserSession(oauthUser *oauth.UserData, userAgent string, ctx *context.Context) (*UserSession, *User, bool) {
+func GetUserSession(ctx context.Context, oauthUser *oauth.UserData, userAgent string) (*UserSession, *User, bool) {
 	user := User{
 		Email:      oauthUser.Email,
 		Avatar:     oauthUser.Avatar,
@@ -59,7 +59,7 @@ func GetUserSession(oauthUser *oauth.UserData, userAgent string, ctx *context.Co
 		}
 
 		if newID {
-			Save(&user, ctx)
+			Save(ctx, &user)
 		}
 	}
 
@@ -80,12 +80,12 @@ func GetUserSession(oauthUser *oauth.UserData, userAgent string, ctx *context.Co
 	return &session, &user, newUser
 }
 
-func LogoutSession(token string, ctx *context.Context) {
+func LogoutSession(ctx context.Context, token string) {
 	// TODO Archive old deleted sessions to cold storage
 	DBCtx(ctx).Delete(&UserSession{Token: token})
 }
 
-func GetUserByToken(token string, ctx *context.Context) *User {
+func GetUserByToken(ctx context.Context, token string) *User {
 	// TODO Merge into a single query
 	var session UserSession
 	DBCtx(ctx).Find(&session, UserSession{Token: token})
@@ -104,7 +104,7 @@ func GetUserByToken(token string, ctx *context.Context) *User {
 	return &user
 }
 
-func GetUserByID(userID string, ctx *context.Context) *User {
+func GetUserByID(ctx context.Context, userID string) *User {
 	var user User
 	DBCtx(ctx).Find(&user, "id = ?", userID)
 
@@ -115,7 +115,7 @@ func GetUserByID(userID string, ctx *context.Context) *User {
 	return &user
 }
 
-func GetUsersByID(userIds []string, ctx *context.Context) *[]User {
+func GetUsersByID(ctx context.Context, userIds []string) *[]User {
 	var users []User
 	DBCtx(ctx).Find(&users, "id in (?)", userIds)
 
@@ -126,19 +126,19 @@ func GetUsersByID(userIds []string, ctx *context.Context) *[]User {
 	return &users
 }
 
-func GetUserMods(userID string, ctx *context.Context) []UserMod {
+func GetUserMods(ctx context.Context, userID string) []UserMod {
 	var mods []UserMod
 	DBCtx(ctx).Raw("SELECT * from \"user_mods\" as tdm WHERE user_id = ? AND mod_id = (SELECT id FROM mods WHERE id = tdm.mod_id AND deleted_at is NULL LIMIT 1)", userID).Find(&mods)
 	return mods
 }
 
-func GetModAuthors(modID string, ctx *context.Context) []UserMod {
+func GetModAuthors(ctx context.Context, modID string) []UserMod {
 	var authors []UserMod
 	DBCtx(ctx).Find(&authors, "mod_id = ?", modID)
 	return authors
 }
 
-func UserCanUploadModVersions(user *User, modID string, ctx *context.Context) bool {
+func UserCanUploadModVersions(ctx context.Context, user *User, modID string) bool {
 	if user.Banned {
 		return false
 	}

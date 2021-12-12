@@ -19,7 +19,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	// perform task
 	log.Ctx(ctx).Info().Msgf("[%s] Updating DB for mod %s version with metadata: %v", versionID, modID, metadata)
 
-	version := postgres.GetVersion(versionID, &ctx)
+	version := postgres.GetVersion(ctx, versionID)
 	link := storage.GenerateDownloadLink(version.Key)
 
 	response, _ := http.Get(link)
@@ -30,7 +30,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 		return errors.Wrap(err, "failed to read response body")
 	}
 
-	mod := postgres.GetModByID(modID, &ctx)
+	mod := postgres.GetModByID(ctx, modID)
 
 	if mod == nil {
 		return errors.New("mod not found")
@@ -52,7 +52,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 			Optional:  false,
 		}
 
-		postgres.Save(&dependency, &ctx)
+		postgres.Save(ctx, &dependency)
 	}
 
 	for depModID, condition := range info.OptionalDependencies {
@@ -63,7 +63,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 			Optional:  true,
 		}
 
-		postgres.Save(&dependency, &ctx)
+		postgres.Save(ctx, &dependency)
 	}
 
 	if metadata {
@@ -88,7 +88,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 
 	version.ModReference = &info.ModReference
 	version.SMLVersion = info.SMLVersion
-	postgres.Save(&version, &ctx)
+	postgres.Save(ctx, &version)
 
 	return nil
 }

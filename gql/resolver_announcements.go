@@ -25,7 +25,7 @@ func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement 
 		Importance: string(announcement.Importance),
 	}
 
-	resultAnnouncement, err := postgres.CreateAnnouncement(dbAnnouncement, &newCtx)
+	resultAnnouncement, err := postgres.CreateAnnouncement(newCtx, dbAnnouncement)
 	if err != nil {
 		return nil, err
 	}
@@ -36,13 +36,13 @@ func (r *mutationResolver) DeleteAnnouncement(ctx context.Context, announcementI
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteAnnouncement")
 	defer wrapper.end()
 
-	dbAnnouncement := postgres.GetAnnouncementByID(announcementID, &newCtx)
+	dbAnnouncement := postgres.GetAnnouncementByID(newCtx, announcementID)
 
 	if dbAnnouncement == nil {
 		return false, errors.New("announcement not found")
 	}
 
-	postgres.Delete(&dbAnnouncement, &newCtx)
+	postgres.Delete(newCtx, &dbAnnouncement)
 
 	return true, nil
 }
@@ -56,7 +56,7 @@ func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementI
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	dbAnnouncement := postgres.GetAnnouncementByID(announcementID, &newCtx)
+	dbAnnouncement := postgres.GetAnnouncementByID(newCtx, announcementID)
 
 	if dbAnnouncement == nil {
 		return nil, errors.New("guide not found")
@@ -65,7 +65,7 @@ func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementI
 	SetStringINNOE(announcement.Message, &dbAnnouncement.Message)
 	SetStringINNOE((*string)(announcement.Importance), &dbAnnouncement.Importance)
 
-	postgres.Save(&dbAnnouncement, &newCtx)
+	postgres.Save(newCtx, &dbAnnouncement)
 
 	return DBAnnouncementToGenerated(dbAnnouncement), nil
 }
@@ -74,7 +74,7 @@ func (r *queryResolver) GetAnnouncement(ctx context.Context, announcementID stri
 	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncement")
 	defer wrapper.end()
 
-	announcement := postgres.GetAnnouncementByID(announcementID, &newCtx)
+	announcement := postgres.GetAnnouncementByID(newCtx, announcementID)
 
 	return DBAnnouncementToGenerated(announcement), nil
 }
@@ -83,7 +83,7 @@ func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]*generated.Anno
 	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncements")
 	defer wrapper.end()
 
-	announcements := postgres.GetAnnouncements(&newCtx)
+	announcements := postgres.GetAnnouncements(newCtx)
 
 	return DBAnnouncementsToGeneratedSlice(announcements), nil
 }
@@ -92,7 +92,7 @@ func (r *queryResolver) GetAnnouncementsByImportance(ctx context.Context, import
 	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncementsByImportance")
 	defer wrapper.end()
 
-	announcements := postgres.GetAnnouncementsByImportance(string(importance), &newCtx)
+	announcements := postgres.GetAnnouncementsByImportance(newCtx, string(importance))
 
 	return DBAnnouncementsToGeneratedSlice(announcements), nil
 }

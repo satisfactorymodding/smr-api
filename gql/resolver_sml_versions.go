@@ -40,7 +40,7 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 		Date:                date,
 	}
 
-	resultSMLVersion, err := postgres.CreateSMLVersion(dbSMLVersion, &newCtx)
+	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
 
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	dbSMLVersion := postgres.GetSMLVersionByID(smlVersionID, &newCtx)
+	dbSMLVersion := postgres.GetSMLVersionByID(newCtx, smlVersionID)
 
 	if dbSMLVersion == nil {
 		return nil, errors.New("smlVersion not found")
@@ -72,7 +72,7 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	SetStringINNOE(smlVersion.Changelog, &dbSMLVersion.Changelog)
 	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
 
-	postgres.Save(&dbSMLVersion, &newCtx)
+	postgres.Save(newCtx, &dbSMLVersion)
 
 	return DBSMLVersionToGenerated(dbSMLVersion), nil
 }
@@ -81,13 +81,13 @@ func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID st
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteSMLVersion")
 	defer wrapper.end()
 
-	dbSMLVersion := postgres.GetSMLVersionByID(smlVersionID, &newCtx)
+	dbSMLVersion := postgres.GetSMLVersionByID(newCtx, smlVersionID)
 
 	if dbSMLVersion == nil {
 		return false, errors.New("smlVersion not found")
 	}
 
-	postgres.Delete(&dbSMLVersion, &newCtx)
+	postgres.Delete(newCtx, &dbSMLVersion)
 
 	return true, nil
 }
@@ -96,7 +96,7 @@ func (r *queryResolver) GetSMLVersion(ctx context.Context, smlVersionID string) 
 	wrapper, newCtx := WrapQueryTrace(ctx, "getSMLVersion")
 	defer wrapper.end()
 
-	return DBSMLVersionToGenerated(postgres.GetSMLVersionByID(smlVersionID, &newCtx)), nil
+	return DBSMLVersionToGenerated(postgres.GetSMLVersionByID(newCtx, smlVersionID)), nil
 }
 
 func (r *queryResolver) GetSMLVersions(ctx context.Context, filter map[string]interface{}) (*generated.GetSMLVersions, error) {
@@ -121,9 +121,9 @@ func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, obj *generated
 	var smlVersions []postgres.SMLVersion
 
 	if smlVersionFilter.Ids == nil || len(smlVersionFilter.Ids) == 0 {
-		smlVersions = postgres.GetSMLVersions(smlVersionFilter, &newCtx)
+		smlVersions = postgres.GetSMLVersions(newCtx, smlVersionFilter)
 	} else {
-		smlVersions = postgres.GetSMLVersionsByID(smlVersionFilter.Ids, &newCtx)
+		smlVersions = postgres.GetSMLVersionsByID(newCtx, smlVersionFilter.Ids)
 	}
 
 	if smlVersions == nil {
@@ -153,5 +153,5 @@ func (r *getSMLVersionsResolver) Count(ctx context.Context, obj *generated.GetSM
 		return len(smlVersionFilter.Ids), nil
 	}
 
-	return int(postgres.GetSMLVersionCount(smlVersionFilter, &newCtx)), nil
+	return int(postgres.GetSMLVersionCount(newCtx, smlVersionFilter)), nil
 }

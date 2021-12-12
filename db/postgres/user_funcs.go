@@ -6,7 +6,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/auth"
 )
 
-func (user User) Has(role *auth.Role, ctx *context.Context) bool {
+func (user User) Has(ctx context.Context, role *auth.Role) bool {
 	groups := auth.GetRoleGroups(role)
 	groupIds := make([]string, len(groups))
 	for i, group := range groups {
@@ -19,7 +19,7 @@ func (user User) Has(role *auth.Role, ctx *context.Context) bool {
 	return group.UserID == user.ID
 }
 
-func (user User) GetRoles(ctx *context.Context) map[*auth.Role]bool {
+func (user User) GetRoles(ctx context.Context) map[*auth.Role]bool {
 	var groups []UserGroup
 	DBCtx(ctx).Where("user_id = ?", user.ID).Find(&groups)
 
@@ -35,7 +35,7 @@ func (user User) GetRoles(ctx *context.Context) map[*auth.Role]bool {
 	return roles
 }
 
-func (user User) GetGroups(ctx *context.Context) []*auth.Group {
+func (user User) GetGroups(ctx context.Context) []*auth.Group {
 	var groups []UserGroup
 	DBCtx(ctx).Where("user_id = ?", user.ID).Find(&groups)
 
@@ -48,7 +48,7 @@ func (user User) GetGroups(ctx *context.Context) []*auth.Group {
 	return mappedGroups
 }
 
-func (user User) SetGroups(groups []string, ctx *context.Context) {
+func (user User) SetGroups(ctx context.Context, groups []string) {
 	var currentGroups []UserGroup
 	DBCtx(ctx).Unscoped().Where("user_id = ?", user.ID).Find(&currentGroups)
 

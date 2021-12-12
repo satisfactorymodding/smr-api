@@ -39,7 +39,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 	log.Ctx(ctx).Info().Msgf("starting virus scan of mod %s version %s", task.ModID, task.VersionID)
 
-	version := postgres.GetVersion(task.VersionID, &ctx)
+	version := postgres.GetVersion(ctx, task.VersionID)
 	link := storage.GenerateDownloadLink(version.Key)
 
 	response, _ := http.Get(link)
@@ -85,12 +85,12 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	if task.ApproveAfter {
 		log.Ctx(ctx).Info().Msgf("approving mod %s version %s after successful virus scan", task.ModID, task.VersionID)
 		version.Approved = true
-		postgres.Save(&version, &ctx)
+		postgres.Save(ctx, &version)
 
-		mod := postgres.GetModByID(task.ModID, &ctx)
+		mod := postgres.GetModByID(ctx, task.ModID)
 		now := time.Now()
 		mod.LastVersionDate = &now
-		postgres.Save(&mod, &ctx)
+		postgres.Save(ctx, &mod)
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), version)
 	}

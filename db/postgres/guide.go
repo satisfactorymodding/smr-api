@@ -13,7 +13,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func CreateGuide(guide *Guide, ctx *context.Context) (*Guide, error) {
+func CreateGuide(ctx context.Context, guide *Guide) (*Guide, error) {
 	// Allow only 8 new guides per 24h
 
 	guide.ID = util.GenerateUniqueID()
@@ -42,7 +42,7 @@ func CreateGuide(guide *Guide, ctx *context.Context) (*Guide, error) {
 	return guide, nil
 }
 
-func GetGuideByID(guideID string, ctx *context.Context) *Guide {
+func GetGuideByID(ctx context.Context, guideID string) *Guide {
 	cacheKey := "GetGuideById_" + guideID
 
 	if guide, ok := dbCache.Get(cacheKey); ok {
@@ -61,7 +61,7 @@ func GetGuideByID(guideID string, ctx *context.Context) *Guide {
 	return &guide
 }
 
-func GetGuides(filter *models.GuideFilter, ctx *context.Context) []Guide {
+func GetGuides(ctx context.Context, filter *models.GuideFilter) []Guide {
 	hash, err := filter.Hash()
 	cacheKey := ""
 	if err == nil {
@@ -93,7 +93,7 @@ func GetGuides(filter *models.GuideFilter, ctx *context.Context) []Guide {
 	return guides
 }
 
-func GetGuidesByID(guideIds []string, ctx *context.Context) []Guide {
+func GetGuidesByID(ctx context.Context, guideIds []string) []Guide {
 	cacheKey := "GetGuidesById_" + strings.Join(guideIds, ":")
 
 	if guides, ok := dbCache.Get(cacheKey); ok {
@@ -112,7 +112,7 @@ func GetGuidesByID(guideIds []string, ctx *context.Context) []Guide {
 	return guides
 }
 
-func GetGuideCount(filter *models.GuideFilter, ctx *context.Context) int64 {
+func GetGuideCount(ctx context.Context, filter *models.GuideFilter) int64 {
 	hash, err := filter.Hash()
 	cacheKey := ""
 	if err == nil {
@@ -140,11 +140,11 @@ func GetGuideCount(filter *models.GuideFilter, ctx *context.Context) int64 {
 	return guideCount
 }
 
-func IncrementGuideViews(guide *Guide, ctx *context.Context) {
+func IncrementGuideViews(ctx context.Context, guide *Guide) {
 	DBCtx(ctx).Model(guide).Update("views", guide.Views+1)
 }
 
-func GetUserGuides(userID string, ctx *context.Context) []Guide {
+func GetUserGuides(ctx context.Context, userID string) []Guide {
 	var guides []Guide
 	DBCtx(ctx).Find(&guides, "user_id = ?", userID)
 	return guides

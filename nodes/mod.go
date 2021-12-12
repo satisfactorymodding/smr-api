@@ -31,7 +31,7 @@ func getMods(c echo.Context) (interface{}, *ErrorResponse) {
 	order := util.OneOf(c, "order", []string{"asc", "desc"}, "desc")
 	search := c.QueryParam("search")
 
-	mods := postgres.GetMods(limit, offset, orderBy, order, search, false, util.Context(c))
+	mods := postgres.GetMods(c.Request().Context(), limit, offset, orderBy, order, search, false)
 
 	converted := make([]*Mod, len(mods))
 	for k, v := range mods {
@@ -51,7 +51,7 @@ func getMods(c echo.Context) (interface{}, *ErrorResponse) {
 // @Router /mods/count [get]
 func getModCount(c echo.Context) (interface{}, *ErrorResponse) {
 	search := c.QueryParam("search")
-	return postgres.GetModCount(search, false, util.Context(c)), nil
+	return postgres.GetModCount(c.Request().Context(), search, false), nil
 }
 
 // @Summary Retrieve a Mod
@@ -65,7 +65,7 @@ func getModCount(c echo.Context) (interface{}, *ErrorResponse) {
 func getMod(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 
-	mod := postgres.GetModByID(modID, util.Context(c))
+	mod := postgres.GetModByID(c.Request().Context(), modID)
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
@@ -73,7 +73,7 @@ func getMod(c echo.Context) (interface{}, *ErrorResponse) {
 
 	if _, ok := c.QueryParams()["view"]; ok {
 		if redis.CanIncrement(c.RealIP(), "view", "mod:"+modID, time.Hour*4) {
-			postgres.IncrementModViews(mod, util.Context(c))
+			postgres.IncrementModViews(c.Request().Context(), mod)
 		}
 	}
 
@@ -94,7 +94,7 @@ func getModsByIds(c echo.Context) (interface{}, *ErrorResponse) {
 
 	// TODO limit amount of users requestable
 
-	mods := postgres.GetModsByID(modIDSplit, util.Context(c))
+	mods := postgres.GetModsByID(c.Request().Context(), modIDSplit)
 
 	if mods == nil {
 		return nil, &ErrorModNotFound
@@ -119,7 +119,7 @@ func getModsByIds(c echo.Context) (interface{}, *ErrorResponse) {
 func getModLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 
-	versions := postgres.GetModsLatestVersions([]string{modID}, false, util.Context(c))
+	versions := postgres.GetModsLatestVersions(c.Request().Context(), []string{modID}, false)
 
 	if versions == nil {
 		return nil, &ErrorVersionNotFound
@@ -148,7 +148,7 @@ func getModsLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
 
 	// TODO limit amount of mods requestable
 
-	versions := postgres.GetModsLatestVersions(modIDSplit, false, util.Context(c))
+	versions := postgres.GetModsLatestVersions(c.Request().Context(), modIDSplit, false)
 
 	if versions == nil {
 		return nil, &ErrorVersionNotFound
@@ -186,13 +186,13 @@ func getModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 
 	modID := c.Param("modId")
 
-	mod := postgres.GetModByID(modID, util.Context(c))
+	mod := postgres.GetModByID(c.Request().Context(), modID)
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
 	}
 
-	versions := postgres.GetModVersions(mod.ID, limit, offset, orderBy, order, false, util.Context(c))
+	versions := postgres.GetModVersions(c.Request().Context(), mod.ID, limit, offset, orderBy, order, false)
 
 	converted := make([]*Version, len(versions))
 	for k, v := range versions {
@@ -213,13 +213,13 @@ func getModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 func getModAuthors(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 
-	mod := postgres.GetModByID(modID, util.Context(c))
+	mod := postgres.GetModByID(c.Request().Context(), modID)
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
 	}
 
-	authors := postgres.GetModAuthors(mod.ID, util.Context(c))
+	authors := postgres.GetModAuthors(c.Request().Context(), mod.ID)
 
 	converted := make([]*ModUser, len(authors))
 	for k, v := range authors {
@@ -242,13 +242,13 @@ func getModVersion(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 	versionID := c.Param("versionId")
 
-	mod := postgres.GetModByID(modID, util.Context(c))
+	mod := postgres.GetModByID(c.Request().Context(), modID)
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
 	}
 
-	version := postgres.GetModVersion(mod.ID, versionID, util.Context(c))
+	version := postgres.GetModVersion(c.Request().Context(), mod.ID, versionID)
 
 	if version == nil {
 		return nil, &ErrorVersionNotFound
@@ -270,20 +270,20 @@ func downloadModVersion(c echo.Context) error {
 	modID := c.Param("modId")
 	versionID := c.Param("versionId")
 
-	mod := postgres.GetModByID(modID, util.Context(c))
+	mod := postgres.GetModByID(c.Request().Context(), modID)
 
 	if mod == nil {
 		return c.String(404, "mod not found")
 	}
 
-	version := postgres.GetModVersion(mod.ID, versionID, util.Context(c))
+	version := postgres.GetModVersion(c.Request().Context(), mod.ID, versionID)
 
 	if version == nil {
 		return c.String(404, "version not found")
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
-		postgres.IncrementVersionDownloads(version, util.Context(c))
+		postgres.IncrementVersionDownloads(c.Request().Context(), version)
 	}
 
 	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))

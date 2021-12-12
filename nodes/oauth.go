@@ -61,7 +61,7 @@ func getGithub(c echo.Context) (interface{}, *ErrorResponse) {
 	avatarURL := user.Avatar
 	user.Avatar = ""
 
-	session, dbUser, newUser := postgres.GetUserSession(user, userAgent, util.Context(c))
+	session, dbUser, newUser := postgres.GetUserSession(c.Request().Context(), user, userAgent)
 
 	if avatarURL != "" && newUser {
 		avatarData, err := util.LinkToWebp(c.Request().Context(), avatarURL)
@@ -73,7 +73,7 @@ func getGithub(c echo.Context) (interface{}, *ErrorResponse) {
 		success, avatarKey := storage.UploadUserAvatar(c.Request().Context(), session.UserID, bytes.NewReader(avatarData))
 		if success {
 			dbUser.Avatar = storage.GenerateDownloadLink(avatarKey)
-			postgres.Save(&dbUser, util.Context(c))
+			postgres.Save(c.Request().Context(), &dbUser)
 		}
 	}
 

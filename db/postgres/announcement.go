@@ -7,13 +7,13 @@ import (
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func CreateAnnouncement(announcement *Announcement, ctx *context.Context) (*Announcement, error) {
+func CreateAnnouncement(ctx context.Context, announcement *Announcement) (*Announcement, error) {
 	announcement.ID = util.GenerateUniqueID()
 	DBCtx(ctx).Create(&announcement)
 	return announcement, nil
 }
 
-func GetAnnouncementByID(announcementID string, ctx *context.Context) *Announcement {
+func GetAnnouncementByID(ctx context.Context, announcementID string) *Announcement {
 	cacheKey := "GetAnnouncementByID_" + announcementID
 
 	if announcement, ok := dbCache.Get(cacheKey); ok {
@@ -32,7 +32,7 @@ func GetAnnouncementByID(announcementID string, ctx *context.Context) *Announcem
 	return &announcement
 }
 
-func GetAnnouncements(ctx *context.Context) []Announcement {
+func GetAnnouncements(ctx context.Context) []Announcement {
 	cacheKey := "GetAnnouncements"
 
 	if announcements, ok := dbCache.Get(cacheKey); ok {
@@ -47,7 +47,7 @@ func GetAnnouncements(ctx *context.Context) []Announcement {
 	return announcements
 }
 
-func GetAnnouncementsByImportance(importance string, ctx *context.Context) []Announcement {
+func GetAnnouncementsByImportance(ctx context.Context, importance string) []Announcement {
 	cacheKey := "GetAnnouncementsByImportance_" + importance
 
 	if announcements, ok := dbCache.Get(cacheKey); ok {

@@ -38,17 +38,17 @@ type Directive struct {
 func canEditMod(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	dbMod := postgres.GetModByID(getArgument(ctx, field).(string), &ctx)
+	dbMod := postgres.GetModByID(ctx, getArgument(ctx, field).(string))
 
 	if dbMod == nil {
 		return nil, errors.New("mod not found")
 	}
 
-	if postgres.UserCanUploadModVersions(user, dbMod.ID, &ctx) {
+	if postgres.UserCanUploadModVersions(ctx, user, dbMod.ID) {
 		return next(ctx)
 	}
 
-	if user.Has(auth.RoleEditAnyContent, &ctx) {
+	if user.Has(ctx, auth.RoleEditAnyContent) {
 		return next(ctx)
 	}
 
@@ -58,17 +58,17 @@ func canEditMod(ctx context.Context, obj interface{}, next graphql.Resolver, fie
 func canEditVersion(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	dbVersion := postgres.GetVersion(getArgument(ctx, field).(string), &ctx)
+	dbVersion := postgres.GetVersion(ctx, getArgument(ctx, field).(string))
 
 	if dbVersion == nil {
 		return nil, errors.New("version not found")
 	}
 
-	if postgres.UserCanUploadModVersions(user, dbVersion.ModID, &ctx) {
+	if postgres.UserCanUploadModVersions(ctx, user, dbVersion.ModID) {
 		return next(ctx)
 	}
 
-	if user.Has(auth.RoleEditAnyContent, &ctx) {
+	if user.Has(ctx, auth.RoleEditAnyContent) {
 		return next(ctx)
 	}
 
@@ -85,7 +85,7 @@ func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, fi
 		userID = getArgument(ctx, field).(string)
 	}
 
-	dbUser := postgres.GetUserByID(userID, &ctx)
+	dbUser := postgres.GetUserByID(ctx, userID)
 
 	if dbUser == nil {
 		return nil, errors.New("user not found")
@@ -95,7 +95,7 @@ func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, fi
 		return next(ctx)
 	}
 
-	if user.Has(auth.RoleEditUsers, &ctx) {
+	if user.Has(ctx, auth.RoleEditUsers) {
 		return next(ctx)
 	}
 
@@ -105,7 +105,7 @@ func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, fi
 func canEditGuide(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	dbGuide := postgres.GetGuideByID(getArgument(ctx, field).(string), &ctx)
+	dbGuide := postgres.GetGuideByID(ctx, getArgument(ctx, field).(string))
 
 	if dbGuide == nil {
 		return nil, errors.New("guide not found")
@@ -115,7 +115,7 @@ func canEditGuide(ctx context.Context, obj interface{}, next graphql.Resolver, f
 		return next(ctx)
 	}
 
-	if user.Has(auth.RoleEditAnyContent, &ctx) {
+	if user.Has(ctx, auth.RoleEditAnyContent) {
 		return next(ctx)
 	}
 
@@ -130,7 +130,7 @@ func isLoggedIn(ctx context.Context, obj interface{}, next graphql.Resolver) (re
 		return nil, errors.New("user not logged in")
 	}
 
-	user := postgres.GetUserByToken(authorization, &ctx)
+	user := postgres.GetUserByToken(ctx, authorization)
 
 	if user == nil {
 		return nil, errors.New("user not logged in")
@@ -150,7 +150,7 @@ func isNotLoggedIn(ctx context.Context, obj interface{}, next graphql.Resolver) 
 	authorization := header.Get("Authorization")
 
 	if authorization != "" {
-		user := postgres.GetUserByToken(authorization, &ctx)
+		user := postgres.GetUserByToken(ctx, authorization)
 
 		if user != nil {
 			return nil, errors.New("user is logged in")
@@ -167,7 +167,7 @@ func getArgument(ctx context.Context, key string) interface{} {
 func canApproveMods(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	if user.Has(auth.RoleApproveMods, &ctx) {
+	if user.Has(ctx, auth.RoleApproveMods) {
 		return next(ctx)
 	}
 
@@ -177,7 +177,7 @@ func canApproveMods(ctx context.Context, obj interface{}, next graphql.Resolver)
 func canApproveVersions(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	if user.Has(auth.RoleApproveVersions, &ctx) {
+	if user.Has(ctx, auth.RoleApproveVersions) {
 		return next(ctx)
 	}
 
@@ -187,7 +187,7 @@ func canApproveVersions(ctx context.Context, obj interface{}, next graphql.Resol
 func canEditUsers(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	if user.Has(auth.RoleEditUsers, &ctx) {
+	if user.Has(ctx, auth.RoleEditUsers) {
 		return next(ctx)
 	}
 
@@ -197,7 +197,7 @@ func canEditUsers(ctx context.Context, obj interface{}, next graphql.Resolver) (
 func canEditSMLVersions(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	if user.Has(auth.RoleEditSMLVersions, &ctx) {
+	if user.Has(ctx, auth.RoleEditSMLVersions) {
 		return next(ctx)
 	}
 
@@ -207,7 +207,7 @@ func canEditSMLVersions(ctx context.Context, obj interface{}, next graphql.Resol
 func canEditBootstrapVersions(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	if user.Has(auth.RoleEditBootstrapVersions, &ctx) {
+	if user.Has(ctx, auth.RoleEditBootstrapVersions) {
 		return next(ctx)
 	}
 
@@ -217,7 +217,7 @@ func canEditBootstrapVersions(ctx context.Context, obj interface{}, next graphql
 func canEditAnnouncements(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	if user.Has(auth.RoleEditAnnouncements, &ctx) {
+	if user.Has(ctx, auth.RoleEditAnnouncements) {
 		return next(ctx)
 	}
 

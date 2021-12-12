@@ -22,7 +22,7 @@ func RunMigrations(ctx context.Context) {
 }
 
 func databaseMigrations(ctx context.Context) {
-	db, _ := postgres2.GetDB().DB()
+	db, _ := postgres2.DBCtx(ctx).DB()
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 
 	if err != nil {

@@ -85,7 +85,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 	dbVersion.Approved = autoApproved
 
-	err = postgres.CreateVersion(dbVersion, &ctx)
+	err = postgres.CreateVersion(ctx, dbVersion)
 
 	if err != nil {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
@@ -100,7 +100,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 			Optional:  false,
 		}
 
-		postgres.Save(&dependency, &ctx)
+		postgres.Save(ctx, &dependency)
 	}
 
 	for modID, condition := range modInfo.OptionalDependencies {
@@ -111,7 +111,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 			Optional:  true,
 		}
 
-		postgres.Save(&dependency, &ctx)
+		postgres.Save(ctx, &dependency)
 	}
 
 	jsonData, err := json.Marshal(modInfo.Metadata)
@@ -120,7 +120,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	} else {
 		metadata := string(jsonData)
 		dbVersion.Metadata = &metadata
-		postgres.Save(&dbVersion, &ctx)
+		postgres.Save(ctx, &dbVersion)
 	}
 
 	// TODO Validate mod files
@@ -135,7 +135,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 				Optional:  false,
 			}
 
-			postgres.DeleteForced(&dependency, &ctx)
+			postgres.DeleteForced(ctx, &dependency)
 		}
 
 		for modID, condition := range modInfo.OptionalDependencies {
@@ -146,23 +146,23 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 				Optional:  true,
 			}
 
-			postgres.DeleteForced(&dependency, &ctx)
+			postgres.DeleteForced(ctx, &dependency)
 		}
 
-		postgres.DeleteForced(&dbVersion, &ctx)
+		postgres.DeleteForced(ctx, &dbVersion)
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 		return nil, errors.New("failed to upload mod")
 	}
 
 	dbVersion.Key = key
-	postgres.Save(&dbVersion, &ctx)
-	postgres.Save(&mod, &ctx)
+	postgres.Save(ctx, &dbVersion)
+	postgres.Save(ctx, &mod)
 
 	if autoApproved {
-		mod := postgres.GetModByID(dbVersion.ModID, &ctx)
+		mod := postgres.GetModByID(ctx, dbVersion.ModID)
 		now := time.Now()
 		mod.LastVersionDate = &now
-		postgres.Save(&mod, &ctx)
+		postgres.Save(ctx, &mod)
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
 	} else {

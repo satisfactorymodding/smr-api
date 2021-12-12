@@ -38,7 +38,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 				}
 			}
 
-			updateTx := postgres.GetDB().Begin()
+			updateTx := postgres.DBCtx(ctx).Begin()
 
 			for entityType, entityValue := range resultMap {
 				for action, actionValue := range entityValue {
@@ -47,7 +47,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 						case "mod":
 							switch action {
 							case "view":
-								mod := postgres.GetModByID(entityID, &ctx)
+								mod := postgres.GetModByID(ctx, entityID)
 								if mod != nil {
 									currentHotness := mod.Hotness
 									if currentHotness > 4 {
@@ -60,7 +60,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 						case "version":
 							switch action {
 							case "download":
-								version := postgres.GetVersion(entityID, &ctx)
+								version := postgres.GetVersion(ctx, entityID)
 								if version != nil {
 									currentHotness := version.Hotness
 									if currentHotness > 4 {
@@ -76,7 +76,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 			}
 
 			updateTx.Commit()
-			updateTx = postgres.GetDB().Begin()
+			updateTx = postgres.DBCtx(ctx).Begin()
 
 			type Result struct {
 				ModID     string
@@ -86,10 +86,10 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 
 			var resultRows []Result
 
-			postgres.GetDB().Raw("SELECT mod_id, SUM(hotness) AS hotness, SUM(downloads) AS downloads FROM versions GROUP BY mod_id").Scan(&resultRows)
+			postgres.DBCtx(ctx).Raw("SELECT mod_id, SUM(hotness) AS hotness, SUM(downloads) AS downloads FROM versions GROUP BY mod_id").Scan(&resultRows)
 
 			for _, row := range resultRows {
-				mod := postgres.GetModByID(row.ModID, &ctx)
+				mod := postgres.GetModByID(ctx, row.ModID)
 				if mod != nil {
 					currentPopularity := mod.Popularity
 					if currentPopularity > 4 {

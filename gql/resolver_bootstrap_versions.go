@@ -39,7 +39,7 @@ func (r *mutationResolver) CreateBootstrapVersion(ctx context.Context, bootstrap
 		Date:                date,
 	}
 
-	resultBootstrapVersion, err := postgres.CreateBootstrapVersion(dbBootstrapVersion, &newCtx)
+	resultBootstrapVersion, err := postgres.CreateBootstrapVersion(newCtx, dbBootstrapVersion)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create bootstrap version")
@@ -57,7 +57,7 @@ func (r *mutationResolver) UpdateBootstrapVersion(ctx context.Context, bootstrap
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	dbBootstrapVersion := postgres.GetBootstrapVersionByID(bootstrapVersionID, &newCtx)
+	dbBootstrapVersion := postgres.GetBootstrapVersionByID(newCtx, bootstrapVersionID)
 
 	if dbBootstrapVersion == nil {
 		return nil, errors.New("bootstrapVersion not found")
@@ -70,7 +70,7 @@ func (r *mutationResolver) UpdateBootstrapVersion(ctx context.Context, bootstrap
 	SetStringINNOE(bootstrapVersion.Changelog, &dbBootstrapVersion.Changelog)
 	SetDateINN(bootstrapVersion.Date, &dbBootstrapVersion.Date)
 
-	postgres.Save(&dbBootstrapVersion, &newCtx)
+	postgres.Save(newCtx, &dbBootstrapVersion)
 
 	return DBBootstrapVersionToGenerated(dbBootstrapVersion), nil
 }
@@ -79,13 +79,13 @@ func (r *mutationResolver) DeleteBootstrapVersion(ctx context.Context, bootstrap
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteBootstrapVersion")
 	defer wrapper.end()
 
-	dbBootstrapVersion := postgres.GetBootstrapVersionByID(bootstrapVersionID, &newCtx)
+	dbBootstrapVersion := postgres.GetBootstrapVersionByID(newCtx, bootstrapVersionID)
 
 	if dbBootstrapVersion == nil {
 		return false, errors.New("bootstrapVersion not found")
 	}
 
-	postgres.Delete(&dbBootstrapVersion, &newCtx)
+	postgres.Delete(newCtx, &dbBootstrapVersion)
 
 	return true, nil
 }
@@ -94,7 +94,7 @@ func (r *queryResolver) GetBootstrapVersion(ctx context.Context, bootstrapVersio
 	wrapper, newCtx := WrapQueryTrace(ctx, "getBootstrapVersion")
 	defer wrapper.end()
 
-	return DBBootstrapVersionToGenerated(postgres.GetBootstrapVersionByID(bootstrapVersionID, &newCtx)), nil
+	return DBBootstrapVersionToGenerated(postgres.GetBootstrapVersionByID(newCtx, bootstrapVersionID)), nil
 }
 
 func (r *queryResolver) GetBootstrapVersions(ctx context.Context, filter map[string]interface{}) (*generated.GetBootstrapVersions, error) {
@@ -119,9 +119,9 @@ func (r *getBootstrapVersionsResolver) BootstrapVersions(ctx context.Context, ob
 	var bootstrapVersions []postgres.BootstrapVersion
 
 	if bootstrapVersionFilter.Ids == nil || len(bootstrapVersionFilter.Ids) == 0 {
-		bootstrapVersions = postgres.GetBootstrapVersions(bootstrapVersionFilter, &newCtx)
+		bootstrapVersions = postgres.GetBootstrapVersions(newCtx, bootstrapVersionFilter)
 	} else {
-		bootstrapVersions = postgres.GetBootstrapVersionsByID(bootstrapVersionFilter.Ids, &newCtx)
+		bootstrapVersions = postgres.GetBootstrapVersionsByID(newCtx, bootstrapVersionFilter.Ids)
 	}
 
 	if bootstrapVersions == nil {
@@ -151,5 +151,5 @@ func (r *getBootstrapVersionsResolver) Count(ctx context.Context, obj *generated
 		return len(bootstrapVersionFilter.Ids), nil
 	}
 
-	return int(postgres.GetBootstrapVersionCount(bootstrapVersionFilter, &newCtx)), nil
+	return int(postgres.GetBootstrapVersionCount(newCtx, bootstrapVersionFilter)), nil
 }

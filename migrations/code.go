@@ -34,7 +34,7 @@ func codeMigrations(ctx context.Context) {
 	// TODO Custom reporter, this one's very ugly
 	reporter := migration.NewDefaultReporterWithParams(codeMigrationLogger{log: log.Ctx(ctx)}, os.Exit)
 
-	db, _ := postgres2.GetDB().DB()
+	db, _ := postgres2.DBCtx(ctx).DB()
 	manager := migration.NewDefaultManager(migration.NewPostgreSQLTarget(db), source)
 	runner := migration.NewArgsRunnerCustom(reporter, manager, os.Exit, "migrate")
 	runner.Run(db)

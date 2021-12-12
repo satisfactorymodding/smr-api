@@ -28,7 +28,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 	wrapper, newCtx := WrapMutationTrace(ctx, "updateUser")
 	defer wrapper.end()
 
-	dbUser := postgres.GetUserByID(userID, &newCtx)
+	dbUser := postgres.GetUserByID(newCtx, userID)
 
 	if dbUser == nil {
 		return nil, errors.New("user not found")
@@ -54,7 +54,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 	}
 
 	if input.Groups != nil {
-		dbUser.SetGroups(input.Groups, &newCtx)
+		dbUser.SetGroups(newCtx, input.Groups)
 	}
 
 	if input.Username != nil {
@@ -69,7 +69,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 		}
 	}
 
-	postgres.Save(&dbUser, &newCtx)
+	postgres.Save(newCtx, &dbUser)
 
 	return DBUserToGenerated(dbUser), nil
 }
@@ -79,7 +79,7 @@ func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
 	defer wrapper.end()
 
 	header := ctx.Value(util.ContextHeader{}).(http.Header)
-	postgres.LogoutSession(header.Get("Authorization"), &newCtx)
+	postgres.LogoutSession(newCtx, header.Get("Authorization"))
 
 	return true, nil
 }
@@ -93,14 +93,14 @@ func (r *queryResolver) GetMe(ctx context.Context) (*generated.User, error) {
 func (r *queryResolver) GetUser(ctx context.Context, userID string) (*generated.User, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getUser")
 	defer wrapper.end()
-	return DBUserToGenerated(postgres.GetUserByID(userID, &newCtx)), nil
+	return DBUserToGenerated(postgres.GetUserByID(newCtx, userID)), nil
 }
 
 func (r *queryResolver) GetUsers(ctx context.Context, userIds []string) ([]*generated.User, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getUsers")
 	defer wrapper.end()
 
-	users := postgres.GetUsersByID(userIds, &newCtx)
+	users := postgres.GetUsersByID(newCtx, userIds)
 
 	if users == nil {
 		return nil, errors.New("users not found")
@@ -120,7 +120,7 @@ func (r *userResolver) Mods(ctx context.Context, obj *generated.User) ([]*genera
 	wrapper, newCtx := WrapQueryTrace(ctx, "User.mods")
 	defer wrapper.end()
 
-	mods := postgres.GetUserMods(obj.ID, &newCtx)
+	mods := postgres.GetUserMods(newCtx, obj.ID)
 
 	if mods == nil {
 		return []*generated.UserMod{}, nil
@@ -142,7 +142,7 @@ func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]*gene
 	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
-	guides := postgres.GetUserGuides(obj.ID, &newCtx)
+	guides := postgres.GetUserGuides(newCtx, obj.ID)
 
 	if guides == nil {
 		return nil, errors.New("guides not found")
@@ -162,7 +162,7 @@ func (r *userResolver) Groups(ctx context.Context, obj *generated.User) ([]*gene
 
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	groups := user.GetGroups(&newCtx)
+	groups := user.GetGroups(newCtx)
 
 	converted := make([]*generated.Group, len(groups))
 	for k, v := range groups {
@@ -181,7 +181,7 @@ func (r *userResolver) Roles(ctx context.Context, obj *generated.User) (*generat
 
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	roles := user.GetRoles(&newCtx)
+	roles := user.GetRoles(newCtx)
 
 	userRoles := &generated.UserRoles{}
 
@@ -239,7 +239,7 @@ func (r *userModResolver) Mod(ctx context.Context, obj *generated.UserMod) (*gen
 	wrapper, newCtx := WrapQueryTrace(ctx, "UserMod.mod")
 	defer wrapper.end()
 
-	mod := postgres.GetModByID(obj.ModID, &newCtx)
+	mod := postgres.GetModByID(newCtx, obj.ModID)
 
 	if mod == nil {
 		return nil, errors.New("mod not found")

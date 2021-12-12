@@ -122,7 +122,7 @@ func completeOAuthFlow(ctx context.Context, user *oauth.UserData, userAgent stri
 	avatarURL := user.Avatar
 	user.Avatar = ""
 
-	session, dbUser, newUser := postgres.GetUserSession(user, userAgent, &ctx)
+	session, dbUser, newUser := postgres.GetUserSession(ctx, user, userAgent)
 
 	if avatarURL != "" && newUser {
 		avatarData, err := util.LinkToWebp(ctx, avatarURL)
@@ -134,7 +134,7 @@ func completeOAuthFlow(ctx context.Context, user *oauth.UserData, userAgent stri
 		success, avatarKey := storage.UploadUserAvatar(ctx, session.UserID, bytes.NewReader(avatarData))
 		if success {
 			dbUser.Avatar = storage.GenerateDownloadLink(avatarKey)
-			postgres.Save(&dbUser, &ctx)
+			postgres.Save(ctx, &dbUser)
 		}
 	}
 

@@ -32,7 +32,7 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 		return
 	}
 
-	user := postgres.GetUserByID(mod.CreatorID, &ctx)
+	user := postgres.GetUserByID(ctx, mod.CreatorID)
 
 	if user == nil {
 		return
@@ -90,7 +90,7 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 		return
 	}
 
-	mod := postgres.GetModByID(version.ModID, &ctx)
+	mod := postgres.GetModByID(ctx, version.ModID)
 
 	if mod == nil {
 		return
