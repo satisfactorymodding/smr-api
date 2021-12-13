@@ -8,6 +8,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -142,7 +143,7 @@ func isLoggedIn(ctx context.Context, obj interface{}, next graphql.Resolver) (re
 		return nil, errUserNotLoggedIn
 	}
 
-	if postgres.IsTokenRevokedOrNotFound(ctx, userID, authorization) {
+	if redis.IsAccessTokenRevoked(authorization) {
 		return nil, errUserNotLoggedIn
 	}
 

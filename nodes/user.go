@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -26,7 +27,7 @@ func userFromContext(c echo.Context) *postgres.User {
 		return nil
 	}
 
-	if postgres.IsTokenRevokedOrNotFound(c.Request().Context(), userID, authorization) {
+	if redis.IsAccessTokenRevoked(authorization) {
 		return nil
 	}
 

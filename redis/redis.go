@@ -15,11 +15,13 @@ import (
 
 	"github.com/cespare/xxhash"
 	"github.com/go-redis/redis"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
+	zl "github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
 var client *redis.Client
+var log *zerolog.Logger
 
 func InitializeRedis(ctx context.Context) {
 	client = redis.NewClient(&redis.Options{
@@ -38,7 +40,8 @@ func InitializeRedis(ctx context.Context) {
 		panic(ping.Err())
 	}
 
-	log.Ctx(ctx).Info().Msg("Redis initialized")
+	log = zl.Ctx(ctx)
+	log.Info().Msg("Redis initialized")
 }
 
 func CanIncrement(ip string, action string, object string, expiration time.Duration) bool {
@@ -136,4 +139,20 @@ func GetVersionUploadState(versionID string) (*generated.CreateVersionResponse, 
 	}
 
 	return data.Data, nil
+}
+
+func RevokeAccessToken(token string) {
+	redisKey := "user:token:" + token + ":revoked"
+
+	client.Set(redisKey, true, time.Hour*24*30)
+}
+
+func IsAccessTokenRevoked(token string) bool {
+	redisKey := "user:token:" + token + ":revoked"
+	res, err := client.Exists(redisKey).Result()
+	if err != nil {
+		log.Err(errors.New("redis call to get user token failed"))
+	}
+
+	return res == 1
 }
