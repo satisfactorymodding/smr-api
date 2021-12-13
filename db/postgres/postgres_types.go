@@ -40,7 +40,8 @@ type UserSession struct {
 	UserID string `gorm:"primaryKey"`
 	Token  string `gorm:"type:varchar(256);unique_index,primaryKey"`
 
-	Revoked bool
+	Revoked     bool
+	UserSession string
 }
 
 type Mod struct {
