@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
   app:
@@ -25,12 +25,13 @@ services:
       POSTGRES_PASSWORD: REPLACE_ME
     ports:
       - 5432:5432
-
-  minio:
-    image: minio/minio
-    ports:
+      - 6379:6379
       - 9000:9000
       - 9001:9001
+  
+  minio:
+    image: minio/minio
+    network_mode: service:postgres
     entrypoint: sh
     command: -c 'mkdir -p /data/smr && /usr/bin/docker-entrypoint.sh minio server /data --console-address ":9001"'
     environment:
