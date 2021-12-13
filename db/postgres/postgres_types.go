@@ -40,9 +40,7 @@ type UserSession struct {
 	UserID string `gorm:"primaryKey"`
 	Token  string `gorm:"type:varchar(256);unique_index,primaryKey"`
 
-	UserAgent string
-	Revoked   bool
-	// Maybe include IP here for showing to the user eventually?
+	Revoked bool
 }
 
 type Mod struct {

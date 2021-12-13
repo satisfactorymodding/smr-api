@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"github.com/o1egl/paseto"
@@ -17,8 +18,11 @@ var pasetoV2 *paseto.V2
 func InitializeSecurity() {
 	var err error
 	privateKey, err = hex.DecodeString(viper.GetString("paseto.private_key"))
-	publicKey, err = hex.DecodeString(viper.GetString("paseto.public_key"))
+	if err != nil {
+		panic(err)
+	}
 
+	publicKey, err = hex.DecodeString(viper.GetString("paseto.public_key"))
 	if err != nil {
 		panic(err)
 	}
@@ -26,11 +30,11 @@ func InitializeSecurity() {
 	pasetoV2 = paseto.NewV2()
 }
 
-func GenerateUserToken(userId string) string {
+func GenerateUserToken(userID string) string {
 	jsonToken := paseto.JSONToken{
 		Expiration: time.Now().Add(time.Hour * 24 * 30),
 	}
-	jsonToken.Set("userID", userId)
+	jsonToken.Set("userID", userID)
 
 	token, err := pasetoV2.Sign(privateKey, jsonToken, nil)
 
@@ -44,6 +48,8 @@ func GenerateUserToken(userId string) string {
 func VerifyUserToken(token string) (paseto.JSONToken, error) {
 	var payload paseto.JSONToken
 	err := pasetoV2.Verify(token, publicKey, &payload, nil)
-
-	return payload, err
+	if err != nil {
+		return payload, fmt.Errorf("unable to verify user token: %w", err)
+	}
+	return payload, nil
 }
