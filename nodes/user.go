@@ -58,7 +58,7 @@ func getMe(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
 // @Success 200
 // @Router /user/me/logout [get]
 func getLogout(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
-	postgres.LogoutSession(c.Request().Context(), c.Request().Header.Get("Authorization"))
+	postgres.LogoutSession(c.Request().Context(), user.ID, c.Request().Header.Get("Authorization"))
 	return nil, nil
 }
 
