@@ -162,21 +162,17 @@ type Announcement struct {
 type Tag struct {
 	SMRModel
 
-	Name string `gorm:"primary_key;type:varchar(20)"`
+	Name string `gorm:"type:varchar(24)"`
 
 	Mods []Mod `gorm:"many2many:mod_tags"`
 }
 
 type ModTag struct {
-	SMRModel
-
-	TagID string `gorm:"primary_key;type:varchar(20)"`
+	TagID string `gorm:"primary_key;type:varchar(24)"`
 	ModID string `gorm:"primary_key;type:varchar(16)"`
 }
 
 type GuideTag struct {
-	SMRModel
-
-	TagID   string `gorm:"primary_key;type:varchar(20)"`
+	TagID   string `gorm:"primary_key;type:varchar(24)"`
 	GuideID string `gorm:"primary_key;type:varchar(16)"`
 }

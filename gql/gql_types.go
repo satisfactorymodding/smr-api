@@ -61,6 +61,7 @@ func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 		LastVersionDate:  &LastVersionDate,
 		ModReference:     mod.ModReference,
 		Hidden:           mod.Hidden,
+		Tags:             DBTagsToGeneratedSlice(mod.Tags),
 	}
 }
 
@@ -183,7 +184,6 @@ func DBTagToGenerated(tag *postgres.Tag) *generated.Tag {
 	if tag == nil {
 		return nil
 	}
-
 	return &generated.Tag{
 		Name: tag.Name,
 		ID:   tag.ID,

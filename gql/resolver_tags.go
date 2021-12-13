@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -95,7 +96,24 @@ func (r *queryResolver) GetTags(ctx context.Context, filter *generated.TagFilter
 	wrapper, newCtx := WrapQueryTrace(ctx, "getTags")
 	defer wrapper.end()
 
-	tags := postgres.GetTags(&newCtx)
+	insertFilterDefaults(filter)
+	tags := postgres.GetTags(&newCtx, filter)
 
 	return DBTagsToGeneratedSlice(tags), nil
+}
+
+func insertFilterDefaults(filter *generated.TagFilter) {
+	fmt.Printf("%#v", filter)
+	offset := 0
+	limit := 10
+	order := generated.OrderDesc
+	if filter.Offset == nil {
+		filter.Offset = &offset
+	}
+	if filter.Limit == nil {
+		filter.Limit = &limit
+	}
+	if filter.Order == nil {
+		filter.Order = &order
+	}
 }

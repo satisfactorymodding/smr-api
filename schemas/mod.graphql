@@ -13,7 +13,6 @@ enum ModFields {
     popularity
     last_version_date
     search
-    tags
 }
 
 type Mod {
@@ -34,7 +33,7 @@ type Mod {
     last_version_date: Date
     mod_reference: ModReference!
     hidden: Boolean!
-    tags: [TagID!]
+    tags: [Tag!]
 
     authors: [UserMod!]!
     version(version: String!): Version
@@ -63,7 +62,7 @@ input ModFilter {
     ids: [String!]
     references: [String!]
     hidden: Boolean
-    tags: [TagID!]
+    tagIDs: [TagID!]
 }
 
 input NewMod {
@@ -74,7 +73,7 @@ input NewMod {
     source_url: String
     mod_reference: ModReference!
     hidden: Boolean
-    tags: [TagID!]
+    tagIDs: [TagID!]
 }
 
 input UpdateMod {
@@ -86,7 +85,7 @@ input UpdateMod {
     mod_reference: ModReference
     authors: [UpdateUserMod!]
     hidden: Boolean
-    tags: [TagID!]
+    tagIDs: [TagID!]
 }
 
 input UpdateUserMod {

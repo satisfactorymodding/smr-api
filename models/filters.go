@@ -106,7 +106,7 @@ type ModFilter struct {
 	References []string             `json:"references" validate:"omitempty,max=100"`
 	Hidden     *bool                `json:"hidden"`
 	Fields     []string             `json:"-"`
-	Tags       []string             `json:"tags"`
+	TagIDs     []string             `json:"tagIDs" validate:"dive,min=3,max=24"`
 }
 
 func DefaultModFilter() *ModFilter {
@@ -142,8 +142,7 @@ func (f *ModFilter) AddField(name string) {
 		"created_at",
 		"last_version_date",
 		"mod_reference",
-		"hidden",
-		"tags":
+		"hidden":
 		f.Fields = append(f.Fields, "mods."+name)
 	}
 }
@@ -329,3 +328,41 @@ func ProcessBootstrapVersionFilter(filter map[string]interface{}) (*BootstrapVer
 
 	return base, nil
 }
+
+//type TagFilter struct {
+//	Limit  *int             `json:"limit" validate:"omitempty,min=1,max=100"`
+//	Offset *int             `json:"offset" validate:"omitempty,min=0"`
+//	Order  *generated.Order `json:"order"`
+//	Search *string          `json:"search" validate:"omitempty,min=3"`
+//	Ids    []string         `json:"ids" validate:"omitempty,max=100"`
+//}
+//
+//func DefaultTagFilter() *TagFilter {
+//	limit := 10
+//	offset := 0
+//	order := generated.OrderDesc
+//	return &TagFilter{
+//		Limit:  &limit,
+//		Offset: &offset,
+//		Ids:    nil,
+//		Order:  &order,
+//	}
+//}
+//
+//func ProcessTagFilter(filter map[string]interface{}) (*TagFilter, error) {
+//	base := DefaultTagFilter()
+//
+//	if filter == nil {
+//		return base, nil
+//	}
+//
+//	if err := ApplyChanges(filter, base); err != nil {
+//		return nil, err
+//	}
+//
+//	if err := dataValidator.Struct(base); err != nil {
+//		return nil, errors.Wrap(err, "failed to validate TagFilter")
+//	}
+//
+//	return base, nil
+//}
