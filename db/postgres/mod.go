@@ -209,8 +209,9 @@ func NewModQuery(filter *models.ModFilter, unapproved bool, ctx *context.Context
 	}
 
 	query = query.Where("approved = ? AND denied = ?", !unapproved, false)
-
+	query.Preload("Tags")
 	if filter != nil {
+
 		if filter.Search != nil && *filter.Search != "" {
 			cleanSearch := strings.Replace(strings.TrimSpace(*filter.Search), " ", " & ", -1)
 			sub := DBCtx(ctx).Table("mods")
@@ -232,7 +233,7 @@ func NewModQuery(filter *models.ModFilter, unapproved bool, ctx *context.Context
 				if string(*filter.OrderBy) == "last_version_date" {
 					query = query.Order("case when last_version_date is null then 1 else 0 end, last_version_date " + string(*filter.Order))
 				} else {
-					query = query.Order(string(*filter.OrderBy) + " " + string(*filter.Order))
+					query = query.Order("mods." + string(*filter.OrderBy) + " " + string(*filter.Order))
 				}
 			}
 		}
@@ -242,7 +243,7 @@ func NewModQuery(filter *models.ModFilter, unapproved bool, ctx *context.Context
 		}
 
 		if filter.Ids != nil && len(filter.Ids) > 0 {
-			query = query.Where("id in (?)", filter.Ids)
+			query = query.Where("mods.id in (?)", filter.Ids)
 		} else if filter.References != nil && len(filter.References) > 0 {
 			query = query.Where("mod_reference in (?)", filter.References)
 		}
@@ -251,11 +252,8 @@ func NewModQuery(filter *models.ModFilter, unapproved bool, ctx *context.Context
 			query = query.Select(filter.Fields)
 		}
 
-		if filter.Tags != nil && len(filter.Tags) > 0 {
-			sub := DBCtx(ctx).Table("mod_tags")
-			sub.Select("mod_id").Where("tag_id in (?)", filter.Tags)
-
-			query.Where("id IN (?)", sub)
+		if filter.TagIDs != nil && len(filter.TagIDs) > 0 {
+			query.Joins("INNER JOIN mod_tags on mod_tags.tag_id in ? AND mod_tags.mod_id = mods.id", filter.TagIDs)
 		}
 	}
 
@@ -263,7 +261,7 @@ func NewModQuery(filter *models.ModFilter, unapproved bool, ctx *context.Context
 }
 
 func ClearModTags(mod *Mod, ctx *context.Context) error {
-	r := DBCtx(ctx).Delete(&ModTag{ModID: mod.ID})
+	r := DBCtx(ctx).Where("mod_id = ?", mod.ID).Delete(&ModTag{})
 	return r.Error
 }
 

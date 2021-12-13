@@ -83,7 +83,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 		}
 	}
 
-	err = postgres.SetModTags(resultMod, mod.Tags, &newCtx)
+	err = postgres.SetModTags(resultMod, mod.TagIDs, &newCtx)
 
 	return DBModToGenerated(resultMod), err
 }
@@ -183,7 +183,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 		return DBModToGenerated(dbMod), err
 	}
 
-	err = postgres.SetModTags(dbMod, mod.Tags, &newCtx)
+	err = postgres.SetModTags(dbMod, mod.TagIDs, &newCtx)
 	if err != nil {
 		return DBModToGenerated(dbMod), err
 	}
