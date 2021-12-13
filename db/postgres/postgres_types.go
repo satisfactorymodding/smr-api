@@ -36,6 +36,7 @@ type User struct {
 type UserSession struct {
 	SMRDates
 
+	// composite primary key
 	UserID string `gorm:"primaryKey"`
 	Token  string `gorm:"type:varchar(256);unique_index,primaryKey"`
 
