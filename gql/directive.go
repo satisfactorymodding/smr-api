@@ -143,7 +143,7 @@ func isLoggedIn(ctx context.Context, obj interface{}, next graphql.Resolver) (re
 		return nil, errUserNotLoggedIn
 	}
 
-	if redis.IsAccessTokenRevoked(authorization) {
+	if redis.IsAccessTokenRevoked(ctx, authorization) {
 		return nil, errUserNotLoggedIn
 	}
 

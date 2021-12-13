@@ -27,7 +27,7 @@ func userFromContext(c echo.Context) *postgres.User {
 		return nil
 	}
 
-	if redis.IsAccessTokenRevoked(authorization) {
+	if redis.IsAccessTokenRevoked(c.Request().Context(), authorization) {
 		return nil
 	}
 
