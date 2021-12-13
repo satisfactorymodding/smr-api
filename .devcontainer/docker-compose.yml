@@ -6,14 +6,17 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VARIANT: 1-bullseye
+        VARIANT: "1-bullseye"
+        NODE_VERSION: "none"
     volumes:
       - ..:/workspace:cached
+    cap_add:
+      - SYS_PTRACE
+    network_mode: service:postgres
 
   redis:
     image: redis:alpine
-    ports:
-      - 6379:6379
+    network_mode: service:postgres
 
   postgres:
     image: postgres:alpine
