@@ -28,6 +28,7 @@ services:
       - 6379:6379
       - 9000:9000
       - 9001:9001
+      - 5020:5020
   
   minio:
     image: minio/minio
