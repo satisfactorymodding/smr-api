@@ -122,18 +122,33 @@ func canEditGuide(ctx context.Context, obj interface{}, next graphql.Resolver, f
 	return nil, errors.New("user not authorized to perform this action")
 }
 
+var errUserNotLoggedIn = errors.New("user not logged in")
+
 func isLoggedIn(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 	header := ctx.Value(util.ContextHeader{}).(http.Header)
 	authorization := header.Get("Authorization")
 
 	if authorization == "" {
-		return nil, errors.New("user not logged in")
+		return nil, errUserNotLoggedIn
 	}
 
-	user := postgres.GetUserByToken(ctx, authorization)
+	payload, err := util.VerifyUserToken(authorization)
+	if err != nil {
+		return nil, errors.New("invalid user authorization token")
+	}
 
+	userID := payload.Get("userID")
+	if userID == "" {
+		return nil, errUserNotLoggedIn
+	}
+
+	if postgres.IsTokenRevokedOrNotFound(ctx, userID, authorization) {
+		return nil, errUserNotLoggedIn
+	}
+
+	user := postgres.GetUserByID(ctx, userID)
 	if user == nil {
-		return nil, errors.New("user not logged in")
+		return nil, errUserNotLoggedIn
 	}
 
 	if user.Banned {
@@ -150,9 +165,10 @@ func isNotLoggedIn(ctx context.Context, obj interface{}, next graphql.Resolver) 
 	authorization := header.Get("Authorization")
 
 	if authorization != "" {
-		user := postgres.GetUserByToken(ctx, authorization)
+		payload, _ := util.VerifyUserToken(authorization)
+		userID := payload.Get("userID")
 
-		if user != nil {
+		if userID != "" {
 			return nil, errors.New("user is logged in")
 		}
 	}

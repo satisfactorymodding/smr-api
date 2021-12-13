@@ -67,12 +67,9 @@ func GetUserSession(ctx context.Context, oauthUser *oauth.UserData, userAgent st
 	// DBCtx(ctx).Delete(&UserSession{UserAgent: userAgent})
 
 	session := UserSession{
-		User:      user,
-		Token:     util.GenerateUserToken(),
+		Token:     util.GenerateUserToken(user.ID),
 		UserAgent: userAgent,
 	}
-
-	session.ID = util.GenerateUniqueID()
 
 	// Create a new session
 	DBCtx(ctx).Create(&session)
@@ -85,23 +82,14 @@ func LogoutSession(ctx context.Context, token string) {
 	DBCtx(ctx).Delete(&UserSession{Token: token})
 }
 
-func GetUserByToken(ctx context.Context, token string) *User {
-	// TODO Merge into a single query
+func IsTokenRevokedOrNotFound(ctx context.Context, userID string, token string) bool {
 	var session UserSession
-	DBCtx(ctx).Find(&session, UserSession{Token: token})
-
-	if session.ID == "" {
-		return nil
+	findReq := DBCtx(ctx).Find(&session, UserSession{UserID: userID, Token: token})
+	if findReq.RowsAffected == 0 {
+		return true
 	}
 
-	var user User
-	DBCtx(ctx).Find(&user, "id = ?", session.UserID)
-
-	if user.ID == "" {
-		return nil
-	}
-
-	return &user
+	return session.Revoked
 }
 
 func GetUserByID(ctx context.Context, userID string) *User {
