@@ -35,7 +35,7 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, guide generated.NewG
 
 	dbGuide.UserID = user.ID
 
-	resultGuide, err := postgres.CreateGuide(dbGuide, &newCtx)
+	resultGuide, err := postgres.CreateGuide(newCtx, dbGuide)
 
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, guid
 	SetStringINNOE(guide.ShortDescription, &dbGuide.ShortDescription)
 	SetStringINNOE(guide.Guide, &dbGuide.Guide)
 
-	postgres.Save(&dbGuide, &newCtx)
+	postgres.Save(newCtx, &dbGuide)
 
 	return DBGuideToGenerated(dbGuide), nil
 }
@@ -84,13 +84,13 @@ func (r *mutationResolver) DeleteGuide(ctx context.Context, guideID string) (boo
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteGuide")
 	defer wrapper.end()
 
-	dbGuide := postgres.GetGuideByID(guideID, &newCtx)
+	dbGuide := postgres.GetGuideByID(newCtx, guideID)
 
 	if dbGuide == nil {
 		return false, errors.New("guide not found")
 	}
 
-	postgres.Delete(&dbGuide, &newCtx)
+	postgres.Delete(newCtx, &dbGuide)
 
 	return true, nil
 }
@@ -99,11 +99,11 @@ func (r *queryResolver) GetGuide(ctx context.Context, guideID string) (*generate
 	wrapper, newCtx := WrapQueryTrace(ctx, "getGuide")
 	defer wrapper.end()
 
-	guide := postgres.GetGuideByID(guideID, &newCtx)
+	guide := postgres.GetGuideByID(newCtx, guideID)
 
 	if guide != nil {
 		if redis.CanIncrement(RealIP(ctx), "view", "guide:"+guideID, time.Hour*4) {
-			postgres.IncrementGuideViews(guide, &newCtx)
+			postgres.IncrementGuideViews(newCtx, guide)
 		}
 	}
 
@@ -132,9 +132,9 @@ func (r *getGuidesResolver) Guides(ctx context.Context, obj *generated.GetGuides
 	var guides []postgres.Guide
 
 	if guideFilter.Ids == nil || len(guideFilter.Ids) == 0 {
-		guides = postgres.GetGuides(guideFilter, &newCtx)
+		guides = postgres.GetGuides(newCtx, guideFilter)
 	} else {
-		guides = postgres.GetGuidesByID(guideFilter.Ids, &newCtx)
+		guides = postgres.GetGuidesByID(newCtx, guideFilter.Ids)
 	}
 
 	if guides == nil {
@@ -164,7 +164,7 @@ func (r *getGuidesResolver) Count(ctx context.Context, obj *generated.GetGuides)
 		return len(guideFilter.Ids), nil
 	}
 
-	return int(postgres.GetGuideCount(guideFilter, &newCtx)), nil
+	return int(postgres.GetGuideCount(newCtx, guideFilter)), nil
 }
 
 type guideResolver struct{ *Resolver }
@@ -173,7 +173,7 @@ func (r *guideResolver) User(ctx context.Context, obj *generated.Guide) (*genera
 	wrapper, newCtx := WrapQueryTrace(ctx, "Guide.user")
 	defer wrapper.end()
 
-	user := postgres.GetUserByID(obj.UserID, &newCtx)
+	user := postgres.GetUserByID(newCtx, obj.UserID)
 
 	if user == nil {
 		return nil, errors.New("user not found")

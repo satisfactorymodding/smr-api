@@ -1,7 +1,6 @@
 package util
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -39,9 +38,4 @@ func OneOf(c echo.Context, param string, options []string, def string) string {
 	}
 
 	return def
-}
-
-func Context(c echo.Context) *context.Context {
-	temp := c.Request().Context()
-	return &temp
 }

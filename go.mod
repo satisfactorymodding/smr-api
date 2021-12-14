@@ -31,6 +31,7 @@ require (
 	github.com/swaggo/echo-swagger v1.1.4
 	github.com/swaggo/swag v1.7.6
 	github.com/vektah/gqlparser/v2 v2.2.0
+	github.com/vmihailenco/taskq/extra/taskqotel/v3 v3.2.8
 	github.com/vmihailenco/taskq/v3 v3.2.8
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.opentelemetry.io/contrib v1.2.0

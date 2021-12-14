@@ -13,7 +13,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func GetVersionsByID(versionIds []string, ctx *context.Context) []Version {
+func GetVersionsByID(ctx context.Context, versionIds []string) []Version {
 	cacheKey := "GetVersionsById_" + strings.Join(versionIds, ":")
 	if versions, ok := dbCache.Get(cacheKey); ok {
 		return versions.([]Version)
@@ -31,7 +31,7 @@ func GetVersionsByID(versionIds []string, ctx *context.Context) []Version {
 	return versions
 }
 
-func GetModLatestVersions(modID string, unapproved bool, ctx *context.Context) *[]Version {
+func GetModLatestVersions(ctx context.Context, modID string, unapproved bool) *[]Version {
 	cacheKey := "GetModLatestVersions_" + modID + "_" + fmt.Sprint(unapproved)
 	if versions, ok := dbCache.Get(cacheKey); ok {
 		return versions.(*[]Version)
@@ -50,7 +50,7 @@ func GetModLatestVersions(modID string, unapproved bool, ctx *context.Context) *
 	return &versions
 }
 
-func GetModsLatestVersions(modIds []string, unapproved bool, ctx *context.Context) *[]Version {
+func GetModsLatestVersions(ctx context.Context, modIds []string, unapproved bool) *[]Version {
 	cacheKey := "GetModsLatestVersions_" + strings.Join(modIds, ":") + "_" + fmt.Sprint(unapproved)
 	if versions, ok := dbCache.Get(cacheKey); ok {
 		return versions.(*[]Version)
@@ -69,7 +69,7 @@ func GetModsLatestVersions(modIds []string, unapproved bool, ctx *context.Contex
 	return &versions
 }
 
-func GetModVersions(modID string, limit int, offset int, orderBy string, order string, unapproved bool, ctx *context.Context) []Version {
+func GetModVersions(ctx context.Context, modID string, limit int, offset int, orderBy string, order string, unapproved bool) []Version {
 	cacheKey := "GetModVersions_" + modID + "_" + fmt.Sprint(limit) + "_" + fmt.Sprint(offset) + "_" + orderBy + "_" + order + "_" + fmt.Sprint(unapproved)
 	if versions, ok := dbCache.Get(cacheKey); ok {
 		return versions.([]Version)
@@ -83,7 +83,7 @@ func GetModVersions(modID string, limit int, offset int, orderBy string, order s
 	return versions
 }
 
-func GetModVersionsNew(modID string, filter *models.VersionFilter, unapproved bool, ctx *context.Context) []Version {
+func GetModVersionsNew(ctx context.Context, modID string, filter *models.VersionFilter, unapproved bool) []Version {
 	hash, err := filter.Hash()
 	cacheKey := ""
 	if err == nil {
@@ -111,7 +111,7 @@ func GetModVersionsNew(modID string, filter *models.VersionFilter, unapproved bo
 	return versions
 }
 
-func GetModVersion(modID string, versionID string, ctx *context.Context) *Version {
+func GetModVersion(ctx context.Context, modID string, versionID string) *Version {
 	cacheKey := "GetModVersion_" + modID + "_" + versionID
 	if version, ok := dbCache.Get(cacheKey); ok {
 		return version.(*Version)
@@ -129,7 +129,7 @@ func GetModVersion(modID string, versionID string, ctx *context.Context) *Versio
 	return &version
 }
 
-func GetModVersionByName(modID string, versionName string, ctx *context.Context) *Version {
+func GetModVersionByName(ctx context.Context, modID string, versionName string) *Version {
 	cacheKey := "GetModVersionByName_" + modID + "_" + versionName
 	if version, ok := dbCache.Get(cacheKey); ok {
 		return version.(*Version)
@@ -147,7 +147,7 @@ func GetModVersionByName(modID string, versionName string, ctx *context.Context)
 	return &version
 }
 
-func CreateVersion(version *Version, ctx *context.Context) error {
+func CreateVersion(ctx context.Context, version *Version) error {
 	var versionCount int64
 	DBCtx(ctx).Model(Version{}).Where("mod_id = ? AND version = ?", version.ModID, version.Version).Count(&versionCount)
 
@@ -171,11 +171,11 @@ func CreateVersion(version *Version, ctx *context.Context) error {
 	return nil
 }
 
-func IncrementVersionDownloads(version *Version, ctx *context.Context) {
+func IncrementVersionDownloads(ctx context.Context, version *Version) {
 	DBCtx(ctx).Model(version).Update("downloads", version.Downloads+1)
 }
 
-func GetVersion(versionID string, ctx *context.Context) *Version {
+func GetVersion(ctx context.Context, versionID string) *Version {
 	cacheKey := "GetVersion_" + versionID
 	if version, ok := dbCache.Get(cacheKey); ok {
 		return version.(*Version)
@@ -193,19 +193,7 @@ func GetVersion(versionID string, ctx *context.Context) *Version {
 	return &version
 }
 
-func GetVersions(limit int, offset int, orderBy string, order string, search string, unapproved bool, ctx *context.Context) []Version {
-	var versions []Version
-	query := DBCtx(ctx).Limit(limit).Offset(offset).Order(orderBy+" "+order).Where("approved = ? AND denied = ?", !unapproved, false)
-
-	if search != "" {
-		query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.Replace(search, " ", " & ", -1))
-	}
-
-	query.Find(&versions)
-	return versions
-}
-
-func GetVersionsNew(filter *models.VersionFilter, unapproved bool, ctx *context.Context) []Version {
+func GetVersionsNew(ctx context.Context, filter *models.VersionFilter, unapproved bool) []Version {
 	hash, err := filter.Hash()
 	cacheKey := ""
 	if err == nil {
@@ -241,19 +229,7 @@ func GetVersionsNew(filter *models.VersionFilter, unapproved bool, ctx *context.
 	return versions
 }
 
-func GetVersionCount(search string, unapproved bool, ctx *context.Context) int64 {
-	var versionCount int64
-	query := DBCtx(ctx).Model(Version{}).Where("approved = ? AND denied = ?", !unapproved, false)
-
-	if search != "" {
-		query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.Replace(search, " ", " & ", -1))
-	}
-
-	query.Count(&versionCount)
-	return versionCount
-}
-
-func GetVersionCountNew(filter *models.VersionFilter, unapproved bool, ctx *context.Context) int64 {
+func GetVersionCountNew(ctx context.Context, filter *models.VersionFilter, unapproved bool) int64 {
 	hash, err := filter.Hash()
 	cacheKey := ""
 	if err == nil {
@@ -281,7 +257,7 @@ func GetVersionCountNew(filter *models.VersionFilter, unapproved bool, ctx *cont
 	return versionCount
 }
 
-func GetVersionDependencies(versionID string, ctx *context.Context) []VersionDependency {
+func GetVersionDependencies(ctx context.Context, versionID string) []VersionDependency {
 	var versionDependencies []VersionDependency
 	DBCtx(ctx).Where("version_id = ?", versionID).Find(&versionDependencies)
 	return versionDependencies

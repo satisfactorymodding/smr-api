@@ -3,10 +3,8 @@ package nodes
 import (
 	"strings"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
-	"github.com/satisfactorymodding/smr-api/util"
-
 	"github.com/labstack/echo/v4"
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 )
 
 func userFromContext(c echo.Context) *postgres.User {
@@ -16,7 +14,7 @@ func userFromContext(c echo.Context) *postgres.User {
 		return nil
 	}
 
-	user := postgres.GetUserByToken(authorization, util.Context(c))
+	user := postgres.GetUserByToken(c.Request().Context(), authorization)
 
 	if user == nil {
 		return nil
@@ -44,7 +42,7 @@ func getMe(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
 // @Success 200
 // @Router /user/me/logout [get]
 func getLogout(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
-	postgres.LogoutSession(c.Request().Header.Get("Authorization"), util.Context(c))
+	postgres.LogoutSession(c.Request().Context(), c.Request().Header.Get("Authorization"))
 	return nil, nil
 }
 
@@ -56,7 +54,7 @@ func getLogout(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse
 // @Success 200
 // @Router /user/me/mods [get]
 func getMyMods(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
-	mods := postgres.GetUserMods(user.ID, util.Context(c))
+	mods := postgres.GetUserMods(c.Request().Context(), user.ID)
 
 	converted := make([]*UserMod, len(mods))
 	for k, v := range mods {
@@ -81,7 +79,7 @@ func getUsers(c echo.Context) (interface{}, *ErrorResponse) {
 
 	// TODO limit amount of users requestable
 
-	users := postgres.GetUsersByID(userIDSplit, util.Context(c))
+	users := postgres.GetUsersByID(c.Request().Context(), userIDSplit)
 
 	if users == nil {
 		return nil, &ErrorUserNotFound
@@ -106,13 +104,13 @@ func getUsers(c echo.Context) (interface{}, *ErrorResponse) {
 func getUserMods(c echo.Context) (interface{}, *ErrorResponse) {
 	userID := c.Param("userId")
 
-	user := postgres.GetUserByID(userID, util.Context(c))
+	user := postgres.GetUserByID(c.Request().Context(), userID)
 
 	if user == nil {
 		return nil, &ErrorUserNotFound
 	}
 
-	mods := postgres.GetUserMods(user.ID, util.Context(c))
+	mods := postgres.GetUserMods(c.Request().Context(), user.ID)
 
 	converted := make([]*UserMod, len(mods))
 	for k, v := range mods {
@@ -133,7 +131,7 @@ func getUserMods(c echo.Context) (interface{}, *ErrorResponse) {
 func getUser(c echo.Context) (interface{}, *ErrorResponse) {
 	userID := c.Param("userId")
 
-	user := postgres.GetUserByID(userID, util.Context(c))
+	user := postgres.GetUserByID(c.Request().Context(), userID)
 
 	if user == nil {
 		return nil, &ErrorUserNotFound

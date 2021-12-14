@@ -27,7 +27,7 @@ func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (str
 	wrapper, newCtx := WrapMutationTrace(ctx, "createVersion")
 	defer wrapper.end()
 
-	mod := postgres.GetModByID(modID, &newCtx)
+	mod := postgres.GetModByID(newCtx, modID)
 
 	if mod == nil {
 		return "", errors.New("mod not found")
@@ -56,7 +56,7 @@ func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, 
 		return false, errors.New("files can consist of max 41 chunks")
 	}
 
-	mod := postgres.GetModByID(modID, &newCtx)
+	mod := postgres.GetModByID(newCtx, modID)
 
 	if mod == nil {
 		return false, errors.New("mod not found")
@@ -86,7 +86,7 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 	wrapper, newCtx := WrapMutationTrace(ctx, "finalizeCreateVersion")
 	defer wrapper.end()
 
-	mod := postgres.GetModByID(modID, &newCtx)
+	mod := postgres.GetModByID(newCtx, modID)
 
 	if mod == nil {
 		return false, errors.New("mod not found")
@@ -100,6 +100,8 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 		return false, errors.New("you must update your mod reference on the site to match your mod_reference in your data.json")
 	}
 
+	log.Ctx(ctx).Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("finalization gql call")
+
 	go func(ctx context.Context, mod *postgres.Mod, versionID string, version generated.NewVersion) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -111,11 +113,15 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 			}
 		}()
 
+		log.Ctx(ctx).Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("calling FinalizeVersionUploadAsync")
+
 		data, err := FinalizeVersionUploadAsync(ctx, mod, versionID, version)
 		if err2 := redis.StoreVersionUploadState(versionID, data, err); err2 != nil {
 			log.Ctx(ctx).Err(err2).Msg("error storing redis state")
 			return
 		}
+
+		log.Ctx(ctx).Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("finished FinalizeVersionUploadAsync")
 
 		if err != nil {
 			log.Ctx(ctx).Err(err).Msgf("error completing version upload [%s]", versionID)
@@ -131,7 +137,7 @@ func (r *mutationResolver) UpdateVersion(ctx context.Context, versionID string, 
 	wrapper, newCtx := WrapMutationTrace(ctx, "updateVersion")
 	defer wrapper.end()
 
-	dbVersion := postgres.GetVersion(versionID, &newCtx)
+	dbVersion := postgres.GetVersion(newCtx, versionID)
 
 	if dbVersion == nil {
 		return nil, errors.New("version not found")
@@ -140,7 +146,7 @@ func (r *mutationResolver) UpdateVersion(ctx context.Context, versionID string, 
 	SetStringINNOE(version.Changelog, &dbVersion.Changelog)
 	SetStabilityINN(version.Stability, &dbVersion.Stability)
 
-	postgres.Save(&dbVersion, &newCtx)
+	postgres.Save(newCtx, &dbVersion)
 
 	return DBVersionToGenerated(dbVersion), nil
 }
@@ -149,13 +155,13 @@ func (r *mutationResolver) DeleteVersion(ctx context.Context, versionID string) 
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteVersion")
 	defer wrapper.end()
 
-	dbVersion := postgres.GetVersion(versionID, &newCtx)
+	dbVersion := postgres.GetVersion(newCtx, versionID)
 
 	if dbVersion == nil {
 		return false, errors.New("version not found")
 	}
 
-	postgres.Delete(&dbVersion, &newCtx)
+	postgres.Delete(newCtx, &dbVersion)
 
 	return true, nil
 }
@@ -164,7 +170,7 @@ func (r *mutationResolver) ApproveVersion(ctx context.Context, versionID string)
 	wrapper, newCtx := WrapMutationTrace(ctx, "approveVersion")
 	defer wrapper.end()
 
-	dbVersion := postgres.GetVersion(versionID, &newCtx)
+	dbVersion := postgres.GetVersion(newCtx, versionID)
 
 	if dbVersion == nil {
 		return false, errors.New("version not found")
@@ -172,12 +178,12 @@ func (r *mutationResolver) ApproveVersion(ctx context.Context, versionID string)
 
 	dbVersion.Approved = true
 
-	postgres.Save(&dbVersion, &newCtx)
+	postgres.Save(newCtx, &dbVersion)
 
-	mod := postgres.GetModByID(dbVersion.ModID, &newCtx)
+	mod := postgres.GetModByID(newCtx, dbVersion.ModID)
 	now := time.Now()
 	mod.LastVersionDate = &now
-	postgres.Save(&mod, &newCtx)
+	postgres.Save(newCtx, &mod)
 
 	go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
 
@@ -188,7 +194,7 @@ func (r *mutationResolver) DenyVersion(ctx context.Context, versionID string) (b
 	wrapper, newCtx := WrapMutationTrace(ctx, "denyVersion")
 	defer wrapper.end()
 
-	dbVersion := postgres.GetVersion(versionID, &newCtx)
+	dbVersion := postgres.GetVersion(newCtx, versionID)
 
 	if dbVersion == nil {
 		return false, errors.New("version not found")
@@ -196,11 +202,11 @@ func (r *mutationResolver) DenyVersion(ctx context.Context, versionID string) (b
 
 	dbVersion.Denied = true
 
-	postgres.Save(&dbVersion, &newCtx)
-	postgres.Delete(&dbVersion, &newCtx)
+	postgres.Save(newCtx, &dbVersion)
+	postgres.Delete(newCtx, &dbVersion)
 
-	mod := postgres.GetModByID(dbVersion.ModID, &newCtx)
-	postgres.Save(&mod, &newCtx)
+	mod := postgres.GetModByID(newCtx, dbVersion.ModID)
+	postgres.Save(newCtx, &mod)
 
 	return true, nil
 }
@@ -208,7 +214,7 @@ func (r *mutationResolver) DenyVersion(ctx context.Context, versionID string) (b
 func (r *queryResolver) GetVersion(ctx context.Context, versionID string) (*generated.Version, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getVersion")
 	defer wrapper.end()
-	return DBVersionToGenerated(postgres.GetVersion(versionID, &newCtx)), nil
+	return DBVersionToGenerated(postgres.GetVersion(newCtx, versionID)), nil
 }
 
 func (r *queryResolver) GetVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
@@ -239,7 +245,7 @@ func (r *queryResolver) CheckVersionUploadState(ctx context.Context, modID strin
 	wrapper, newCtx := WrapQueryTrace(ctx, "checkVersionUploadState")
 	defer wrapper.end()
 
-	mod := postgres.GetModByID(modID, &newCtx)
+	mod := postgres.GetModByID(newCtx, modID)
 
 	if mod == nil {
 		return nil, errors.New("mod not found")
@@ -278,9 +284,9 @@ func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVers
 	var versions []postgres.Version
 
 	if versionFilter.Ids == nil || len(versionFilter.Ids) == 0 {
-		versions = postgres.GetVersionsNew(versionFilter, unapproved, &newCtx)
+		versions = postgres.GetVersionsNew(newCtx, versionFilter, unapproved)
 	} else {
-		versions = postgres.GetVersionsByID(versionFilter.Ids, &newCtx)
+		versions = postgres.GetVersionsByID(newCtx, versionFilter.Ids)
 	}
 
 	if versions == nil {
@@ -312,7 +318,7 @@ func (r *getVersionsResolver) Count(ctx context.Context, _ *generated.GetVersion
 		return len(versionFilter.Ids), nil
 	}
 
-	return int(postgres.GetVersionCountNew(versionFilter, unapproved, &newCtx)), nil
+	return int(postgres.GetVersionCountNew(newCtx, versionFilter, unapproved)), nil
 }
 
 type versionResolver struct{ *Resolver }
@@ -325,7 +331,7 @@ func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*gen
 	wrapper, newCtx := WrapQueryTrace(ctx, "Version.mod")
 	defer wrapper.end()
 
-	return DBModToGenerated(postgres.GetModByID(obj.ModID, &newCtx)), nil
+	return DBModToGenerated(postgres.GetModByID(newCtx, obj.ModID)), nil
 }
 
 var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config{
@@ -387,9 +393,9 @@ func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMy
 	var versions []postgres.Version
 
 	if versionFilter.Ids == nil || len(versionFilter.Ids) == 0 {
-		versions = postgres.GetVersionsNew(versionFilter, unapproved, &newCtx)
+		versions = postgres.GetVersionsNew(newCtx, versionFilter, unapproved)
 	} else {
-		versions = postgres.GetVersionsByID(versionFilter.Ids, &newCtx)
+		versions = postgres.GetVersionsByID(newCtx, versionFilter.Ids)
 	}
 
 	if versions == nil {
@@ -421,5 +427,5 @@ func (r *getMyVersionsResolver) Count(ctx context.Context, _ *generated.GetMyVer
 		return len(versionFilter.Ids), nil
 	}
 
-	return int(postgres.GetVersionCountNew(versionFilter, unapproved, &newCtx)), nil
+	return int(postgres.GetVersionCountNew(newCtx, versionFilter, unapproved)), nil
 }

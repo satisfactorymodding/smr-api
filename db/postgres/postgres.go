@@ -105,25 +105,26 @@ func InitializePostgres(ctx context.Context) {
 	log.Ctx(ctx).Info().Msg("Postgres initialized")
 }
 
-func Save(object interface{}, ctx *context.Context) {
+func Save(ctx context.Context, object interface{}) {
 	DBCtx(ctx).Save(object)
 }
 
-func Delete(object interface{}, ctx *context.Context) {
+func Delete(ctx context.Context, object interface{}) {
 	DBCtx(ctx).Delete(object)
 }
 
-func DeleteForced(object interface{}, ctx *context.Context) {
+func DeleteForced(ctx context.Context, object interface{}) {
 	DBCtx(ctx).Unscoped().Delete(object)
 }
 
-func GetDB() *gorm.DB {
-	return db
-}
-
-func DBCtx(ctx *context.Context) *gorm.DB {
+func DBCtx(ctx context.Context) *gorm.DB {
 	if ctx != nil {
-		return db.WithContext(*ctx)
+		dbCtx := DBFromContext(ctx)
+		if dbCtx != nil {
+			return dbCtx
+		}
+
+		return db.WithContext(ctx)
 	}
 
 	return db

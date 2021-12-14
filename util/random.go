@@ -33,11 +33,10 @@ func GenerateUniqueID() string {
 	result := make([]byte, 10)
 
 	randMutex.Lock()
+	defer randMutex.Unlock()
 
 	_, _ = io.ReadAtLeast(crand.Reader, randBuffer[:], len(randBuffer))
 	copy(result[6:], randBuffer[:])
-
-	randMutex.Unlock()
 
 	PutUint48(result[:6], uint64(time.Now().UnixNano()/1e6))
 

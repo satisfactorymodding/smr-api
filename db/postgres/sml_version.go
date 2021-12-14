@@ -8,7 +8,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func CreateSMLVersion(smlVersion *SMLVersion, ctx *context.Context) (*SMLVersion, error) {
+func CreateSMLVersion(ctx context.Context, smlVersion *SMLVersion) (*SMLVersion, error) {
 	smlVersion.ID = util.GenerateUniqueID()
 
 	DBCtx(ctx).Create(&smlVersion)
@@ -16,7 +16,7 @@ func CreateSMLVersion(smlVersion *SMLVersion, ctx *context.Context) (*SMLVersion
 	return smlVersion, nil
 }
 
-func GetSMLVersionByID(smlVersionID string, ctx *context.Context) *SMLVersion {
+func GetSMLVersionByID(ctx context.Context, smlVersionID string) *SMLVersion {
 	var smlVersion SMLVersion
 	DBCtx(ctx).Find(&smlVersion, "id = ?", smlVersionID)
 
@@ -27,7 +27,7 @@ func GetSMLVersionByID(smlVersionID string, ctx *context.Context) *SMLVersion {
 	return &smlVersion
 }
 
-func GetSMLVersions(filter *models.SMLVersionFilter, ctx *context.Context) []SMLVersion {
+func GetSMLVersions(ctx context.Context, filter *models.SMLVersionFilter) []SMLVersion {
 	var smlVersions []SMLVersion
 	query := DBCtx(ctx)
 
@@ -45,7 +45,7 @@ func GetSMLVersions(filter *models.SMLVersionFilter, ctx *context.Context) []SML
 	return smlVersions
 }
 
-func GetSMLVersionsByID(smlVersionIds []string, ctx *context.Context) []SMLVersion {
+func GetSMLVersionsByID(ctx context.Context, smlVersionIds []string) []SMLVersion {
 	var smlVersions []SMLVersion
 	DBCtx(ctx).Find(&smlVersions, "id in (?)", smlVersionIds)
 
@@ -56,7 +56,7 @@ func GetSMLVersionsByID(smlVersionIds []string, ctx *context.Context) []SMLVersi
 	return smlVersions
 }
 
-func GetSMLVersionCount(filter *models.SMLVersionFilter, ctx *context.Context) int64 {
+func GetSMLVersionCount(ctx context.Context, filter *models.SMLVersionFilter) int64 {
 	var smlVersionCount int64
 	query := DBCtx(ctx).Model(SMLVersion{})
 
@@ -70,7 +70,7 @@ func GetSMLVersionCount(filter *models.SMLVersionFilter, ctx *context.Context) i
 	return smlVersionCount
 }
 
-func GetSMLLatestVersions(ctx *context.Context) *[]SMLVersion {
+func GetSMLLatestVersions(ctx context.Context) *[]SMLVersion {
 	var smlVersions []SMLVersion
 
 	DBCtx(ctx).Select("distinct on (stability) *").

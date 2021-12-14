@@ -8,7 +8,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func CreateBootstrapVersion(bootstrapVersion *BootstrapVersion, ctx *context.Context) (*BootstrapVersion, error) {
+func CreateBootstrapVersion(ctx context.Context, bootstrapVersion *BootstrapVersion) (*BootstrapVersion, error) {
 	bootstrapVersion.ID = util.GenerateUniqueID()
 
 	DBCtx(ctx).Create(&bootstrapVersion)
@@ -16,7 +16,7 @@ func CreateBootstrapVersion(bootstrapVersion *BootstrapVersion, ctx *context.Con
 	return bootstrapVersion, nil
 }
 
-func GetBootstrapVersionByID(bootstrapVersionID string, ctx *context.Context) *BootstrapVersion {
+func GetBootstrapVersionByID(ctx context.Context, bootstrapVersionID string) *BootstrapVersion {
 	var bootstrapVersion BootstrapVersion
 	DBCtx(ctx).Find(&bootstrapVersion, "id = ?", bootstrapVersionID)
 
@@ -27,7 +27,7 @@ func GetBootstrapVersionByID(bootstrapVersionID string, ctx *context.Context) *B
 	return &bootstrapVersion
 }
 
-func GetBootstrapVersions(filter *models.BootstrapVersionFilter, ctx *context.Context) []BootstrapVersion {
+func GetBootstrapVersions(ctx context.Context, filter *models.BootstrapVersionFilter) []BootstrapVersion {
 	var bootstrapVersions []BootstrapVersion
 	query := DBCtx(ctx)
 
@@ -45,7 +45,7 @@ func GetBootstrapVersions(filter *models.BootstrapVersionFilter, ctx *context.Co
 	return bootstrapVersions
 }
 
-func GetBootstrapVersionsByID(bootstrapVersionIds []string, ctx *context.Context) []BootstrapVersion {
+func GetBootstrapVersionsByID(ctx context.Context, bootstrapVersionIds []string) []BootstrapVersion {
 	var bootstrapVersions []BootstrapVersion
 	DBCtx(ctx).Find(&bootstrapVersions, "id in (?)", bootstrapVersionIds)
 
@@ -56,7 +56,7 @@ func GetBootstrapVersionsByID(bootstrapVersionIds []string, ctx *context.Context
 	return bootstrapVersions
 }
 
-func GetBootstrapVersionCount(filter *models.BootstrapVersionFilter, ctx *context.Context) int64 {
+func GetBootstrapVersionCount(ctx context.Context, filter *models.BootstrapVersionFilter) int64 {
 	var bootstrapVersionCount int64
 	query := DBCtx(ctx).Model(BootstrapVersion{})
 
@@ -68,14 +68,4 @@ func GetBootstrapVersionCount(filter *models.BootstrapVersionFilter, ctx *contex
 
 	query.Count(&bootstrapVersionCount)
 	return bootstrapVersionCount
-}
-
-func GetBootstrapLatestVersions(ctx *context.Context) *[]BootstrapVersion {
-	var bootstrapVersions []BootstrapVersion
-
-	DBCtx(ctx).Select("distinct on (stability) *").
-		Order("stability, created_at desc").
-		Find(&bootstrapVersions)
-
-	return &bootstrapVersions
 }

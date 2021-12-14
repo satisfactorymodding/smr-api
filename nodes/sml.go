@@ -1,10 +1,8 @@
 package nodes
 
 import (
-	"github.com/satisfactorymodding/smr-api/db/postgres"
-	"github.com/satisfactorymodding/smr-api/util"
-
 	"github.com/labstack/echo/v4"
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 )
 
 // @Summary Retrieve a list of latest versions for sml
@@ -15,7 +13,7 @@ import (
 // @Success 200
 // @Router /sml/latest-versions [get]
 func getSMLLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
-	smlVersions := postgres.GetSMLLatestVersions(util.Context(c))
+	smlVersions := postgres.GetSMLLatestVersions(c.Request().Context())
 
 	if smlVersions == nil {
 		return nil, &ErrorVersionNotFound

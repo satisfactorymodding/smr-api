@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
-	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
+	"github.com/vmihailenco/taskq/extra/taskqotel/v3"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog/log"
+	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
 	"github.com/spf13/viper"
 	"github.com/vmihailenco/taskq/v3"
 	"github.com/vmihailenco/taskq/v3/redisq"
@@ -28,8 +30,15 @@ func InitializeJobs(ctx context.Context) {
 	QueueFactory := redisq.NewFactory()
 
 	queue = QueueFactory.RegisterQueue(&taskq.QueueOptions{
-		Name:  "api-worker",
-		Redis: connection,
+		Name:               "api-worker",
+		Redis:              connection,
+		ReservationTimeout: time.Hour,
+	})
+
+	QueueFactory.Range(func(q taskq.Queue) bool {
+		consumer := q.Consumer()
+		consumer.AddHook(&taskqotel.OpenTelemetryHook{})
+		return true
 	})
 
 	if err := QueueFactory.StartConsumers(ctx); err != nil {

@@ -3,12 +3,10 @@ package nodes
 import (
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/storage"
-	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/labstack/echo/v4"
 )
 
 // @Summary Retrieve a Version
@@ -22,7 +20,7 @@ import (
 func getVersion(c echo.Context) (interface{}, *ErrorResponse) {
 	versionID := c.Param("versionId")
 
-	version := postgres.GetVersion(versionID, util.Context(c))
+	version := postgres.GetVersion(c.Request().Context(), versionID)
 
 	if version == nil {
 		return nil, &ErrorVersionNotFound
@@ -42,14 +40,14 @@ func getVersion(c echo.Context) (interface{}, *ErrorResponse) {
 func downloadVersion(c echo.Context) error {
 	versionID := c.Param("versionId")
 
-	version := postgres.GetVersion(versionID, util.Context(c))
+	version := postgres.GetVersion(c.Request().Context(), versionID)
 
 	if version == nil {
 		return c.String(404, "version not found")
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
-		postgres.IncrementVersionDownloads(version, util.Context(c))
+		postgres.IncrementVersionDownloads(c.Request().Context(), version)
 	}
 
 	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))

@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetModByID(modID string, ctx *context.Context) *Mod {
+func GetModByID(ctx context.Context, modID string) *Mod {
 	cacheKey := "GetModById_" + modID
 	if mod, ok := dbCache.Get(cacheKey); ok {
 		return mod.(*Mod)
@@ -37,7 +37,7 @@ func GetModByIDNoCache(modID string, ctx *context.Context) *Mod {
 	return &mod
 }
 
-func GetModByReference(modReference string, ctx *context.Context) *Mod {
+func GetModByReference(ctx context.Context, modReference string) *Mod {
 	cacheKey := "GetModByReference_" + modReference
 	if mod, ok := dbCache.Get(cacheKey); ok {
 		return mod.(*Mod)
@@ -55,7 +55,7 @@ func GetModByReference(modReference string, ctx *context.Context) *Mod {
 	return &mod
 }
 
-func GetModsByID(modIds []string, ctx *context.Context) []Mod {
+func GetModsByID(ctx context.Context, modIds []string) []Mod {
 	cacheKey := "GetModsById_" + strings.Join(modIds, ":")
 	if mods, ok := dbCache.Get(cacheKey); ok {
 		return mods.([]Mod)
@@ -73,13 +73,13 @@ func GetModsByID(modIds []string, ctx *context.Context) []Mod {
 	return mods
 }
 
-func DeleteMod(modID string, ctx *context.Context) {
+func DeleteMod(ctx context.Context, modID string) {
 	DBCtx(ctx).Delete(Mod{}, "id = ?", modID)
 	DBCtx(ctx).Delete(Version{}, "mod_id = ?", modID)
 	DBCtx(ctx).Delete(UserMod{}, "mod_id = ?", modID)
 }
 
-func GetModCount(search string, unapproved bool, ctx *context.Context) int64 {
+func GetModCount(ctx context.Context, search string, unapproved bool) int64 {
 	cacheLey := "GetModCount_" + search + "_" + fmt.Sprint(unapproved)
 	if count, ok := dbCache.Get(cacheLey); ok {
 		return count.(int64)
@@ -99,7 +99,7 @@ func GetModCount(search string, unapproved bool, ctx *context.Context) int64 {
 	return modCount
 }
 
-func GetModCountNew(filter *models.ModFilter, unapproved bool, ctx *context.Context) int64 {
+func GetModCountNew(ctx context.Context, filter *models.ModFilter, unapproved bool) int64 {
 	hash, err := filter.Hash()
 	cacheKey := ""
 	if err == nil {
@@ -110,7 +110,7 @@ func GetModCountNew(filter *models.ModFilter, unapproved bool, ctx *context.Cont
 	}
 
 	var modCount int64
-	NewModQuery(filter, unapproved, ctx, true).Count(&modCount)
+	NewModQuery(ctx, filter, unapproved, true).Count(&modCount)
 
 	if cacheKey != "" {
 		dbCache.Set(cacheKey, modCount, cache.DefaultExpiration)
@@ -119,11 +119,11 @@ func GetModCountNew(filter *models.ModFilter, unapproved bool, ctx *context.Cont
 	return modCount
 }
 
-func IncrementModViews(mod *Mod, ctx *context.Context) {
+func IncrementModViews(ctx context.Context, mod *Mod) {
 	DBCtx(ctx).Model(mod).Update("views", mod.Views+1)
 }
 
-func GetMods(limit int, offset int, orderBy string, order string, search string, unapproved bool, ctx *context.Context) []Mod {
+func GetMods(ctx context.Context, limit int, offset int, orderBy string, order string, search string, unapproved bool) []Mod {
 	cacheKey := "GetMods_" + fmt.Sprint(limit) + "_" + fmt.Sprint(offset) + "_" + orderBy + "_" + order + "_" + search + "_" + fmt.Sprint(unapproved)
 	if mods, ok := dbCache.Get(cacheKey); ok {
 		return mods.([]Mod)
@@ -151,7 +151,7 @@ func GetMods(limit int, offset int, orderBy string, order string, search string,
 	return mods
 }
 
-func GetModsNew(filter *models.ModFilter, unapproved bool, ctx *context.Context) []Mod {
+func GetModsNew(ctx context.Context, filter *models.ModFilter, unapproved bool) []Mod {
 	hash, err := filter.Hash()
 	cacheKey := ""
 	if err == nil {
@@ -162,7 +162,7 @@ func GetModsNew(filter *models.ModFilter, unapproved bool, ctx *context.Context)
 	}
 
 	var mods []Mod
-	NewModQuery(filter, unapproved, ctx, false).Find(&mods)
+	NewModQuery(ctx, filter, unapproved, false).Find(&mods)
 
 	if cacheKey != "" {
 		dbCache.Set(cacheKey, mods, cache.DefaultExpiration)
@@ -171,7 +171,7 @@ func GetModsNew(filter *models.ModFilter, unapproved bool, ctx *context.Context)
 	return mods
 }
 
-func CreateMod(mod *Mod, ctx *context.Context) (*Mod, error) {
+func CreateMod(ctx context.Context, mod *Mod) (*Mod, error) {
 	// Allow only new 4 mods per 24h
 
 	mod.ID = util.GenerateUniqueID()
@@ -205,7 +205,7 @@ func CreateMod(mod *Mod, ctx *context.Context) (*Mod, error) {
 	return mod, nil
 }
 
-func NewModQuery(filter *models.ModFilter, unapproved bool, ctx *context.Context, count bool) *gorm.DB {
+func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool, count bool) *gorm.DB {
 	query := DBCtx(ctx)
 
 	if count {
@@ -260,7 +260,7 @@ func NewModQuery(filter *models.ModFilter, unapproved bool, ctx *context.Context
 		}
 	}
 
-	return query
+	return query.Debug()
 }
 
 func ClearModTags(modID string, ctx *context.Context) error {
