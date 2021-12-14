@@ -119,6 +119,11 @@ func DeleteForced(ctx context.Context, object interface{}) {
 
 func DBCtx(ctx context.Context) *gorm.DB {
 	if ctx != nil {
+		dbCtx := DBFromContext(ctx)
+		if dbCtx != nil {
+			return dbCtx
+		}
+
 		return db.WithContext(ctx)
 	}
 
