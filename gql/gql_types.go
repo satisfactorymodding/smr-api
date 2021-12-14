@@ -107,6 +107,7 @@ func DBGuideToGenerated(guide *postgres.Guide) *generated.Guide {
 		Views:            int(guide.Views),
 		UpdatedAt:        guide.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:        guide.CreatedAt.Format(time.RFC3339Nano),
+		Tags:             DBTagsToGeneratedSlice(guide.Tags),
 	}
 }
 

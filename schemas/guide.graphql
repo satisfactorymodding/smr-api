@@ -18,6 +18,7 @@ type Guide {
     user_id: UserID!
     updated_at: Date!
     created_at: Date!
+    tags: [Tag!]!
 
     user: User!
 }
@@ -33,12 +34,14 @@ input NewGuide {
     name: String!
     short_description: String!
     guide: String!
+    tagIDs: [TagID!]
 }
 
 input UpdateGuide {
     name: String
     short_description: String
     guide: String
+    tagIDs: [TagID!]
 }
 
 input GuideFilter {
@@ -48,6 +51,7 @@ input GuideFilter {
     order: Order
     search: String
     ids: [String!]
+    tagIDs: [TagID!]
 }
 
 ### Queries
