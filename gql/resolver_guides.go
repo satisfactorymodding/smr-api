@@ -41,7 +41,14 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, guide generated.NewG
 		return nil, err
 	}
 
-	return DBGuideToGenerated(resultGuide), nil
+	err = postgres.SetGuideTags(resultGuide.ID, guide.TagIDs, &newCtx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Need to get the guide again to populate tags
+	return DBGuideToGenerated(postgres.GetGuideByIDNoCache(resultGuide.ID, &newCtx)), nil
 }
 
 func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, guide generated.UpdateGuide) (*generated.Guide, error) {
@@ -53,7 +60,12 @@ func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, guid
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	dbGuide := postgres.GetGuideByID(guideID, &newCtx)
+	err := postgres.ResetGuideTags(guideID, guide.TagIDs, &newCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	dbGuide := postgres.GetGuideByIDNoCache(guideID, &newCtx)
 
 	if dbGuide == nil {
 		return nil, errors.New("guide not found")

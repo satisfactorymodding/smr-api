@@ -68,7 +68,7 @@ func CreateTag(tag *Tag, ctx *context.Context, ratelimit bool) (*Tag, error) {
 	err = DBCtx(ctx).Create(&tag).Error
 
 	if err != nil {
-		return nil, fmt.Errorf("Could not create tag: %v", err)
+		return nil, fmt.Errorf("Could not create tag: %w", err)
 	}
 
 	return tag, nil
@@ -93,15 +93,15 @@ func GetTagByName(tagName string, ctx *context.Context) *Tag {
 	return &tag
 }
 
-func GetTagByID(tagId string, ctx *context.Context) *Tag {
-	cacheKey := "GetTagById_" + tagId
+func GetTagByID(tagID string, ctx *context.Context) *Tag {
+	cacheKey := "GetTagById_" + tagID
 
 	if tag, ok := dbCache.Get(cacheKey); ok {
 		return tag.(*Tag)
 	}
 
 	var tag Tag
-	DBCtx(ctx).Find(&tag, "id = ?", tagId)
+	DBCtx(ctx).Find(&tag, "id = ?", tagID)
 
 	if tag.ID == "" {
 		return nil
