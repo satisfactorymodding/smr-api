@@ -32,13 +32,13 @@ func ValidateTagName(tag string) error {
 	return nil
 }
 
-func CreateTag(tag *Tag, ctx *context.Context, ratelimit bool) (*Tag, error) {
+func CreateTag(ctx context.Context, tag *Tag, ratelimit bool) (*Tag, error) {
 	err := ValidateTagName(tag.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	if GetTagByName(tag.Name, ctx) != nil {
+	if GetTagByName(ctx, tag.Name) != nil {
 		return nil, fmt.Errorf("Tag %v already exists", tag.Name)
 	}
 
@@ -74,7 +74,7 @@ func CreateTag(tag *Tag, ctx *context.Context, ratelimit bool) (*Tag, error) {
 	return tag, nil
 }
 
-func GetTagByName(tagName string, ctx *context.Context) *Tag {
+func GetTagByName(ctx context.Context, tagName string) *Tag {
 	cacheKey := "GetTagByName_" + tagName
 
 	if tag, ok := dbCache.Get(cacheKey); ok {
@@ -93,7 +93,7 @@ func GetTagByName(tagName string, ctx *context.Context) *Tag {
 	return &tag
 }
 
-func GetTagByID(tagID string, ctx *context.Context) *Tag {
+func GetTagByID(ctx context.Context, tagID string) *Tag {
 	cacheKey := "GetTagById_" + tagID
 
 	if tag, ok := dbCache.Get(cacheKey); ok {
@@ -112,7 +112,7 @@ func GetTagByID(tagID string, ctx *context.Context) *Tag {
 	return &tag
 }
 
-func GetTags(ctx *context.Context, filter *generated.TagFilter) []Tag {
+func GetTags(ctx context.Context, filter *generated.TagFilter) []Tag {
 	cacheKey := ""
 	hash, err := hashstructure.Hash(filter, hashstructure.FormatV2, nil)
 	if err == nil {

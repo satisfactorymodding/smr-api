@@ -228,7 +228,7 @@ func canEditAnnouncements(ctx context.Context, obj interface{}, next graphql.Res
 func canManageTags(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	if user.Has(auth.RoleManageTags, &ctx) {
+	if user.Has(ctx, auth.RoleManageTags) {
 		return next(ctx)
 	}
 

@@ -49,10 +49,10 @@ func GetGuideByID(ctx context.Context, guideID string) *Guide {
 		return guide.(*Guide)
 	}
 
-	return GetGuideByIDNoCache(guideID, ctx)
+	return GetGuideByIDNoCache(ctx, guideID)
 }
 
-func GetGuideByIDNoCache(guideID string, ctx *context.Context) *Guide {
+func GetGuideByIDNoCache(ctx context.Context, guideID string) *Guide {
 	var guide Guide
 	DBCtx(ctx).Preload("Tags").Find(&guide, "id = ?", guideID)
 
@@ -159,14 +159,14 @@ func GetUserGuides(ctx context.Context, userID string) []Guide {
 	return guides
 }
 
-func ClearGuideTags(guideID string, ctx *context.Context) error {
+func ClearGuideTags(ctx context.Context, guideID string) error {
 	r := DBCtx(ctx).Where("guide_id = ?", guideID).Delete(&GuideTag{})
 	return r.Error
 }
 
-func SetGuideTags(guideID string, tagIDs []string, ctx *context.Context) error {
+func SetGuideTags(ctx context.Context, guideID string, tagIDs []string) error {
 	for _, tag := range tagIDs {
-		err := AddGuideTag(guideID, tag, ctx)
+		err := AddGuideTag(ctx, guideID, tag)
 		if err != nil {
 			return err
 		}
@@ -174,24 +174,24 @@ func SetGuideTags(guideID string, tagIDs []string, ctx *context.Context) error {
 	return nil
 }
 
-func ResetGuideTags(guideID string, tagIDs []string, ctx *context.Context) error {
-	err := ClearGuideTags(guideID, ctx)
+func ResetGuideTags(ctx context.Context, guideID string, tagIDs []string) error {
+	err := ClearGuideTags(ctx, guideID)
 	if err != nil {
 		return err
 	}
-	err = SetGuideTags(guideID, tagIDs, ctx)
+	err = SetGuideTags(ctx, guideID, tagIDs)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func AddGuideTag(guideID string, tagID string, ctx *context.Context) error {
+func AddGuideTag(ctx context.Context, guideID string, tagID string) error {
 	r := DBCtx(ctx).Create(&GuideTag{GuideID: guideID, TagID: tagID})
 	return r.Error
 }
 
-func RemoveGuideTag(guideID string, tagID string, ctx *context.Context) error {
+func RemoveGuideTag(ctx context.Context, guideID string, tagID string) error {
 	r := DBCtx(ctx).Delete(&GuideTag{GuideID: guideID, TagID: tagID})
 	return r.Error
 }
