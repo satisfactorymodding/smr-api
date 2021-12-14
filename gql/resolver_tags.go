@@ -17,7 +17,7 @@ func (r *mutationResolver) CreateTag(ctx context.Context, tagName string) (*gene
 		Name: tagName,
 	}
 
-	resultTag, err := postgres.CreateTag(dbTag, &newCtx, true)
+	resultTag, err := postgres.CreateTag(newCtx, dbTag, true)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tagNames []st
 			Name: tagName,
 		}
 
-		resultTag, err := postgres.CreateTag(dbTag, &newCtx, false)
+		resultTag, err := postgres.CreateTag(newCtx, dbTag, false)
 		if err != nil {
 			return nil, err
 		}
@@ -50,13 +50,13 @@ func (r *mutationResolver) DeleteTag(ctx context.Context, id string) (bool, erro
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteTag")
 	defer wrapper.end()
 
-	dbTag := postgres.GetTagByID(id, &newCtx)
+	dbTag := postgres.GetTagByID(newCtx, id)
 
 	if dbTag == nil {
 		return false, errors.New("Tag not found")
 	}
 
-	postgres.Delete(&dbTag, &newCtx)
+	postgres.Delete(newCtx, &dbTag)
 
 	return true, nil
 }
@@ -65,7 +65,7 @@ func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName str
 	wrapper, newCtx := WrapMutationTrace(ctx, "updateTag")
 	defer wrapper.end()
 
-	dbTag := postgres.GetTagByID(id, &newCtx)
+	dbTag := postgres.GetTagByID(newCtx, id)
 
 	if dbTag == nil {
 		return nil, errors.New("Tag not found")
@@ -78,7 +78,7 @@ func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName str
 
 	SetStringINNOE(&newName, &dbTag.Name)
 
-	postgres.Save(&dbTag, &newCtx)
+	postgres.Save(newCtx, &dbTag)
 
 	return DBTagToGenerated(dbTag), nil
 }
@@ -87,7 +87,7 @@ func (r *queryResolver) GetTag(ctx context.Context, id string) (*generated.Tag, 
 	wrapper, newCtx := WrapQueryTrace(ctx, "getTag_"+id)
 	defer wrapper.end()
 
-	tag := postgres.GetTagByID(id, &newCtx)
+	tag := postgres.GetTagByID(newCtx, id)
 
 	return DBTagToGenerated(tag), nil
 }
@@ -97,7 +97,7 @@ func (r *queryResolver) GetTags(ctx context.Context, filter *generated.TagFilter
 	defer wrapper.end()
 
 	insertFilterDefaults(filter)
-	tags := postgres.GetTags(&newCtx, filter)
+	tags := postgres.GetTags(newCtx, filter)
 
 	return DBTagsToGeneratedSlice(tags), nil
 }

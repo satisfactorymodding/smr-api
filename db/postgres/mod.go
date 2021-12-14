@@ -21,10 +21,10 @@ func GetModByID(ctx context.Context, modID string) *Mod {
 		return mod.(*Mod)
 	}
 
-	return GetModByIDNoCache(modID, ctx)
+	return GetModByIDNoCache(ctx, modID)
 }
 
-func GetModByIDNoCache(modID string, ctx *context.Context) *Mod {
+func GetModByIDNoCache(ctx context.Context, modID string) *Mod {
 	var mod Mod
 	DBCtx(ctx).Preload("Tags").Find(&mod, "id = ?", modID)
 
@@ -263,14 +263,14 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 	return query.Debug()
 }
 
-func ClearModTags(modID string, ctx *context.Context) error {
+func ClearModTags(ctx context.Context, modID string) error {
 	r := DBCtx(ctx).Where("mod_id = ?", modID).Delete(&ModTag{})
 	return r.Error
 }
 
-func SetModTags(modID string, tagIDs []string, ctx *context.Context) error {
+func SetModTags(ctx context.Context, modID string, tagIDs []string) error {
 	for _, tag := range tagIDs {
-		err := AddModTag(modID, tag, ctx)
+		err := AddModTag(ctx, modID, tag)
 		if err != nil {
 			return err
 		}
@@ -278,24 +278,24 @@ func SetModTags(modID string, tagIDs []string, ctx *context.Context) error {
 	return nil
 }
 
-func ResetModTags(modID string, tagIDs []string, ctx *context.Context) error {
-	err := ClearModTags(modID, ctx)
+func ResetModTags(ctx context.Context, modID string, tagIDs []string) error {
+	err := ClearModTags(ctx, modID)
 	if err != nil {
 		return err
 	}
-	err = SetModTags(modID, tagIDs, ctx)
+	err = SetModTags(ctx, modID, tagIDs)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func AddModTag(modID string, tagID string, ctx *context.Context) error {
+func AddModTag(ctx context.Context, modID string, tagID string) error {
 	r := DBCtx(ctx).Create(&ModTag{ModID: modID, TagID: tagID})
 	return r.Error
 }
 
-func RemoveModTag(modID string, tagID string, ctx *context.Context) error {
+func RemoveModTag(ctx context.Context, modID string, tagID string) error {
 	r := DBCtx(ctx).Delete(&ModTag{ModID: modID, TagID: tagID})
 	return r.Error
 }

@@ -83,14 +83,14 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 		}
 	}
 
-	err = postgres.SetModTags(resultMod.ID, mod.TagIDs, &newCtx)
+	err = postgres.SetModTags(newCtx, resultMod.ID, mod.TagIDs)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Need to get the mod again to populate tags
-	return DBModToGenerated(postgres.GetModByIDNoCache(resultMod.ID, &newCtx)), nil
+	return DBModToGenerated(postgres.GetModByIDNoCache(newCtx, resultMod.ID)), nil
 }
 
 func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod generated.UpdateMod) (*generated.Mod, error) {
@@ -102,13 +102,13 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	err := postgres.ResetModTags(modID, mod.TagIDs, &newCtx)
+	err := postgres.ResetModTags(newCtx, modID, mod.TagIDs)
 
 	if err != nil {
 		return nil, err
 	}
 
-	dbMod := postgres.GetModByIDNoCache(modID, &newCtx)
+	dbMod := postgres.GetModByIDNoCache(newCtx, modID)
 
 	if dbMod == nil {
 		return nil, errors.New("mod not found")
