@@ -254,3 +254,21 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 
 	return query.Debug()
 }
+
+func GetModByIDOrReference(ctx context.Context, modIDOrReference string) *Mod {
+	cacheKey := "GetModByIDOrReference_" + modIDOrReference
+	if mod, ok := dbCache.Get(cacheKey); ok {
+		return mod.(*Mod)
+	}
+
+	var mod Mod
+	DBCtx(ctx).Find(&mod, "mod_reference = ? OR id = ?", modIDOrReference, modIDOrReference)
+
+	if mod.ID == "" {
+		return nil
+	}
+
+	dbCache.Set(cacheKey, &mod, cache.DefaultExpiration)
+
+	return &mod
+}

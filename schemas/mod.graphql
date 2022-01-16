@@ -94,6 +94,7 @@ input UpdateUserMod {
 extend type Query {
     getMod(modId: ModID!): Mod
     getModByReference(modReference: ModReference!): Mod
+    getModByIdOrReference(modIdOrReference: String!): Mod
     getMods(filter: ModFilter): GetMods!
     getUnapprovedMods(filter: ModFilter): GetMods! @canApproveMods @isLoggedIn
 
