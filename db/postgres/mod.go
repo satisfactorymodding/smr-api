@@ -281,7 +281,7 @@ func GetModByIDOrReference(ctx context.Context, modIDOrReference string) *Mod {
 	return &mod
 }
 
-func ClearModTags(modID string, ctx *context.Context) error {
+func ClearModTags(ctx context.Context, modID string) error {
 	r := DBCtx(ctx).Where("mod_id = ?", modID).Delete(&ModTag{})
 	return r.Error
 }
