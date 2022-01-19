@@ -12,3 +12,4 @@ directive @canEditUsers on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canEditSMLVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canEditBootstrapVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canEditAnnouncements on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @canManageTags on FIELD_DEFINITION | INPUT_FIELD_DEFINITION

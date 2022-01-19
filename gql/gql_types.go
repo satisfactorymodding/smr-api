@@ -61,6 +61,7 @@ func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 		LastVersionDate:  &LastVersionDate,
 		ModReference:     mod.ModReference,
 		Hidden:           mod.Hidden,
+		Tags:             DBTagsToGeneratedSlice(mod.Tags),
 	}
 }
 
@@ -106,6 +107,7 @@ func DBGuideToGenerated(guide *postgres.Guide) *generated.Guide {
 		Views:            int(guide.Views),
 		UpdatedAt:        guide.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:        guide.CreatedAt.Format(time.RFC3339Nano),
+		Tags:             DBTagsToGeneratedSlice(guide.Tags),
 	}
 }
 
@@ -175,6 +177,24 @@ func DBAnnouncementsToGeneratedSlice(announcements []postgres.Announcement) []*g
 	converted := make([]*generated.Announcement, len(announcements))
 	for i, announcement := range announcements {
 		converted[i] = DBAnnouncementToGenerated(&announcement)
+	}
+	return converted
+}
+
+func DBTagToGenerated(tag *postgres.Tag) *generated.Tag {
+	if tag == nil {
+		return nil
+	}
+	return &generated.Tag{
+		Name: tag.Name,
+		ID:   tag.ID,
+	}
+}
+
+func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
+	converted := make([]*generated.Tag, len(tags))
+	for i, tag := range tags {
+		converted[i] = DBTagToGenerated(&tag)
 	}
 	return converted
 }

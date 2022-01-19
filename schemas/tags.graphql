@@ -1,0 +1,29 @@
+scalar TagID
+scalar TagName
+
+type Tag {
+    id: TagID!
+    name: TagName!
+}
+
+input TagFilter {
+    limit: Int
+    offset: Int
+    order: Order
+    search: String
+    ids: [TagID!]
+}
+
+extend type Query {
+    getTag(tagID: TagID!): Tag
+    getTags(filter: TagFilter): [Tag!]!
+}
+
+### Mutations
+
+extend type Mutation {
+    createTag(tagName: TagName!): Tag @isLoggedIn
+    createMultipleTags(tagNames: [TagName!]!): [Tag!]! @canManageTags @isLoggedIn
+    updateTag(tagID: TagID!, NewName: TagName!): Tag! @canManageTags @isLoggedIn
+    deleteTag(tagID: TagID!): Boolean! @canManageTags @isLoggedIn
+}
