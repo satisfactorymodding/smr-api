@@ -538,3 +538,18 @@ func (r *modResolver) LatestVersions(ctx context.Context, obj *generated.Mod) (*
 
 	return &converted, nil
 }
+
+func (r *queryResolver) GetModByIDOrReference(ctx context.Context, modIDOrReference string) (*generated.Mod, error) {
+	wrapper, newCtx := WrapQueryTrace(ctx, "getModByIdOrReference")
+	defer wrapper.end()
+
+	mod := postgres.GetModByIDOrReference(newCtx, modIDOrReference)
+
+	if mod != nil {
+		if redis.CanIncrement(RealIP(ctx), "view", "mod:"+mod.ID, time.Hour*4) {
+			postgres.IncrementModViews(newCtx, mod)
+		}
+	}
+
+	return DBModToGenerated(mod), nil
+}
