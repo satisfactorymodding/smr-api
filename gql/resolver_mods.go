@@ -540,3 +540,44 @@ func (r *queryResolver) GetModByIDOrReference(ctx context.Context, modIDOrRefere
 
 	return DBModToGenerated(mod), nil
 }
+
+func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []*generated.ModVersionConstraint) ([]*generated.ModVersion, error) {
+	wrapper, newCtx := WrapQueryTrace(ctx, "resolveModVersions")
+	defer wrapper.end()
+
+	constraintMapping := make(map[string]string)
+	modIDOrReferences := make([]string, len(filter))
+	for i, constraint := range filter {
+		modIDOrReferences[i] = constraint.ModIDOrReference
+		constraintMapping[constraint.ModIDOrReference] = constraint.Version
+	}
+
+	mods := postgres.GetModsByIDOrReference(newCtx, modIDOrReferences)
+
+	if mods == nil {
+		return nil, errors.New("no mods found")
+	}
+
+	modVersions := make([]*generated.ModVersion, len(mods))
+	for i, mod := range mods {
+		constraint, ok := constraintMapping[mod.ID]
+		if !ok {
+			constraint = constraintMapping[mod.ModReference]
+		}
+
+		versions := postgres.GetModVersionsConstraint(newCtx, mod.ID, constraint)
+
+		converted := make([]*generated.Version, len(versions))
+		for k, v := range versions {
+			converted[k] = DBVersionToGenerated(&v)
+		}
+
+		modVersions[i] = &generated.ModVersion{
+			ID:           mod.ID,
+			ModReference: mod.ModReference,
+			Versions:     converted,
+		}
+	}
+
+	return modVersions, nil
+}

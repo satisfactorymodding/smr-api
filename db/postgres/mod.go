@@ -272,3 +272,17 @@ func GetModByIDOrReference(ctx context.Context, modIDOrReference string) *Mod {
 
 	return &mod
 }
+
+func GetModsByIDOrReference(ctx context.Context, modIDOrReferences []string) []Mod {
+	cacheKey := "GetModsByIDOrReference_" + strings.Join(modIDOrReferences, "-")
+	if mod, ok := dbCache.Get(cacheKey); ok {
+		return mod.([]Mod)
+	}
+
+	var mods []Mod
+	DBCtx(ctx).Find(&mods, "mod_reference IN ? OR id IN ?", modIDOrReferences, modIDOrReferences)
+
+	dbCache.Set(cacheKey, mods, cache.DefaultExpiration)
+
+	return mods
+}
