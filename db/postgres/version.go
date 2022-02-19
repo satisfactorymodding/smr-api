@@ -328,25 +328,25 @@ func GetModVersionsConstraint(ctx context.Context, modID string, constraint stri
 	sign := matches[0][1]
 	switch sign {
 	case "<=":
-		query = query.Where("version_major < ?", major).
+		query = query.Where(db.Or("version_major < ?", major).
 			Or("version_major = ? AND version_minor < ?", major, minor).
-			Or("version_major = ? AND version_minor = ? AND version_patch <= ?", major, minor, patch)
+			Or("version_major = ? AND version_minor = ? AND version_patch <= ?", major, minor, patch))
 	case "<":
-		query = query.Where("version_major < ?", major).
+		query = query.Where(db.Or("version_major < ?", major).
 			Or("version_major = ? AND version_minor < ?", major, minor).
-			Or("version_major = ? AND version_minor = ? AND version_patch < ?", major, minor, patch)
+			Or("version_major = ? AND version_minor = ? AND version_patch < ?", major, minor, patch))
 	case ">":
-		query = query.Where("version_major > ?", major).
+		query = query.Where(db.Or("version_major > ?", major).
 			Or("version_major = ? AND version_minor > ?", major, minor).
-			Or("version_major = ? AND version_minor = ? AND version_patch > ?", major, minor, patch)
+			Or("version_major = ? AND version_minor = ? AND version_patch > ?", major, minor, patch))
 	case ">=":
-		query = query.Where("version_major > ?", major).
+		query = query.Where(db.Or("version_major > ?", major).
 			Or("version_major = ? AND version_minor > ?", major, minor).
-			Or("version_major = ? AND version_minor = ? AND version_patch >= ?", major, minor, patch)
+			Or("version_major = ? AND version_minor = ? AND version_patch >= ?", major, minor, patch))
 	case "^":
 		if major != 0 {
-			query = query.Where("version_major = ? AND version_minor > ?", major, minor).
-				Or("version_major = ? AND version_minor = ? AND version_patch >= ?", major, minor, patch)
+			query = query.Where(db.Or("version_major = ? AND version_minor > ?", major, minor).
+				Or("version_major = ? AND version_minor = ? AND version_patch >= ?", major, minor, patch))
 		} else if minor != 0 {
 			query = query.Where("version_major = ? AND version_minor = ? AND version_patch >= ?", major, minor, patch)
 		} else {
