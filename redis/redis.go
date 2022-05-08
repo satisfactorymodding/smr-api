@@ -137,3 +137,19 @@ func GetVersionUploadState(versionID string) (*generated.CreateVersionResponse, 
 
 	return data.Data, nil
 }
+
+func RevokeAccessToken(token string) {
+	redisKey := "user:token:" + token + ":revoked"
+
+	client.Set(redisKey, true, time.Hour*24*30)
+}
+
+func IsAccessTokenRevoked(ctx context.Context, token string) bool {
+	redisKey := "user:token:" + token + ":revoked"
+	res, err := client.Exists(redisKey).Result()
+	if err != nil {
+		log.Ctx(ctx).Err(errors.New("redis call to get user token failed")).Msg("fail-open - assume the token is not revoked")
+	}
+
+	return res == 1
+}

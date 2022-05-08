@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"sync"
 
 	"github.com/satisfactorymodding/smr-api/oauth"
+	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -67,12 +69,9 @@ func GetUserSession(ctx context.Context, oauthUser *oauth.UserData, userAgent st
 	// DBCtx(ctx).Delete(&UserSession{UserAgent: userAgent})
 
 	session := UserSession{
-		User:      user,
-		Token:     util.GenerateUserToken(),
+		Token:     util.GenerateUserToken(user.ID),
 		UserAgent: userAgent,
 	}
-
-	session.ID = util.GenerateUniqueID()
 
 	// Create a new session
 	DBCtx(ctx).Create(&session)
@@ -80,28 +79,24 @@ func GetUserSession(ctx context.Context, oauthUser *oauth.UserData, userAgent st
 	return &session, &user, newUser
 }
 
-func LogoutSession(ctx context.Context, token string) {
-	// TODO Archive old deleted sessions to cold storage
-	DBCtx(ctx).Delete(&UserSession{Token: token})
-}
+func LogoutSession(ctx context.Context, userID string, token string) {
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 
-func GetUserByToken(ctx context.Context, token string) *User {
-	// TODO Merge into a single query
-	var session UserSession
-	DBCtx(ctx).Find(&session, UserSession{Token: token})
+	// Do we still want to track revoked in DB?
+	// What if revoke fails? should we grab the error and surface it? should we care?
+	go func() {
+		defer wg.Done()
+		DBCtx(ctx).Model(&UserSession{UserID: userID, Token: token}).UpdateColumns(UserSession{Revoked: true})
+	}()
 
-	if session.ID == "" {
-		return nil
-	}
+	// Maybe the redis call should be first?
+	go func() {
+		defer wg.Done()
+		redis.RevokeAccessToken(token)
+	}()
 
-	var user User
-	DBCtx(ctx).Find(&user, "id = ?", session.UserID)
-
-	if user.ID == "" {
-		return nil
-	}
-
-	return &user
+	wg.Wait()
 }
 
 func GetUserByID(ctx context.Context, userID string) *User {

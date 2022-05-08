@@ -5,6 +5,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/redis"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func userFromContext(c echo.Context) *postgres.User {
@@ -14,8 +16,22 @@ func userFromContext(c echo.Context) *postgres.User {
 		return nil
 	}
 
-	user := postgres.GetUserByToken(c.Request().Context(), authorization)
+	payload, err := util.VerifyUserToken(authorization)
+	if err != nil {
+		c.Logger().Warn("User attempted to sign in with an invalid token")
+		return nil
+	}
 
+	userID := payload.Get("userID")
+	if userID == "" {
+		return nil
+	}
+
+	if redis.IsAccessTokenRevoked(c.Request().Context(), authorization) {
+		return nil
+	}
+
+	user := postgres.GetUserByID(c.Request().Context(), userID)
 	if user == nil {
 		return nil
 	}
@@ -42,7 +58,7 @@ func getMe(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
 // @Success 200
 // @Router /user/me/logout [get]
 func getLogout(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
-	postgres.LogoutSession(c.Request().Context(), c.Request().Header.Get("Authorization"))
+	postgres.LogoutSession(c.Request().Context(), user.ID, c.Request().Header.Get("Authorization"))
 	return nil, nil
 }
 

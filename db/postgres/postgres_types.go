@@ -34,12 +34,13 @@ type User struct {
 }
 
 type UserSession struct {
-	SMRModel
+	SMRDates
 
-	UserID string
-	User   User
+	// composite primary key
+	UserID string `gorm:"primaryKey"`
+	Token  string `gorm:"type:varchar(256);unique_index,primaryKey"`
 
-	Token     string `gorm:"type:varchar(256);unique_index"`
+	Revoked   bool
 	UserAgent string
 }
 

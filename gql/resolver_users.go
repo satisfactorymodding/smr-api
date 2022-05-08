@@ -79,8 +79,13 @@ func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
 	defer wrapper.end()
 
 	header := ctx.Value(util.ContextHeader{}).(http.Header)
-	postgres.LogoutSession(newCtx, header.Get("Authorization"))
+	authorization := header.Get("Authorization")
+	payload, err := util.VerifyUserToken(authorization)
+	if err != nil {
+		return false, err
+	}
 
+	postgres.LogoutSession(newCtx, payload.Get("userID"), authorization)
 	return true, nil
 }
 
