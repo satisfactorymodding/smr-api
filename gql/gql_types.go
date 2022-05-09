@@ -181,6 +181,26 @@ func DBAnnouncementsToGeneratedSlice(announcements []postgres.Announcement) []*g
 	return converted
 }
 
+func DBModLinkToGenerated(modlinks *postgres.ModLink) *generated.ModLink {
+	if modlinks == nil {
+		return nil
+	}
+
+	size := 0
+	if modlinks.Size != nil {
+		size = int(*modlinks.Size)
+	}
+
+	return &generated.ModLink{
+		ID:       modlinks.ID,
+		Platform: modlinks.Platform,
+		Side:     modlinks.Side,
+		Link:     modlinks.Link,
+		Hash:     modlinks.Hash,
+		Size:     &size,
+	}
+}
+
 func DBTagToGenerated(tag *postgres.Tag) *generated.Tag {
 	if tag == nil {
 		return nil
@@ -195,6 +215,28 @@ func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
 	converted := make([]*generated.Tag, len(tags))
 	for i, tag := range tags {
 		converted[i] = DBTagToGenerated(&tag)
+	}
+	return converted
+}
+
+func DBSMLLinkToGenerated(smlLink *postgres.SMLLink) *generated.SMLLink {
+	if smlLink == nil {
+		return nil
+	}
+
+	return &generated.SMLLink{
+		ID:           smlLink.ID,
+		SMLVersionID: smlLink.SMLVersionID,
+		Platform:     smlLink.Platform,
+		Side:         smlLink.Side,
+		Link:         smlLink.Link,
+	}
+}
+
+func DBSMLLinksToGeneratedSlice(smllinks []postgres.SMLLink) []*generated.SMLLink {
+	converted := make([]*generated.SMLLink, len(smllinks))
+	for i, smllink := range smllinks {
+		converted[i] = DBSMLLinkToGenerated(&smllink)
 	}
 	return converted
 }

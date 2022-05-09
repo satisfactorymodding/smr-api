@@ -1,0 +1,45 @@
+### Types
+
+scalar SMLLinkID
+
+type SMLLink {
+    id: SMLLinkID!
+    SMLVersionID: String!
+    platform: String!
+    side: String!
+    link: String!
+}
+
+type GetSMLLinks {
+    sml_links: [SMLLink!]!
+}
+
+### Inputs
+
+input NewSMLLink {
+    platform: String!
+    side: String!
+    link: String!
+}
+
+input UpdateSMLLink {
+    id: SMLLinkID!
+    SMLVersionID: SMLVersionID!
+    platform: String!
+    side: String!
+    link: String!
+}
+
+### Queries
+
+extend type Query {
+    getSMLLink(smlLinksID: SMLLinkID!): SMLLink
+}
+
+### Mutations
+
+extend type Mutation {
+    createSMLLink(smlLink: NewSMLLink!): SMLLink! @canEditSMLVersions @isLoggedIn
+    updateSMLLink(SMLLinksId: SMLLinkID!, smlLink: UpdateSMLLink!): SMLLink! @canEditSMLVersions @isLoggedIn
+    deleteSMLLink(SMLLinksId: SMLLinkID!): Boolean! @canEditSMLVersions @isLoggedIn
+}

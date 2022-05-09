@@ -127,6 +127,7 @@ type SMLVersion struct {
 	Stability           string `sql:"type:version_stability"`
 	Date                time.Time
 	Link                string
+	Links               []SMLLink
 	Changelog           string
 	BootstrapVersion    *string
 }
@@ -175,4 +176,25 @@ type ModTag struct {
 type GuideTag struct {
 	TagID   string `gorm:"primary_key;type:varchar(24)"`
 	GuideID string `gorm:"primary_key;type:varchar(16)"`
+
+type ModLink struct {
+	SMRModel
+
+	ModLinkID string
+	VersionID string `gorm:"primary_key;type:varchar(16)"`
+	ModID     string `gorm:"primary_key;type:varchar(16)"`
+	Platform  string
+	Side      string
+	Link      string
+	Size      *int64
+	Hash      *string
+}
+
+type SMLLink struct {
+	SMRModel
+
+	SMLLinkID string
+	Platform  string
+	Side      string
+	Link      string
 }
