@@ -5,21 +5,21 @@ enum CompatibilityState {
 }
 
 type Compatibility {
-    compatible: CompatibilityState!
+    state: CompatibilityState!
     note: String
 }
 
 input CompatibilityInput {
-    compatible: CompatibilityState!
+    state: CompatibilityState!
     note: String
 }
 
 type CompatibilityInfo {
-    EA: Compatibility
-    EXP: Compatibility
+    EA: Compatibility!
+    EXP: Compatibility!
 }
 
 input CompatibilityInfoInput {
-    EA: CompatibilityInput
-    EXP: CompatibilityInput
+    EA: CompatibilityInput!
+    EXP: CompatibilityInput!
 }
