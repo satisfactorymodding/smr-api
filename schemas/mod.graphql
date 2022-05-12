@@ -34,6 +34,7 @@ type Mod {
     mod_reference: ModReference!
     hidden: Boolean!
     tags: [Tag!]
+    compatibility: CompatibilityInfo
 
     authors: [UserMod!]!
     version(version: String!): Version
@@ -86,6 +87,7 @@ input UpdateMod {
     authors: [UpdateUserMod!]
     hidden: Boolean
     tagIDs: [TagID!]
+    compatibility: CompatibilityInfoInput
 }
 
 input UpdateUserMod {
