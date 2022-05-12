@@ -23,4 +23,5 @@ type UpdateMod struct {
 	Hidden           *bool           `json:"hidden"`
 	Authors          []UpdateUserMod `json:"authors"`
 	TagIDs           []string        `json:"tagIDs" validate:"dive,min=3,max=24"`
+	Compatibility    *Compatibility  `json:"compatibility"`
 }
