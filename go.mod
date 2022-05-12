@@ -1,6 +1,6 @@
 module github.com/satisfactorymodding/smr-api
 
-go 1.17
+go 1.18
 
 require (
 	github.com/99designs/gqlgen v0.14.1-0.20211126133514-497227faf4e4

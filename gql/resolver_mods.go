@@ -43,9 +43,9 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 		ModReference:     mod.ModReference,
 	}
 
-	SetStringINN(mod.SourceURL, &dbMod.SourceURL)
-	SetStringINN(mod.FullDescription, &dbMod.FullDescription)
-	SetBoolINN(mod.Hidden, &dbMod.Hidden)
+	SetINN(mod.SourceURL, &dbMod.SourceURL)
+	SetINN(mod.FullDescription, &dbMod.FullDescription)
+	SetINN(mod.Hidden, &dbMod.Hidden)
 
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
@@ -120,10 +120,10 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 
 	SetStringINNOE(mod.Name, &dbMod.Name)
 	SetStringINNOE(mod.ShortDescription, &dbMod.ShortDescription)
-	SetStringINN(mod.SourceURL, &dbMod.SourceURL)
-	SetStringINN(mod.FullDescription, &dbMod.FullDescription)
-	SetStringINN(mod.ModReference, &dbMod.ModReference)
-	SetBoolINN(mod.Hidden, &dbMod.Hidden)
+	SetINN(mod.SourceURL, &dbMod.SourceURL)
+	SetINN(mod.FullDescription, &dbMod.FullDescription)
+	SetINN(mod.ModReference, &dbMod.ModReference)
+	SetINN(mod.Hidden, &dbMod.Hidden)
 
 	if mod.Logo != nil {
 		file, err := ioutil.ReadAll(mod.Logo.File)
