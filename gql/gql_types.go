@@ -62,6 +62,7 @@ func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 		ModReference:     mod.ModReference,
 		Hidden:           mod.Hidden,
 		Tags:             DBTagsToGeneratedSlice(mod.Tags),
+		Compatibility:    DBCompInfoToGenCompInfo(mod.Compatibility),
 	}
 }
 
@@ -197,4 +198,39 @@ func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
 		converted[i] = DBTagToGenerated(&tag)
 	}
 	return converted
+}
+
+func GenCompInfoToDBCompInfo(gen *generated.CompatibilityInfoInput) *postgres.CompatibilityInfo {
+	if gen == nil {
+		return nil
+	}
+	return &postgres.CompatibilityInfo{
+		EA:  GenCompToDBComp(gen.Ea),
+		EXP: GenCompToDBComp(gen.Exp),
+	}
+}
+
+func GenCompToDBComp(gen *generated.CompatibilityInput) postgres.Compatibility {
+	r := postgres.Compatibility{
+		State: string(gen.State),
+	}
+	SetINN(gen.Note, &r.Note)
+	return r
+}
+
+func DBCompInfoToGenCompInfo(gen *postgres.CompatibilityInfo) *generated.CompatibilityInfo {
+	if gen == nil {
+		return nil
+	}
+	return &generated.CompatibilityInfo{
+		Ea:  DBCompToGenComp(gen.EA),
+		Exp: DBCompToGenComp(gen.EXP),
+	}
+}
+
+func DBCompToGenComp(db postgres.Compatibility) *generated.Compatibility {
+	return &generated.Compatibility{
+		State: generated.CompatibilityState(db.State),
+		Note:  &db.Note,
+	}
 }

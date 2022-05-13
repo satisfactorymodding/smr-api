@@ -3,6 +3,7 @@ package gql
 import (
 	"context"
 	"fmt"
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"net"
 	"net/http"
 	"strings"
@@ -58,7 +59,7 @@ func SetStringINNOE(value *string, target *string) {
 
 // SetINN sets target if value not nil
 func SetINN[T any](v *T, target *T) {
-	if !(v == nil) {
+	if v != nil {
 		*target = *v
 	}
 }
@@ -77,6 +78,14 @@ func SetDateINN(value *string, target *time.Time) {
 	}
 
 	*target, _ = time.Parse(time.RFC3339Nano, *value)
+}
+
+func SetCompatibilityINN(value *generated.CompatibilityInfoInput, target **postgres.CompatibilityInfo) {
+	if value == nil {
+		return
+	}
+	toDB := GenCompInfoToDBCompInfo(value)
+	*target = toDB
 }
 
 func RealIP(ctx context.Context) string {

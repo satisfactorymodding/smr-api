@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
 
 	"gorm.io/gorm"
@@ -61,6 +63,7 @@ type Mod struct {
 	LastVersionDate  *time.Time
 	ModReference     string
 	Hidden           bool
+	Compatibility    *CompatibilityInfo
 
 	Users []User `gorm:"many2many:user_mods;"`
 
@@ -175,4 +178,25 @@ type ModTag struct {
 type GuideTag struct {
 	TagID   string `gorm:"primary_key;type:varchar(24)"`
 	GuideID string `gorm:"primary_key;type:varchar(16)"`
+}
+
+type CompatibilityInfo struct {
+	EA  Compatibility `gorm:"type:compatibility"`
+	EXP Compatibility `gorm:"type:compatibility"`
+}
+
+func (c *CompatibilityInfo) Value() (driver.Value, error) {
+	b, err := json.Marshal(c)
+	return b, err
+}
+
+func (c *CompatibilityInfo) Scan(src any) error {
+	v := src.([]byte)
+	err := json.Unmarshal(v, c)
+	return err
+}
+
+type Compatibility struct {
+	State string
+	Note  string
 }

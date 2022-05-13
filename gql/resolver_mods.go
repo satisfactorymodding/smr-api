@@ -124,6 +124,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 	SetINN(mod.FullDescription, &dbMod.FullDescription)
 	SetINN(mod.ModReference, &dbMod.ModReference)
 	SetINN(mod.Hidden, &dbMod.Hidden)
+	SetCompatibilityINN(mod.Compatibility, &dbMod.Compatibility)
 
 	if mod.Logo != nil {
 		file, err := ioutil.ReadAll(mod.Logo.File)
