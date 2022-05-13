@@ -3,11 +3,12 @@ package gql
 import (
 	"context"
 	"fmt"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/util"

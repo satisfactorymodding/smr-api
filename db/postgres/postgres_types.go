@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"gorm.io/gorm"
 )
 
@@ -187,13 +189,13 @@ type CompatibilityInfo struct {
 
 func (c *CompatibilityInfo) Value() (driver.Value, error) {
 	b, err := json.Marshal(c)
-	return b, err
+	return b, errors.Wrap(err, "failed to marshal")
 }
 
 func (c *CompatibilityInfo) Scan(src any) error {
 	v := src.([]byte)
 	err := json.Unmarshal(v, c)
-	return err
+	return errors.Wrap(err, "failed to unmarshal")
 }
 
 type Compatibility struct {
