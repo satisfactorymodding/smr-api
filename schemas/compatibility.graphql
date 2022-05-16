@@ -23,3 +23,8 @@ input CompatibilityInfoInput {
     EA: CompatibilityInput!
     EXP: CompatibilityInput!
 }
+
+extend type Mutation {
+    updateModCompatibility(modId: ModID!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModCompatibility @isLoggedIn
+    updateMultipleModCompatibilities(modIDs: [ModID!]!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModCompatibility @isLoggedIn
+}

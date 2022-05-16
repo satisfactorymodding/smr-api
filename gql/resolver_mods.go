@@ -193,6 +193,27 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 	return DBModToGenerated(dbMod), nil
 }
 
+func (r *mutationResolver) UpdateModCompatibility(ctx context.Context, modID string, compatibility generated.CompatibilityInfoInput) (bool, error) {
+	updateMod := generated.UpdateMod{
+		Compatibility: &compatibility,
+	}
+	_, err := r.UpdateMod(ctx, modID, updateMod)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) UpdateMultipleModCompatibilities(ctx context.Context, modIDs []string, compatibility generated.CompatibilityInfoInput) (bool, error) {
+	for _, modID := range modIDs {
+		_, err := r.UpdateModCompatibility(ctx, modID, compatibility)
+		if err != nil {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
 func (r *mutationResolver) DeleteMod(ctx context.Context, modID string) (bool, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteMod")
 	defer wrapper.end()
