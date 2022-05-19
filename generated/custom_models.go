@@ -11,7 +11,7 @@ type NewMod struct {
 	ModReference     string          `json:"mod_reference"`
 	Hidden           *bool           `json:"hidden"`
 	TagIDs           []string        `json:"tagIDs" validate:"dive,min=3,max=24"`
-	Links            []NewSMLLink    `json:"links"`
+	Links            []string        `json:"links"`
 }
 
 type UpdateMod struct {
@@ -24,5 +24,5 @@ type UpdateMod struct {
 	Hidden           *bool           `json:"hidden"`
 	Authors          []UpdateUserMod `json:"authors"`
 	TagIDs           []string        `json:"tagIDs" validate:"dive,min=3,max=24"`
-	Links            []UpdateSMLLink `json:"links"`
+	Links            []string        `json:"links"`
 }
