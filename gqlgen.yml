@@ -20,6 +20,10 @@ models:
   UpdateMod:
     model: github.com/satisfactorymodding/smr-api/generated.UpdateMod
 
+  ModLinkFilter:
+    model: "map[string]interface{}"
+  SMLLinkFilter:
+    model: "map[string]interface{}"
   VersionFilter:
     model: "map[string]interface{}"
   ModFilter:
