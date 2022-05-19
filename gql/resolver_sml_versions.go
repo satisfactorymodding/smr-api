@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -30,6 +31,28 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 		return nil, errors.Wrap(err, "failed to parse date")
 	}
 
+	fmt.Println("SML Resolver Text: ")
+	fmt.Println("smlVersion Text: ", smlVersion)
+	fmt.Println("smlVersion.Links Text: ", smlVersion.Links)
+	fmt.Println("Number of SML Links: ", len(smlVersion.Links))
+
+	resultLinks := make([]postgres.SMLLink, len(smlVersion.Links))
+
+	for i, smlLink := range smlVersion.Links {
+		dbSMLLinks := &postgres.SMLLink{
+			SMLVersionLinkID: string(smlLink.SMLVersionLinkID),
+			Platform:         string(smlLink.Platform),
+			Side:             string(smlLink.Side),
+			Link:             string(smlLink.Link),
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		resultLinks[i] = *dbSMLLinks
+	}
+
 	dbSMLVersion := &postgres.SMLVersion{
 		Version:             smlVersion.Version,
 		SatisfactoryVersion: smlVersion.SatisfactoryVersion,
@@ -38,6 +61,7 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 		Link:                smlVersion.Link,
 		Changelog:           smlVersion.Changelog,
 		Date:                date,
+		Links:               resultLinks,
 	}
 
 	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)

@@ -329,3 +329,44 @@ func ProcessBootstrapVersionFilter(filter map[string]interface{}) (*BootstrapVer
 
 	return base, nil
 }
+
+type SMLLinkFilter struct {
+	Limit   *int                     `json:"limit" validate:"omitempty,min=1,max=100"`
+	Offset  *int                     `json:"offset" validate:"omitempty,min=0"`
+	OrderBy *generated.SMLLinkFields `json:"order_by"`
+	Order   *generated.Order         `json:"order"`
+	Search  *string                  `json:"search" validate:"omitempty,min=3"`
+	Ids     []string                 `json:"ids" validate:"omitempty,max=100"`
+}
+
+func DefaultSMLLinkFilter() *SMLLinkFilter {
+	limit := 10
+	offset := 0
+	order := generated.OrderDesc
+	orderBy := generated.SMLLinkFieldsPlatform
+	return &SMLLinkFilter{
+		Limit:   &limit,
+		Offset:  &offset,
+		Ids:     nil,
+		Order:   &order,
+		OrderBy: &orderBy,
+	}
+}
+
+func ProcessSMLLinkFilter(filter map[string]interface{}) (*SMLLinkFilter, error) {
+	base := DefaultSMLLinkFilter()
+
+	if filter == nil {
+		return base, nil
+	}
+
+	if err := ApplyChanges(filter, base); err != nil {
+		return nil, err
+	}
+
+	if err := dataValidator.Struct(base); err != nil {
+		return nil, errors.Wrap(err, "failed to validate SMLLinkFilter")
+	}
+
+	return base, nil
+}

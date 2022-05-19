@@ -13,6 +13,17 @@ func CreateSMLVersion(ctx context.Context, smlVersion *SMLVersion) (*SMLVersion,
 
 	DBCtx(ctx).Create(&smlVersion)
 
+	for _, link := range smlVersion.Links {
+
+		DBCtx(ctx).Create(&SMLLink{
+			ID:               util.GenerateUniqueID(),
+			SMLVersionLinkID: smlVersion.ID,
+			Platform:         link.Platform,
+			Side:             link.Side,
+			Link:             link.Link,
+		})
+	}
+
 	return smlVersion, nil
 }
 
@@ -52,6 +63,8 @@ func GetSMLVersionsByID(ctx context.Context, smlVersionIds []string) []SMLVersio
 	if len(smlVersionIds) != len(smlVersions) {
 		return nil
 	}
+
+	DBCtx(ctx).Preload("Links").Find(&smlVersions, "smlversionlinkid in (?)", smlVersionIds)
 
 	return smlVersions
 }

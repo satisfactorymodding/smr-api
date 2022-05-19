@@ -21,16 +21,20 @@ func (r *mutationResolver) CreateSMLLink(ctx context.Context, smlLink generated.
 	}
 
 	dbSMLLinks := &postgres.SMLLink{
-		Platform: string(smlLink.Platform),
-		Side:     string(smlLink.Side),
-		Link:     string(smlLink.Link),
+		SMLVersionLinkID: string(smlLink.SMLVersionLinkID),
+		Platform:         string(smlLink.Platform),
+		Side:             string(smlLink.Side),
+		Link:             string(smlLink.Link),
 	}
 
 	resultSMLLink, err := postgres.CreateSMLLink(newCtx, dbSMLLinks)
+
 	if err != nil {
 		return nil, err
 	}
+
 	return DBSMLLinkToGenerated(resultSMLLink), nil
+
 }
 
 func (r *mutationResolver) DeleteSMLLink(ctx context.Context, linksID string) (bool, error) {
@@ -63,6 +67,7 @@ func (r *mutationResolver) UpdateSMLLink(ctx context.Context, smlLinkID string, 
 		return nil, errors.New("guide not found")
 	}
 
+	SetStringINNOE((*string)(&smlLink.SMLVersionLinkID), &dbSMLLink.SMLVersionLinkID)
 	SetStringINNOE((*string)(&smlLink.Platform), &dbSMLLink.Platform)
 	SetStringINNOE((*string)(&smlLink.Side), &dbSMLLink.Side)
 	SetStringINNOE((*string)(&smlLink.Link), &dbSMLLink.Link)
@@ -81,11 +86,8 @@ func (r *queryResolver) GetSMLLink(ctx context.Context, smlLinkID string) (*gene
 	return DBSMLLinkToGenerated(smlLink), nil
 }
 
-func (r *queryResolver) GetSMLLinks(ctx context.Context) ([]*generated.SMLLink, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getSMLLinks")
+func (r *queryResolver) GetSMLLinks(ctx context.Context, filter map[string]interface{}) (*generated.GetSMLLinks, error) {
+	wrapper, _ := WrapQueryTrace(ctx, "getSMLLinks")
 	defer wrapper.end()
-
-	smllinks := postgres.GetSMLLinks(newCtx)
-
-	return DBSMLLinksToGeneratedSlice(smllinks), nil
+	return &generated.GetSMLLinks{}, nil
 }

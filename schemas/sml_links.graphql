@@ -4,19 +4,34 @@ scalar SMLLinkID
 
 type SMLLink {
     id: SMLLinkID!
-    SMLVersionID: String!
+    SMLVersionLinkID: String!
     platform: String!
     side: String!
     link: String!
 }
 
+enum SMLLinkFields {
+    platform
+    side
+}
+
 type GetSMLLinks {
-    sml_links: [SMLLink!]!
+    links: [SMLLink!]!
 }
 
 ### Inputs
 
+input SMLLinkFilter {
+    limit: Int
+    offset: Int
+    order_by: SMLLinkFields
+    order: Order
+    search: String
+    ids: [String!]
+}
+
 input NewSMLLink {
+    SMLVersionLinkID: String!
     platform: String!
     side: String!
     link: String!
@@ -24,7 +39,7 @@ input NewSMLLink {
 
 input UpdateSMLLink {
     id: SMLLinkID!
-    SMLVersionID: SMLVersionID!
+    SMLVersionLinkID: String!
     platform: String!
     side: String!
     link: String!
@@ -33,7 +48,8 @@ input UpdateSMLLink {
 ### Queries
 
 extend type Query {
-    getSMLLink(smlLinksID: SMLLinkID!): SMLLink
+    getSMLLink(smlVersionId: SMLVersionID!): SMLLink
+    getSMLLinks(filter: SMLLinkFilter): GetSMLLinks!
 }
 
 ### Mutations
