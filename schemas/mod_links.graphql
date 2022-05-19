@@ -1,0 +1,48 @@
+### Types
+
+scalar ModLinkID
+
+type ModLink {
+    id: ModLinkID!
+    version_id: VersionID!
+    platform: String!
+    side: String!
+    link: String!
+    size: Int
+    hash: String
+}
+
+### Inputs
+
+input NewModLink {
+    id: ModLinkID
+    platform: String!
+    side: String!
+    link: String!
+    size: Int
+    hash: String
+}
+
+input UpdateModLink {
+    id: ModLinkID!
+    version_id: VersionID!
+    platform: String!
+    side: String!
+    link: String!
+    size: Int
+    hash: String
+}
+
+### Queries
+
+extend type Query {
+    getModLink(id: ModLinkID!): ModLink
+}
+
+### Mutations
+
+extend type Mutation {
+    createModLink(mod_link: NewModLink!): ModLink @isLoggedIn
+    updateModLink(ModLinksId: ModLinkID!, mod_link: UpdateModLink!): ModLink! @canEditMod(field: "versionId") @isLoggedIn
+    deleteModLink(ModLinksId: ModLinkID!): Boolean! @canEditMod(field: "versionId") @isLoggedIn
+}

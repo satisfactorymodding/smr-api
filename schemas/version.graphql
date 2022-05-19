@@ -32,6 +32,7 @@ type Version {
     updated_at: Date!
     created_at: Date!
     link: String!
+    links: [ModLink]
     metadata: String
     size: Int
     hash: String
