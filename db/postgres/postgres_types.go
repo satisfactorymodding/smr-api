@@ -179,10 +179,8 @@ type GuideTag struct {
 }
 
 type ModLink struct {
-	SMRModel
-
-	VersionID string `gorm:"primary_key;type:varchar(16)"`
-	ModID     string `gorm:"primary_key;type:varchar(16)"`
+	ID        string `gorm:"primary_key;type:varchar(16)"`
+	VersionID string
 	Platform  string
 	Side      string
 	Link      string

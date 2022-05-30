@@ -4,7 +4,7 @@ scalar ModLinkID
 
 type ModLink {
     id: ModLinkID!
-    version_id: VersionID!
+    ModVersionLinkID: String!
     platform: String!
     side: String!
     link: String!
@@ -16,6 +16,7 @@ type ModLink {
 
 input NewModLink {
     id: ModLinkID
+    ModVersionLinkID: String!
     platform: String!
     side: String!
     link: String!
@@ -25,7 +26,7 @@ input NewModLink {
 
 input UpdateModLink {
     id: ModLinkID!
-    version_id: VersionID!
+    ModVersionLinkID: String!
     platform: String!
     side: String!
     link: String!
@@ -36,13 +37,13 @@ input UpdateModLink {
 ### Queries
 
 extend type Query {
-    getModLink(id: ModLinkID!): ModLink
+    getModLink(id: ModVersionLinkID!): ModLink
 }
 
 ### Mutations
 
 extend type Mutation {
     createModLink(mod_link: NewModLink!): ModLink @isLoggedIn
-    updateModLink(ModLinksId: ModLinkID!, mod_link: UpdateModLink!): ModLink! @canEditMod(field: "versionId") @isLoggedIn
-    deleteModLink(ModLinksId: ModLinkID!): Boolean! @canEditMod(field: "versionId") @isLoggedIn
+    updateModLink(ModLinksId: ModVersionLinkID!, mod_link: UpdateModLink!): ModLink! @canEditMod(field: "versionId") @isLoggedIn
+    deleteModLink(ModLinksId: ModVersionLinkID!): Boolean! @canEditMod(field: "versionId") @isLoggedIn
 }

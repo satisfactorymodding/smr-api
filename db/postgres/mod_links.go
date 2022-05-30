@@ -13,15 +13,15 @@ func CreateModLink(ctx context.Context, modLink *ModLink) (*ModLink, error) {
 	return modLink, nil
 }
 
-func GetModLinkByID(ctx context.Context, modLinksId string) *ModLink {
-	cacheKey := "GetModLinkByID_" + modLinksId
+func GetModLinkByID(ctx context.Context, modLinksID string) *ModLink {
+	cacheKey := "GetModLinkByID_" + modLinksID
 
 	if modLink, ok := dbCache.Get(cacheKey); ok {
 		return modLink.(*ModLink)
 	}
 
 	var modLink ModLink
-	DBCtx(ctx).Find(&modLink, "id = ?", modLinksId)
+	DBCtx(ctx).Find(&modLink, "id = ?", modLinksID)
 
 	if modLink.ID == "" {
 		return nil
