@@ -222,7 +222,7 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 	// Validate that all listed files are accounted for in data.json
 	for _, archiveFile := range archive.File {
 		if archiveFile != nil {
-			if strings.HasSuffix(archiveFile.Name, ".dll") || strings.HasSuffix(archiveFile.Name, ".pak") {
+			if strings.HasSuffix(archiveFile.Name, ".dll") || strings.HasSuffix(archiveFile.Name, ".pak") || strings.HasSuffix(archiveFile.Name, ".so") {
 				found := false
 				for _, obj := range modInfo.Objects {
 					if obj.Path == archiveFile.Name {
@@ -342,6 +342,11 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 					Type: "pak",
 				})
 			} else if extension == "dll" {
+				modInfo.Objects = append(modInfo.Objects, ModObject{
+					Path: file.Name,
+					Type: "sml_mod",
+				})
+			} else if extension == "so" {
 				modInfo.Objects = append(modInfo.Objects, ModObject{
 					Path: file.Name,
 					Type: "sml_mod",

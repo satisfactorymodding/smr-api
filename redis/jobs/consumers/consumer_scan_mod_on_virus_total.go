@@ -59,7 +59,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	toScan := make([]io.Reader, 0)
 	names := make([]string, 0)
 	for _, file := range archive.File {
-		if path.Ext(file.Name) == ".dll" {
+		if path.Ext(file.Name) == ".dll" || path.Ext(file.Name) == ".so" {
 			open, err := file.Open()
 
 			if err != nil {
