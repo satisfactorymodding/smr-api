@@ -127,7 +127,7 @@ type SMLVersion struct {
 	Stability           string `sql:"type:version_stability"`
 	Date                time.Time
 	Link                string
-	Links               []SMLLink `gorm:"foreignKey:SMLVersionLinkID"`
+	Links               []SMLLink `gorm:"foreignKey:sml_version_link_id"`
 	Changelog           string
 	BootstrapVersion    *string
 }

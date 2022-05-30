@@ -25,7 +25,7 @@ func GetSMLLinkByID(ctx context.Context, smlLinksId string) *SMLLink {
 	}
 
 	var smlLink SMLLink
-	DBCtx(ctx).Find(&smlLink, "id = ?", smlLinksId)
+	DBCtx(ctx).Preload("Links").Find(&smlLink, "id = ?", smlLinksId)
 
 	if smlLink.ID == "" {
 		return nil
@@ -50,6 +50,18 @@ func GetSMLLinks(ctx context.Context, filter *models.SMLLinkFilter) []SMLLink {
 		}
 	}
 
-	query.Find(&smlLinks)
+	query.Preload("Links").Find(&smlLinks)
+	return smlLinks
+}
+
+func GetSMLLinksByID(ctx context.Context, smlLinkIds []string) []SMLLink {
+	var smlLinks []SMLLink
+
+	DBCtx(ctx).Preload("Links").Find(&smlLinks, "id in (?)", smlLinkIds)
+
+	if len(smlLinkIds) != len(smlLinks) {
+		return nil
+	}
+
 	return smlLinks
 }

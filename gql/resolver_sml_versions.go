@@ -36,11 +36,22 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 	fmt.Println("smlVersion.Links Text: ", smlVersion.Links)
 	fmt.Println("Number of SML Links: ", len(smlVersion.Links))
 
-	resultLinks := make([]postgres.SMLLink, len(smlVersion.Links))
+	dbSMLVersion := &postgres.SMLVersion{
+		Version:             smlVersion.Version,
+		SatisfactoryVersion: smlVersion.SatisfactoryVersion,
+		BootstrapVersion:    smlVersion.BootstrapVersion,
+		Stability:           string(smlVersion.Stability),
+		Link:                smlVersion.Link,
+		Changelog:           smlVersion.Changelog,
+		Date:                date,
+	}
 
-	for i, smlLink := range smlVersion.Links {
+	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
+
+	for _, smlLink := range smlVersion.Links {
 		dbSMLLinks := &postgres.SMLLink{
-			SMLVersionLinkID: string(smlLink.SMLVersionLinkID),
+			ID:               util.GenerateUniqueID(),
+			SMLVersionLinkID: string(resultSMLVersion.ID),
 			Platform:         string(smlLink.Platform),
 			Side:             string(smlLink.Side),
 			Link:             string(smlLink.Link),
@@ -50,21 +61,9 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 			return nil, err
 		}
 
-		resultLinks[i] = *dbSMLLinks
-	}
+		postgres.CreateSMLLink(newCtx, dbSMLLinks)
 
-	dbSMLVersion := &postgres.SMLVersion{
-		Version:             smlVersion.Version,
-		SatisfactoryVersion: smlVersion.SatisfactoryVersion,
-		BootstrapVersion:    smlVersion.BootstrapVersion,
-		Stability:           string(smlVersion.Stability),
-		Link:                smlVersion.Link,
-		Changelog:           smlVersion.Changelog,
-		Date:                date,
-		Links:               resultLinks,
 	}
-
-	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
 
 	if err != nil {
 		return nil, err

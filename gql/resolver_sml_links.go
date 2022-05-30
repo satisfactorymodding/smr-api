@@ -3,7 +3,9 @@ package gql
 import (
 	"context"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/pkg/errors"
+	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
 	"gopkg.in/go-playground/validator.v9"
 
@@ -64,7 +66,7 @@ func (r *mutationResolver) UpdateSMLLink(ctx context.Context, smlLinkID string, 
 	dbSMLLink := postgres.GetSMLLinkByID(newCtx, smlLinkID)
 
 	if dbSMLLink == nil {
-		return nil, errors.New("guide not found")
+		return nil, errors.New("sml link not found")
 	}
 
 	SetStringINNOE((*string)(&smlLink.SMLVersionLinkID), &dbSMLLink.SMLVersionLinkID)
@@ -90,4 +92,37 @@ func (r *queryResolver) GetSMLLinks(ctx context.Context, filter map[string]inter
 	wrapper, _ := WrapQueryTrace(ctx, "getSMLLinks")
 	defer wrapper.end()
 	return &generated.GetSMLLinks{}, nil
+}
+
+type getSMLLinksResolver struct{ *Resolver }
+
+func (r *getSMLLinksResolver) SmlLinks(ctx context.Context, obj *generated.GetSMLLinks) ([]*generated.SMLLink, error) {
+	wrapper, newCtx := WrapQueryTrace(ctx, "GetSMLLinks.Links")
+	defer wrapper.end()
+
+	resolverContext := graphql.GetFieldContext(ctx)
+	smlLinkFilter, err := models.ProcessSMLLinkFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	var smlLinks []postgres.SMLLink
+
+	if smlLinkFilter.Ids == nil || len(smlLinkFilter.Ids) == 0 {
+		smlLinks = postgres.GetSMLLinks(newCtx, smlLinkFilter)
+	} else {
+		smlLinks = postgres.GetSMLLinksByID(newCtx, smlLinkFilter.Ids)
+	}
+
+	if smlLinks == nil {
+		return nil, errors.New("sml releases not found")
+	}
+
+	converted := make([]*generated.SMLLink, len(smlLinks))
+	for k, v := range smlLinks {
+		converted[k] = DBSMLLinkToGenerated(&v)
+	}
+
+	return converted, nil
 }
