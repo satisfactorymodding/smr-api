@@ -52,6 +52,12 @@ type GetMyMods {
     count: Int!
 }
 
+type ModVersion {
+    id: ModID!
+    mod_reference: ModReference!
+    versions: [Version!]!
+}
+
 ### Inputs
 
 input ModFilter {
@@ -95,6 +101,11 @@ input UpdateUserMod {
     role: String!
 }
 
+input ModVersionConstraint {
+    modIdOrReference: String!
+    version: String!
+}
+
 ### Queries
 
 extend type Query {
@@ -106,6 +117,8 @@ extend type Query {
 
     getMyMods(filter: ModFilter): GetMyMods! @isLoggedIn
     getMyUnapprovedMods(filter: ModFilter): GetMyMods! @isLoggedIn
+
+    resolveModVersions(filter: [ModVersionConstraint!]!): [ModVersion!]!
 }
 
 ### Mutations

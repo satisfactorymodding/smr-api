@@ -26,6 +26,7 @@ jobs:
         with:
           skip-pkg-cache: true
           skip-build-cache: true
+          args: --timeout 5m
 
       - name: Build
         run: go build -v -o api-linux-amd64 .

@@ -1,0 +1,56 @@
+{
+  "host": "0.0.0.0",
+  "port": 5020,
+
+  "production": false,
+
+  "database": {
+    "redis": {
+      "host": "localhost",
+      "port": 6379,
+      "pass": "",
+      "db": 1
+    },
+    "postgres": {
+      "host": "localhost",
+      "port": 5432,
+      "user": "postgres",
+      "pass": "REPLACE_ME",
+      "db": "postgres"
+    }
+  },
+
+  "storage": {
+    "type": "s3",
+    "region": "us-east-1",
+    "bucket": "smr",
+    "key": "REPLACE_ME_KEY",
+    "secret": "REPLACE_ME_SECRET",
+    "endpoint": "http://localhost:9000",
+    "base_url": "http://localhost:9000"
+  },
+
+  "oauth": {
+    "github": {
+      "client_id": "...",
+      "client_secret": "..."
+    },
+    "google": {
+      "client_id": "...",
+      "client_secret": "..."
+    },
+    "facebook": {
+      "client_id": "...",
+      "client_secret": "..."
+    }
+  },
+
+  "paseto": {
+    "public_key": "...",
+    "private_key": "..."
+  },
+
+  "frontend": {
+    "url": "http://localhost:4200"
+  }
+}
