@@ -34,13 +34,15 @@ type User struct {
 }
 
 type UserSession struct {
-	SMRModel
+	SMRDates
 
-	UserID string
-	User   User
+	// composite primary key
+	UserID string `gorm:"primaryKey"`
+	Token  string `gorm:"type:varchar(256);unique_index,primaryKey"`
 
-	Token     string `gorm:"type:varchar(256);unique_index"`
 	UserAgent string
+	Revoked   bool
+	// Maybe include IP here for showing to the user eventually?
 }
 
 type Mod struct {

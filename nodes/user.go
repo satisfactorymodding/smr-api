@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func userFromContext(c echo.Context) *postgres.User {
@@ -14,8 +15,22 @@ func userFromContext(c echo.Context) *postgres.User {
 		return nil
 	}
 
-	user := postgres.GetUserByToken(c.Request().Context(), authorization)
+	payload, err := util.VerifyUserToken(authorization)
+	if err != nil {
+		c.Logger().Warn("User attempted to sign in with an invalid token")
+		return nil
+	}
 
+	userID := payload.Get("userID")
+	if userID == "" {
+		return nil
+	}
+
+	if postgres.IsTokenRevokedOrNotFound(c.Request().Context(), userID, authorization) {
+		return nil
+	}
+
+	user := postgres.GetUserByID(c.Request().Context(), userID)
 	if user == nil {
 		return nil
 	}
