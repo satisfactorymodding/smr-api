@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/satisfactorymodding/smr-api/db/postgres"
+
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/util"
 
@@ -56,13 +58,11 @@ func SetStringINNOE(value *string, target *string) {
 	*target = *value
 }
 
-// SetStringINN sets target if value not nil or empty
-func SetStringINN(value *string, target *string) {
-	if value == nil {
-		return
+// SetINN sets target if value not nil
+func SetINN[T any](v *T, target *T) {
+	if v != nil {
+		*target = *v
 	}
-
-	*target = *value
 }
 
 func SetStabilityINN(value *generated.VersionStabilities, target *string) {
@@ -73,14 +73,6 @@ func SetStabilityINN(value *generated.VersionStabilities, target *string) {
 	*target = string(*value)
 }
 
-func SetIntINN(value *int, target *int) {
-	if value == nil {
-		return
-	}
-
-	*target = *value
-}
-
 func SetDateINN(value *string, target *time.Time) {
 	if value == nil {
 		return
@@ -89,12 +81,12 @@ func SetDateINN(value *string, target *time.Time) {
 	*target, _ = time.Parse(time.RFC3339Nano, *value)
 }
 
-func SetBoolINN(value *bool, target *bool) {
+func SetCompatibilityINN(value *generated.CompatibilityInfoInput, target **postgres.CompatibilityInfo) {
 	if value == nil {
 		return
 	}
-
-	*target = *value
+	toDB := GenCompInfoToDBCompInfo(value)
+	*target = toDB
 }
 
 func RealIP(ctx context.Context) string {
