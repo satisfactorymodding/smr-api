@@ -19,8 +19,8 @@ func CreateSMLVersion(ctx context.Context, smlVersion *SMLVersion) (*SMLVersion,
 			ID:               util.GenerateUniqueID(),
 			SMLVersionLinkID: smlVersion.ID,
 			Platform:         link.Platform,
-			Side:             link.Side,
-			Link:             link.Link,
+			//Side:             link.Side,
+			Link: link.Link,
 		})
 	}
 

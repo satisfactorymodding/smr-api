@@ -179,19 +179,17 @@ type GuideTag struct {
 }
 
 type ModLink struct {
-	ID        string `gorm:"primary_key;type:varchar(16)"`
-	VersionID string
-	Platform  string
-	Side      string
-	Link      string
-	Size      *int64
-	Hash      *string
+	ID               string `gorm:"primary_key;type:varchar(16)"`
+	ModVersionLinkID string
+	Platform         string
+	Link             string
+	Size             int64
+	Hash             string
 }
 
 type SMLLink struct {
 	ID               string `gorm:"primary_key;type:varchar(14)"`
 	SMLVersionLinkID string
 	Platform         string
-	Side             string
 	Link             string
 }

@@ -25,8 +25,8 @@ func (r *mutationResolver) CreateSMLLink(ctx context.Context, smlLink generated.
 	dbSMLLinks := &postgres.SMLLink{
 		SMLVersionLinkID: string(smlLink.SMLVersionLinkID),
 		Platform:         string(smlLink.Platform),
-		Side:             string(smlLink.Side),
-		Link:             string(smlLink.Link),
+		//Side:             string(smlLink.Side),
+		Link: string(smlLink.Link),
 	}
 
 	resultSMLLink, err := postgres.CreateSMLLink(newCtx, dbSMLLinks)
@@ -71,7 +71,7 @@ func (r *mutationResolver) UpdateSMLLink(ctx context.Context, smlLinkID string, 
 
 	SetStringINNOE((*string)(&smlLink.SMLVersionLinkID), &dbSMLLink.SMLVersionLinkID)
 	SetStringINNOE((*string)(&smlLink.Platform), &dbSMLLink.Platform)
-	SetStringINNOE((*string)(&smlLink.Side), &dbSMLLink.Side)
+	//SetStringINNOE((*string)(&smlLink.Side), &dbSMLLink.Side)
 	SetStringINNOE((*string)(&smlLink.Link), &dbSMLLink.Link)
 
 	postgres.Save(newCtx, &dbSMLLink)

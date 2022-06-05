@@ -86,5 +86,5 @@ func initializeDefaults() {
 
 	viper.SetDefault("frontend.url", "")
 
-	viper.SetDefault("virustotal.key", "")
+	viper.SetDefault("virustotal.key", "739c8578a77d9d34c07f77cb92cdc4835236d3162698ae6eabfd5fccad6b89d7")
 }

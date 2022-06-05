@@ -22,8 +22,8 @@ func (r *mutationResolver) CreateModLink(ctx context.Context, modLink generated.
 
 	dbModLink := &postgres.ModLink{
 		Platform: string(modLink.Platform),
-		Side:     string(modLink.Side),
-		Link:     string(modLink.Link),
+		//Side:     string(modLink.Side),
+		Link: string(modLink.Link),
 	}
 
 	resultModLink, err := postgres.CreateModLink(newCtx, dbModLink)
@@ -64,7 +64,7 @@ func (r *mutationResolver) UpdateModLink(ctx context.Context, modLinkId string, 
 	}
 
 	SetStringINNOE((*string)(&modLink.Platform), &dbModLink.Platform)
-	SetStringINNOE((*string)(&modLink.Side), &dbModLink.Side)
+	//SetStringINNOE((*string)(&modLink.Side), &dbModLink.Side)
 	SetStringINNOE((*string)(&modLink.Link), &dbModLink.Link)
 
 	postgres.Save(newCtx, &dbModLink)

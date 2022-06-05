@@ -6,7 +6,6 @@ type ModLink {
     id: ModLinkID!
     ModVersionLinkID: String!
     platform: String!
-    side: String!
     link: String!
     size: Int
     hash: String
@@ -18,7 +17,6 @@ input NewModLink {
     id: ModLinkID
     ModVersionLinkID: String!
     platform: String!
-    side: String!
     link: String!
     size: Int
     hash: String
@@ -28,7 +26,6 @@ input UpdateModLink {
     id: ModLinkID!
     ModVersionLinkID: String!
     platform: String!
-    side: String!
     link: String!
     size: Int
     hash: String
@@ -37,13 +34,13 @@ input UpdateModLink {
 ### Queries
 
 extend type Query {
-    getModLink(id: ModVersionLinkID!): ModLink
+    getModLink(id: ModLinkID!): ModLink
 }
 
 ### Mutations
 
 extend type Mutation {
     createModLink(mod_link: NewModLink!): ModLink @isLoggedIn
-    updateModLink(ModLinksId: ModVersionLinkID!, mod_link: UpdateModLink!): ModLink! @canEditMod(field: "versionId") @isLoggedIn
-    deleteModLink(ModLinksId: ModVersionLinkID!): Boolean! @canEditMod(field: "versionId") @isLoggedIn
+    updateModLink(ModLinksId: ModLinkID!, mod_link: UpdateModLink!): ModLink! @canEditMod(field: "versionId") @isLoggedIn
+    deleteModLink(ModLinksId: ModLinkID!): Boolean! @canEditMod(field: "versionId") @isLoggedIn
 }

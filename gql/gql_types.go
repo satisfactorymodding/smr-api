@@ -211,12 +211,12 @@ func DBModLinkToGenerated(modLink *postgres.ModLink) *generated.ModLink {
 	}
 
 	return &generated.ModLink{
-		VersionID: modLink.VersionID,
-		Platform:  modLink.Platform,
-		Side:      modLink.Side,
-		Link:      modLink.Link,
-		Hash:      modLink.Hash,
-		Size:      &size,
+		ModVersionLinkID: modLink.ModVersionLinkID,
+		Platform:         modLink.Platform,
+		//Side:      modLink.Side,
+		Link: modLink.Link,
+		Hash: modLink.Hash,
+		Size: &size,
 	}
 }
 
@@ -236,8 +236,8 @@ func DBSMLLinkToGenerated(smlLink *postgres.SMLLink) *generated.SMLLink {
 	return &generated.SMLLink{
 		SMLVersionLinkID: smlLink.SMLVersionLinkID,
 		Platform:         smlLink.Platform,
-		Side:             smlLink.Side,
-		Link:             smlLink.Link,
+		//Side:             smlLink.Side,
+		Link: smlLink.Link,
 	}
 }
 

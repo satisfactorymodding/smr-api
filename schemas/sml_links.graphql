@@ -6,13 +6,11 @@ type SMLLink {
     id: SMLLinkID!
     SMLVersionLinkID: String!
     platform: String!
-    side: String!
     link: String!
 }
 
 enum SMLLinkFields {
     platform
-    side
 }
 
 type GetSMLLinks {
@@ -33,7 +31,6 @@ input SMLLinkFilter {
 input NewSMLLink {
     SMLVersionLinkID: String!
     platform: String!
-    side: String!
     link: String!
 }
 
@@ -41,7 +38,6 @@ input UpdateSMLLink {
     id: SMLLinkID!
     SMLVersionLinkID: String!
     platform: String!
-    side: String!
     link: String!
 }
 
