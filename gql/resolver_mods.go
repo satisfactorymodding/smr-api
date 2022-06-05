@@ -43,9 +43,9 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 		ModReference:     mod.ModReference,
 	}
 
-	SetStringINN(mod.SourceURL, &dbMod.SourceURL)
-	SetStringINN(mod.FullDescription, &dbMod.FullDescription)
-	SetBoolINN(mod.Hidden, &dbMod.Hidden)
+	SetINN(mod.SourceURL, &dbMod.SourceURL)
+	SetINN(mod.FullDescription, &dbMod.FullDescription)
+	SetINN(mod.Hidden, &dbMod.Hidden)
 
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
@@ -120,10 +120,11 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 
 	SetStringINNOE(mod.Name, &dbMod.Name)
 	SetStringINNOE(mod.ShortDescription, &dbMod.ShortDescription)
-	SetStringINN(mod.SourceURL, &dbMod.SourceURL)
-	SetStringINN(mod.FullDescription, &dbMod.FullDescription)
-	SetStringINN(mod.ModReference, &dbMod.ModReference)
-	SetBoolINN(mod.Hidden, &dbMod.Hidden)
+	SetINN(mod.SourceURL, &dbMod.SourceURL)
+	SetINN(mod.FullDescription, &dbMod.FullDescription)
+	SetINN(mod.ModReference, &dbMod.ModReference)
+	SetINN(mod.Hidden, &dbMod.Hidden)
+	SetCompatibilityINN(mod.Compatibility, &dbMod.Compatibility)
 
 	if mod.Logo != nil {
 		file, err := ioutil.ReadAll(mod.Logo.File)
@@ -190,6 +191,27 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 	}
 
 	return DBModToGenerated(dbMod), nil
+}
+
+func (r *mutationResolver) UpdateModCompatibility(ctx context.Context, modID string, compatibility generated.CompatibilityInfoInput) (bool, error) {
+	updateMod := generated.UpdateMod{
+		Compatibility: &compatibility,
+	}
+	_, err := r.UpdateMod(ctx, modID, updateMod)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) UpdateMultipleModCompatibilities(ctx context.Context, modIDs []string, compatibility generated.CompatibilityInfoInput) (bool, error) {
+	for _, modID := range modIDs {
+		_, err := r.UpdateModCompatibility(ctx, modID, compatibility)
+		if err != nil {
+			return false, err
+		}
+	}
+	return true, nil
 }
 
 func (r *mutationResolver) DeleteMod(ctx context.Context, modID string) (bool, error) {
@@ -552,4 +574,45 @@ func (r *queryResolver) GetModByIDOrReference(ctx context.Context, modIDOrRefere
 	}
 
 	return DBModToGenerated(mod), nil
+}
+
+func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []*generated.ModVersionConstraint) ([]*generated.ModVersion, error) {
+	wrapper, newCtx := WrapQueryTrace(ctx, "resolveModVersions")
+	defer wrapper.end()
+
+	constraintMapping := make(map[string]string)
+	modIDOrReferences := make([]string, len(filter))
+	for i, constraint := range filter {
+		modIDOrReferences[i] = constraint.ModIDOrReference
+		constraintMapping[constraint.ModIDOrReference] = constraint.Version
+	}
+
+	mods := postgres.GetModsByIDOrReference(newCtx, modIDOrReferences)
+
+	if mods == nil {
+		return nil, errors.New("no mods found")
+	}
+
+	modVersions := make([]*generated.ModVersion, len(mods))
+	for i, mod := range mods {
+		constraint, ok := constraintMapping[mod.ID]
+		if !ok {
+			constraint = constraintMapping[mod.ModReference]
+		}
+
+		versions := postgres.GetModVersionsConstraint(newCtx, mod.ID, constraint)
+
+		converted := make([]*generated.Version, len(versions))
+		for k, v := range versions {
+			converted[k] = DBVersionToGenerated(&v)
+		}
+
+		modVersions[i] = &generated.ModVersion{
+			ID:           mod.ID,
+			ModReference: mod.ModReference,
+			Versions:     converted,
+		}
+	}
+
+	return modVersions, nil
 }

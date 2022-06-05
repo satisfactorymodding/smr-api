@@ -8,7 +8,7 @@ require (
 	github.com/Vilsol/ue4pak v0.1.5
 	github.com/VirusTotal/vt-go v0.0.0-20220413144842-e010bf48aaee
 	github.com/avast/retry-go/v3 v3.1.1
-	github.com/aws/aws-sdk-go v1.44.14
+	github.com/aws/aws-sdk-go v1.44.12
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/cespare/xxhash v1.1.0
 	github.com/chai2010/webp v1.1.1
@@ -30,8 +30,7 @@ require (
 	github.com/sizeofint/gif-to-webp v0.0.0-20210224202734-e9d7ed071591
 	github.com/spf13/viper v1.11.0
 	github.com/swaggo/echo-swagger v1.3.2
-	github.com/swaggo/swag v1.8.2
-	github.com/vektah/gqlparser/v2 v2.4.2
+	github.com/swaggo/swag v1.8.1
 	github.com/vmihailenco/taskq/extra/taskqotel/v3 v3.2.8
 	github.com/vmihailenco/taskq/v3 v3.2.8
 	github.com/xeipuuv/gojsonschema v1.2.0
@@ -42,7 +41,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.7.0
 	go.opentelemetry.io/otel/sdk v1.7.0
 	go.opentelemetry.io/otel/trace v1.7.0
-	golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9
+	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gorm.io/driver/postgres v1.3.5
@@ -127,6 +126,7 @@ require (
 	github.com/urfave/cli/v2 v2.4.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
+	github.com/vektah/gqlparser/v2 v2.4.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect

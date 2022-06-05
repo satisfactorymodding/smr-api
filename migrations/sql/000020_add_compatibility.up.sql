@@ -1,2 +1,2 @@
 ALTER TABLE mods
-    ADD COLUMN compatibility jsonb 
+    ADD COLUMN compatibility jsonb

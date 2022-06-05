@@ -84,7 +84,7 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	}
 
 	SetStringINNOE(smlVersion.Version, &dbSMLVersion.Version)
-	SetIntINN(smlVersion.SatisfactoryVersion, &dbSMLVersion.SatisfactoryVersion)
+	SetINN(smlVersion.SatisfactoryVersion, &dbSMLVersion.SatisfactoryVersion)
 	SetStringINNOE(smlVersion.BootstrapVersion, dbSMLVersion.BootstrapVersion)
 	SetStabilityINN(smlVersion.Stability, &dbSMLVersion.Stability)
 	SetStringINNOE(smlVersion.Link, &dbSMLVersion.Link)

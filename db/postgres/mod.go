@@ -213,7 +213,7 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 	}
 
 	query = query.Where("approved = ? AND denied = ?", !unapproved, false)
-	query.Preload("Tags")
+	query = query.Preload("Tags")
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
 			cleanSearch := strings.Replace(strings.TrimSpace(*filter.Search), " ", " & ", -1)
@@ -316,4 +316,18 @@ func AddModTag(ctx context.Context, modID string, tagID string) error {
 func RemoveModTag(ctx context.Context, modID string, tagID string) error {
 	r := DBCtx(ctx).Delete(&ModTag{ModID: modID, TagID: tagID})
 	return r.Error
+}
+
+func GetModsByIDOrReference(ctx context.Context, modIDOrReferences []string) []Mod {
+	cacheKey := "GetModsByIDOrReference_" + strings.Join(modIDOrReferences, "-")
+	if mod, ok := dbCache.Get(cacheKey); ok {
+		return mod.([]Mod)
+	}
+
+	var mods []Mod
+	DBCtx(ctx).Find(&mods, "mod_reference IN ? OR id IN ?", modIDOrReferences, modIDOrReferences)
+
+	dbCache.Set(cacheKey, mods, cache.DefaultExpiration)
+
+	return mods
 }

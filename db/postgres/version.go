@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,6 +14,8 @@ import (
 
 	"github.com/patrickmn/go-cache"
 )
+
+var semverCheck = regexp.MustCompile(`^(<=|<|>|>=|\^)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
 
 func GetVersionsByID(ctx context.Context, versionIds []string) []Version {
 	cacheKey := "GetVersionsById_" + strings.Join(versionIds, ":")
@@ -261,4 +265,98 @@ func GetVersionDependencies(ctx context.Context, versionID string) []VersionDepe
 	var versionDependencies []VersionDependency
 	DBCtx(ctx).Where("version_id = ?", versionID).Find(&versionDependencies)
 	return versionDependencies
+}
+
+func GetModVersionsConstraint(ctx context.Context, modID string, constraint string) []Version {
+	matches := semverCheck.FindAllStringSubmatch(constraint, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+
+	major, err := strconv.Atoi(matches[0][2])
+	if err != nil {
+		return nil
+	}
+
+	minor, err := strconv.Atoi(matches[0][3])
+	if err != nil {
+		return nil
+	}
+
+	patch, err := strconv.Atoi(matches[0][4])
+	if err != nil {
+		return nil
+	}
+
+	query := DBCtx(ctx).Where("mod_id", modID)
+
+	/*
+		<=1.2.3
+		major < 1
+		major = 1, minor < 2
+		major = 1, minor = 2, patch <= 3
+
+		<1.2.3
+		major < 1
+		major = 1, minor < 2
+		major = 1, minor = 2, patch < 3
+
+		>1.2.3
+		major > 1
+		major = 1, minor > 2
+		major = 1, minor = 2, patch > 3
+
+		>=1.2.3
+		major > 1
+		major = 1, minor > 2
+		major = 1, minor = 2, patch >= 3
+
+		1.2.3
+		major = 1, minor = 2, patch = 3
+
+		^1.2.3 (>=1.2.3, <2.0.0)
+		major = 1, minor > 2
+		major = 1, minor = 2, patch >= 3
+
+		^0.2.3 (>=0.2.3, <0.3.0)
+		major = 0, minor = 2, patch >= 3
+
+		^0.0.3 (>=0.0.3, <0.0.4)
+		major = 0, minor = 0, patch = 3
+	*/
+
+	sign := matches[0][1]
+	switch sign {
+	case "<=":
+		query = query.Where(db.Or("version_major < ?", major).
+			Or("version_major = ? AND version_minor < ?", major, minor).
+			Or("version_major = ? AND version_minor = ? AND version_patch <= ?", major, minor, patch))
+	case "<":
+		query = query.Where(db.Or("version_major < ?", major).
+			Or("version_major = ? AND version_minor < ?", major, minor).
+			Or("version_major = ? AND version_minor = ? AND version_patch < ?", major, minor, patch))
+	case ">":
+		query = query.Where(db.Or("version_major > ?", major).
+			Or("version_major = ? AND version_minor > ?", major, minor).
+			Or("version_major = ? AND version_minor = ? AND version_patch > ?", major, minor, patch))
+	case ">=":
+		query = query.Where(db.Or("version_major > ?", major).
+			Or("version_major = ? AND version_minor > ?", major, minor).
+			Or("version_major = ? AND version_minor = ? AND version_patch >= ?", major, minor, patch))
+	case "^":
+		if major != 0 {
+			query = query.Where(db.Or("version_major = ? AND version_minor > ?", major, minor).
+				Or("version_major = ? AND version_minor = ? AND version_patch >= ?", major, minor, patch))
+		} else if minor != 0 {
+			query = query.Where("version_major = ? AND version_minor = ? AND version_patch >= ?", major, minor, patch)
+		} else {
+			query = query.Where("version_major = ? AND version_minor = ? AND version_patch = ?", major, minor, patch)
+		}
+	default:
+		query = query.Where("version_major = ? AND version_minor = ? AND version_patch = ?", major, minor, patch)
+	}
+
+	var versions []Version
+	query.Find(&versions)
+	return versions
 }

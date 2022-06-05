@@ -142,7 +142,8 @@ func (f *ModFilter) AddField(name string) {
 		"created_at",
 		"last_version_date",
 		"mod_reference",
-		"hidden":
+		"hidden",
+		"compatibility":
 		f.Fields = append(f.Fields, "mods."+name)
 	}
 }

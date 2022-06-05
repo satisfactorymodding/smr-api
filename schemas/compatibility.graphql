@@ -1,0 +1,30 @@
+enum CompatibilityState {
+    Works
+    Damaged
+    Broken
+}
+
+type Compatibility {
+    state: CompatibilityState!
+    note: String
+}
+
+input CompatibilityInput {
+    state: CompatibilityState!
+    note: String
+}
+
+type CompatibilityInfo {
+    EA: Compatibility!
+    EXP: Compatibility!
+}
+
+input CompatibilityInfoInput {
+    EA: CompatibilityInput!
+    EXP: CompatibilityInput!
+}
+
+extend type Mutation {
+    updateModCompatibility(modId: ModID!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModCompatibility @isLoggedIn
+    updateMultipleModCompatibilities(modIDs: [ModID!]!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModCompatibility @isLoggedIn
+}
