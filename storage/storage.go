@@ -1,12 +1,17 @@
 package storage
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"strings"
 
 	"github.com/avast/retry-go/v3"
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 
 	"github.com/pkg/errors"
 
@@ -347,4 +352,144 @@ func EncodeName(name string) string {
 		result = strings.ReplaceAll(result, k, v)
 	}
 	return result
+}
+
+func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID string) error {
+
+	//read combined file
+
+	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
+
+	if err != nil {
+		return errors.New("invalid zip archive")
+	}
+
+	// Create a buffer to write our archive to.
+	fmt.Println("Beginning Splitting Operations")
+	bufLinuxServer := new(bytes.Buffer)
+	bufWin64Server := new(bytes.Buffer)
+	bufWin64Client := new(bytes.Buffer)
+
+	// Create a new zip archive.
+	zipWriterLinuxServer := zip.NewWriter(bufLinuxServer)
+	zipWriterWin64Server := zip.NewWriter(bufWin64Server)
+	zipWriterWin64Client := zip.NewWriter(bufWin64Client)
+
+	var LinuxServer = false
+	var Win64Server = false
+	var Win64Client = false
+
+	// Add some files to the archive.
+	for _, file := range zipReader.File {
+
+		if !strings.Contains(file.Name, "pdb") && !strings.Contains(file.Name, "debug") {
+
+			if strings.Contains(file.FileHeader.Name, "LinuxServer") {
+				file.FileHeader.Name = strings.ReplaceAll(file.FileHeader.Name, "LinuxServer/", "")
+				zipWriterLinuxServer.Copy(file)
+				LinuxServer = true
+			}
+
+			if strings.Contains(file.FileHeader.Name, "WindowsServer") {
+				file.FileHeader.Name = strings.ReplaceAll(file.FileHeader.Name, "WindowsServer/", "")
+				zipWriterWin64Server.Copy(file)
+				Win64Server = true
+			}
+
+			if strings.Contains(file.FileHeader.Name, "WindowsNoClient") {
+				file.FileHeader.Name = strings.ReplaceAll(file.FileHeader.Name, "WindowsNoClient/", "")
+				zipWriterWin64Client.Copy(file)
+				Win64Client = true
+			}
+		}
+	}
+
+	// Make sure to check the error on Close.
+	err = zipWriterLinuxServer.Close()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	err = zipWriterWin64Server.Close()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	err = zipWriterWin64Client.Close()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	//Write to mod_link and upload new smaller smod file
+	if LinuxServer {
+		cleanName := cleanModName(name)
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-LinuxServer-"+versionID)
+		_, err = storage.Put(ctx, key, bytes.NewReader(bufLinuxServer.Bytes()))
+
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		hash := sha256.New()
+		_, err = hash.Write(bufLinuxServer.Bytes())
+
+		dbModLink := &postgres.ModLink{
+			ModVersionLinkID: versionID,
+			Link:             key,
+			Hash:             hex.EncodeToString(hash.Sum(nil)),
+			Size:             int64(len(bufLinuxServer.Bytes())),
+		}
+
+		postgres.CreateModLink(ctx, dbModLink)
+	}
+
+	if Win64Server {
+		cleanName := cleanModName(name)
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Win64Server-"+versionID)
+		_, err = storage.Put(ctx, key, bytes.NewReader(bufWin64Server.Bytes()))
+
+		hash := sha256.New()
+		_, err = hash.Write(bufWin64Server.Bytes())
+
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		dbModLink := &postgres.ModLink{
+			ModVersionLinkID: versionID,
+			Link:             key,
+			Hash:             hex.EncodeToString(hash.Sum(nil)),
+			Size:             int64(len(bufWin64Server.Bytes())),
+		}
+
+		postgres.CreateModLink(ctx, dbModLink)
+	}
+	if Win64Client {
+		cleanName := cleanModName(name)
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowNoEditor-"+versionID)
+		_, err = storage.Put(ctx, key, bytes.NewReader(bufWin64Client.Bytes()))
+
+		hash := sha256.New()
+		_, err = hash.Write(bufWin64Client.Bytes())
+
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		dbModLink := &postgres.ModLink{
+			ModVersionLinkID: versionID,
+			Link:             key,
+			Hash:             hex.EncodeToString(hash.Sum(nil)),
+			Size:             int64(len(bufWin64Client.Bytes())),
+		}
+
+		postgres.CreateModLink(ctx, dbModLink)
+	}
+
+	return nil
+
 }
