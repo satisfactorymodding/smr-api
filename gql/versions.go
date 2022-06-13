@@ -124,9 +124,9 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	}
 
 	// TODO Validate mod files
-	success, key := storage.RenameVersion(ctx, mod.ID, mod.Name, versionID, modInfo.Version)
+	key, err := storage.SeparateMod(ctx, fileData, mod.ID, mod.Name, versionID, modInfo.Version)
 
-	if !success {
+	if err != nil {
 		for modID, condition := range modInfo.Dependencies {
 			dependency := postgres.VersionDependency{
 				VersionID: dbVersion.ID,

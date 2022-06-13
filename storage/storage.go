@@ -371,14 +371,14 @@ func EncodeName(name string) string {
 	return result
 }
 
-func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID string) error {
+func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID string, modVersion string) (string, error) {
 
 	//read combined file
 
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 
 	if err != nil {
-		return errors.New("invalid zip archive")
+		return "", errors.New("invalid zip archive")
 	}
 
 	// Create a buffer to write our archive to.
@@ -396,28 +396,73 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	var Win64Server = false
 	var Win64Client = false
 
+	cleanName := cleanModName(name)
+
 	// Add some files to the archive.
 	for _, file := range zipReader.File {
 
-		if !strings.Contains(file.Name, "pdb") && !strings.Contains(file.Name, "debug") {
+		if !strings.HasPrefix(file.Name, "pdb") && !strings.HasPrefix(file.Name, "debug") && !strings.Contains(file.Name, name+modVersion) {
 
-			if strings.Contains(file.FileHeader.Name, "LinuxServer") {
-				file.FileHeader.Name = strings.ReplaceAll(file.FileHeader.Name, "LinuxServer/", "")
-				zipWriterLinuxServer.Copy(file)
+			if strings.Contains(file.Name, "LinuxServer") {
+				fileName := strings.ReplaceAll(file.Name, "LinuxServer/", "")
+				zipFile, err := zipWriterLinuxServer.Create(fileName)
+
+				if err != nil {
+					fmt.Println(err)
+					return "", err
+				}
+
+				rawFile, err := file.Open()
+
+				if err != nil {
+					fmt.Println(err)
+					return "", err
+				}
+
+				zipFile.Write(StreamToByte(rawFile))
 				LinuxServer = true
 			}
 
-			if strings.Contains(file.FileHeader.Name, "WindowsServer") {
-				file.FileHeader.Name = strings.ReplaceAll(file.FileHeader.Name, "WindowsServer/", "")
-				zipWriterWin64Server.Copy(file)
+			if strings.Contains(file.Name, "WindowsServer") {
+				fileName := strings.ReplaceAll(file.Name, "WindowsServer/", "")
+				zipFile, err := zipWriterWin64Server.Create(fileName)
+
+				if err != nil {
+					fmt.Println(err)
+					return "", err
+				}
+
+				rawFile, err := file.Open()
+
+				if err != nil {
+					fmt.Println(err)
+					return "", err
+				}
+
+				zipFile.Write(StreamToByte(rawFile))
 				Win64Server = true
 			}
 
-			if strings.Contains(file.FileHeader.Name, "WindowsNoClient") {
-				file.FileHeader.Name = strings.ReplaceAll(file.FileHeader.Name, "WindowsNoClient/", "")
-				zipWriterWin64Client.Copy(file)
+			if strings.Contains(file.Name, "WindowsNoEditor") {
+				fileName := strings.ReplaceAll(file.Name, "WindowsNoEditor/", "")
+				zipFile, err := zipWriterWin64Client.Create(fileName)
+
+				if err != nil {
+					fmt.Println(err)
+					return "", err
+				}
+
+				rawFile, err := file.Open()
+
+				if err != nil {
+					fmt.Println(err)
+					return "", err
+				}
+
+				zipFile.Write(StreamToByte(rawFile))
 				Win64Client = true
 			}
+
 		}
 	}
 
@@ -425,28 +470,27 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	err = zipWriterLinuxServer.Close()
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return "", err
 	}
 	err = zipWriterWin64Server.Close()
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return "", err
 	}
 	err = zipWriterWin64Client.Close()
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return "", err
 	}
 
 	//Write to mod_link and upload new smaller smod file
 	if LinuxServer {
-		cleanName := cleanModName(name)
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-LinuxServer-"+versionID)
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-LinuxServer-"+modVersion)
 		_, err = storage.Put(ctx, key, bytes.NewReader(bufLinuxServer.Bytes()))
 
 		if err != nil {
 			fmt.Println(err)
-			return err
+			return "", err
 		}
 
 		hash := sha256.New()
@@ -463,8 +507,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	}
 
 	if Win64Server {
-		cleanName := cleanModName(name)
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Win64Server-"+versionID)
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Win64Server-"+modVersion)
 		_, err = storage.Put(ctx, key, bytes.NewReader(bufWin64Server.Bytes()))
 
 		hash := sha256.New()
@@ -472,7 +515,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 
 		if err != nil {
 			fmt.Println(err)
-			return err
+			return "", err
 		}
 
 		dbModLink := &postgres.ModLink{
@@ -485,8 +528,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		postgres.CreateModLink(ctx, dbModLink)
 	}
 	if Win64Client {
-		cleanName := cleanModName(name)
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowNoEditor-"+versionID)
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowNoEditor-"+modVersion)
 		_, err = storage.Put(ctx, key, bytes.NewReader(bufWin64Client.Bytes()))
 
 		hash := sha256.New()
@@ -494,7 +536,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 
 		if err != nil {
 			fmt.Println(err)
-			return err
+			return "", err
 		}
 
 		dbModLink := &postgres.ModLink{
@@ -507,6 +549,14 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		postgres.CreateModLink(ctx, dbModLink)
 	}
 
-	return nil
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowNoEditor-"+modVersion)
 
+	return key, err
+
+}
+
+func StreamToByte(stream io.Reader) []byte {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(stream)
+	return buf.Bytes()
 }
