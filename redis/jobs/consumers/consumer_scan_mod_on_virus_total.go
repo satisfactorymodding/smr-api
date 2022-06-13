@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -40,7 +41,11 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	log.Ctx(ctx).Info().Msgf("starting virus scan of mod %s version %s", task.ModID, task.VersionID)
 
 	version := postgres.GetVersion(ctx, task.VersionID)
-	link := storage.GenerateDownloadLink(version.Key)
+	mod := postgres.GetModByID(ctx, version.ModID)
+	//Before Dedi
+	//link := storage.GenerateDownloadLink(version.Key)
+
+	link := fmt.Sprintf("/mods/%s/%s.smod", version.ModID, mod.Name+version.ID)
 
 	response, _ := http.Get(link)
 
