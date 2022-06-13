@@ -151,6 +151,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 		postgres.DeleteForced(ctx, &dbVersion)
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		storage.DeleteCombinedMod(ctx, mod.ID, mod.Name, dbVersion.ID)
 		return nil, errors.New("failed to upload mod")
 	}
 
@@ -165,6 +166,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &mod)
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
+		storage.DeleteCombinedMod(ctx, mod.ID, mod.Name, dbVersion.ID)
 	} else {
 		l.Info().Msg("Submitting version job for virus scan")
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)

@@ -95,5 +95,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 		go integrations.NewVersion(util.ReWrapCtx(ctx), version)
 	}
 
+	go storage.DeleteCombinedMod(ctx, task.ModID, mod.Name, task.VersionID)
+
 	return nil
 }

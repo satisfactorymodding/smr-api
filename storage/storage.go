@@ -294,6 +294,23 @@ func DeleteMod(ctx context.Context, modID string, name string, versionID string)
 	return true
 }
 
+func DeleteCombinedMod(ctx context.Context, modID string, name string, versionID string) bool {
+	if storage == nil {
+		return false
+	}
+
+	cleanName := cleanModName(name)
+
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
+
+	if err := storage.Delete(key); err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to delete combined version")
+		return false
+	}
+
+	return true
+}
+
 func ModVersionMeta(ctx context.Context, modID string, name string, versionID string) *ObjectMeta {
 	if storage == nil {
 		return nil
