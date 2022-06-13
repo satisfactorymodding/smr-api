@@ -207,17 +207,16 @@ func DBModLinkToGenerated(modLink *postgres.ModLink) *generated.ModLink {
 	}
 
 	size := 0
-	if modLink.Size != nil {
-		size = int(*modLink.Size)
+	if &modLink.Size != nil {
+		size = int(modLink.Size)
 	}
 
 	return &generated.ModLink{
 		ModVersionLinkID: modLink.ModVersionLinkID,
 		Platform:         modLink.Platform,
-		//Side:      modLink.Side,
-		Link: modLink.Link,
-		Hash: modLink.Hash,
-		Size: &size,
+		Link:             modLink.Link,
+		Hash:             &modLink.Hash,
+		Size:             &size,
 	}
 }
 

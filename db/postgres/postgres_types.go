@@ -95,6 +95,7 @@ type Version struct {
 	Approved     bool   `gorm:"default:false;not null"`
 	Denied       bool   `gorm:"default:false;not null"`
 	Hotness      uint
+	Links        []ModLink `gorm:"foreignKey:mod_version_link_id"`
 	Metadata     *string
 	ModReference *string
 	VersionMajor *int
