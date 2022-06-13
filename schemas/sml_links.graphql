@@ -35,7 +35,6 @@ input NewSMLLink {
 }
 
 input UpdateSMLLink {
-    id: SMLLinkID!
     SMLVersionLinkID: String!
     platform: String!
     link: String!

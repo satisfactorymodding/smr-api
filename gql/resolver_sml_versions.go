@@ -47,8 +47,7 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 			ID:               util.GenerateUniqueID(),
 			SMLVersionLinkID: string(resultSMLVersion.ID),
 			Platform:         string(smlLink.Platform),
-			//Side:             string(smlLink.Side),
-			Link: string(smlLink.Link),
+			Link:             string(smlLink.Link),
 		}
 
 		resultSMLLink, err := postgres.CreateSMLLink(newCtx, dbSMLLinks)

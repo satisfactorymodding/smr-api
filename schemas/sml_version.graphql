@@ -8,7 +8,7 @@ type SMLVersion {
     satisfactory_version: Int!
     stability: VersionStabilities!
     link: String!
-    links: [SMLLink]
+    links: [SMLLink]!
     changelog: String!
     date: Date!
     bootstrap_version: String
@@ -48,7 +48,7 @@ input UpdateSMLVersion {
     satisfactory_version: Int
     stability: VersionStabilities
     link: String
-    links: [UpdateSMLLink]
+    links: [UpdateSMLLink]!
     changelog: String
     date: Date
     bootstrap_version: String
