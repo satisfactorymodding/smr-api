@@ -288,3 +288,33 @@ func downloadModVersion(c echo.Context) error {
 
 	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))
 }
+
+func downloadModVersionLink(c echo.Context) error {
+	modID := c.Param("modId")
+	versionID := c.Param("versionId")
+	platformType := c.Param("platform")
+
+	mod := postgres.GetModByID(c.Request().Context(), modID)
+
+	if mod == nil {
+		return c.String(404, "mod not found")
+	}
+
+	version := postgres.GetModVersion(c.Request().Context(), mod.ID, versionID)
+
+	if version == nil {
+		return c.String(404, "version not found")
+	}
+
+	platform := postgres.GetModLink(c.Request().Context(), versionID, platformType)
+
+	if platform == nil {
+		return c.String(404, "platform not found")
+	}
+
+	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
+		postgres.IncrementVersionDownloads(c.Request().Context(), version)
+	}
+
+	return c.Redirect(302, storage.GenerateDownloadLink(platform.Link))
+}

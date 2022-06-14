@@ -42,10 +42,8 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 	version := postgres.GetVersion(ctx, task.VersionID)
 	mod := postgres.GetModByID(ctx, version.ModID)
-	//Before Dedi
-	//link := storage.GenerateDownloadLink(version.Key)
 
-	link := fmt.Sprintf("/mods/%s/%s.smod", version.ModID, mod.Name+version.ID)
+	link := storage.GenerateDownloadLink(version.Key)
 
 	response, _ := http.Get(link)
 

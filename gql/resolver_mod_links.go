@@ -33,11 +33,11 @@ func (r *mutationResolver) CreateModLink(ctx context.Context, modLink generated.
 	return DBModLinkToGenerated(resultModLink), nil
 }
 
-func (r *mutationResolver) DeleteModLink(ctx context.Context, linksID string) (bool, error) {
+func (r *mutationResolver) DeleteModLink(ctx context.Context, modLinksID string) (bool, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteModLink")
 	defer wrapper.end()
 
-	dbModLink := postgres.GetModLinkByID(newCtx, linksID)
+	dbModLink := postgres.GetModLinkByID(ctx, modLinksID)
 
 	if dbModLink == nil {
 		return false, errors.New("Mod Link not found")
@@ -48,7 +48,7 @@ func (r *mutationResolver) DeleteModLink(ctx context.Context, linksID string) (b
 	return true, nil
 }
 
-func (r *mutationResolver) UpdateModLink(ctx context.Context, modLinkId string, modLink generated.UpdateModLink) (*generated.ModLink, error) {
+func (r *mutationResolver) UpdateModLink(ctx context.Context, modLinkID string, modLink generated.UpdateModLink) (*generated.ModLink, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "updateModLink")
 	defer wrapper.end()
 
@@ -57,14 +57,13 @@ func (r *mutationResolver) UpdateModLink(ctx context.Context, modLinkId string, 
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	dbModLink := postgres.GetModLinkByID(newCtx, modLinkId)
+	dbModLink := postgres.GetModLinkByID(newCtx, modLinkID)
 
 	if dbModLink == nil {
 		return nil, errors.New("guide not found")
 	}
 
 	SetStringINNOE((*string)(&modLink.Platform), &dbModLink.Platform)
-	//SetStringINNOE((*string)(&modLink.Side), &dbModLink.Side)
 	SetStringINNOE((*string)(&modLink.Link), &dbModLink.Link)
 
 	postgres.Save(newCtx, &dbModLink)

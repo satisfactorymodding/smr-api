@@ -61,3 +61,21 @@ func GetLinksByMod(ctx context.Context, importance string) []ModLink {
 
 	return modLink
 }
+
+func GetModLink(ctx context.Context, versionID string, platform string) *ModLink {
+	cacheKey := "GetModLink_" + versionID + "_" + platform
+	if modplatform, ok := dbCache.Get(cacheKey); ok {
+		return modplatform.(*ModLink)
+	}
+
+	var modplatform ModLink
+	DBCtx(ctx).First(&modplatform, "mod_version_link_id = ? AND platform = ?", versionID, platform)
+
+	if modplatform.ModVersionLinkID == "" {
+		return nil
+	}
+
+	dbCache.Set(cacheKey, &modplatform, cache.DefaultExpiration)
+
+	return &modplatform
+}

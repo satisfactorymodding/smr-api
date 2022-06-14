@@ -68,8 +68,8 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		ModID:        mod.ID,
 		Stability:    string(version.Stability),
 		ModReference: &modInfo.ModReference,
-		//Size:         &modInfo.Size,
-		//Hash:         &modInfo.Hash,
+		Size:         &modInfo.Size,
+		Hash:         &modInfo.Hash,
 		VersionMajor: &versionMajor,
 		VersionMinor: &versionMinor,
 		VersionPatch: &versionPatch,
@@ -124,9 +124,11 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	}
 
 	// TODO Validate mod files
-	key, err := storage.SeparateMod(ctx, fileData, mod.ID, mod.Name, versionID, modInfo.Version)
+	success, key := storage.RenameVersion(ctx, mod.ID, mod.Name, versionID, modInfo.Version)
 
-	if err != nil {
+	separated := storage.SeparateMod(ctx, fileData, mod.ID, mod.Name, dbVersion.ID, modInfo.Version)
+
+	if !success || !separated {
 		for modID, condition := range modInfo.Dependencies {
 			dependency := postgres.VersionDependency{
 				VersionID: dbVersion.ID,
@@ -151,7 +153,10 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 		postgres.DeleteForced(ctx, &dbVersion)
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		storage.DeleteCombinedMod(ctx, mod.ID, mod.Name, dbVersion.ID)
+		storage.DeleteCombinedMod(ctx, mod.ID, mod.Name, versionID)
+		for _, dbModLink := range dbVersion.Links {
+			postgres.Delete(ctx, dbModLink)
+		}
 		return nil, errors.New("failed to upload mod")
 	}
 
@@ -166,7 +171,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &mod)
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
-		storage.DeleteCombinedMod(ctx, mod.ID, mod.Name, dbVersion.ID)
+		storage.DeleteCombinedMod(ctx, mod.ID, mod.Name, versionID)
 	} else {
 		l.Info().Msg("Submitting version job for virus scan")
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)
