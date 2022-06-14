@@ -400,30 +400,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	for _, file := range zipReader.File {
 		if !strings.HasPrefix(file.Name, "pdb") && !strings.HasPrefix(file.Name, "debug") && !strings.Contains(file.Name, name+modVersion) {
 			if strings.Contains(file.Name, "LinuxServer") {
-				fileName := strings.ReplaceAll(file.Name, "LinuxServer/", "")
-				zipFile, err := zipWriterLinuxServer.Create(fileName)
-
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
-
-				rawFile, err := file.Open()
-
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
-
-				buf := new(bytes.Buffer)
-				_, err = buf.ReadFrom(rawFile)
-
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
-
-				_, err = zipFile.Write(buf.Bytes())
+				err = WriteZipFile(file, "LinuxServer", zipWriterLinuxServer)
 
 				if err != nil {
 					fmt.Println(err)
@@ -434,30 +411,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 			}
 
 			if strings.Contains(file.Name, "WindowsServer") {
-				fileName := strings.ReplaceAll(file.Name, "WindowsServer/", "")
-				zipFile, err := zipWriterWin64Server.Create(fileName)
-
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
-
-				rawFile, err := file.Open()
-
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
-
-				buf := new(bytes.Buffer)
-				_, err = buf.ReadFrom(rawFile)
-
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
-
-				_, err = zipFile.Write(buf.Bytes())
+				err = WriteZipFile(file, "WindowsServer", zipWriterWin64Server)
 
 				if err != nil {
 					fmt.Println(err)
@@ -468,30 +422,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 			}
 
 			if strings.Contains(file.Name, "WindowsNoEditor") {
-				fileName := strings.ReplaceAll(file.Name, "WindowsNoEditor/", "")
-				zipFile, err := zipWriterWin64Client.Create(fileName)
-
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
-
-				rawFile, err := file.Open()
-
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
-
-				buf := new(bytes.Buffer)
-				_, err = buf.ReadFrom(rawFile)
-
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
-
-				_, err = zipFile.Write(buf.Bytes())
+				err = WriteZipFile(file, "WindowsNoEditor", zipWriterWin64Client)
 
 				if err != nil {
 					fmt.Println(err)
@@ -523,31 +454,9 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	//Write to mod_link and upload new smaller smod file
 	if LinuxServer {
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-LinuxServer-"+modVersion)
-		_, err = storage.Put(ctx, key, bytes.NewReader(bufLinuxServer.Bytes()))
+		platform := "LinuxServer"
 
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		hash := sha256.New()
-		_, err = hash.Write(bufLinuxServer.Bytes())
-
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		dbModLink := &postgres.ModLink{
-			ModVersionLinkID: versionID,
-			Platform:         "LinuxServer",
-			Link:             key,
-			Hash:             hex.EncodeToString(hash.Sum(nil)),
-			Size:             int64(len(bufLinuxServer.Bytes())),
-		}
-
-		_, err = postgres.CreateModLink(ctx, dbModLink)
-
+		err = WriteModLink(ctx, key, versionID, platform, bufLinuxServer)
 		if err != nil {
 			fmt.Println(err)
 			return false
@@ -556,30 +465,9 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 
 	if Win64Server {
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Win64Server-"+modVersion)
-		_, err = storage.Put(ctx, key, bytes.NewReader(bufWin64Server.Bytes()))
+		platform := "WindowsServer"
 
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		hash := sha256.New()
-		_, err = hash.Write(bufWin64Server.Bytes())
-
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		dbModLink := &postgres.ModLink{
-			ModVersionLinkID: versionID,
-			Platform:         "WindowsServer",
-			Link:             key,
-			Hash:             hex.EncodeToString(hash.Sum(nil)),
-			Size:             int64(len(bufWin64Server.Bytes())),
-		}
-
-		_, err = postgres.CreateModLink(ctx, dbModLink)
+		err = WriteModLink(ctx, key, versionID, platform, bufLinuxServer)
 
 		if err != nil {
 			fmt.Println(err)
@@ -587,31 +475,10 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		}
 	}
 	if Win64Client {
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowNoEditor-"+modVersion)
-		_, err = storage.Put(ctx, key, bytes.NewReader(bufWin64Client.Bytes()))
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-LinuxServer-"+modVersion)
+		platform := "WindowsNoEditor"
 
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		hash := sha256.New()
-		_, err = hash.Write(bufWin64Client.Bytes())
-
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		dbModLink := &postgres.ModLink{
-			ModVersionLinkID: versionID,
-			Platform:         "WindowNoEditor",
-			Link:             key,
-			Hash:             hex.EncodeToString(hash.Sum(nil)),
-			Size:             int64(len(bufWin64Client.Bytes())),
-		}
-
-		_, err = postgres.CreateModLink(ctx, dbModLink)
+		err = WriteModLink(ctx, key, versionID, platform, bufLinuxServer)
 
 		if err != nil {
 			fmt.Println(err)
@@ -620,4 +487,73 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	}
 
 	return true
+}
+
+func WriteZipFile(file *zip.File, platform string, zipWriter *zip.Writer) error {
+	fileName := strings.ReplaceAll(file.Name, platform+"/", "")
+	zipFile, err := zipWriter.Create(fileName)
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	rawFile, err := file.Open()
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	buf := new(bytes.Buffer)
+	_, err = buf.ReadFrom(rawFile)
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	_, err = zipFile.Write(buf.Bytes())
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func WriteModLink(ctx context.Context, key string, versionID string, platform string, buffer *bytes.Buffer) error {
+	_, err := storage.Put(ctx, key, bytes.NewReader(buffer.Bytes()))
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	hash := sha256.New()
+	_, err = hash.Write(buffer.Bytes())
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	dbModLink := &postgres.ModLink{
+		ModVersionLinkID: versionID,
+		Platform:         platform,
+		Link:             key,
+		Hash:             hex.EncodeToString(hash.Sum(nil)),
+		Size:             int64(len(buffer.Bytes())),
+	}
+
+	_, err = postgres.CreateModLink(ctx, dbModLink)
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
+
 }
