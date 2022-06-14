@@ -17,15 +17,15 @@ func CreateSMLLink(ctx context.Context, smlLink *SMLLink) (*SMLLink, error) {
 	return smlLink, nil
 }
 
-func GetSMLLinkByID(ctx context.Context, smlLinksId string) *SMLLink {
-	cacheKey := "GetSMLLinkByID_" + smlLinksId
+func GetSMLLinkByID(ctx context.Context, smlLinksID string) *SMLLink {
+	cacheKey := "GetSMLLinkByID_" + smlLinksID
 
 	if smlLink, ok := dbCache.Get(cacheKey); ok {
 		return smlLink.(*SMLLink)
 	}
 
 	var smlLink SMLLink
-	DBCtx(ctx).Preload("Links").Find(&smlLink, "id = ?", smlLinksId)
+	DBCtx(ctx).Preload("Links").Find(&smlLink, "id = ?", smlLinksID)
 
 	if smlLink.ID == "" {
 		return nil

@@ -14,13 +14,11 @@ func CreateSMLVersion(ctx context.Context, smlVersion *SMLVersion) (*SMLVersion,
 	DBCtx(ctx).Create(&smlVersion)
 
 	for _, link := range smlVersion.Links {
-
 		DBCtx(ctx).Create(&SMLLink{
 			ID:               util.GenerateUniqueID(),
 			SMLVersionLinkID: smlVersion.ID,
 			Platform:         link.Platform,
-			//Side:             link.Side,
-			Link: link.Link,
+			Link:             link.Link,
 		})
 	}
 

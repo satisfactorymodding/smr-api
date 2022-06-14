@@ -57,7 +57,6 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 		}
 
 		DBSMLLinkToGenerated(resultSMLLink)
-
 	}
 
 	if err != nil {

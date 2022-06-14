@@ -36,7 +36,6 @@ func (r *mutationResolver) CreateSMLLink(ctx context.Context, smlLink generated.
 	}
 
 	return DBSMLLinkToGenerated(resultSMLLink), nil
-
 }
 
 func (r *mutationResolver) DeleteSMLLink(ctx context.Context, linksID string) (bool, error) {
@@ -57,7 +56,6 @@ func (r *mutationResolver) DeleteSMLLink(ctx context.Context, linksID string) (b
 func (r *mutationResolver) UpdateSMLLink(ctx context.Context, smlLinkID string, smlLink generated.UpdateSMLLink) (*generated.SMLLink, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "updateSMLLink")
 	defer wrapper.end()
-
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&smlLink); err != nil {
 		return nil, errors.Wrap(err, "validation failed")
