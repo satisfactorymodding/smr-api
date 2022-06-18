@@ -212,6 +212,7 @@ func DBModLinkToGenerated(modLink *postgres.ModLink) *generated.ModLink {
 	}
 
 	return &generated.ModLink{
+		ID:               modLink.ID,
 		ModVersionLinkID: modLink.ModVersionLinkID,
 		Platform:         modLink.Platform,
 		Link:             modLink.Link,

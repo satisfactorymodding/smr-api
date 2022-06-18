@@ -20,24 +20,29 @@ func (r *mutationResolver) CreateModLink(ctx context.Context, modLink generated.
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	dbModLink := &postgres.ModLink{
-		Platform: string(modLink.Platform),
-		//Side:     string(modLink.Side),
-		Link: string(modLink.Link),
+	dbModLinks := &postgres.ModLink{
+		ID:               string(util.GenerateUniqueID()),
+		ModVersionLinkID: string(modLink.ModVersionLinkID),
+		Platform:         string(modLink.Platform),
+		Link:             string(modLink.Link),
+		Hash:             *modLink.Hash,
+		Size:             int64(*modLink.Size),
 	}
 
-	resultModLink, err := postgres.CreateModLink(newCtx, dbModLink)
+	resultModLink, err := postgres.CreateModLink(newCtx, dbModLinks)
+
 	if err != nil {
 		return nil, err
 	}
+
 	return DBModLinkToGenerated(resultModLink), nil
 }
 
-func (r *mutationResolver) DeleteModLink(ctx context.Context, modLinksID string) (bool, error) {
+func (r *mutationResolver) DeleteModLink(ctx context.Context, linksID string) (bool, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteModLink")
 	defer wrapper.end()
 
-	dbModLink := postgres.GetModLinkByID(ctx, modLinksID)
+	dbModLink := postgres.GetModLinkByID(newCtx, linksID)
 
 	if dbModLink == nil {
 		return false, errors.New("Mod Link not found")
@@ -48,30 +53,22 @@ func (r *mutationResolver) DeleteModLink(ctx context.Context, modLinksID string)
 	return true, nil
 }
 
-func (r *mutationResolver) UpdateModLink(ctx context.Context, modLinkID string, modLink generated.UpdateModLink) (*generated.ModLink, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "updateModLink")
+func (r *queryResolver) GetModLink(ctx context.Context, modLinkID string) (*generated.ModLink, error) {
+	wrapper, newCtx := WrapQueryTrace(ctx, "getModLink")
 	defer wrapper.end()
 
-	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
-	if err := val.Struct(&modLink); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
-	}
+	modLink := postgres.GetModLink(newCtx, modLinkID)
 
-	dbModLink := postgres.GetModLinkByID(newCtx, modLinkID)
-
-	if dbModLink == nil {
-		return nil, errors.New("guide not found")
-	}
-
-	SetStringINNOE((*string)(&modLink.Platform), &dbModLink.Platform)
-	SetStringINNOE((*string)(&modLink.Link), &dbModLink.Link)
-
-	postgres.Save(newCtx, &dbModLink)
-
-	return DBModLinkToGenerated(dbModLink), nil
+	return DBModLinkToGenerated(modLink), nil
 }
 
-func (r *queryResolver) GetModLink(ctx context.Context, modLinkID string) (*generated.ModLink, error) {
+func (r *queryResolver) GetModLinks(ctx context.Context, filter map[string]interface{}) (*generated.GetModLinks, error) {
+	wrapper, _ := WrapQueryTrace(ctx, "getModLinks")
+	defer wrapper.end()
+	return &generated.GetModLinks{}, nil
+}
+
+func (r *queryResolver) GetModLinkByID(ctx context.Context, modLinkID string) (*generated.ModLink, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getModLink")
 	defer wrapper.end()
 
@@ -79,3 +76,5 @@ func (r *queryResolver) GetModLink(ctx context.Context, modLinkID string) (*gene
 
 	return DBModLinkToGenerated(modLink), nil
 }
+
+type getModLinksResolver struct{ *Resolver }

@@ -2,7 +2,7 @@
 create table if not exists mod_links
 (
     id                varchar(14) not null constraint mod_links_pkey primary key,
-    mod_version_link_id             text,
+    mod_version_link_id             varchar(14),
     platform          varchar(16),
     link              text,
     hash              char(64),

@@ -11,19 +11,27 @@ type ModLink {
     hash: String
 }
 
+enum ModLinkFields {
+    platform
+}
+
+type GetModLinks {
+    links: [ModLink!]!
+}
+
 ### Inputs
+
+input ModLinkFilter {
+    limit: Int
+    offset: Int
+    order_by: ModLinkFields
+    order: Order
+    search: String
+    ids: [String!]
+}
 
 input NewModLink {
     id: ModLinkID
-    ModVersionLinkID: String!
-    platform: String!
-    link: String!
-    size: Int
-    hash: String
-}
-
-input UpdateModLink {
-    id: ModLinkID!
     ModVersionLinkID: String!
     platform: String!
     link: String!
@@ -35,12 +43,12 @@ input UpdateModLink {
 
 extend type Query {
     getModLink(id: ModLinkID!): ModLink
+    getModLinks(filter: ModLinkFilter): GetModLinks!
 }
 
 ### Mutations
 
 extend type Mutation {
     createModLink(mod_link: NewModLink!): ModLink @isLoggedIn
-    updateModLink(ModLinksId: ModLinkID!, mod_link: UpdateModLink!): ModLink! @canEditMod(field: "versionId") @isLoggedIn
     deleteModLink(ModLinksId: ModLinkID!): Boolean! @canEditMod(field: "versionId") @isLoggedIn
 }

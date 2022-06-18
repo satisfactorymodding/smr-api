@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"strings"
 
 	"github.com/patrickmn/go-cache"
+	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -13,15 +15,15 @@ func CreateModLink(ctx context.Context, modLink *ModLink) (*ModLink, error) {
 	return modLink, nil
 }
 
-func GetModLinkByID(ctx context.Context, modLinksID string) *ModLink {
-	cacheKey := "GetModLinkByID_" + modLinksID
+func GetModLink(ctx context.Context, modLinkID string) *ModLink {
+	cacheKey := "GetModLink_" + modLinkID
 
 	if modLink, ok := dbCache.Get(cacheKey); ok {
 		return modLink.(*ModLink)
 	}
 
 	var modLink ModLink
-	DBCtx(ctx).Find(&modLink, "id = ?", modLinksID)
+	DBCtx(ctx).Find(&modLink, "id = ?", modLinkID)
 
 	if modLink.ID == "" {
 		return nil
@@ -32,37 +34,56 @@ func GetModLinkByID(ctx context.Context, modLinksID string) *ModLink {
 	return &modLink
 }
 
-func GetModLinks(ctx context.Context) []ModLink {
-	cacheKey := "GetModLinks"
+func GetModLinks(ctx context.Context, filter *models.ModLinkFilter) []ModLink {
+	var modLinks []ModLink
+	query := DBCtx(ctx)
 
-	if modLink, ok := dbCache.Get(cacheKey); ok {
-		return modLink.([]ModLink)
+	if filter != nil {
+		query = query.Limit(*filter.Limit).
+			Offset(*filter.Offset).
+			Order(string(*filter.OrderBy) + " " + string(*filter.Order))
+
+		if filter.Search != nil && *filter.Search != "" {
+			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+		}
 	}
 
-	var modLink []ModLink
-	DBCtx(ctx).Find(&modLink)
+	query.Find(&modLinks)
+	return modLinks
+}
+
+func GetModLinkByID(ctx context.Context, modLinkID string) *ModLink {
+	cacheKey := "GetModLink_" + modLinkID
+
+	if modLink, ok := dbCache.Get(cacheKey); ok {
+		return modLink.(*ModLink)
+	}
+
+	var modLink ModLink
+	DBCtx(ctx).Find(&modLink, "id = ?", modLinkID)
+
+	if modLink.ID == "" {
+		return nil
+	}
 
 	dbCache.Set(cacheKey, modLink, cache.DefaultExpiration)
 
-	return modLink
+	return &modLink
 }
 
-func GetLinksByMod(ctx context.Context, importance string) []ModLink {
-	cacheKey := "GetLinksByMod_" + importance
+func GetModLinksByID(ctx context.Context, modLinkIds []string) []ModLink {
+	var modLinks []ModLink
 
-	if modLink, ok := dbCache.Get(cacheKey); ok {
-		return modLink.([]ModLink)
+	DBCtx(ctx).Find(&modLinks, "id in (?)", modLinkIds)
+
+	if len(modLinkIds) != len(modLinks) {
+		return nil
 	}
 
-	var modLink []ModLink
-	DBCtx(ctx).Find(&modLink, "importance = ?", importance)
-
-	dbCache.Set(cacheKey, modLink, cache.DefaultExpiration)
-
-	return modLink
+	return modLinks
 }
 
-func GetModLink(ctx context.Context, versionID string, platform string) *ModLink {
+func GetModLinkDownload(ctx context.Context, versionID string, platform string) *ModLink {
 	cacheKey := "GetModLink_" + versionID + "_" + platform
 	if modplatform, ok := dbCache.Get(cacheKey); ok {
 		return modplatform.(*ModLink)
