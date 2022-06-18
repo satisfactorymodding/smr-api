@@ -29,12 +29,14 @@ input SMLLinkFilter {
 }
 
 input NewSMLLink {
+    id: SMLLinkID!
     SMLVersionLinkID: String!
     platform: String!
     link: String!
 }
 
 input UpdateSMLLink {
+    id: SMLLinkID!
     SMLVersionLinkID: String!
     platform: String!
     link: String!

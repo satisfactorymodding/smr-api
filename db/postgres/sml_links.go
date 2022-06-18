@@ -17,15 +17,15 @@ func CreateSMLLink(ctx context.Context, smlLink *SMLLink) (*SMLLink, error) {
 	return smlLink, nil
 }
 
-func GetSMLLinkByID(ctx context.Context, smlLinksID string) *SMLLink {
-	cacheKey := "GetSMLLinkByID_" + smlLinksID
+func GetSMLLink(ctx context.Context, smlLinkID string) *SMLLink {
+	cacheKey := "GetSMLLink_" + smlLinkID
 
 	if smlLink, ok := dbCache.Get(cacheKey); ok {
 		return smlLink.(*SMLLink)
 	}
 
 	var smlLink SMLLink
-	DBCtx(ctx).Preload("Links").Find(&smlLink, "id = ?", smlLinksID)
+	DBCtx(ctx).Find(&smlLink, "id = ?", smlLinkID)
 
 	if smlLink.ID == "" {
 		return nil
@@ -50,14 +50,26 @@ func GetSMLLinks(ctx context.Context, filter *models.SMLLinkFilter) []SMLLink {
 		}
 	}
 
-	query.Preload("Links").Find(&smlLinks)
+	query.Find(&smlLinks)
+	return smlLinks
+}
+
+func GetSMLLinkByID(ctx context.Context, smlLinkID string) []SMLLink {
+	var smlLinks []SMLLink
+
+	DBCtx(ctx).Find(&smlLinks, "id in ?", smlLinkID)
+
+	if len(smlLinks) != 0 {
+		return nil
+	}
+
 	return smlLinks
 }
 
 func GetSMLLinksByID(ctx context.Context, smlLinkIds []string) []SMLLink {
 	var smlLinks []SMLLink
 
-	DBCtx(ctx).Preload("Links").Find(&smlLinks, "id in (?)", smlLinkIds)
+	DBCtx(ctx).Find(&smlLinks, "id in (?)", smlLinkIds)
 
 	if len(smlLinkIds) != len(smlLinks) {
 		return nil

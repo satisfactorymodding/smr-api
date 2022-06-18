@@ -14,7 +14,7 @@ create index if not exists idx_mod_links_id on mod_links (mod_version_link_id, p
 create table if not exists sml_links
 (
     id                varchar(14) not null constraint sml_links_pkey primary key,
-    sml_version_link_id      text,
+    sml_version_link_id      varchar(14),
     platform          varchar(16),
     link              text
 );

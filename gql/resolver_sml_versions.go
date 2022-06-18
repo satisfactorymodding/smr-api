@@ -89,6 +89,17 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	SetStringINNOE(smlVersion.Changelog, &dbSMLVersion.Changelog)
 	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
 
+	for _, smlLink := range smlVersion.Links {
+		dbSMLLink := postgres.GetSMLLink(newCtx, smlLink.ID)
+
+		SetStringINNOE((*string)(&smlLink.ID), &dbSMLLink.ID)
+		SetStringINNOE((*string)(&smlLink.SMLVersionLinkID), &dbSMLLink.SMLVersionLinkID)
+		SetStringINNOE((*string)(&smlLink.Platform), &dbSMLLink.Platform)
+		SetStringINNOE((*string)(&smlLink.Link), &dbSMLLink.Link)
+
+		postgres.Save(newCtx, dbSMLLink)
+	}
+
 	postgres.Save(newCtx, &dbSMLVersion)
 
 	return DBSMLVersionToGenerated(dbSMLVersion), nil
@@ -102,6 +113,16 @@ func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID st
 
 	if dbSMLVersion == nil {
 		return false, errors.New("smlVersion not found")
+	}
+
+	for _, smlLink := range dbSMLVersion.Links {
+		dbSMLLink := postgres.GetSMLLink(newCtx, smlLink.ID)
+
+		if dbSMLVersion == nil {
+			return false, errors.New("smlLink not found")
+		}
+
+		postgres.Delete(newCtx, &dbSMLLink)
 	}
 
 	postgres.Delete(newCtx, &dbSMLVersion)

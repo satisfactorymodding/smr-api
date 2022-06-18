@@ -234,10 +234,10 @@ func DBSMLLinkToGenerated(smlLink *postgres.SMLLink) *generated.SMLLink {
 	}
 
 	return &generated.SMLLink{
+		ID:               smlLink.ID,
 		SMLVersionLinkID: smlLink.SMLVersionLinkID,
 		Platform:         smlLink.Platform,
-		//Side:             smlLink.Side,
-		Link: smlLink.Link,
+		Link:             smlLink.Link,
 	}
 }
 
