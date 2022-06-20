@@ -1,12 +1,12 @@
 -- Mod Links
 create table if not exists mod_links
 (
-    id                varchar(14) not null constraint mod_links_pkey primary key,
-    mod_version_link_id             varchar(14),
-    platform          varchar(16),
-    link              text,
-    hash              char(64),
-    size              bigint
+    id                      varchar(14) not null constraint mod_links_pkey primary key,
+    mod_version_link_id     varchar(14),
+    platform                varchar(16),
+    key                     text,
+    hash                    char(64),
+    size                    bigint
 );
 create index if not exists idx_mod_links_id on mod_links (mod_version_link_id, platform);
 

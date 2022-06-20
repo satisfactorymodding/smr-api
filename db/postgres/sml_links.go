@@ -77,3 +77,14 @@ func GetSMLLinksByID(ctx context.Context, smlLinkIds []string) []SMLLink {
 
 	return smlLinks
 }
+
+func GetSMLLinkDownload(ctx context.Context, smlVersionID string, platform string) string {
+	var smlPlatform SMLLink
+	DBCtx(ctx).First(&smlPlatform, "sml_version_link_id = ? AND platform = ?", smlVersionID, platform)
+
+	if smlPlatform.SMLVersionLinkID == "" {
+		return ""
+	}
+
+	return smlPlatform.Link
+}

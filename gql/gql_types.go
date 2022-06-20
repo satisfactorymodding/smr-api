@@ -124,7 +124,7 @@ func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) *generated.SMLVers
 		BootstrapVersion:    smlVersion.BootstrapVersion,
 		Stability:           generated.VersionStabilities(smlVersion.Stability),
 		Link:                smlVersion.Link,
-		Links:               DBSMLLinksToGeneratedSlice(smlVersion.Links),
+		Arch:                DBSMLLinksToGeneratedSlice(smlVersion.Arch),
 		Changelog:           smlVersion.Changelog,
 		Date:                smlVersion.Date.Format(time.RFC3339Nano),
 		UpdatedAt:           smlVersion.UpdatedAt.Format(time.RFC3339Nano),

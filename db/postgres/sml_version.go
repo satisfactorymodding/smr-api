@@ -13,7 +13,7 @@ func CreateSMLVersion(ctx context.Context, smlVersion *SMLVersion) (*SMLVersion,
 
 	DBCtx(ctx).Create(&smlVersion)
 
-	for _, link := range smlVersion.Links {
+	for _, link := range smlVersion.Arch {
 		DBCtx(ctx).Create(&SMLLink{
 			ID:               util.GenerateUniqueID(),
 			SMLVersionLinkID: smlVersion.ID,
@@ -27,7 +27,7 @@ func CreateSMLVersion(ctx context.Context, smlVersion *SMLVersion) (*SMLVersion,
 
 func GetSMLVersionByID(ctx context.Context, smlVersionID string) *SMLVersion {
 	var smlVersion SMLVersion
-	DBCtx(ctx).Preload("Links").Find(&smlVersion, "id in (?)", smlVersionID)
+	DBCtx(ctx).Preload("Arch").Find(&smlVersion, "id in (?)", smlVersionID)
 
 	if smlVersion.ID == "" {
 		return nil
@@ -50,14 +50,14 @@ func GetSMLVersions(ctx context.Context, filter *models.SMLVersionFilter) []SMLV
 		}
 	}
 
-	query.Preload("Links").Find(&smlVersions)
+	query.Preload("Arch").Find(&smlVersions)
 
 	return smlVersions
 }
 
 func GetSMLVersionsByID(ctx context.Context, smlVersionIds []string) []SMLVersion {
 	var smlVersions []SMLVersion
-	DBCtx(ctx).Preload("Links").Find(&smlVersions, "id in (?)", smlVersionIds)
+	DBCtx(ctx).Preload("Arch").Find(&smlVersions, "id in (?)", smlVersionIds)
 
 	if len(smlVersionIds) != len(smlVersions) {
 		return nil
@@ -83,7 +83,7 @@ func GetSMLVersionCount(ctx context.Context, filter *models.SMLVersionFilter) in
 func GetSMLLatestVersions(ctx context.Context) *[]SMLVersion {
 	var smlVersions []SMLVersion
 
-	DBCtx(ctx).Preload("Links").Select("distinct on (stability) *").
+	DBCtx(ctx).Preload("Arch").Select("distinct on (stability) *").
 		Order("stability, created_at desc").
 		Find(&smlVersions)
 

@@ -89,4 +89,9 @@ func (r *queryResolver) GetSMLLinks(ctx context.Context, filter map[string]inter
 	return &generated.GetSMLLinks{}, nil
 }
 
-type getSMLLinksResolver struct{ *Resolver }
+func (r *queryResolver) GetSMLDownload(ctx context.Context, smlVersionID string, platform string) (string, error) {
+	wrapper, newCtx := WrapQueryTrace(ctx, "getSMLDownload")
+	defer wrapper.end()
+	smlLink := postgres.GetSMLLinkDownload(newCtx, smlVersionID, platform)
+	return smlLink, nil
+}

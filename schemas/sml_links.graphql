@@ -14,7 +14,7 @@ enum SMLLinkFields {
 }
 
 type GetSMLLinks {
-    links: [SMLLink!]!
+    arch: [SMLLink!]!
 }
 
 ### Inputs
@@ -47,6 +47,8 @@ input UpdateSMLLink {
 extend type Query {
     getSMLLink(smlVersionId: SMLVersionID!): SMLLink
     getSMLLinks(filter: SMLLinkFilter): GetSMLLinks!
+
+    getSMLDownload(SMLVersionLinkID: String!, platform: String!): String!
 }
 
 ### Mutations
