@@ -24,7 +24,7 @@ func (r *mutationResolver) CreateModLink(ctx context.Context, modLink generated.
 		ID:               string(util.GenerateUniqueID()),
 		ModVersionLinkID: string(modLink.ModVersionLinkID),
 		Platform:         string(modLink.Platform),
-		Link:             string(modLink.Link),
+		Key:              string(modLink.Key),
 		Hash:             *modLink.Hash,
 		Size:             int64(*modLink.Size),
 	}
@@ -53,12 +53,14 @@ func (r *mutationResolver) DeleteModLink(ctx context.Context, linksID string) (b
 	return true, nil
 }
 
+func (r *versionResolver) ModLink(_ context.Context, obj *generated.ModLink) (string, error) {
+	return "/v1/version/" + obj.ModVersionLinkID + "/platform/" + obj.Platform + "/download", nil
+}
+
 func (r *queryResolver) GetModLink(ctx context.Context, modLinkID string) (*generated.ModLink, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getModLink")
 	defer wrapper.end()
-
 	modLink := postgres.GetModLink(newCtx, modLinkID)
-
 	return DBModLinkToGenerated(modLink), nil
 }
 
@@ -71,10 +73,13 @@ func (r *queryResolver) GetModLinks(ctx context.Context, filter map[string]inter
 func (r *queryResolver) GetModLinkByID(ctx context.Context, modLinkID string) (*generated.ModLink, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getModLink")
 	defer wrapper.end()
-
 	modLink := postgres.GetModLinkByID(newCtx, modLinkID)
-
 	return DBModLinkToGenerated(modLink), nil
 }
 
-type getModLinksResolver struct{ *Resolver }
+func (r *queryResolver) GetModDownload(ctx context.Context, versionID string, platform string) (string, error) {
+	wrapper, newCtx := WrapQueryTrace(ctx, "getModDownload")
+	defer wrapper.end()
+	modLink := postgres.GetModLinkDownload(newCtx, versionID, platform)
+	return modLink, nil
+}

@@ -209,7 +209,7 @@ type ModLink struct {
 	ID               string `gorm:"primary_key;type:varchar(16)"`
 	ModVersionLinkID string
 	Platform         string
-	Link             string
+	Key              string
 	Size             int64
 	Hash             string
 }

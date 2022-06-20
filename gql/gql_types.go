@@ -84,6 +84,7 @@ func DBVersionToGenerated(version *postgres.Version) *generated.Version {
 		Changelog:  version.Changelog,
 		Downloads:  int(version.Downloads),
 		Stability:  generated.VersionStabilities(version.Stability),
+		Arch:       DBModLinksToGeneratedSlice(version.Arch),
 		Approved:   version.Approved,
 		UpdatedAt:  version.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:  version.CreatedAt.Format(time.RFC3339Nano),
@@ -215,7 +216,7 @@ func DBModLinkToGenerated(modLink *postgres.ModLink) *generated.ModLink {
 		ID:               modLink.ID,
 		ModVersionLinkID: modLink.ModVersionLinkID,
 		Platform:         modLink.Platform,
-		Link:             modLink.Link,
+		Key:              modLink.Key,
 		Hash:             &modLink.Hash,
 		Size:             &size,
 	}

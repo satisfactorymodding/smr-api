@@ -52,6 +52,14 @@ func GetModLinks(ctx context.Context, filter *models.ModLinkFilter) []ModLink {
 	return modLinks
 }
 
+func GetVersionModLinks(ctx context.Context, versionID string) []ModLink {
+	var modLinks []ModLink
+	query := DBCtx(ctx).Find(&modLinks, "mod_version_link_id = ?", versionID)
+
+	query.Find(&modLinks)
+	return modLinks
+}
+
 func GetModLinkByID(ctx context.Context, modLinkID string) *ModLink {
 	cacheKey := "GetModLink_" + modLinkID
 
@@ -83,7 +91,7 @@ func GetModLinksByID(ctx context.Context, modLinkIds []string) []ModLink {
 	return modLinks
 }
 
-func GetModLinkDownload(ctx context.Context, versionID string, platform string) *ModLink {
+func GetModLinkByPlatform(ctx context.Context, versionID string, platform string) *ModLink {
 	cacheKey := "GetModLink_" + versionID + "_" + platform
 	if modplatform, ok := dbCache.Get(cacheKey); ok {
 		return modplatform.(*ModLink)
@@ -99,4 +107,15 @@ func GetModLinkDownload(ctx context.Context, versionID string, platform string) 
 	dbCache.Set(cacheKey, &modplatform, cache.DefaultExpiration)
 
 	return &modplatform
+}
+
+func GetModLinkDownload(ctx context.Context, versionID string, platform string) string {
+	var modPlatform ModLink
+	DBCtx(ctx).First(&modPlatform, "mod_version_link_id = ? AND platform = ?", versionID, platform)
+
+	if modPlatform.ModVersionLinkID == "" {
+		return ""
+	}
+
+	return modPlatform.Key
 }

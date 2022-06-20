@@ -6,7 +6,7 @@ type ModLink {
     id: ModLinkID!
     ModVersionLinkID: String!
     platform: String!
-    link: String!
+    key: String!
     size: Int
     hash: String
 }
@@ -16,7 +16,7 @@ enum ModLinkFields {
 }
 
 type GetModLinks {
-    links: [ModLink!]!
+    arch: [ModLink!]!
 }
 
 ### Inputs
@@ -34,7 +34,7 @@ input NewModLink {
     id: ModLinkID
     ModVersionLinkID: String!
     platform: String!
-    link: String!
+    key: String!
     size: Int
     hash: String
 }
@@ -44,6 +44,8 @@ input NewModLink {
 extend type Query {
     getModLink(id: ModLinkID!): ModLink
     getModLinks(filter: ModLinkFilter): GetModLinks!
+
+    getModDownload(ModVersionLinkID: String!, platform: String!): String!
 }
 
 ### Mutations

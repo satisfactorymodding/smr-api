@@ -213,7 +213,7 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 	}
 
 	query = query.Where("approved = ? AND denied = ?", !unapproved, false)
-	query = query.Preload("Tags").Preload("Links")
+	query = query.Preload("Tags").Preload("Arch")
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
 			cleanSearch := strings.Replace(strings.TrimSpace(*filter.Search), " ", " & ", -1)
