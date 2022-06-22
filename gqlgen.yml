@@ -57,6 +57,11 @@ models:
       latestVersions:
         resolver: true
 
+  ModLink:
+    fields:
+      asset:
+        resolver: true
+
   UserMod:
     fields:
       user:
