@@ -6,7 +6,7 @@ type ModLink {
     id: ModLinkID!
     ModVersionLinkID: String!
     platform: String!
-    key: String!
+    asset: String!
     size: Int
     hash: String
 }

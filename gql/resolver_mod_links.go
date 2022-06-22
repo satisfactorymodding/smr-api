@@ -38,11 +38,11 @@ func (r *mutationResolver) CreateModLink(ctx context.Context, modLink generated.
 	return DBModLinkToGenerated(resultModLink), nil
 }
 
-func (r *mutationResolver) DeleteModLink(ctx context.Context, linksID string) (bool, error) {
+func (r *mutationResolver) DeleteModLink(ctx context.Context, modLinkID string) (bool, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "deleteModLink")
 	defer wrapper.end()
 
-	dbModLink := postgres.GetModLinkByID(newCtx, linksID)
+	dbModLink := postgres.GetModLinkByID(newCtx, modLinkID)
 
 	if dbModLink == nil {
 		return false, errors.New("Mod Link not found")
@@ -53,8 +53,10 @@ func (r *mutationResolver) DeleteModLink(ctx context.Context, linksID string) (b
 	return true, nil
 }
 
-func (r *versionResolver) ModLink(_ context.Context, obj *generated.ModLink) (string, error) {
-	return "/v1/version/" + obj.ModVersionLinkID + "/platform/" + obj.Platform + "/download", nil
+type modlinkResolver struct{ *Resolver }
+
+func (r *modlinkResolver) Asset(_ context.Context, obj *generated.ModLink) (string, error) {
+	return "/v1/version/" + obj.ModVersionLinkID + "/" + obj.Platform + "/download", nil
 }
 
 func (r *queryResolver) GetModLink(ctx context.Context, modLinkID string) (*generated.ModLink, error) {
