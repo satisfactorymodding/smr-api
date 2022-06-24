@@ -277,7 +277,7 @@ func RenameVersion(ctx context.Context, modID string, name string, versionID str
 	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(cleanName)+"-"+version)
 }
 
-func DeleteMod(ctx context.Context, modID string, name string, versionID string) bool {
+func DeleteVersion(ctx context.Context, modID string, name string, versionID string) bool {
 	if storage == nil {
 		return false
 	}
@@ -285,7 +285,6 @@ func DeleteMod(ctx context.Context, modID string, name string, versionID string)
 	cleanName := cleanModName(name)
 
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
-
 	if err := storage.Delete(key); err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to delete version")
 		return false
@@ -294,17 +293,44 @@ func DeleteMod(ctx context.Context, modID string, name string, versionID string)
 	return true
 }
 
-func DeleteCombinedMod(ctx context.Context, modID string, name string, version string) bool {
+func DeleteMod(ctx context.Context, modID string, name string, versionID string) bool {
 	if storage == nil {
 		return false
 	}
 
 	cleanName := cleanModName(name)
 
-	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+version)
+	query := postgres.GetModVersion(ctx, modID, versionID)
+
+	if len(query.Arch) != 0 {
+		for _, link := range query.Arch {
+			if success := DeleteModLink(ctx, modID, cleanName, versionID, link.Platform); !success {
+				return false
+			}
+		}
+	} else {
+
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
+
+		if err := storage.Delete(key); err != nil {
+			log.Ctx(ctx).Err(err).Msg("failed to delete version")
+			return false
+		}
+	}
+
+	return true
+}
+
+func DeleteModLink(ctx context.Context, modID string, name string, versionID string, platform string) bool {
+	if storage == nil {
+		return false
+	}
+
+	cleanName := cleanModName(name)
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+platform+"-"+versionID)
 
 	if err := storage.Delete(key); err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to delete combined version")
+		log.Ctx(ctx).Err(err).Msg("failed to delete version link")
 		return false
 	}
 
@@ -371,12 +397,12 @@ func EncodeName(name string) string {
 	return result
 }
 
-func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID string, modVersion string) bool {
+func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID string, modVersion string) (bool, string) {
 	//read combined file
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 
 	if err != nil {
-		return false
+		return false, ""
 	}
 
 	// Create a buffer to write our archive to.
@@ -398,39 +424,41 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 
 	// Add some files to the archive.
 	for _, file := range zipReader.File {
-		if !strings.HasPrefix(file.Name, "pdb") && !strings.HasPrefix(file.Name, "debug") && !strings.Contains(file.Name, name+modVersion) {
-			if strings.Contains(file.Name, "LinuxServer") {
-				err = WriteZipFile(file, "LinuxServer", zipWriterLinuxServer)
+		if strings.HasPrefix(file.Name, ".pdb") || strings.HasPrefix(file.Name, ".debug") || strings.Contains(file.Name, modVersion) {
+			continue
+		}
 
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
+		if strings.Contains(file.Name, "LinuxServer") {
+			err = WriteZipFile(file, "LinuxServer", zipWriterLinuxServer)
 
-				LinuxServer = true
+			if err != nil {
+				fmt.Println(err)
+				return false, ""
 			}
 
-			if strings.Contains(file.Name, "WindowsServer") {
-				err = WriteZipFile(file, "WindowsServer", zipWriterWin64Server)
+			LinuxServer = true
+		}
 
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
+		if strings.Contains(file.Name, "WindowsServer") {
+			err = WriteZipFile(file, "WindowsServer", zipWriterWin64Server)
 
-				Win64Server = true
+			if err != nil {
+				fmt.Println(err)
+				return false, ""
 			}
 
-			if strings.Contains(file.Name, "WindowsNoEditor") {
-				err = WriteZipFile(file, "WindowsNoEditor", zipWriterWin64Client)
+			Win64Server = true
+		}
 
-				if err != nil {
-					fmt.Println(err)
-					return false
-				}
+		if strings.Contains(file.Name, "WindowsNoEditor") {
+			err = WriteZipFile(file, "WindowsNoEditor", zipWriterWin64Client)
 
-				Win64Client = true
+			if err != nil {
+				fmt.Println(err)
+				return false, ""
 			}
+
+			Win64Client = true
 		}
 	}
 
@@ -438,17 +466,17 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	err = zipWriterLinuxServer.Close()
 	if err != nil {
 		fmt.Println(err)
-		return false
+		return false, ""
 	}
 	err = zipWriterWin64Server.Close()
 	if err != nil {
 		fmt.Println(err)
-		return false
+		return false, ""
 	}
 	err = zipWriterWin64Client.Close()
 	if err != nil {
 		fmt.Println(err)
-		return false
+		return false, ""
 	}
 
 	//Write to mod_link and upload new smaller smod file
@@ -459,7 +487,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		err = WriteModLink(ctx, key, versionID, platform, bufLinuxServer)
 		if err != nil {
 			fmt.Println(err)
-			return false
+			return false, ""
 		}
 	}
 
@@ -467,26 +495,40 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Win64Server-"+modVersion)
 		platform := "WindowsServer"
 
-		err = WriteModLink(ctx, key, versionID, platform, bufLinuxServer)
+		err = WriteModLink(ctx, key, versionID, platform, bufWin64Server)
 
 		if err != nil {
 			fmt.Println(err)
-			return false
+			return false, ""
 		}
 	}
 	if Win64Client {
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-LinuxServer-"+modVersion)
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowsNoEditor-"+modVersion)
 		platform := "WindowsNoEditor"
 
-		err = WriteModLink(ctx, key, versionID, platform, bufLinuxServer)
+		err = WriteModLink(ctx, key, versionID, platform, bufWin64Client)
 
 		if err != nil {
 			fmt.Println(err)
-			return false
+			return false, ""
 		}
 	}
 
-	return true
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Combined-"+modVersion)
+	platform := "Combined"
+
+	combined := bytes.NewBuffer(body)
+
+	err = WriteModLink(ctx, key, versionID, platform, combined)
+
+	if err != nil {
+		fmt.Println(err)
+		return false, ""
+	}
+
+	key = fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowsNoEditor-"+modVersion)
+
+	return true, key
 }
 
 func WriteZipFile(file *zip.File, platform string, zipWriter *zip.Writer) error {
@@ -542,7 +584,7 @@ func WriteModLink(ctx context.Context, key string, versionID string, platform st
 	dbModLink := &postgres.ModLink{
 		ModVersionLinkID: versionID,
 		Platform:         platform,
-		Link:             key,
+		Key:              key,
 		Hash:             hex.EncodeToString(hash.Sum(nil)),
 		Size:             int64(len(buffer.Bytes())),
 	}
@@ -555,5 +597,4 @@ func WriteModLink(ctx context.Context, key string, versionID string, platform st
 	}
 
 	return nil
-
 }

@@ -101,6 +101,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	}
 
 	go storage.DeleteModLink(ctx, mod.ID, mod.Name, version.ID, "Combined")
+	go postgres.Delete(ctx, modLink)
 
 	return nil
 }
