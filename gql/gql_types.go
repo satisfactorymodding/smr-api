@@ -61,6 +61,7 @@ func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 		LastVersionDate:  &LastVersionDate,
 		ModReference:     mod.ModReference,
 		Hidden:           mod.Hidden,
+		Versions:         DBVersionsToGeneratedSlice(mod.Versions),
 		Tags:             DBTagsToGeneratedSlice(mod.Tags),
 		Compatibility:    DBCompInfoToGenCompInfo(mod.Compatibility),
 	}
@@ -93,6 +94,14 @@ func DBVersionToGenerated(version *postgres.Version) *generated.Version {
 		Hash:       version.Hash,
 		Size:       &size,
 	}
+}
+
+func DBVersionsToGeneratedSlice(versions []postgres.Version) []*generated.Version {
+	converted := make([]*generated.Version, len(versions))
+	for i, version := range versions {
+		converted[i] = DBVersionToGenerated(&version)
+	}
+	return converted
 }
 
 func DBGuideToGenerated(guide *postgres.Guide) *generated.Guide {
