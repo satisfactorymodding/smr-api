@@ -309,7 +309,6 @@ func DeleteMod(ctx context.Context, modID string, name string, versionID string)
 			}
 		}
 	} else {
-
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
 
 		if err := storage.Delete(key); err != nil {
@@ -537,14 +536,14 @@ func WriteZipFile(file *zip.File, platform string, zipWriter *zip.Writer) error 
 
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return fmt.Errorf("failed to create zip: %w", err)
 	}
 
 	rawFile, err := file.Open()
 
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return fmt.Errorf("failed to open zipped file: %w", err)
 	}
 
 	buf := new(bytes.Buffer)
@@ -552,14 +551,14 @@ func WriteZipFile(file *zip.File, platform string, zipWriter *zip.Writer) error 
 
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return fmt.Errorf("failed to read zipped file: %w", err)
 	}
 
 	_, err = zipFile.Write(buf.Bytes())
 
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return fmt.Errorf("failed to write file to zip: %w", err)
 	}
 
 	return nil
@@ -570,7 +569,7 @@ func WriteModLink(ctx context.Context, key string, versionID string, platform st
 
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return fmt.Errorf("failed to write smod: %w", err)
 	}
 
 	hash := sha256.New()
@@ -578,7 +577,7 @@ func WriteModLink(ctx context.Context, key string, versionID string, platform st
 
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return fmt.Errorf("failed to hash smod: %w", err)
 	}
 
 	dbModLink := &postgres.ModLink{
@@ -593,7 +592,7 @@ func WriteModLink(ctx context.Context, key string, versionID string, platform st
 
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return fmt.Errorf("failed to create ModLink: %w", err)
 	}
 
 	return nil
