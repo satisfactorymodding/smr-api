@@ -492,7 +492,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 
 	if Win64Server {
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Win64Server-"+modVersion)
-		platform := "WindowsServer"
+		platform := "Win64Server"
 
 		err = WriteModLink(ctx, key, versionID, platform, bufWin64Server)
 
