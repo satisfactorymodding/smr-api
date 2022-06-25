@@ -44,13 +44,4 @@ input NewModLink {
 extend type Query {
     getModLink(id: ModLinkID!): ModLink
     getModLinks(filter: ModLinkFilter): GetModLinks!
-
-    getModDownload(ModVersionLinkID: String!, platform: String!): String!
-}
-
-### Mutations
-
-extend type Mutation {
-    createModLink(mod_link: NewModLink!): ModLink @isLoggedIn
-    deleteModLink(ModLinksId: ModLinkID!): Boolean! @canEditMod(field: "versionId") @isLoggedIn
 }

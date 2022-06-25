@@ -47,14 +47,4 @@ input UpdateSMLLink {
 extend type Query {
     getSMLLink(smlVersionId: SMLVersionID!): SMLLink
     getSMLLinks(filter: SMLLinkFilter): GetSMLLinks!
-
-    getSMLDownload(SMLVersionLinkID: String!, platform: String!): String!
-}
-
-### Mutations
-
-extend type Mutation {
-    createSMLLink(smlLink: NewSMLLink!): SMLLink! @canEditSMLVersions @isLoggedIn
-    updateSMLLink(SMLLinksId: SMLLinkID!, smlLink: UpdateSMLLink!): SMLLink! @canEditSMLVersions @isLoggedIn
-    deleteSMLLink(SMLLinksId: SMLLinkID!): Boolean! @canEditSMLVersions @isLoggedIn
 }
