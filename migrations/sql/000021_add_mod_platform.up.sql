@@ -18,4 +18,4 @@ create table if not exists sml_archs
     platform          varchar(16),
     link              text
 );
-create index if not exists idx_sml_archs_id on sml_links (sml_version_arch_id, platform);
+create index if not exists idx_sml_archs_id on sml_archs (sml_version_arch_id, platform);

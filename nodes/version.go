@@ -53,7 +53,7 @@ func downloadVersion(c echo.Context) error {
 	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))
 }
 
-func downloadModLink(c echo.Context) error {
+func downloadModArch(c echo.Context) error {
 	versionID := c.Param("versionId")
 	platformType := c.Param("platform")
 
@@ -63,7 +63,7 @@ func downloadModLink(c echo.Context) error {
 		return c.String(404, "version not found")
 	}
 
-	platform := postgres.GetModLinkByPlatform(c.Request().Context(), versionID, platformType)
+	platform := postgres.GetModArchByPlatform(c.Request().Context(), versionID, platformType)
 
 	if platform == nil {
 		return c.String(404, "platform not found")

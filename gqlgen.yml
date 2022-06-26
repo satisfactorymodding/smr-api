@@ -20,9 +20,9 @@ models:
   UpdateMod:
     model: github.com/satisfactorymodding/smr-api/generated.UpdateMod
 
-  ModLinkFilter:
+  ModArchFilter:
     model: "map[string]interface{}"
-  SMLLinkFilter:
+  SMLArchFilter:
     model: "map[string]interface{}"
   VersionFilter:
     model: "map[string]interface{}"
@@ -57,7 +57,7 @@ models:
       latestVersions:
         resolver: true
 
-  ModLink:
+  ModArch:
     fields:
       asset:
         resolver: true

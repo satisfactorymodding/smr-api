@@ -14,9 +14,9 @@ func CreateSMLVersion(ctx context.Context, smlVersion *SMLVersion) (*SMLVersion,
 	DBCtx(ctx).Create(&smlVersion)
 
 	for _, link := range smlVersion.Arch {
-		DBCtx(ctx).Create(&SMLLink{
+		DBCtx(ctx).Create(&SMLArch{
 			ID:               util.GenerateUniqueID(),
-			SMLVersionLinkID: smlVersion.ID,
+			SMLVersionArchID: smlVersion.ID,
 			Platform:         link.Platform,
 			Link:             link.Link,
 		})

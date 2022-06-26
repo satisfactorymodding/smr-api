@@ -9,7 +9,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func CreateSMLLink(ctx context.Context, smlLink *SMLLink) (*SMLLink, error) {
+func CreateSMLArch(ctx context.Context, smlLink *SMLArch) (*SMLArch, error) {
 	smlLink.ID = util.GenerateUniqueID()
 
 	DBCtx(ctx).Create(&smlLink)
@@ -17,14 +17,14 @@ func CreateSMLLink(ctx context.Context, smlLink *SMLLink) (*SMLLink, error) {
 	return smlLink, nil
 }
 
-func GetSMLLink(ctx context.Context, smlLinkID string) *SMLLink {
-	cacheKey := "GetSMLLink_" + smlLinkID
+func GetSMLArch(ctx context.Context, smlLinkID string) *SMLArch {
+	cacheKey := "GetSMLArch_" + smlLinkID
 
 	if smlLink, ok := dbCache.Get(cacheKey); ok {
-		return smlLink.(*SMLLink)
+		return smlLink.(*SMLArch)
 	}
 
-	var smlLink SMLLink
+	var smlLink SMLArch
 	DBCtx(ctx).Find(&smlLink, "id = ?", smlLinkID)
 
 	if smlLink.ID == "" {
@@ -36,8 +36,8 @@ func GetSMLLink(ctx context.Context, smlLinkID string) *SMLLink {
 	return &smlLink
 }
 
-func GetSMLLinks(ctx context.Context, filter *models.SMLLinkFilter) []SMLLink {
-	var smlLinks []SMLLink
+func GetSMLArchs(ctx context.Context, filter *models.SMLArchFilter) []SMLArch {
+	var smlLinks []SMLArch
 	query := DBCtx(ctx)
 
 	if filter != nil {
@@ -54,8 +54,8 @@ func GetSMLLinks(ctx context.Context, filter *models.SMLLinkFilter) []SMLLink {
 	return smlLinks
 }
 
-func GetSMLLinkByID(ctx context.Context, smlLinkID string) []SMLLink {
-	var smlLinks []SMLLink
+func GetSMLArchByID(ctx context.Context, smlLinkID string) []SMLArch {
+	var smlLinks []SMLArch
 
 	DBCtx(ctx).Find(&smlLinks, "id in ?", smlLinkID)
 
@@ -66,8 +66,8 @@ func GetSMLLinkByID(ctx context.Context, smlLinkID string) []SMLLink {
 	return smlLinks
 }
 
-func GetSMLLinksByID(ctx context.Context, smlLinkIds []string) []SMLLink {
-	var smlLinks []SMLLink
+func GetSMLArchsByID(ctx context.Context, smlLinkIds []string) []SMLArch {
+	var smlLinks []SMLArch
 
 	DBCtx(ctx).Find(&smlLinks, "id in (?)", smlLinkIds)
 
@@ -78,11 +78,11 @@ func GetSMLLinksByID(ctx context.Context, smlLinkIds []string) []SMLLink {
 	return smlLinks
 }
 
-func GetSMLLinkDownload(ctx context.Context, smlVersionID string, platform string) string {
-	var smlPlatform SMLLink
-	DBCtx(ctx).First(&smlPlatform, "sml_version_link_id = ? AND platform = ?", smlVersionID, platform)
+func GetSMLArchDownload(ctx context.Context, smlVersionID string, platform string) string {
+	var smlPlatform SMLArch
+	DBCtx(ctx).First(&smlPlatform, "sml_version_arch_id = ? AND platform = ?", smlVersionID, platform)
 
-	if smlPlatform.SMLVersionLinkID == "" {
+	if smlPlatform.SMLVersionArchID == "" {
 		return ""
 	}
 

@@ -43,20 +43,20 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
 
 	for _, smlLink := range smlVersion.Arch {
-		dbSMLLinks := &postgres.SMLLink{
+		dbSMLArchs := &postgres.SMLArch{
 			ID:               util.GenerateUniqueID(),
-			SMLVersionLinkID: string(resultSMLVersion.ID),
+			SMLVersionArchID: string(resultSMLVersion.ID),
 			Platform:         string(smlLink.Platform),
 			Link:             string(smlLink.Link),
 		}
 
-		resultSMLLink, err := postgres.CreateSMLLink(newCtx, dbSMLLinks)
+		resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArchs)
 
 		if err != nil {
 			return nil, err
 		}
 
-		DBSMLLinkToGenerated(resultSMLLink)
+		DBSMLArchToGenerated(resultSMLArch)
 	}
 
 	if err != nil {
@@ -90,14 +90,14 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
 
 	for _, smlLink := range smlVersion.Arch {
-		dbSMLLink := postgres.GetSMLLink(newCtx, smlLink.ID)
+		dbSMLArch := postgres.GetSMLArch(newCtx, smlLink.ID)
 
-		SetStringINNOE((*string)(&smlLink.ID), &dbSMLLink.ID)
-		SetStringINNOE((*string)(&smlLink.SMLVersionLinkID), &dbSMLLink.SMLVersionLinkID)
-		SetStringINNOE((*string)(&smlLink.Platform), &dbSMLLink.Platform)
-		SetStringINNOE((*string)(&smlLink.Link), &dbSMLLink.Link)
+		SetStringINNOE((*string)(&smlLink.ID), &dbSMLArch.ID)
+		SetStringINNOE((*string)(&smlLink.SMLVersionArchID), &dbSMLArch.SMLVersionArchID)
+		SetStringINNOE((*string)(&smlLink.Platform), &dbSMLArch.Platform)
+		SetStringINNOE((*string)(&smlLink.Link), &dbSMLArch.Link)
 
-		postgres.Save(newCtx, dbSMLLink)
+		postgres.Save(newCtx, dbSMLArch)
 	}
 
 	postgres.Save(newCtx, &dbSMLVersion)
@@ -116,13 +116,13 @@ func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID st
 	}
 
 	for _, smlLink := range dbSMLVersion.Arch {
-		dbSMLLink := postgres.GetSMLLink(newCtx, smlLink.ID)
+		dbSMLArch := postgres.GetSMLArch(newCtx, smlLink.ID)
 
 		if dbSMLVersion == nil {
 			return false, errors.New("smlLink not found")
 		}
 
-		postgres.Delete(newCtx, &dbSMLLink)
+		postgres.Delete(newCtx, &dbSMLArch)
 	}
 
 	postgres.Delete(newCtx, &dbSMLVersion)

@@ -1,38 +1,38 @@
 ### Types
 
-scalar ModLinkID
+scalar ModArchID
 
-type ModLink {
-    id: ModLinkID!
-    ModVersionLinkID: String!
+type ModArch {
+    id: ModArchID!
+    ModVersionArchID: String!
     platform: String!
     asset: String!
     size: Int
     hash: String
 }
 
-enum ModLinkFields {
+enum ModArchFields {
     platform
 }
 
-type GetModLinks {
-    arch: [ModLink!]!
+type GetModArchs {
+    arch: [ModArch!]!
 }
 
 ### Inputs
 
-input ModLinkFilter {
+input ModArchFilter {
     limit: Int
     offset: Int
-    order_by: ModLinkFields
+    order_by: ModArchFields
     order: Order
     search: String
     ids: [String!]
 }
 
-input NewModLink {
-    id: ModLinkID
-    ModVersionLinkID: String!
+input NewModArch {
+    id: ModArchID
+    ModVersionArchID: String!
     platform: String!
     key: String!
     size: Int
@@ -42,6 +42,6 @@ input NewModLink {
 ### Queries
 
 extend type Query {
-    getModLink(id: ModLinkID!): ModLink
-    getModLinks(filter: ModLinkFilter): GetModLinks!
+    getModArch(id: ModArchID!): ModArch
+    getModArchs(filter: ModArchFilter): GetModArchs!
 }

@@ -124,7 +124,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	}
 
 	// TODO Validate mod files
-	//Okay, uploaded file is read and readable... let's dump it and separate, and re-save as ModName-Combined-SemVersion in ModLink
+	//Okay, uploaded file is read and readable... let's dump it and separate, and re-save as ModName-Combined-SemVersion in ModArch
 	storage.DeleteVersion(ctx, mod.ID, mod.Name, versionID)
 
 	separated, key := storage.SeparateMod(ctx, fileData, mod.ID, mod.Name, dbVersion.ID, modInfo.Version)
@@ -155,8 +155,8 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.DeleteForced(ctx, &dbVersion)
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 
-		for _, dbModLink := range dbVersion.Arch {
-			postgres.DeleteForced(ctx, &dbModLink)
+		for _, dbModArch := range dbVersion.Arch {
+			postgres.DeleteForced(ctx, &dbModArch)
 		}
 		return nil, errors.New("failed to upload mod")
 	}
@@ -172,7 +172,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &mod)
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
-		storage.DeleteModLink(ctx, mod.ID, mod.Name, versionID, "Combined")
+		storage.DeleteModArch(ctx, mod.ID, mod.Name, versionID, "Combined")
 	} else {
 		l.Info().Msg("Submitting version job for virus scan")
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)

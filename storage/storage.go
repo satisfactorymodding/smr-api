@@ -304,7 +304,7 @@ func DeleteMod(ctx context.Context, modID string, name string, versionID string)
 
 	if len(query.Arch) != 0 {
 		for _, link := range query.Arch {
-			if success := DeleteModLink(ctx, modID, cleanName, versionID, link.Platform); !success {
+			if success := DeleteModArch(ctx, modID, cleanName, versionID, link.Platform); !success {
 				return false
 			}
 		}
@@ -320,7 +320,7 @@ func DeleteMod(ctx context.Context, modID string, name string, versionID string)
 	return true
 }
 
-func DeleteModLink(ctx context.Context, modID string, name string, versionID string, platform string) bool {
+func DeleteModArch(ctx context.Context, modID string, name string, versionID string, platform string) bool {
 	if storage == nil {
 		return false
 	}
@@ -483,7 +483,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-LinuxServer-"+modVersion)
 		platform := "LinuxServer"
 
-		err = WriteModLink(ctx, key, versionID, platform, bufLinuxServer)
+		err = WriteModArch(ctx, key, versionID, platform, bufLinuxServer)
 		if err != nil {
 			fmt.Println(err)
 			return false, ""
@@ -494,7 +494,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Win64Server-"+modVersion)
 		platform := "Win64Server"
 
-		err = WriteModLink(ctx, key, versionID, platform, bufWin64Server)
+		err = WriteModArch(ctx, key, versionID, platform, bufWin64Server)
 
 		if err != nil {
 			fmt.Println(err)
@@ -505,7 +505,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowsNoEditor-"+modVersion)
 		platform := "WindowsNoEditor"
 
-		err = WriteModLink(ctx, key, versionID, platform, bufWin64Client)
+		err = WriteModArch(ctx, key, versionID, platform, bufWin64Client)
 
 		if err != nil {
 			fmt.Println(err)
@@ -518,7 +518,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 
 	combined := bytes.NewBuffer(body)
 
-	err = WriteModLink(ctx, key, versionID, platform, combined)
+	err = WriteModArch(ctx, key, versionID, platform, combined)
 
 	if err != nil {
 		fmt.Println(err)
@@ -564,7 +564,7 @@ func WriteZipFile(file *zip.File, platform string, zipWriter *zip.Writer) error 
 	return nil
 }
 
-func WriteModLink(ctx context.Context, key string, versionID string, platform string, buffer *bytes.Buffer) error {
+func WriteModArch(ctx context.Context, key string, versionID string, platform string, buffer *bytes.Buffer) error {
 	_, err := storage.Put(ctx, key, bytes.NewReader(buffer.Bytes()))
 
 	if err != nil {
@@ -575,20 +575,15 @@ func WriteModLink(ctx context.Context, key string, versionID string, platform st
 	hash := sha256.New()
 	_, err = hash.Write(buffer.Bytes())
 
-	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed to hash smod: %w", err)
-	}
-
-	dbModLink := &postgres.ModLink{
-		ModVersionLinkID: versionID,
+	dbModArch := &postgres.ModArch{
+		ModVersionArchID: versionID,
 		Platform:         platform,
 		Key:              key,
 		Hash:             hex.EncodeToString(hash.Sum(nil)),
 		Size:             int64(len(buffer.Bytes())),
 	}
 
-	_, err = postgres.CreateModLink(ctx, dbModLink)
+	postgres.CreateModArch(ctx, dbModArch)
 
 	if err != nil {
 		fmt.Println(err)

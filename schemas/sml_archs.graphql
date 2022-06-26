@@ -1,43 +1,43 @@
 ### Types
 
-scalar SMLLinkID
+scalar SMLArchID
 
-type SMLLink {
-    id: SMLLinkID!
-    SMLVersionLinkID: String!
+type SMLArch {
+    id: SMLArchID!
+    SMLVersionArchID: String!
     platform: String!
     link: String!
 }
 
-enum SMLLinkFields {
+enum SMLArchFields {
     platform
 }
 
-type GetSMLLinks {
-    arch: [SMLLink!]!
+type GetSMLArchs {
+    arch: [SMLArch!]!
 }
 
 ### Inputs
 
-input SMLLinkFilter {
+input SMLArchFilter {
     limit: Int
     offset: Int
-    order_by: SMLLinkFields
+    order_by: SMLArchFields
     order: Order
     search: String
     ids: [String!]
 }
 
-input NewSMLLink {
-    id: SMLLinkID!
-    SMLVersionLinkID: String!
+input NewSMLArch {
+    id: SMLArchID!
+    SMLVersionArchID: String!
     platform: String!
     link: String!
 }
 
-input UpdateSMLLink {
-    id: SMLLinkID!
-    SMLVersionLinkID: String!
+input UpdateSMLArch {
+    id: SMLArchID!
+    SMLVersionArchID: String!
     platform: String!
     link: String!
 }
@@ -45,6 +45,6 @@ input UpdateSMLLink {
 ### Queries
 
 extend type Query {
-    getSMLLink(smlVersionId: SMLVersionID!): SMLLink
-    getSMLLinks(filter: SMLLinkFilter): GetSMLLinks!
+    getSMLArch(smlVersionId: SMLVersionID!): SMLArch
+    getSMLArchs(filter: SMLArchFilter): GetSMLArchs!
 }

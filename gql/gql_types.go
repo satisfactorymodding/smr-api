@@ -85,7 +85,7 @@ func DBVersionToGenerated(version *postgres.Version) *generated.Version {
 		Changelog:  version.Changelog,
 		Downloads:  int(version.Downloads),
 		Stability:  generated.VersionStabilities(version.Stability),
-		Arch:       DBModLinksToGeneratedSlice(version.Arch),
+		Arch:       DBModArchsToGeneratedSlice(version.Arch),
 		Approved:   version.Approved,
 		UpdatedAt:  version.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:  version.CreatedAt.Format(time.RFC3339Nano),
@@ -134,7 +134,7 @@ func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) *generated.SMLVers
 		BootstrapVersion:    smlVersion.BootstrapVersion,
 		Stability:           generated.VersionStabilities(smlVersion.Stability),
 		Link:                smlVersion.Link,
-		Arch:                DBSMLLinksToGeneratedSlice(smlVersion.Arch),
+		Arch:                DBSMLArchsToGeneratedSlice(smlVersion.Arch),
 		Changelog:           smlVersion.Changelog,
 		Date:                smlVersion.Date.Format(time.RFC3339Nano),
 		UpdatedAt:           smlVersion.UpdatedAt.Format(time.RFC3339Nano),
@@ -211,50 +211,50 @@ func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
 	return converted
 }
 
-func DBModLinkToGenerated(modLink *postgres.ModLink) *generated.ModLink {
-	if modLink == nil {
+func DBModArchToGenerated(modArch *postgres.ModArch) *generated.ModArch {
+	if modArch == nil {
 		return nil
 	}
 
 	size := 0
-	if &modLink.Size != nil {
-		size = int(modLink.Size)
+	if &modArch.Size != nil {
+		size = int(modArch.Size)
 	}
 
-	return &generated.ModLink{
-		ID:               modLink.ID,
-		ModVersionLinkID: modLink.ModVersionLinkID,
-		Platform:         modLink.Platform,
-		Hash:             &modLink.Hash,
+	return &generated.ModArch{
+		ID:               modArch.ID,
+		ModVersionArchID: modArch.ModVersionArchID,
+		Platform:         modArch.Platform,
+		Hash:             &modArch.Hash,
 		Size:             &size,
 	}
 }
 
-func DBModLinksToGeneratedSlice(modLinks []postgres.ModLink) []*generated.ModLink {
-	converted := make([]*generated.ModLink, len(modLinks))
-	for i, modLink := range modLinks {
-		converted[i] = DBModLinkToGenerated(&modLink)
+func DBModArchsToGeneratedSlice(modArchs []postgres.ModArch) []*generated.ModArch {
+	converted := make([]*generated.ModArch, len(modArchs))
+	for i, modArch := range modArchs {
+		converted[i] = DBModArchToGenerated(&modArch)
 	}
 	return converted
 }
 
-func DBSMLLinkToGenerated(smlLink *postgres.SMLLink) *generated.SMLLink {
+func DBSMLArchToGenerated(smlLink *postgres.SMLArch) *generated.SMLArch {
 	if smlLink == nil {
 		return nil
 	}
 
-	return &generated.SMLLink{
+	return &generated.SMLArch{
 		ID:               smlLink.ID,
-		SMLVersionLinkID: smlLink.SMLVersionLinkID,
+		SMLVersionArchID: smlLink.SMLVersionArchID,
 		Platform:         smlLink.Platform,
 		Link:             smlLink.Link,
 	}
 }
 
-func DBSMLLinksToGeneratedSlice(smlLinks []postgres.SMLLink) []*generated.SMLLink {
-	converted := make([]*generated.SMLLink, len(smlLinks))
+func DBSMLArchsToGeneratedSlice(smlLinks []postgres.SMLArch) []*generated.SMLArch {
+	converted := make([]*generated.SMLArch, len(smlLinks))
 	for i, smlLink := range smlLinks {
-		converted[i] = DBSMLLinkToGenerated(&smlLink)
+		converted[i] = DBSMLArchToGenerated(&smlLink)
 	}
 	return converted
 }

@@ -10,6 +10,10 @@ import (
 	"gorm.io/gorm"
 )
 
+type Tabler interface {
+	TableName() string
+}
+
 type SMRDates struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -95,7 +99,7 @@ type Version struct {
 	Approved     bool   `gorm:"default:false;not null"`
 	Denied       bool   `gorm:"default:false;not null"`
 	Hotness      uint
-	Arch         []ModLink `gorm:"foreignKey:mod_version_link_id" gorm:"preload:true"`
+	Arch         []ModArch `gorm:"foreignKey:mod_version_arch_id" gorm:"preload:true"`
 	Metadata     *string
 	ModReference *string
 	VersionMajor *int
@@ -133,7 +137,7 @@ type SMLVersion struct {
 	Stability           string `sql:"type:version_stability"`
 	Date                time.Time
 	Link                string
-	Arch                []SMLLink `gorm:"foreignKey:sml_version_link_id" gorm:"preload:true"`
+	Arch                []SMLArch `gorm:"foreignKey:sml_version_arch_id" gorm:"preload:true"`
 	Changelog           string
 	BootstrapVersion    *string
 }
@@ -205,18 +209,26 @@ type Compatibility struct {
 	Note  string
 }
 
-type ModLink struct {
+type ModArch struct {
 	ID               string `gorm:"primary_key;type:varchar(16)"`
-	ModVersionLinkID string
+	ModVersionArchID string
 	Platform         string
 	Key              string
 	Size             int64
 	Hash             string
 }
 
-type SMLLink struct {
+func (ModArch) TableName() string {
+	return "mod_archs"
+}
+
+type SMLArch struct {
 	ID               string `gorm:"primary_key;type:varchar(14)"`
-	SMLVersionLinkID string
+	SMLVersionArchID string
 	Platform         string
 	Link             string
+}
+
+func (SMLArch) TableName() string {
+	return "sml_archs"
 }

@@ -331,21 +331,21 @@ func ProcessBootstrapVersionFilter(filter map[string]interface{}) (*BootstrapVer
 	return base, nil
 }
 
-type SMLLinkFilter struct {
+type SMLArchFilter struct {
 	Limit   *int                     `json:"limit" validate:"omitempty,min=1,max=100"`
 	Offset  *int                     `json:"offset" validate:"omitempty,min=0"`
-	OrderBy *generated.SMLLinkFields `json:"order_by"`
+	OrderBy *generated.SMLArchFields `json:"order_by"`
 	Order   *generated.Order         `json:"order"`
 	Search  *string                  `json:"search" validate:"omitempty,min=3"`
 	Ids     []string                 `json:"ids" validate:"omitempty,max=100"`
 }
 
-func DefaultSMLLinkFilter() *SMLLinkFilter {
+func DefaultSMLArchFilter() *SMLArchFilter {
 	limit := 10
 	offset := 0
 	order := generated.OrderDesc
-	orderBy := generated.SMLLinkFieldsPlatform
-	return &SMLLinkFilter{
+	orderBy := generated.SMLArchFieldsPlatform
+	return &SMLArchFilter{
 		Limit:   &limit,
 		Offset:  &offset,
 		Ids:     nil,
@@ -354,8 +354,8 @@ func DefaultSMLLinkFilter() *SMLLinkFilter {
 	}
 }
 
-func ProcessSMLLinkFilter(filter map[string]interface{}) (*SMLLinkFilter, error) {
-	base := DefaultSMLLinkFilter()
+func ProcessSMLArchFilter(filter map[string]interface{}) (*SMLArchFilter, error) {
+	base := DefaultSMLArchFilter()
 
 	if filter == nil {
 		return base, nil
@@ -366,27 +366,27 @@ func ProcessSMLLinkFilter(filter map[string]interface{}) (*SMLLinkFilter, error)
 	}
 
 	if err := dataValidator.Struct(base); err != nil {
-		return nil, errors.Wrap(err, "failed to validate SMLLinkFilter")
+		return nil, errors.Wrap(err, "failed to validate SMLArchFilter")
 	}
 
 	return base, nil
 }
 
-type ModLinkFilter struct {
+type ModArchFilter struct {
 	Limit   *int                     `json:"limit" validate:"omitempty,min=1,max=100"`
 	Offset  *int                     `json:"offset" validate:"omitempty,min=0"`
-	OrderBy *generated.ModLinkFields `json:"order_by"`
+	OrderBy *generated.ModArchFields `json:"order_by"`
 	Order   *generated.Order         `json:"order"`
 	Search  *string                  `json:"search" validate:"omitempty,min=3"`
 	Ids     []string                 `json:"ids" validate:"omitempty,max=100"`
 }
 
-func DefaultModLinkFilter() *ModLinkFilter {
+func DefaultModArchFilter() *ModArchFilter {
 	limit := 10
 	offset := 0
 	order := generated.OrderDesc
-	orderBy := generated.ModLinkFieldsPlatform
-	return &ModLinkFilter{
+	orderBy := generated.ModArchFieldsPlatform
+	return &ModArchFilter{
 		Limit:   &limit,
 		Offset:  &offset,
 		Ids:     nil,
@@ -395,8 +395,8 @@ func DefaultModLinkFilter() *ModLinkFilter {
 	}
 }
 
-func ProcessModLinkFilter(filter map[string]interface{}) (*ModLinkFilter, error) {
-	base := DefaultModLinkFilter()
+func ProcessModArchFilter(filter map[string]interface{}) (*ModArchFilter, error) {
+	base := DefaultModArchFilter()
 
 	if filter == nil {
 		return base, nil
@@ -407,7 +407,7 @@ func ProcessModLinkFilter(filter map[string]interface{}) (*ModLinkFilter, error)
 	}
 
 	if err := dataValidator.Struct(base); err != nil {
-		return nil, errors.Wrap(err, "failed to validate ModLinkFilter")
+		return nil, errors.Wrap(err, "failed to validate ModArchFilter")
 	}
 
 	return base, nil

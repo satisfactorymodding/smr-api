@@ -186,7 +186,7 @@ func (r *mutationResolver) ApproveVersion(ctx context.Context, versionID string)
 	postgres.Save(newCtx, &mod)
 
 	go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
-	go storage.DeleteModLink(ctx, dbVersion.ModID, mod.Name, versionID, "Combined")
+	go storage.DeleteModArch(ctx, dbVersion.ModID, mod.Name, versionID, "Combined")
 
 	return true, nil
 }
