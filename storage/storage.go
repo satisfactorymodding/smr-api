@@ -404,8 +404,6 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		return false, ""
 	}
 
-	// Create a buffer to write our archive to.
-	log.Ctx(ctx).Info().Msg("Beginning Splitting Operations")
 	bufLinuxServer := new(bytes.Buffer)
 	bufWin64Server := new(bytes.Buffer)
 	bufWin64Client := new(bytes.Buffer)
