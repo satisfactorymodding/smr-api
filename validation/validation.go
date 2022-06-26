@@ -341,12 +341,7 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 					Path: file.Name,
 					Type: "pak",
 				})
-			} else if extension == "dll" {
-				modInfo.Objects = append(modInfo.Objects, ModObject{
-					Path: file.Name,
-					Type: "sml_mod",
-				})
-			} else if extension == "so" {
+			} else if extension == "dll" || extension == "so" {
 				modInfo.Objects = append(modInfo.Objects, ModObject{
 					Path: file.Name,
 					Type: "sml_mod",
