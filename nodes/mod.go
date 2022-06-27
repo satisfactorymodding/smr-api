@@ -273,13 +273,13 @@ func downloadModVersion(c echo.Context) error {
 	mod := postgres.GetModByID(c.Request().Context(), modID)
 
 	if mod == nil {
-		return c.String(404, "mod not found")
+		return c.String(404, "mod not found, modID:"+modID)
 	}
 
 	version := postgres.GetModVersion(c.Request().Context(), mod.ID, versionID)
 
 	if version == nil {
-		return c.String(404, "version not found")
+		return c.String(404, "version not found, modID:"+modID+" versionID:"+versionID)
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
@@ -289,32 +289,42 @@ func downloadModVersion(c echo.Context) error {
 	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))
 }
 
+// @Summary Download a Mod Version by Platform
+// @Tags Mod
+// @Description Download a mod version by mod ID and version ID and Platform
+// @Accept  json
+// @Produce  json
+// @Param modId path string true "Mod ID"
+// @Param versionId path string true "Version ID"
+// @Param versionId path string true "Platform"
+// @Success 200
+// @Router /mod/{modId}/versions/{versionId}/{platform}/download [get]
 func downloadModVersionArch(c echo.Context) error {
 	modID := c.Param("modId")
 	versionID := c.Param("versionId")
-	platformType := c.Param("platform")
+	platform := c.Param("platform")
 
 	mod := postgres.GetModByID(c.Request().Context(), modID)
 
 	if mod == nil {
-		return c.String(404, "mod not found")
+		return c.String(404, "mod not found, modID:"+modID)
 	}
 
 	version := postgres.GetModVersion(c.Request().Context(), mod.ID, versionID)
 
 	if version == nil {
-		return c.String(404, "version not found")
+		return c.String(404, "version not found, modID:"+modID+" versionID:"+versionID)
 	}
 
-	platform := postgres.GetModArchByPlatform(c.Request().Context(), versionID, platformType)
+	arch := postgres.GetModArchByPlatform(c.Request().Context(), versionID, platform)
 
-	if platform == nil {
-		return c.String(404, "platform not found")
+	if arch == nil {
+		return c.String(404, "platform not found, modID:"+modID+" versionID:"+versionID+" platform:"+platform)
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
 		postgres.IncrementVersionDownloads(c.Request().Context(), version)
 	}
 
-	return c.Redirect(302, storage.GenerateDownloadLink(platform.Key))
+	return c.Redirect(302, storage.GenerateDownloadLink(arch.Key))
 }

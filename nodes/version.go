@@ -53,25 +53,35 @@ func downloadVersion(c echo.Context) error {
 	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))
 }
 
+// @Summary Download a Platform
+// @Tags Version
+// @Tags Platform
+// @Description Download a mod version by version ID and Platform
+// @Accept  json
+// @Produce  json
+// @Param versionId path string true "Version ID"
+// @Param versionId path string true "Version ID"
+// @Success 200
+// @Router /versions/{versionId}/{platform}/download [get]
 func downloadModArch(c echo.Context) error {
 	versionID := c.Param("versionId")
-	platformType := c.Param("platform")
+	platform := c.Param("platform")
 
 	version := postgres.GetVersion(c.Request().Context(), versionID)
 
 	if version == nil {
-		return c.String(404, "version not found")
+		return c.String(404, "version not found, versionID:"+versionID)
 	}
 
-	platform := postgres.GetModArchByPlatform(c.Request().Context(), versionID, platformType)
+	arch := postgres.GetModArchByPlatform(c.Request().Context(), versionID, platform)
 
-	if platform == nil {
-		return c.String(404, "platform not found")
+	if arch == nil {
+		return c.String(404, "platform not found, versionID:"+versionID+" platform:"+platform)
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
 		postgres.IncrementVersionDownloads(c.Request().Context(), version)
 	}
 
-	return c.Redirect(302, storage.GenerateDownloadLink(platform.Key))
+	return c.Redirect(302, storage.GenerateDownloadLink(arch.Key))
 }
