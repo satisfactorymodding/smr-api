@@ -426,10 +426,10 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		}
 
 		if strings.Contains(file.Name, "LinuxServer") {
-			err = WriteZipFile(file, "LinuxServer", zipWriterLinuxServer)
+			err = WriteZipFile(ctx, file, "LinuxServer", zipWriterLinuxServer)
 
 			if err != nil {
-				fmt.Println(err)
+				log.Ctx(ctx).Err(err).Msg("Failed to write zip to LinuxServer smod")
 				return false, ""
 			}
 
@@ -437,10 +437,10 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		}
 
 		if strings.Contains(file.Name, "WindowsServer") {
-			err = WriteZipFile(file, "WindowsServer", zipWriterWin64Server)
+			err = WriteZipFile(ctx, file, "WindowsServer", zipWriterWin64Server)
 
 			if err != nil {
-				fmt.Println(err)
+				log.Ctx(ctx).Err(err).Msg("Failed to write zip to Win64Server smod")
 				return false, ""
 			}
 
@@ -448,10 +448,10 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		}
 
 		if strings.Contains(file.Name, "WindowsNoEditor") {
-			err = WriteZipFile(file, "WindowsNoEditor", zipWriterWin64Client)
+			err = WriteZipFile(ctx, file, "WindowsNoEditor", zipWriterWin64Client)
 
 			if err != nil {
-				fmt.Println(err)
+				log.Ctx(ctx).Err(err).Msg("Failed to write zip to WindowsNoEditor smod")
 				return false, ""
 			}
 
@@ -459,22 +459,10 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		}
 	}
 
-	// Make sure to check the error on Close.
-	err = zipWriterLinuxServer.Close()
-	if err != nil {
-		fmt.Println(err)
-		return false, ""
-	}
-	err = zipWriterWin64Server.Close()
-	if err != nil {
-		fmt.Println(err)
-		return false, ""
-	}
-	err = zipWriterWin64Client.Close()
-	if err != nil {
-		fmt.Println(err)
-		return false, ""
-	}
+	//Close files
+	zipWriterLinuxServer.Close()
+	zipWriterWin64Server.Close()
+	zipWriterWin64Client.Close()
 
 	//Write to mod_link and upload new smaller smod file
 	if LinuxServer {
@@ -483,7 +471,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 
 		err = WriteModArch(ctx, key, versionID, platform, bufLinuxServer)
 		if err != nil {
-			fmt.Println(err)
+			log.Ctx(ctx).Err(err).Msg("Failed to save LinuxServer smod")
 			return false, ""
 		}
 	}
@@ -495,7 +483,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		err = WriteModArch(ctx, key, versionID, platform, bufWin64Server)
 
 		if err != nil {
-			fmt.Println(err)
+			log.Ctx(ctx).Err(err).Msg("Failed to save Win64Server smod")
 			return false, ""
 		}
 	}
@@ -506,7 +494,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		err = WriteModArch(ctx, key, versionID, platform, bufWin64Client)
 
 		if err != nil {
-			fmt.Println(err)
+			log.Ctx(ctx).Err(err).Msg("Failed to save WindowsNoEditor smod")
 			return false, ""
 		}
 	}
@@ -519,7 +507,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	err = WriteModArch(ctx, key, versionID, platform, combined)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Ctx(ctx).Err(err).Msg("Failed to save Combined smod")
 		return false, ""
 	}
 
@@ -528,35 +516,35 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	return true, key
 }
 
-func WriteZipFile(file *zip.File, platform string, zipWriter *zip.Writer) error {
+func WriteZipFile(ctx context.Context, file *zip.File, platform string, zipWriter *zip.Writer) error {
 	fileName := strings.ReplaceAll(file.Name, platform+"/", "")
 	zipFile, err := zipWriter.Create(fileName)
 
 	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed to create zip: %w", err)
+		log.Ctx(ctx).Err(err).Msg("Failed to create smod file for " + platform)
+		return fmt.Errorf("Failed to create smod file for %s: %w", platform, err)
 	}
 
 	rawFile, err := file.Open()
 
 	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed to open zipped file: %w", err)
+		log.Ctx(ctx).Err(err).Msg("Failed to open smod file for " + platform)
+		return fmt.Errorf("Failed to open smod file for %s: %w", platform, err)
 	}
 
 	buf := new(bytes.Buffer)
 	_, err = buf.ReadFrom(rawFile)
 
 	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed to read zipped file: %w", err)
+		log.Ctx(ctx).Err(err).Msg("Failed to read from buffer for " + platform)
+		return fmt.Errorf("Failed to read smod file for %s: %w", platform, err)
 	}
 
 	_, err = zipFile.Write(buf.Bytes())
 
 	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed to write file to zip: %w", err)
+		log.Ctx(ctx).Err(err).Msg("Failed to write to smod file: " + platform)
+		return fmt.Errorf("Failed to write smod file for %s: %w", platform, err)
 	}
 
 	return nil
@@ -566,12 +554,12 @@ func WriteModArch(ctx context.Context, key string, versionID string, platform st
 	_, err := storage.Put(ctx, key, bytes.NewReader(buffer.Bytes()))
 
 	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed to write smod: %w", err)
+		log.Ctx(ctx).Err(err).Msg("failed to write smod: " + key)
+		return fmt.Errorf("Failed to load smod %s: %w", key, err)
 	}
 
 	hash := sha256.New()
-	_, err = hash.Write(buffer.Bytes())
+	hash.Write(buffer.Bytes())
 
 	dbModArch := &postgres.ModArch{
 		ModVersionArchID: versionID,
@@ -581,11 +569,11 @@ func WriteModArch(ctx context.Context, key string, versionID string, platform st
 		Size:             int64(len(buffer.Bytes())),
 	}
 
-	postgres.CreateModArch(ctx, dbModArch)
+	_, err = postgres.CreateModArch(ctx, dbModArch)
 
 	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed to create ModLink: %w", err)
+		log.Ctx(ctx).Err(err).Msg("Failed to create ModArch: " + versionID + "-" + platform)
+		return fmt.Errorf("Failed to create ModArch %s-%s: %w", versionID, platform, err)
 	}
 
 	return nil
