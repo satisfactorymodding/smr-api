@@ -123,7 +123,6 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &dbVersion)
 	}
 
-	// TODO Validate mod files
 	//Okay, uploaded file is read and readable... let's dump it and separate, and re-save as ModName-Combined-SemVersion in ModArch
 	storage.DeleteVersion(ctx, mod.ID, mod.Name, versionID)
 
