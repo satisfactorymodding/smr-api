@@ -522,14 +522,14 @@ func WriteZipFile(ctx context.Context, file *zip.File, platform string, zipWrite
 
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("Failed to create smod file for " + platform)
-		return fmt.Errorf("Failed to create smod file for %s: %w", platform, err)
+		return errors.Wrap(err, "Failed to open smod file for "+platform)
 	}
 
 	rawFile, err := file.Open()
 
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("Failed to open smod file for " + platform)
-		return fmt.Errorf("Failed to open smod file for %s: %w", platform, err)
+		return errors.Wrap(err, "Failed to open smod file for "+platform)
 	}
 
 	buf := new(bytes.Buffer)
@@ -537,14 +537,14 @@ func WriteZipFile(ctx context.Context, file *zip.File, platform string, zipWrite
 
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("Failed to read from buffer for " + platform)
-		return fmt.Errorf("Failed to read smod file for %s: %w", platform, err)
+		return errors.Wrap(err, "Failed to read from buffer for "+platform)
 	}
 
 	_, err = zipFile.Write(buf.Bytes())
 
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("Failed to write to smod file: " + platform)
-		return fmt.Errorf("Failed to write smod file for %s: %w", platform, err)
+		return errors.Wrap(err, "Failed to write smod file for "+platform)
 	}
 
 	return nil
@@ -555,7 +555,7 @@ func WriteModArch(ctx context.Context, key string, versionID string, platform st
 
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to write smod: " + key)
-		return fmt.Errorf("Failed to load smod %s: %w", key, err)
+		return errors.Wrap(err, "Failed to load smod:"+key)
 	}
 
 	hash := sha256.New()
@@ -573,7 +573,7 @@ func WriteModArch(ctx context.Context, key string, versionID string, platform st
 
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("Failed to create ModArch: " + versionID + "-" + platform)
-		return fmt.Errorf("Failed to create ModArch %s-%s: %w", versionID, platform, err)
+		return errors.Wrap(err, "Failed to create ModArch: "+versionID+"-"+platform)
 	}
 
 	return nil
