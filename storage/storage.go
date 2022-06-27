@@ -507,7 +507,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	err = WriteModArch(ctx, key, versionID, platform, combined)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("Failed to save Combined smod")
+		log.Ctx(ctx).Err(err).Msg("Failed to save Combined smod versionID: " + versionID)
 		return false, ""
 	}
 
