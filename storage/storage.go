@@ -409,7 +409,6 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	bufPlatform := bytes.NewBuffer(body)
 
 	for _, ModPlatform := range ModPlatforms {
-
 		if ModPlatform != "Combined" {
 			bufPlatform = new(bytes.Buffer)
 			zipWriter := zip.NewWriter(bufPlatform)
