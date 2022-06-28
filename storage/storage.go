@@ -404,114 +404,43 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		return false, ""
 	}
 
-	bufLinuxServer := new(bytes.Buffer)
-	bufWin64Server := new(bytes.Buffer)
-	bufWin64Client := new(bytes.Buffer)
-
-	// Create a new zip archive.
-	zipWriterLinuxServer := zip.NewWriter(bufLinuxServer)
-	zipWriterWin64Server := zip.NewWriter(bufWin64Server)
-	zipWriterWin64Client := zip.NewWriter(bufWin64Client)
-
-	var LinuxServer = false
-	var Win64Server = false
-	var Win64Client = false
-
+	ModPlatforms := []string{"Combined", "WindowsNoEditor", "WindowsServer", "LinuxServer"}
 	cleanName := cleanModName(name)
+	bufPlatform := bytes.NewBuffer(body)
 
-	// Add some files to the archive.
-	for _, file := range zipReader.File {
-		if strings.HasPrefix(file.Name, ".pdb") || strings.HasPrefix(file.Name, ".debug") || strings.Contains(file.Name, modVersion) {
-			continue
-		}
+	for _, ModPlatform := range ModPlatforms {
+		cleanPlatform := cleanPlatform(ModPlatform)
 
-		if strings.Contains(file.Name, "LinuxServer") {
-			err = WriteZipFile(ctx, file, "LinuxServer", zipWriterLinuxServer)
+		if cleanPlatform != "Combined" {
+			bufPlatform = new(bytes.Buffer)
+			zipWriter := zip.NewWriter(bufPlatform)
 
-			if err != nil {
-				log.Ctx(ctx).Err(err).Msg("Failed to write zip to LinuxServer smod")
-				return false, ""
+			for _, file := range zipReader.File {
+				if strings.HasPrefix(file.Name, ".pdb") || strings.HasPrefix(file.Name, ".debug") || !strings.Contains(file.Name, ModPlatform) {
+					continue
+				}
+
+				err = WriteZipFile(ctx, file, ModPlatform, zipWriter)
+
+				if err != nil {
+					log.Ctx(ctx).Err(err).Msg("Failed to write zip to " + cleanPlatform + " smod")
+					return false, ""
+				}
 			}
 
-			LinuxServer = true
+			zipWriter.Close()
 		}
 
-		if strings.Contains(file.Name, "WindowsServer") {
-			err = WriteZipFile(ctx, file, "WindowsServer", zipWriterWin64Server)
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+cleanPlatform+"-"+modVersion)
 
-			if err != nil {
-				log.Ctx(ctx).Err(err).Msg("Failed to write zip to Win64Server smod")
-				return false, ""
-			}
-
-			Win64Server = true
-		}
-
-		if strings.Contains(file.Name, "WindowsNoEditor") {
-			err = WriteZipFile(ctx, file, "WindowsNoEditor", zipWriterWin64Client)
-
-			if err != nil {
-				log.Ctx(ctx).Err(err).Msg("Failed to write zip to WindowsNoEditor smod")
-				return false, ""
-			}
-
-			Win64Client = true
-		}
-	}
-
-	//Close files
-	zipWriterLinuxServer.Close()
-	zipWriterWin64Server.Close()
-	zipWriterWin64Client.Close()
-
-	//Write to mod_link and upload new smaller smod file
-	if LinuxServer {
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-LinuxServer-"+modVersion)
-		platform := "LinuxServer"
-
-		err = WriteModArch(ctx, key, versionID, platform, bufLinuxServer)
+		err = WriteModArch(ctx, key, versionID, cleanPlatform, bufPlatform)
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("Failed to save LinuxServer smod")
+			log.Ctx(ctx).Err(err).Msg("Failed to save " + cleanPlatform + " smod")
 			return false, ""
 		}
 	}
 
-	if Win64Server {
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Win64Server-"+modVersion)
-		platform := "Win64Server"
-
-		err = WriteModArch(ctx, key, versionID, platform, bufWin64Server)
-
-		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("Failed to save Win64Server smod")
-			return false, ""
-		}
-	}
-	if Win64Client {
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowsNoEditor-"+modVersion)
-		platform := "WindowsNoEditor"
-
-		err = WriteModArch(ctx, key, versionID, platform, bufWin64Client)
-
-		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("Failed to save WindowsNoEditor smod")
-			return false, ""
-		}
-	}
-
-	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-Combined-"+modVersion)
-	platform := "Combined"
-
-	combined := bytes.NewBuffer(body)
-
-	err = WriteModArch(ctx, key, versionID, platform, combined)
-
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("Failed to save Combined smod versionID: " + versionID)
-		return false, ""
-	}
-
-	key = fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowsNoEditor-"+modVersion)
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowsNoEditor-"+modVersion)
 
 	return true, key
 }
