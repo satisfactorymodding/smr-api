@@ -409,9 +409,8 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 	bufPlatform := bytes.NewBuffer(body)
 
 	for _, ModPlatform := range ModPlatforms {
-		cleanPlatform := cleanPlatform(ModPlatform)
 
-		if cleanPlatform != "Combined" {
+		if ModPlatform != "Combined" {
 			bufPlatform = new(bytes.Buffer)
 			zipWriter := zip.NewWriter(bufPlatform)
 
@@ -423,7 +422,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 				err = WriteZipFile(ctx, file, ModPlatform, zipWriter)
 
 				if err != nil {
-					log.Ctx(ctx).Err(err).Msg("Failed to write zip to " + cleanPlatform + " smod")
+					log.Ctx(ctx).Err(err).Msg("Failed to write zip to " + ModPlatform + " smod")
 					return false, ""
 				}
 			}
@@ -431,11 +430,11 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 			zipWriter.Close()
 		}
 
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+cleanPlatform+"-"+modVersion)
+		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+ModPlatform+"-"+modVersion)
 
-		err = WriteModArch(ctx, key, versionID, cleanPlatform, bufPlatform)
+		err = WriteModArch(ctx, key, versionID, ModPlatform, bufPlatform)
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("Failed to save " + cleanPlatform + " smod")
+			log.Ctx(ctx).Err(err).Msg("Failed to save " + ModPlatform + " smod")
 			return false, ""
 		}
 	}
