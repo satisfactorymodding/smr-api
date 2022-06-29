@@ -68,8 +68,6 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		ModID:        mod.ID,
 		Stability:    string(version.Stability),
 		ModReference: &modInfo.ModReference,
-		Size:         &modInfo.Size,
-		Hash:         &modInfo.Hash,
 		VersionMajor: &versionMajor,
 		VersionMinor: &versionMinor,
 		VersionPatch: &versionPatch,
@@ -124,9 +122,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	}
 
 	//Okay, uploaded file is read and readable... let's dump it and separate, and re-save as ModName-Combined-SemVersion in ModArch
-	storage.DeleteVersion(ctx, mod.ID, mod.Name, versionID)
-
-	separated, key := storage.SeparateMod(ctx, fileData, mod.ID, mod.Name, dbVersion.ID, modInfo.Version)
+	separated := storage.SeparateMod(ctx, fileData, mod.ID, mod.Name, dbVersion.ID, modInfo.Version)
 
 	if !separated {
 		for modID, condition := range modInfo.Dependencies {
@@ -160,7 +156,11 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		return nil, errors.New("failed to upload mod")
 	}
 
-	dbVersion.Key = key
+	dbModArch := postgres.GetModArchByPlatform(ctx, dbVersion.ID, "WindowsNoEditor")
+
+	dbVersion.Key = dbModArch.Key
+	dbVersion.Hash = &dbModArch.Hash
+	dbVersion.Size = &dbModArch.Size
 	postgres.Save(ctx, &dbVersion)
 	postgres.Save(ctx, &mod)
 

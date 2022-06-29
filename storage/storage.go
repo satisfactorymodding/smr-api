@@ -396,12 +396,12 @@ func EncodeName(name string) string {
 	return result
 }
 
-func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID string, modVersion string) (bool, string) {
+func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID string, modVersion string) bool {
 	//read combined file
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 
 	if err != nil {
-		return false, ""
+		return false
 	}
 
 	ModPlatforms := []string{"Combined", "WindowsNoEditor", "WindowsServer", "LinuxServer"}
@@ -422,7 +422,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 
 				if err != nil {
 					log.Ctx(ctx).Err(err).Msg("Failed to write zip to " + ModPlatform + " smod")
-					return false, ""
+					return false
 				}
 			}
 
@@ -434,13 +434,11 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		err = WriteModArch(ctx, key, versionID, ModPlatform, bufPlatform)
 		if err != nil {
 			log.Ctx(ctx).Err(err).Msg("Failed to save " + ModPlatform + " smod")
-			return false, ""
+			return false
 		}
 	}
 
-	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-WindowsNoEditor-"+modVersion)
-
-	return true, key
+	return true
 }
 
 func WriteZipFile(ctx context.Context, file *zip.File, platform string, zipWriter *zip.Writer) error {
