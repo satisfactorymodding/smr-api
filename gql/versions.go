@@ -164,6 +164,8 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	postgres.Save(ctx, &dbVersion)
 	postgres.Save(ctx, &mod)
 
+	storage.DeleteVersion(ctx, mod.ID, mod.Name, versionID)
+
 	if autoApproved {
 		mod := postgres.GetModByID(ctx, dbVersion.ModID)
 		now := time.Now()
