@@ -24,7 +24,7 @@ func GetVersionsByID(ctx context.Context, versionIds []string) []Version {
 	}
 
 	var versions []Version
-	DBCtx(ctx).Find(&versions, "id in (?)", versionIds)
+	DBCtx(ctx).Preload("Arch").Find(&versions, "id in (?)", versionIds)
 
 	if len(versionIds) != len(versions) {
 		return nil
@@ -43,7 +43,7 @@ func GetModLatestVersions(ctx context.Context, modID string, unapproved bool) *[
 
 	var versions []Version
 
-	DBCtx(ctx).Select("distinct on (mod_id, stability) *").
+	DBCtx(ctx).Preload("Arch").Select("distinct on (mod_id, stability) *").
 		Where("mod_id = ?", modID).
 		Where("approved = ? AND denied = ?", !unapproved, false).
 		Order("mod_id, stability, created_at desc").
@@ -62,7 +62,7 @@ func GetModsLatestVersions(ctx context.Context, modIds []string, unapproved bool
 
 	var versions []Version
 
-	DBCtx(ctx).Select("distinct on (mod_id, stability) *").
+	DBCtx(ctx).Preload("Arch").Select("distinct on (mod_id, stability) *").
 		Where("mod_id in (?)", modIds).
 		Where("approved = ? AND denied = ?", !unapproved, false).
 		Order("mod_id, stability, created_at desc").
@@ -80,7 +80,7 @@ func GetModVersions(ctx context.Context, modID string, limit int, offset int, or
 	}
 
 	var versions []Version
-	DBCtx(ctx).Limit(limit).Offset(offset).Order(orderBy+" "+order).Where("approved = ? AND denied = ?", !unapproved, false).Find(&versions, "mod_id = ?", modID)
+	DBCtx(ctx).Preload("Arch").Limit(limit).Offset(offset).Order(orderBy+" "+order).Where("approved = ? AND denied = ?", !unapproved, false).Find(&versions, "mod_id = ?", modID)
 
 	dbCache.Set(cacheKey, versions, cache.DefaultExpiration)
 
@@ -98,7 +98,7 @@ func GetModVersionsNew(ctx context.Context, modID string, filter *models.Version
 	}
 
 	var versions []Version
-	query := DBCtx(ctx)
+	query := DBCtx(ctx).Preload("Arch")
 
 	if filter != nil {
 		query = query.Limit(*filter.Limit).
@@ -106,7 +106,7 @@ func GetModVersionsNew(ctx context.Context, modID string, filter *models.Version
 			Order(string(*filter.OrderBy) + " " + string(*filter.Order))
 	}
 
-	query.Where("approved = ? AND denied = ?", !unapproved, false).Find(&versions, "mod_id = ?", modID)
+	query.Preload("Arch").Where("approved = ? AND denied = ?", !unapproved, false).Find(&versions, "mod_id = ?", modID)
 
 	if cacheKey != "" {
 		dbCache.Set(cacheKey, versions, cache.DefaultExpiration)
@@ -122,7 +122,7 @@ func GetModVersion(ctx context.Context, modID string, versionID string) *Version
 	}
 
 	var version Version
-	DBCtx(ctx).First(&version, "mod_id = ? AND id = ?", modID, versionID)
+	DBCtx(ctx).Preload("Arch").First(&version, "mod_id = ? AND id = ?", modID, versionID)
 
 	if version.ID == "" {
 		return nil
@@ -140,7 +140,7 @@ func GetModVersionByName(ctx context.Context, modID string, versionName string) 
 	}
 
 	var version Version
-	DBCtx(ctx).First(&version, "mod_id = ? AND version = ?", modID, versionName)
+	DBCtx(ctx).Preload("Arch").First(&version, "mod_id = ? AND version = ?", modID, versionName)
 
 	if version.ID == "" {
 		return nil
@@ -186,7 +186,7 @@ func GetVersion(ctx context.Context, versionID string) *Version {
 	}
 
 	var version Version
-	DBCtx(ctx).First(&version, "id = ?", versionID)
+	DBCtx(ctx).Preload("Arch").First(&version, "id = ?", versionID)
 
 	if version.ID == "" {
 		return nil
@@ -208,7 +208,7 @@ func GetVersionsNew(ctx context.Context, filter *models.VersionFilter, unapprove
 	}
 
 	var versions []Version
-	query := DBCtx(ctx).Where("approved = ? AND denied = ?", !unapproved, false)
+	query := DBCtx(ctx).Preload("Arch").Where("approved = ? AND denied = ?", !unapproved, false)
 
 	if filter != nil {
 		query = query.Limit(*filter.Limit).
@@ -224,7 +224,7 @@ func GetVersionsNew(ctx context.Context, filter *models.VersionFilter, unapprove
 		}
 	}
 
-	query.Find(&versions)
+	query.Preload("Arch").Find(&versions)
 
 	if cacheKey != "" {
 		dbCache.Set(cacheKey, versions, cache.DefaultExpiration)
@@ -288,7 +288,7 @@ func GetModVersionsConstraint(ctx context.Context, modID string, constraint stri
 		return nil
 	}
 
-	query := DBCtx(ctx).Where("mod_id", modID)
+	query := DBCtx(ctx).Preload("Arch").Where("mod_id", modID)
 
 	/*
 		<=1.2.3
@@ -357,6 +357,6 @@ func GetModVersionsConstraint(ctx context.Context, modID string, constraint stri
 	}
 
 	var versions []Version
-	query.Find(&versions)
+	query.Preload("Arch").Find(&versions)
 	return versions
 }

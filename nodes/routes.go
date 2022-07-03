@@ -15,6 +15,7 @@ func RegisterModRoutes(router *echo.Group) {
 
 	router.GET("/:modId/versions/:versionId", dataWrapper(getModVersion))
 	router.GET("/:modId/versions/:versionId/download", downloadModVersion)
+	router.GET("/:modId/versions/:versionId/:platform/download", downloadModVersionArch)
 }
 
 func RegisterModsRoutes(router *echo.Group) {
@@ -47,6 +48,7 @@ func RegisterUsersRoutes(router *echo.Group) {
 func RegisterVersionRoutes(router *echo.Group) {
 	router.GET("/:versionId", dataWrapper(getVersion))
 	router.GET("/:versionId/download", downloadVersion)
+	router.GET("/:versionId/:platform/download", downloadModArch)
 }
 
 func RegisterSMLRoutes(router *echo.Group) {

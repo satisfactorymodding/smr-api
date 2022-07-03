@@ -21,6 +21,9 @@ func (r *Resolver) User() generated.UserResolver {
 func (r *Resolver) UserMod() generated.UserModResolver {
 	return &userModResolver{r}
 }
+func (r *Resolver) ModArch() generated.ModArchResolver {
+	return &modlinkResolver{r}
+}
 func (r *Resolver) Version() generated.VersionResolver {
 	return &versionResolver{r}
 }

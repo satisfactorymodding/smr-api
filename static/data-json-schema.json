@@ -89,7 +89,7 @@
             "examples": [
               "SDF.dll"
             ],
-            "pattern": "^(.*)\\.(pak|dll)$"
+            "pattern": "^(.*)\\.(pak|dll|so)$"
           },
           "type": {
             "type": "string",

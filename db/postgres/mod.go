@@ -26,7 +26,7 @@ func GetModByID(ctx context.Context, modID string) *Mod {
 
 func GetModByIDNoCache(ctx context.Context, modID string) *Mod {
 	var mod Mod
-	DBCtx(ctx).Preload("Tags").Find(&mod, "id = ?", modID)
+	DBCtx(ctx).Preload("Tags").Preload("Versions.Arch").Find(&mod, "id = ?", modID)
 
 	if mod.ID == "" {
 		return nil
@@ -44,7 +44,7 @@ func GetModByReference(ctx context.Context, modReference string) *Mod {
 	}
 
 	var mod Mod
-	DBCtx(ctx).Preload("Tags").Find(&mod, "mod_reference = ?", modReference)
+	DBCtx(ctx).Preload("Tags").Preload("Versions.Arch").Find(&mod, "mod_reference = ?", modReference)
 
 	if mod.ID == "" {
 		return nil
@@ -213,7 +213,7 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 	}
 
 	query = query.Where("approved = ? AND denied = ?", !unapproved, false)
-	query = query.Preload("Tags")
+	query = query.Preload("Tags").Preload("Versions.Arch")
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
 			cleanSearch := strings.Replace(strings.TrimSpace(*filter.Search), " ", " & ", -1)

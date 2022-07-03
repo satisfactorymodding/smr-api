@@ -1,0 +1,47 @@
+### Types
+
+scalar ModArchID
+
+type ModArch {
+    id: ModArchID!
+    ModVersionArchID: String!
+    platform: String!
+    asset: String!
+    size: Int
+    hash: String
+}
+
+enum ModArchFields {
+    platform
+}
+
+type GetModArchs {
+    arch: [ModArch!]!
+}
+
+### Inputs
+
+input ModArchFilter {
+    limit: Int
+    offset: Int
+    order_by: ModArchFields
+    order: Order
+    search: String
+    ids: [String!]
+}
+
+input NewModArch {
+    id: ModArchID
+    ModVersionArchID: String!
+    platform: String!
+    key: String!
+    size: Int
+    hash: String
+}
+
+### Queries
+
+extend type Query {
+    getModArch(id: ModArchID!): ModArch
+    getModArchs(filter: ModArchFilter): GetModArchs!
+}
