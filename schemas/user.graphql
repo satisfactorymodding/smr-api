@@ -10,6 +10,7 @@ type UserRoles {
     editUsers: Boolean!
     editSMLVersions: Boolean!
     editBootstrapVersions: Boolean!
+    editAnyModCompatibility: Boolean!
 }
 
 type Group {

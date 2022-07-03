@@ -213,6 +213,10 @@ func (r *userResolver) Roles(ctx context.Context, obj *generated.User) (*generat
 		userRoles.EditBootstrapVersions = true
 	}
 
+	if hasRole, ok := roles[auth.RoleEditAnyModCompatibility]; ok && hasRole {
+		userRoles.EditAnyModCompatibility = true
+	}
+
 	return userRoles, nil
 }
 
