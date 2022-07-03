@@ -48,7 +48,7 @@ var (
 		ID:          "9",
 		Description: "Allows user to manage tags",
 	}
-	RoleEditModCompatibility = &Role{
+	RoleEditAnyModCompatibility = &Role{
 		ID:          "10",
 		Description: "Allows user to edit any mod's compatibility info",
 	}
@@ -68,7 +68,7 @@ var (
 			RoleEditBootstrapVersions,
 			RoleEditAnnouncements,
 			RoleManageTags,
-			RoleEditModCompatibility,
+			RoleEditAnyModCompatibility,
 		},
 	}
 	GroupModerator = &Group{
@@ -79,7 +79,7 @@ var (
 			RoleApproveVersions,
 			RoleEditAnnouncements,
 			RoleManageTags,
-			RoleEditModCompatibility,
+			RoleEditAnyModCompatibility,
 		},
 	}
 	GroupSMLDev = &Group{
@@ -98,9 +98,9 @@ var (
 	}
 	GroupCompatibilityOfficer = &Group{
 		ID:   "5",
-		Name: "Compatibility Officier",
+		Name: "Compatibility Officer",
 		Roles: []*Role{
-			RoleEditModCompatibility,
+			RoleEditAnyModCompatibility,
 		},
 	}
 )
