@@ -38,7 +38,7 @@ func InitializeRedis(ctx context.Context) {
 		panic(ping.Err())
 	}
 
-	log.Ctx(ctx).Info().Msg("Redis initialized")
+	log.Info().Msg("Redis initialized")
 }
 
 func CanIncrement(ip string, action string, object string, expiration time.Duration) bool {

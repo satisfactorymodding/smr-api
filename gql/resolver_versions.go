@@ -100,12 +100,12 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 		return false, errors.New("you must update your mod reference on the site to match your mod_reference in your data.json")
 	}
 
-	log.Ctx(ctx).Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("finalization gql call")
+	log.Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("finalization gql call")
 
 	go func(ctx context.Context, mod *postgres.Mod, versionID string, version generated.NewVersion) {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Ctx(ctx).Error().Interface("recover", r).Str("stack", string(debug.Stack())).Msgf("recovered from version finalization")
+				log.Error().Interface("recover", r).Str("stack", string(debug.Stack())).Msgf("recovered from version finalization")
 
 				if err := redis.StoreVersionUploadState(versionID, nil, errors.New("internal error, please try again, if it fails again, please report on discord")); err != nil {
 					log.Error().Err(err).Msg("failed to store version upload state")
@@ -113,20 +113,20 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 			}
 		}()
 
-		log.Ctx(ctx).Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("calling FinalizeVersionUploadAsync")
+		log.Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("calling FinalizeVersionUploadAsync")
 
 		data, err := FinalizeVersionUploadAsync(ctx, mod, versionID, version)
 		if err2 := redis.StoreVersionUploadState(versionID, data, err); err2 != nil {
-			log.Ctx(ctx).Err(err2).Msg("error storing redis state")
+			log.Err(err2).Msg("error storing redis state")
 			return
 		}
 
-		log.Ctx(ctx).Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("finished FinalizeVersionUploadAsync")
+		log.Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("finished FinalizeVersionUploadAsync")
 
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msgf("error completing version upload [%s]", versionID)
+			log.Err(err).Msgf("error completing version upload [%s]", versionID)
 		} else {
-			log.Ctx(ctx).Info().Msgf("completed version upload: %s", versionID)
+			log.Info().Msgf("completed version upload: %s", versionID)
 		}
 	}(util.ReWrapCtx(ctx), mod, versionID, version)
 

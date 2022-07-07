@@ -116,7 +116,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 	jsonData, err := json.Marshal(modInfo.Metadata)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("[%s] failed serializing", dbVersion.ID)
+		log.Err(err).Msgf("[%s] failed serializing", dbVersion.ID)
 	} else {
 		metadata := string(jsonData)
 		dbVersion.Metadata = &metadata

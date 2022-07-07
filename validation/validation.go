@@ -115,14 +115,14 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 						data, err := archiveFile.Open()
 
 						if err != nil {
-							log.Ctx(ctx).Err(err).Msg("failed opening archive file")
+							log.Err(err).Msg("failed opening archive file")
 							break
 						}
 
 						pakData, err := ioutil.ReadAll(data)
 
 						if err != nil {
-							log.Ctx(ctx).Err(err).Msg("failed reading archive file")
+							log.Err(err).Msg("failed reading archive file")
 							break
 						}
 
@@ -133,7 +133,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 						pak, err := AttemptExtractDataFromPak(ctx, reader)
 
 						if err != nil {
-							log.Ctx(ctx).Err(err).Msg("failed parsing archive file")
+							log.Err(err).Msg("failed parsing archive file")
 							break
 						}
 
@@ -151,7 +151,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	_, err = hash.Write(body)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("error hashing pak")
+		log.Err(err).Msg("error hashing pak")
 	}
 
 	modInfo.Hash = hex.EncodeToString(hash.Sum(nil))
@@ -159,7 +159,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	version, err := semver.StrictNewVersion(modInfo.Version)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("error parsing semver")
+		log.Err(err).Msg("error parsing semver")
 		return nil, errors.Wrap(err, "error parsing semver")
 	}
 

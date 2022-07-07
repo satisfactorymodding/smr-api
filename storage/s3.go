@@ -38,7 +38,7 @@ func initializeS3(ctx context.Context, config Config) *S3 {
 	newSession, err := session.NewSession(s3Config)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to create S3 session")
+		log.Err(err).Msg("failed to create S3 session")
 		return nil
 	}
 

@@ -17,7 +17,7 @@ import (
 
 func UpdateModDataFromStorage(ctx context.Context, modID string, versionID string, metadata bool) error {
 	// perform task
-	log.Ctx(ctx).Info().Msgf("[%s] Updating DB for mod %s version with metadata: %v", versionID, modID, metadata)
+	log.Info().Msgf("[%s] Updating DB for mod %s version with metadata: %v", versionID, modID, metadata)
 
 	version := postgres.GetVersion(ctx, versionID)
 	link := storage.GenerateDownloadLink(version.Key)
@@ -39,7 +39,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	info, err := validation.ExtractModInfo(ctx, fileData, metadata, false, mod.ModReference)
 
 	if err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msgf("[%s] Failed updating mod, likely outdated", versionID)
+		log.Warn().Err(err).Msgf("[%s] Failed updating mod, likely outdated", versionID)
 		// Outdated version
 		return nil
 	}
@@ -69,7 +69,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	if metadata {
 		jsonData, err := json.Marshal(info.Metadata)
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msgf("[%s] failed serializing", versionID)
+			log.Err(err).Msgf("[%s] failed serializing", versionID)
 		} else {
 			metadata := string(jsonData)
 			version.Metadata = &metadata

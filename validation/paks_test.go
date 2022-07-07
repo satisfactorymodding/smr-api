@@ -45,7 +45,7 @@ func TestExtractDataFromPak(t *testing.T) {
 		pakData, err := AttemptExtractDataFromPak(ctx, reader)
 
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("error parsing pak")
+			log.Err(err).Msg("error parsing pak")
 			t.Error(err)
 		} else {
 			marshal, _ := json.MarshalIndent(pakData, "", "  ")

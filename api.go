@@ -86,7 +86,7 @@ func Serve() {
 
 	if !viper.GetBool("production") {
 		go func() {
-			log.Ctx(ctx).Err(http.ListenAndServe("0.0.0.0:6060", nil)).Msg("Debug server")
+			log.Err(http.ListenAndServe("0.0.0.0:6060", nil)).Msg("Debug server")
 		}()
 	}
 
@@ -236,7 +236,7 @@ func Serve() {
 				bytesIn = "0"
 			}
 
-			log.Ctx(ctx).Info().
+			log.Info().
 				Str("time_rfc3339", time.Now().Format(time.RFC3339)).
 				Str("remote_ip", c.RealIP()).
 				Str("host", req.Host).
@@ -266,7 +266,7 @@ func Serve() {
 	}()
 
 	address := fmt.Sprintf(":%d", viper.GetInt("port"))
-	log.Ctx(ctx).Info().Str("address", address).Msg("starting server")
+	log.Info().Str("address", address).Msg("starting server")
 
 	e.HidePort = true
 	e.Logger.Error(e.Start(address))
@@ -276,7 +276,7 @@ func installExportPipeline(ctx context.Context) func() {
 	client := otlptracehttp.NewClient()
 	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
-		log.Ctx(ctx).Fatal().Err(err).Msg("creating OTLP trace exporter")
+		log.Fatal().Err(err).Msg("creating OTLP trace exporter")
 	}
 
 	tracerProvider := sdktrace.NewTracerProvider(
@@ -288,7 +288,7 @@ func installExportPipeline(ctx context.Context) func() {
 
 	return func() {
 		if err := tracerProvider.Shutdown(ctx); err != nil {
-			log.Ctx(ctx).Fatal().Err(err).Msg("stopping tracer provider")
+			log.Fatal().Err(err).Msg("stopping tracer provider")
 		}
 	}
 }
