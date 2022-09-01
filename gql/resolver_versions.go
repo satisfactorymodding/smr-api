@@ -3,7 +3,7 @@ package gql
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"runtime/debug"
 	"time"
 
@@ -71,7 +71,7 @@ func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, 
 	}
 
 	// TODO Optimize
-	fileData, err := ioutil.ReadAll(file.File)
+	fileData, err := io.ReadAll(file.File)
 
 	if err != nil {
 		return false, errors.Wrap(err, "failed to read file")

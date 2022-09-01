@@ -3,7 +3,7 @@ package consumers
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -24,7 +24,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 
 	response, _ := http.Get(link)
 
-	fileData, err := ioutil.ReadAll(response.Body)
+	fileData, err := io.ReadAll(response.Body)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to read response body")

@@ -2,17 +2,13 @@ package util
 
 import (
 	"context"
-
 	// GIF Support
 	_ "image/gif"
-
 	// JPEG Support
 	_ "image/jpeg"
-
 	// PNG Support
 	_ "image/png"
-
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/satisfactorymodding/smr-api/util/converter"
@@ -31,7 +27,7 @@ func LinkToWebp(ctx context.Context, url string) ([]byte, error) {
 		return nil, errors.New("invalid url")
 	}
 
-	imageAsBytes, err := ioutil.ReadAll(resp.Body)
+	imageAsBytes, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		return nil, errors.New("invalid url")

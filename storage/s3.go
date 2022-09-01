@@ -72,7 +72,7 @@ func (s3o *S3) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 
 	uploader := s3manager.NewUploader(s3o.S3Session)
 
-	_, err := uploader.Upload(&s3manager.UploadInput{
+	_, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Body:   body,
 		Bucket: aws.String(viper.GetString("storage.bucket")),
 		Key:    aws.String(cleanedKey),

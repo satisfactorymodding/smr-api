@@ -1,6 +1,6 @@
 module github.com/satisfactorymodding/smr-api
 
-go 1.18
+go 1.19
 
 require (
 	github.com/99designs/gqlgen v0.17.5
@@ -31,6 +31,7 @@ require (
 	github.com/spf13/viper v1.11.0
 	github.com/swaggo/echo-swagger v1.3.2
 	github.com/swaggo/swag v1.8.1
+	github.com/vektah/gqlparser/v2 v2.4.2
 	github.com/vmihailenco/taskq/extra/taskqotel/v3 v3.2.8
 	github.com/vmihailenco/taskq/v3 v3.2.8
 	github.com/xeipuuv/gojsonschema v1.2.0
@@ -42,6 +43,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.7.0
 	go.opentelemetry.io/otel/trace v1.7.0
 	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88
+	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gorm.io/driver/postgres v1.3.5
@@ -126,7 +128,6 @@ require (
 	github.com/urfave/cli/v2 v2.4.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
-	github.com/vektah/gqlparser/v2 v2.4.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
@@ -137,7 +138,6 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/exp v0.0.0-20210220032938-85be41e4509f // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect

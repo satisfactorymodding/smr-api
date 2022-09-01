@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -32,7 +31,7 @@ func TestExtractDataFromPak(t *testing.T) {
 	for _, f := range paks {
 		fmt.Println("Parsing file:", f)
 
-		data, err := ioutil.ReadFile(f)
+		data, err := os.ReadFile(f)
 
 		if err != nil {
 			panic(err)
@@ -50,7 +49,7 @@ func TestExtractDataFromPak(t *testing.T) {
 		} else {
 			marshal, _ := json.MarshalIndent(pakData, "", "  ")
 
-			if err := ioutil.WriteFile(f+".json", marshal, 0644); err != nil {
+			if err := os.WriteFile(f+".json", marshal, 0644); err != nil {
 				t.Error(err)
 			}
 		}

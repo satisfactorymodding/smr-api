@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"html"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -76,7 +75,7 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 		_ = Body.Close()
 	}(res.Body)
 
-	_, _ = ioutil.ReadAll(res.Body)
+	_, _ = io.ReadAll(res.Body)
 }
 
 func NewVersion(ctx context.Context, version *postgres.Version) {
@@ -161,5 +160,5 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 		_ = Body.Close()
 	}(res.Body)
 
-	_, _ = ioutil.ReadAll(res.Body)
+	_, _ = io.ReadAll(res.Body)
 }

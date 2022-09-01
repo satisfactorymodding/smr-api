@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -119,7 +118,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 							break
 						}
 
-						pakData, err := ioutil.ReadAll(data)
+						pakData, err := io.ReadAll(data)
 
 						if err != nil {
 							log.Err(err).Msg("failed reading archive file")
@@ -178,7 +177,7 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 		return nil, errors.New("invalid zip archive")
 	}
 
-	dataJSON, err := ioutil.ReadAll(rc)
+	dataJSON, err := io.ReadAll(rc)
 
 	if err != nil {
 		return nil, errors.New("invalid zip archive")
@@ -277,7 +276,7 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 		return nil, errors.New("invalid zip archive")
 	}
 
-	uPluginJSON, err := ioutil.ReadAll(rc)
+	uPluginJSON, err := io.ReadAll(rc)
 
 	if err != nil {
 		return nil, errors.New("invalid zip archive")

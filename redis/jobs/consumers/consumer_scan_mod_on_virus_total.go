@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"path"
 	"time"
@@ -44,7 +43,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 	response, _ := http.Get(link)
 
-	fileData, err := ioutil.ReadAll(response.Body)
+	fileData, err := io.ReadAll(response.Body)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to read mod file")
