@@ -5,6 +5,7 @@ directive @canEditMod(field: String!) on FIELD_DEFINITION
 directive @canEditVersion(field: String!) on FIELD_DEFINITION
 directive @canEditUser(field: String!, object: Boolean!) on FIELD_DEFINITION
 directive @canEditGuide(field: String!) on FIELD_DEFINITION
+directive @canEditModCompatibility(field: String) on FIELD_DEFINITION
 
 directive @canApproveMods on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canApproveVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
@@ -12,3 +13,4 @@ directive @canEditUsers on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canEditSMLVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canEditBootstrapVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canEditAnnouncements on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @canManageTags on FIELD_DEFINITION | INPUT_FIELD_DEFINITION

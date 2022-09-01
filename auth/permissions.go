@@ -44,6 +44,14 @@ var (
 		ID:          "8",
 		Description: "Allows user to manage announcements",
 	}
+	RoleManageTags = &Role{
+		ID:          "9",
+		Description: "Allows user to manage tags",
+	}
+	RoleEditAnyModCompatibility = &Role{
+		ID:          "10",
+		Description: "Allows user to edit any mod's compatibility info",
+	}
 )
 
 var (
@@ -59,6 +67,8 @@ var (
 			RoleEditSMLVersions,
 			RoleEditBootstrapVersions,
 			RoleEditAnnouncements,
+			RoleManageTags,
+			RoleEditAnyModCompatibility,
 		},
 	}
 	GroupModerator = &Group{
@@ -68,6 +78,8 @@ var (
 			RoleApproveMods,
 			RoleApproveVersions,
 			RoleEditAnnouncements,
+			RoleManageTags,
+			RoleEditAnyModCompatibility,
 		},
 	}
 	GroupSMLDev = &Group{
@@ -84,13 +96,20 @@ var (
 			RoleEditBootstrapVersions,
 		},
 	}
+	GroupCompatibilityOfficer = &Group{
+		ID:   "5",
+		Name: "Compatibility Officer",
+		Roles: []*Role{
+			RoleEditAnyModCompatibility,
+		},
+	}
 )
 
 var idToGroupMapping = make(map[string]*Group)
 var roleToGroupMapping = make(map[*Role][]*Group)
 
 func initializePermissions() {
-	groups := []*Group{GroupAdmin, GroupModerator, GroupSMLDev, GroupBootstrapDev}
+	groups := []*Group{GroupAdmin, GroupModerator, GroupSMLDev, GroupBootstrapDev, GroupCompatibilityOfficer}
 	for _, group := range groups {
 		idToGroupMapping[group.ID] = group
 

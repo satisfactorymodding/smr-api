@@ -106,6 +106,7 @@ type ModFilter struct {
 	References []string             `json:"references" validate:"omitempty,max=100"`
 	Hidden     *bool                `json:"hidden"`
 	Fields     []string             `json:"-"`
+	TagIDs     []string             `json:"tagIDs" validate:"omitempty,max=100"`
 }
 
 func DefaultModFilter() *ModFilter {
@@ -141,7 +142,8 @@ func (f *ModFilter) AddField(name string) {
 		"created_at",
 		"last_version_date",
 		"mod_reference",
-		"hidden":
+		"hidden",
+		"compatibility":
 		f.Fields = append(f.Fields, "mods."+name)
 	}
 }
@@ -179,6 +181,7 @@ type GuideFilter struct {
 	Order   *generated.Order       `json:"order"`
 	Search  *string                `json:"search" validate:"omitempty,min=3"`
 	Ids     []string               `json:"ids" validate:"omitempty,max=100"`
+	TagIDs  []string               `json:"tagIDs" validate:"omitempty,max=100"`
 }
 
 func (f GuideFilter) Hash() (string, error) {

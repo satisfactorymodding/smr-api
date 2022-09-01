@@ -61,6 +61,8 @@ func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 		LastVersionDate:  &LastVersionDate,
 		ModReference:     mod.ModReference,
 		Hidden:           mod.Hidden,
+		Tags:             DBTagsToGeneratedSlice(mod.Tags),
+		Compatibility:    DBCompInfoToGenCompInfo(mod.Compatibility),
 	}
 }
 
@@ -106,6 +108,7 @@ func DBGuideToGenerated(guide *postgres.Guide) *generated.Guide {
 		Views:            int(guide.Views),
 		UpdatedAt:        guide.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:        guide.CreatedAt.Format(time.RFC3339Nano),
+		Tags:             DBTagsToGeneratedSlice(guide.Tags),
 	}
 }
 
@@ -177,4 +180,57 @@ func DBAnnouncementsToGeneratedSlice(announcements []postgres.Announcement) []*g
 		converted[i] = DBAnnouncementToGenerated(&announcement)
 	}
 	return converted
+}
+
+func DBTagToGenerated(tag *postgres.Tag) *generated.Tag {
+	if tag == nil {
+		return nil
+	}
+	return &generated.Tag{
+		Name: tag.Name,
+		ID:   tag.ID,
+	}
+}
+
+func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
+	converted := make([]*generated.Tag, len(tags))
+	for i, tag := range tags {
+		converted[i] = DBTagToGenerated(&tag)
+	}
+	return converted
+}
+
+func GenCompInfoToDBCompInfo(gen *generated.CompatibilityInfoInput) *postgres.CompatibilityInfo {
+	if gen == nil {
+		return nil
+	}
+	return &postgres.CompatibilityInfo{
+		EA:  GenCompToDBComp(gen.Ea),
+		EXP: GenCompToDBComp(gen.Exp),
+	}
+}
+
+func GenCompToDBComp(gen *generated.CompatibilityInput) postgres.Compatibility {
+	r := postgres.Compatibility{
+		State: string(gen.State),
+	}
+	SetINN(gen.Note, &r.Note)
+	return r
+}
+
+func DBCompInfoToGenCompInfo(gen *postgres.CompatibilityInfo) *generated.CompatibilityInfo {
+	if gen == nil {
+		return nil
+	}
+	return &generated.CompatibilityInfo{
+		Ea:  DBCompToGenComp(gen.EA),
+		Exp: DBCompToGenComp(gen.EXP),
+	}
+}
+
+func DBCompToGenComp(db postgres.Compatibility) *generated.Compatibility {
+	return &generated.Compatibility{
+		State: generated.CompatibilityState(db.State),
+		Note:  &db.Note,
+	}
 }

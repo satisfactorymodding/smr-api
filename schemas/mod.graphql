@@ -33,6 +33,8 @@ type Mod {
     last_version_date: Date
     mod_reference: ModReference!
     hidden: Boolean!
+    tags: [Tag!]
+    compatibility: CompatibilityInfo
 
     authors: [UserMod!]!
     version(version: String!): Version
@@ -67,6 +69,7 @@ input ModFilter {
     ids: [String!]
     references: [String!]
     hidden: Boolean
+    tagIDs: [TagID!]
 }
 
 input NewMod {
@@ -77,6 +80,7 @@ input NewMod {
     source_url: String
     mod_reference: ModReference!
     hidden: Boolean
+    tagIDs: [TagID!]
 }
 
 input UpdateMod {
@@ -88,6 +92,8 @@ input UpdateMod {
     mod_reference: ModReference
     authors: [UpdateUserMod!]
     hidden: Boolean
+    tagIDs: [TagID!]
+    compatibility: CompatibilityInfoInput
 }
 
 input UpdateUserMod {

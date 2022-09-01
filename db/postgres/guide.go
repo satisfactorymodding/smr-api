@@ -49,13 +49,18 @@ func GetGuideByID(ctx context.Context, guideID string) *Guide {
 		return guide.(*Guide)
 	}
 
+	return GetGuideByIDNoCache(ctx, guideID)
+}
+
+func GetGuideByIDNoCache(ctx context.Context, guideID string) *Guide {
 	var guide Guide
-	DBCtx(ctx).Find(&guide, "id = ?", guideID)
+	DBCtx(ctx).Preload("Tags").Find(&guide, "id = ?", guideID)
 
 	if guide.ID == "" {
 		return nil
 	}
 
+	cacheKey := "GetGuideById_" + guideID
 	dbCache.Set(cacheKey, &guide, cache.DefaultExpiration)
 
 	return &guide
@@ -72,7 +77,7 @@ func GetGuides(ctx context.Context, filter *models.GuideFilter) []Guide {
 	}
 
 	var guides []Guide
-	query := DBCtx(ctx)
+	query := DBCtx(ctx).Preload("Tags")
 
 	if filter != nil {
 		query = query.Limit(*filter.Limit).
@@ -81,6 +86,10 @@ func GetGuides(ctx context.Context, filter *models.GuideFilter) []Guide {
 
 		if filter.Search != nil && *filter.Search != "" {
 			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+		}
+
+		if filter.TagIDs != nil && len(filter.TagIDs) > 0 {
+			query.Joins("INNER JOIN guide_tags on guide_tags.tag_id in ? AND guide_tags.guide_id = guides.id", filter.TagIDs)
 		}
 	}
 
@@ -101,7 +110,7 @@ func GetGuidesByID(ctx context.Context, guideIds []string) []Guide {
 	}
 
 	var guides []Guide
-	DBCtx(ctx).Find(&guides, "id in (?)", guideIds)
+	DBCtx(ctx).Preload("Tags").Find(&guides, "id in (?)", guideIds)
 
 	if len(guideIds) != len(guides) {
 		return nil
@@ -146,6 +155,43 @@ func IncrementGuideViews(ctx context.Context, guide *Guide) {
 
 func GetUserGuides(ctx context.Context, userID string) []Guide {
 	var guides []Guide
-	DBCtx(ctx).Find(&guides, "user_id = ?", userID)
+	DBCtx(ctx).Preload("Tags").Find(&guides, "user_id = ?", userID)
 	return guides
+}
+
+func ClearGuideTags(ctx context.Context, guideID string) error {
+	r := DBCtx(ctx).Where("guide_id = ?", guideID).Delete(&GuideTag{})
+	return r.Error
+}
+
+func SetGuideTags(ctx context.Context, guideID string, tagIDs []string) error {
+	for _, tag := range tagIDs {
+		err := AddGuideTag(ctx, guideID, tag)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ResetGuideTags(ctx context.Context, guideID string, tagIDs []string) error {
+	err := ClearGuideTags(ctx, guideID)
+	if err != nil {
+		return err
+	}
+	err = SetGuideTags(ctx, guideID, tagIDs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AddGuideTag(ctx context.Context, guideID string, tagID string) error {
+	r := DBCtx(ctx).Create(&GuideTag{GuideID: guideID, TagID: tagID})
+	return r.Error
+}
+
+func RemoveGuideTag(ctx context.Context, guideID string, tagID string) error {
+	r := DBCtx(ctx).Delete(&GuideTag{GuideID: guideID, TagID: tagID})
+	return r.Error
 }

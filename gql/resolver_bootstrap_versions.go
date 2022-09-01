@@ -64,7 +64,7 @@ func (r *mutationResolver) UpdateBootstrapVersion(ctx context.Context, bootstrap
 	}
 
 	SetStringINNOE(bootstrapVersion.Version, &dbBootstrapVersion.Version)
-	SetIntINN(bootstrapVersion.SatisfactoryVersion, &dbBootstrapVersion.SatisfactoryVersion)
+	SetINN(bootstrapVersion.SatisfactoryVersion, &dbBootstrapVersion.SatisfactoryVersion)
 	SetStabilityINN(bootstrapVersion.Stability, &dbBootstrapVersion.Stability)
 	SetStringINNOE(bootstrapVersion.Link, &dbBootstrapVersion.Link)
 	SetStringINNOE(bootstrapVersion.Changelog, &dbBootstrapVersion.Changelog)

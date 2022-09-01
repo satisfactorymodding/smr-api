@@ -21,14 +21,18 @@ func GetModByID(ctx context.Context, modID string) *Mod {
 		return mod.(*Mod)
 	}
 
+	return GetModByIDNoCache(ctx, modID)
+}
+
+func GetModByIDNoCache(ctx context.Context, modID string) *Mod {
 	var mod Mod
-	DBCtx(ctx).Find(&mod, "id = ?", modID)
+	DBCtx(ctx).Preload("Tags").Find(&mod, "id = ?", modID)
 
 	if mod.ID == "" {
 		return nil
 	}
 
-	dbCache.Set(cacheKey, &mod, cache.DefaultExpiration)
+	dbCache.Set("GetModById_"+modID, &mod, cache.DefaultExpiration)
 
 	return &mod
 }
@@ -40,7 +44,7 @@ func GetModByReference(ctx context.Context, modReference string) *Mod {
 	}
 
 	var mod Mod
-	DBCtx(ctx).Find(&mod, "mod_reference = ?", modReference)
+	DBCtx(ctx).Preload("Tags").Find(&mod, "mod_reference = ?", modReference)
 
 	if mod.ID == "" {
 		return nil
@@ -58,7 +62,7 @@ func GetModsByID(ctx context.Context, modIds []string) []Mod {
 	}
 
 	var mods []Mod
-	DBCtx(ctx).Find(&mods, "id in (?)", modIds)
+	DBCtx(ctx).Preload("Tags").Find(&mods, "id in (?)", modIds)
 
 	if len(modIds) != len(mods) {
 		return nil
@@ -209,7 +213,7 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 	}
 
 	query = query.Where("approved = ? AND denied = ?", !unapproved, false)
-
+	query = query.Preload("Tags")
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
 			cleanSearch := strings.Replace(strings.TrimSpace(*filter.Search), " ", " & ", -1)
@@ -232,7 +236,7 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 				if string(*filter.OrderBy) == "last_version_date" {
 					query = query.Order("case when last_version_date is null then 1 else 0 end, last_version_date " + string(*filter.Order))
 				} else {
-					query = query.Order(string(*filter.OrderBy) + " " + string(*filter.Order))
+					query = query.Order("mods." + string(*filter.OrderBy) + " " + string(*filter.Order))
 				}
 			}
 		}
@@ -242,13 +246,17 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 		}
 
 		if filter.Ids != nil && len(filter.Ids) > 0 {
-			query = query.Where("id in (?)", filter.Ids)
+			query = query.Where("mods.id in (?)", filter.Ids)
 		} else if filter.References != nil && len(filter.References) > 0 {
 			query = query.Where("mod_reference in (?)", filter.References)
 		}
 
 		if filter.Fields != nil && len(filter.Fields) > 0 {
 			query = query.Select(filter.Fields)
+		}
+
+		if filter.TagIDs != nil && len(filter.TagIDs) > 0 {
+			query.Joins("INNER JOIN mod_tags on mod_tags.tag_id in ? AND mod_tags.mod_id = mods.id", filter.TagIDs)
 		}
 	}
 
@@ -262,7 +270,7 @@ func GetModByIDOrReference(ctx context.Context, modIDOrReference string) *Mod {
 	}
 
 	var mod Mod
-	DBCtx(ctx).Find(&mod, "mod_reference = ? OR id = ?", modIDOrReference, modIDOrReference)
+	DBCtx(ctx).Preload("Tags").Find(&mod, "mod_reference = ? OR id = ?", modIDOrReference, modIDOrReference)
 
 	if mod.ID == "" {
 		return nil
@@ -273,6 +281,43 @@ func GetModByIDOrReference(ctx context.Context, modIDOrReference string) *Mod {
 	return &mod
 }
 
+func ClearModTags(ctx context.Context, modID string) error {
+	r := DBCtx(ctx).Where("mod_id = ?", modID).Delete(&ModTag{})
+	return r.Error
+}
+
+func SetModTags(ctx context.Context, modID string, tagIDs []string) error {
+	for _, tag := range tagIDs {
+		err := AddModTag(ctx, modID, tag)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ResetModTags(ctx context.Context, modID string, tagIDs []string) error {
+	err := ClearModTags(ctx, modID)
+	if err != nil {
+		return err
+	}
+	err = SetModTags(ctx, modID, tagIDs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AddModTag(ctx context.Context, modID string, tagID string) error {
+	r := DBCtx(ctx).Create(&ModTag{ModID: modID, TagID: tagID})
+	return r.Error
+}
+
+func RemoveModTag(ctx context.Context, modID string, tagID string) error {
+	r := DBCtx(ctx).Delete(&ModTag{ModID: modID, TagID: tagID})
+	return r.Error
+}
+
 func GetModsByIDOrReference(ctx context.Context, modIDOrReferences []string) []Mod {
 	cacheKey := "GetModsByIDOrReference_" + strings.Join(modIDOrReferences, "-")
 	if mod, ok := dbCache.Get(cacheKey); ok {
@@ -280,7 +325,7 @@ func GetModsByIDOrReference(ctx context.Context, modIDOrReferences []string) []M
 	}
 
 	var mods []Mod
-	DBCtx(ctx).Find(&mods, "mod_reference IN ? OR id IN ?", modIDOrReferences, modIDOrReferences)
+	DBCtx(ctx).Preload("Tags").Find(&mods, "mod_reference IN ? OR id IN ?", modIDOrReferences, modIDOrReferences)
 
 	dbCache.Set(cacheKey, mods, cache.DefaultExpiration)
 
