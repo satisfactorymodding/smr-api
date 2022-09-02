@@ -27,7 +27,7 @@ func ConvertAnyImageToWebp(ctx context.Context, imageAsBytes []byte) ([]byte, er
 
 	if err != nil {
 		message := "error converting image to webp"
-		log.Ctx(ctx).Err(err).Msg(message)
+		log.Err(err).Msg(message)
 		return nil, errors.Wrap(err, message)
 	}
 
@@ -38,7 +38,7 @@ func ConvertAnyImageToWebp(ctx context.Context, imageAsBytes []byte) ([]byte, er
 
 		if err != nil {
 			message := "error converting image to webp"
-			log.Ctx(ctx).Err(err).Msg(message)
+			log.Err(err).Msg(message)
 			return nil, errors.Wrap(err, message)
 		}
 

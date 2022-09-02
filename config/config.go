@@ -33,10 +33,10 @@ func InitializeConfig() context.Context {
 	ctx := log.Logger.WithContext(context.Background())
 
 	if err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("config initialized using defaults and environment only!")
+		log.Warn().Err(err).Msg("config initialized using defaults and environment only!")
 	}
 
-	log.Ctx(ctx).Info().Msg("Config initialized")
+	log.Info().Msg("Config initialized")
 
 	return ctx
 }

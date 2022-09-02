@@ -55,7 +55,7 @@ func SubmitJobUpdateDBFromModVersionFileTask(ctx context.Context, modID string, 
 	err := queue.Add(tasks.UpdateDBFromModVersionFileTask.WithArgs(ctx, task))
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("error adding task")
+		log.Err(err).Msg("error adding task")
 	}
 }
 
@@ -68,7 +68,7 @@ func SubmitJobUpdateDBFromModVersionJSONFileTask(ctx context.Context, modID stri
 	err := queue.Add(tasks.UpdateDBFromModVersionJSONFileTask.WithArgs(ctx, task))
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("error adding task")
+		log.Err(err).Msg("error adding task")
 	}
 }
 
@@ -80,7 +80,7 @@ func SubmitJobCopyObjectFromOldBucketTask(ctx context.Context, key string) {
 	err := queue.Add(tasks.CopyObjectFromOldBucketTask.WithArgs(ctx, task))
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("error adding task")
+		log.Err(err).Msg("error adding task")
 	}
 }
 
@@ -92,7 +92,7 @@ func SubmitJobCopyObjectToOldBucketTask(ctx context.Context, key string) {
 	err := queue.Add(tasks.CopyObjectToOldBucketTask.WithArgs(ctx, task))
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("error adding task")
+		log.Err(err).Msg("error adding task")
 	}
 }
 
@@ -106,6 +106,6 @@ func SubmitJobScanModOnVirusTotalTask(ctx context.Context, modID string, version
 	err := queue.Add(tasks.ScanModOnVirusTotalTask.WithArgs(ctx, task))
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("error adding task")
+		log.Err(err).Msg("error adding task")
 	}
 }

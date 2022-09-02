@@ -57,10 +57,24 @@ func canEditMod(ctx context.Context, obj interface{}, next graphql.Resolver, fie
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canEditModCompatibility(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+func canEditModCompatibility(ctx context.Context, obj interface{}, next graphql.Resolver, field *string) (res interface{}, err error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
-	if user.Has(ctx, auth.RoleEditModCompatibility) {
+	if user.Has(ctx, auth.RoleEditAnyModCompatibility) || user.Has(ctx, auth.RoleEditAnyContent) {
+		return next(ctx)
+	}
+
+	if field == nil {
+		return nil, errors.New("user not authorized to perform this action")
+	}
+
+	dbMod := postgres.GetModByID(ctx, getArgument(ctx, *field).(string))
+
+	if dbMod == nil {
+		return nil, errors.New("mod not found")
+	}
+
+	if postgres.UserCanUploadModVersions(ctx, user, dbMod.ID) {
 		return next(ctx)
 	}
 

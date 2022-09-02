@@ -18,7 +18,7 @@ import (
 func RunMigrations(ctx context.Context) {
 	databaseMigrations(ctx)
 	codeMigrations(ctx)
-	log.Ctx(ctx).Info().Msg("Migrations Complete")
+	log.Info().Msg("Migrations Complete")
 }
 
 func databaseMigrations(ctx context.Context) {

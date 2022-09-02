@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"path"
 	"time"
@@ -37,7 +36,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 		return errors.Wrap(err, "failed to unmarshal task data")
 	}
 
-	log.Ctx(ctx).Info().Msgf("starting virus scan of mod %s version %s", task.ModID, task.VersionID)
+	log.Info().Msgf("starting virus scan of mod %s version %s", task.ModID, task.VersionID)
 
 	version := postgres.GetVersion(ctx, task.VersionID)
 	mod := postgres.GetModByID(ctx, version.ModID)
@@ -47,7 +46,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 	response, _ := http.Get(link)
 
-	fileData, err := ioutil.ReadAll(response.Body)
+	fileData, err := io.ReadAll(response.Body)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to read mod file")
@@ -81,12 +80,12 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	}
 
 	if !success {
-		log.Ctx(ctx).Warn().Msgf("mod %s version %s failed to pass virus scan", task.ModID, task.VersionID)
+		log.Warn().Msgf("mod %s version %s failed to pass virus scan", task.ModID, task.VersionID)
 		return nil
 	}
 
 	if task.ApproveAfter {
-		log.Ctx(ctx).Info().Msgf("approving mod %s version %s after successful virus scan", task.ModID, task.VersionID)
+		log.Info().Msgf("approving mod %s version %s after successful virus scan", task.ModID, task.VersionID)
 		version.Approved = true
 		postgres.Save(ctx, &version)
 

@@ -66,7 +66,7 @@ func InitializeStorage(ctx context.Context) {
 		panic("Failed to initialize storage!")
 	}
 
-	log.Ctx(ctx).Info().Msgf("Storage initialized: %s", baseConfig.Type)
+	log.Info().Msgf("Storage initialized: %s", baseConfig.Type)
 }
 
 func configToStorage(ctx context.Context, config Config) Storage {
@@ -93,7 +93,7 @@ func StartUploadMultipartMod(ctx context.Context, modID string, name string, ver
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
 	if err := StartMultipartUpload(key); err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to upload mod")
+		log.Err(err).Msg("failed to upload mod")
 		return false, ""
 	}
 
@@ -111,7 +111,7 @@ func UploadMultipartMod(ctx context.Context, modID string, name string, versionI
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
 	if err := UploadPart(key, part, data); err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to upload mod")
+		log.Err(err).Msg("failed to upload mod")
 		return false, ""
 	}
 
@@ -129,7 +129,7 @@ func CompleteUploadMultipartMod(ctx context.Context, modID string, name string, 
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
 	if err := CompleteMultipartUpload(key); err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to upload mod")
+		log.Err(err).Msg("failed to upload mod")
 		return false, ""
 	}
 
@@ -146,7 +146,7 @@ func UploadModLogo(ctx context.Context, modID string, data io.ReadSeeker) (bool,
 	key, err := storage.Put(ctx, key, data)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to upload mod logo")
+		log.Err(err).Msg("failed to upload mod logo")
 		return false, ""
 	}
 
@@ -169,12 +169,12 @@ func UploadUserAvatar(ctx context.Context, userID string, data io.ReadSeeker) (b
 		retry.Attempts(3),
 		retry.LastErrorOnly(true),
 		retry.OnRetry(func(n uint, err error) {
-			log.Ctx(ctx).Err(err).Msgf("failed to upload user avatar, retrying [%d]", n)
+			log.Err(err).Msgf("failed to upload user avatar, retrying [%d]", n)
 		}),
 	)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to upload user avatar")
+		log.Err(err).Msg("failed to upload user avatar")
 		return false, ""
 	}
 
@@ -261,16 +261,16 @@ func RenameVersion(ctx context.Context, modID string, name string, versionID str
 	from := fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(cleanName)+"-"+versionID)
 	to := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+version)
 
-	log.Ctx(ctx).Info().Msgf("Renaming file from %s to %s", from, to)
+	log.Info().Msgf("Renaming file from %s to %s", from, to)
 
 	if err := storage.Rename(from, to); err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to rename version")
+		log.Err(err).Msg("failed to rename version")
 		return false, ""
 	}
 
 	fromUnescaped := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
 	if err := storage.Delete(fromUnescaped); err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to delete version")
+		log.Err(err).Msg("failed to delete version")
 		return false, ""
 	}
 
@@ -286,7 +286,7 @@ func DeleteVersion(ctx context.Context, modID string, name string, versionID str
 
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
 	if err := storage.Delete(key); err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to delete version")
+		log.Err(err).Msg("failed to delete version")
 		return false
 	}
 
@@ -347,7 +347,7 @@ func ModVersionMeta(ctx context.Context, modID string, name string, versionID st
 
 	meta, err := storage.Meta(key)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to delete version")
+		log.Err(err).Msg("failed to delete version")
 		return nil
 	}
 

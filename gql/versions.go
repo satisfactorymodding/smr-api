@@ -3,7 +3,7 @@ package gql
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"time"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -38,7 +38,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	}
 
 	// TODO Optimize
-	fileData, err := ioutil.ReadAll(modFile)
+	fileData, err := io.ReadAll(modFile)
 
 	if err != nil {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
@@ -114,7 +114,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 	jsonData, err := json.Marshal(modInfo.Metadata)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("[%s] failed serializing", dbVersion.ID)
+		log.Err(err).Msgf("[%s] failed serializing", dbVersion.ID)
 	} else {
 		metadata := string(jsonData)
 		dbVersion.Metadata = &metadata

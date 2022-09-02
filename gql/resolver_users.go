@@ -7,7 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -35,7 +35,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 	}
 
 	if input.Avatar != nil {
-		file, err := ioutil.ReadAll(input.Avatar.File)
+		file, err := io.ReadAll(input.Avatar.File)
 
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read avatar file")
@@ -211,6 +211,10 @@ func (r *userResolver) Roles(ctx context.Context, obj *generated.User) (*generat
 
 	if hasRole, ok := roles[auth.RoleEditBootstrapVersions]; ok && hasRole {
 		userRoles.EditBootstrapVersions = true
+	}
+
+	if hasRole, ok := roles[auth.RoleEditAnyModCompatibility]; ok && hasRole {
+		userRoles.EditAnyModCompatibility = true
 	}
 
 	return userRoles, nil

@@ -3,10 +3,9 @@ package migrations
 import (
 	"context"
 	"os"
+	"strings"
 
 	postgres2 "github.com/satisfactorymodding/smr-api/db/postgres"
-
-	"strings"
 
 	// Import all migrations
 	_ "github.com/satisfactorymodding/smr-api/migrations/code"
@@ -32,7 +31,7 @@ func codeMigrations(ctx context.Context) {
 	source := migration.DefaultCodeSource()
 
 	// TODO Custom reporter, this one's very ugly
-	reporter := migration.NewDefaultReporterWithParams(codeMigrationLogger{log: log.Ctx(ctx)}, os.Exit)
+	reporter := migration.NewDefaultReporterWithParams(codeMigrationLogger{log: &log.Logger}, os.Exit)
 
 	db, _ := postgres2.DBCtx(ctx).DB()
 	manager := migration.NewDefaultManager(migration.NewPostgreSQLTarget(db), source)

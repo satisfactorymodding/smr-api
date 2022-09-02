@@ -18,7 +18,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 		for {
 			start := time.Now()
 			keys := redis.GetAllKeys()
-			log.Ctx(ctx).Info().Msgf("Fetched: %d keys in %s", len(keys), time.Since(start).String())
+			log.Info().Msgf("Fetched: %d keys in %s", len(keys), time.Since(start).String())
 			resultMap := make(map[string]map[string]map[string]uint)
 			for _, key := range keys {
 				if matches := keyRegex.FindStringSubmatch(key); matches != nil {
@@ -104,7 +104,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 				updateTx.Commit()
 			}
 
-			log.Ctx(ctx).Info().Msgf("Statistics Updated! Took %s", time.Since(start).String())
+			log.Info().Msgf("Statistics Updated! Took %s", time.Since(start).String())
 			time.Sleep(time.Minute)
 		}
 	}()

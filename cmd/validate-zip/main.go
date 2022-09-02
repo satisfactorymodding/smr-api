@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 
 	"github.com/satisfactorymodding/smr-api/validation"
@@ -13,7 +12,7 @@ func main() {
 		return
 	}
 
-	f, _ := ioutil.ReadFile(os.Args[1])
+	f, _ := os.ReadFile(os.Args[1])
 
 	validation.InitializeValidator()
 	_, err := validation.ExtractModInfo(context.Background(), f, true, true, "N/A")

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+
 	"github.com/satisfactorymodding/smr-api/redis"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,7 +37,7 @@ func initializeB2(ctx context.Context, config Config) *B2 {
 	newSession, err := session.NewSession(s3Config)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to create S3 session")
+		log.Err(err).Msg("failed to create S3 session")
 		return nil
 	}
 
@@ -69,7 +70,7 @@ func (b2o *B2) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 	cleanedKey := strings.TrimPrefix(key, "/")
 	uploader := s3manager.NewUploader(b2o.S3Session)
 
-	_, err := uploader.Upload(&s3manager.UploadInput{
+	_, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Body:   body,
 		Bucket: aws.String(b2o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
