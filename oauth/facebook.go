@@ -2,7 +2,7 @@ package oauth
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 
 	"github.com/satisfactorymodding/smr-api/redis"
 
@@ -34,7 +34,7 @@ func FacebookCallback(code string, state string) (*UserData, error) {
 		return nil, errors.Wrap(err, "failed to get user data")
 	}
 
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read response body")

@@ -16,7 +16,7 @@ func ConvertAnyImageToWebp(imageAsBytes []byte) ([]byte, error) {
 
 	if err != nil {
 		err := errors.Wrap(err, "error converting image to webp")
-		log.Ctx(ctx).Error(err)
+		log.Error(err)
 		return nil, err
 	}
 

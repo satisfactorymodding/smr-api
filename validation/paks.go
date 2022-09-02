@@ -206,7 +206,7 @@ func ExtractDataFromPak(ctx context.Context, reader parser.PakReader) map[string
 						if _, ok := ignoredClasses[cleanName]; !ok {
 							if !strings.HasPrefix(cleanName, "Widget_") &&
 								!strings.HasPrefix(cleanName, "ParticleModule") {
-								log.Ctx(ctx).Warn().Msgf("Parsing unknown class name: %s", cleanName)
+								log.Warn().Msgf("Parsing unknown class name: %s", cleanName)
 
 								if _, ok := exportData[cleanName]; !ok {
 									exportData[cleanName] = make([]interface{}, 0)

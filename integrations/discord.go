@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"html"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -61,7 +60,7 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 	payloadJSON, err := json.Marshal(payload)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("error marshaling discord webhook")
+		log.Err(err).Msg("error marshaling discord webhook")
 		return
 	}
 
@@ -76,11 +75,11 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 		_ = Body.Close()
 	}(res.Body)
 
-	_, _ = ioutil.ReadAll(res.Body)
+	_, _ = io.ReadAll(res.Body)
 }
 
 func NewVersion(ctx context.Context, version *postgres.Version) {
-	log.Ctx(ctx).Info().Str("stack", string(debug.Stack())).Msg("new version discord webhook")
+	log.Info().Str("stack", string(debug.Stack())).Msg("new version discord webhook")
 
 	if version == nil {
 		return
@@ -146,7 +145,7 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 	payloadJSON, err := json.Marshal(payload)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("error marshaling discord webhook")
+		log.Err(err).Msg("error marshaling discord webhook")
 		return
 	}
 
@@ -161,5 +160,5 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 		_ = Body.Close()
 	}(res.Body)
 
-	_, _ = ioutil.ReadAll(res.Body)
+	_, _ = io.ReadAll(res.Body)
 }

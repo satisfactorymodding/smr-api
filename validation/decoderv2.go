@@ -48,10 +48,10 @@ func DecodeProperty(ctx context.Context, cleanName string, property *parser.FPro
 		} else if b, ok := property.Tag.(byte); ok {
 			return b
 		} else {
-			log.Ctx(ctx).Error().Msgf("Unknown ByteProperty type: %#v", property)
+			log.Error().Msgf("Unknown ByteProperty type: %#v", property)
 		}
 	default:
-		log.Ctx(ctx).Error().Msgf("Unknown property type [%s]: %s", cleanName, property.PropertyType)
+		log.Error().Msgf("Unknown property type [%s]: %s", cleanName, property.PropertyType)
 	}
 
 	return nil
@@ -110,7 +110,7 @@ func DecodeArrayProperty(ctx context.Context, property *parser.FPropertyTag) []i
 	case "FloatProperty":
 		copy(results, arrayData)
 	default:
-		log.Ctx(ctx).Error().Msgf("Unknown array property data type [%s]: %s", property.Name, property.TagData.(string))
+		log.Error().Msgf("Unknown array property data type [%s]: %s", property.Name, property.TagData.(string))
 	}
 
 	return results

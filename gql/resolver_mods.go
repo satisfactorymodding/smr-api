@@ -3,7 +3,7 @@ package gql
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"time"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
@@ -54,7 +54,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 	var logoData []byte
 
 	if mod.Logo != nil {
-		file, err := ioutil.ReadAll(mod.Logo.File)
+		file, err := io.ReadAll(mod.Logo.File)
 
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read logo file")
@@ -127,7 +127,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 	SetCompatibilityINN(mod.Compatibility, &dbMod.Compatibility)
 
 	if mod.Logo != nil {
-		file, err := ioutil.ReadAll(mod.Logo.File)
+		file, err := io.ReadAll(mod.Logo.File)
 
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read logo file")

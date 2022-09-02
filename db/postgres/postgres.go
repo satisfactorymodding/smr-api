@@ -35,15 +35,15 @@ func (l *GormLogger) LogMode(mode logger.LogLevel) logger.Interface {
 }
 
 func (*GormLogger) Info(ctx context.Context, msg string, data ...interface{}) {
-	log.Ctx(ctx).Info().Str("file", utils.FileWithLineNum()).Msgf(msg, data...)
+	log.Info().Str("file", utils.FileWithLineNum()).Msgf(msg, data...)
 }
 
 func (*GormLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
-	log.Ctx(ctx).Warn().Str("file", utils.FileWithLineNum()).Msgf(msg, data...)
+	log.Warn().Str("file", utils.FileWithLineNum()).Msgf(msg, data...)
 }
 
 func (*GormLogger) Error(ctx context.Context, msg string, data ...interface{}) {
-	log.Ctx(ctx).Error().Str("file", utils.FileWithLineNum()).Msgf(msg, data...)
+	log.Error().Str("file", utils.FileWithLineNum()).Msgf(msg, data...)
 }
 
 func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
@@ -52,16 +52,14 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 
 	sql, rows := fc()
 
-	logCtx := log.Ctx(ctx)
-
 	var logEv *zerolog.Event
 	switch {
 	case err != nil:
-		logEv = logCtx.Err(err)
+		logEv = log.Err(err)
 	case since > l.SlowThreshold && l.SlowThreshold != 0:
-		logEv = logCtx.Warn()
+		logEv = log.Warn()
 	case l.Debug:
-		logEv = logCtx.Info()
+		logEv = log.Info()
 	}
 
 	if logEv != nil {
@@ -102,7 +100,7 @@ func InitializePostgres(ctx context.Context) {
 
 	// TODO Create search indexes
 
-	log.Ctx(ctx).Info().Msg("Postgres initialized")
+	log.Info().Msg("Postgres initialized")
 }
 
 func Save(ctx context.Context, object interface{}) {

@@ -42,7 +42,7 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) (bool, er
 
 		analysisID := scan.ID()
 
-		log.Ctx(ctx).Info().Msgf("uploaded virus scan for file %s and analysis ID: %s", names[i], analysisID)
+		log.Info().Msgf("uploaded virus scan for file %s and analysis ID: %s", names[i], analysisID)
 
 		for {
 			time.Sleep(time.Second * 15)

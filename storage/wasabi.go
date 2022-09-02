@@ -32,7 +32,7 @@ func initializeWasabi(ctx context.Context, config Config) *Wasabi {
 	newSession, err := session.NewSession(s3Config)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to create session")
+		log.Err(err).Msg("failed to create session")
 		return nil
 	}
 
