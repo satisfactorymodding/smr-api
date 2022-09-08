@@ -46,6 +46,7 @@ func initializeDefaults() {
 	viper.SetDefault("port", "5020")
 
 	viper.SetDefault("production", true)
+	viper.SetDefault("profiler", false)
 
 	viper.SetDefault("database.redis.host", "localhost")
 	viper.SetDefault("database.redis.port", 6379)

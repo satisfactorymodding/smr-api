@@ -84,12 +84,16 @@ func Serve() {
 
 	migrations.RunMigrations(ctx)
 
-	if !viper.GetBool("production") {
+	if viper.GetBool("profiler") {
 		go func() {
 			debugServer := echo.New()
 			pprof.Register(debugServer)
 			debugServer.Any("/debug/fgprof", echo.WrapHandler(fgprof.Handler()))
-			debugServer.Logger.Fatal(debugServer.Start(":6060"))
+			debugServer.HideBanner = true
+			debugServer.HidePort = true
+			address := ":6060"
+			log.Info().Str("address", address).Msg("starting profiler")
+			debugServer.Logger.Fatal(debugServer.Start(address))
 		}()
 	}
 
