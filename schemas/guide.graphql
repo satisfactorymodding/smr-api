@@ -20,7 +20,7 @@ type Guide {
     created_at: Date!
     tags: [Tag!]!
 
-    user: User!
+    user: User
 }
 
 type GetGuides {
@@ -65,6 +65,6 @@ extend type Query {
 
 extend type Mutation {
     createGuide(guide: NewGuide!): Guide @isLoggedIn
-    updateGuide(guideId: GuideID!, guide: UpdateGuide!): Guide! @canEditGuide(field: "guideId") @isLoggedIn
+    updateGuide(guideId: GuideID!, guide: UpdateGuide!): Guide @canEditGuide(field: "guideId") @isLoggedIn
     deleteGuide(guideId: GuideID!): Boolean! @canEditGuide(field: "guideId") @isLoggedIn
 }

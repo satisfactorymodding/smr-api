@@ -45,7 +45,8 @@ func (r *mutationResolver) CreateBootstrapVersion(ctx context.Context, bootstrap
 		return nil, errors.Wrap(err, "failed to create bootstrap version")
 	}
 
-	return DBBootstrapVersionToGenerated(resultBootstrapVersion), nil
+	temp := DBBootstrapVersionToGenerated(resultBootstrapVersion)
+	return &temp, nil
 }
 
 func (r *mutationResolver) UpdateBootstrapVersion(ctx context.Context, bootstrapVersionID string, bootstrapVersion generated.UpdateBootstrapVersion) (*generated.BootstrapVersion, error) {
@@ -72,7 +73,8 @@ func (r *mutationResolver) UpdateBootstrapVersion(ctx context.Context, bootstrap
 
 	postgres.Save(newCtx, &dbBootstrapVersion)
 
-	return DBBootstrapVersionToGenerated(dbBootstrapVersion), nil
+	temp := DBBootstrapVersionToGenerated(dbBootstrapVersion)
+	return &temp, nil
 }
 
 func (r *mutationResolver) DeleteBootstrapVersion(ctx context.Context, bootstrapVersionID string) (bool, error) {
@@ -94,18 +96,19 @@ func (r *queryResolver) GetBootstrapVersion(ctx context.Context, bootstrapVersio
 	wrapper, newCtx := WrapQueryTrace(ctx, "getBootstrapVersion")
 	defer wrapper.end()
 
-	return DBBootstrapVersionToGenerated(postgres.GetBootstrapVersionByID(newCtx, bootstrapVersionID)), nil
+	temp := DBBootstrapVersionToGenerated(postgres.GetBootstrapVersionByID(newCtx, bootstrapVersionID))
+	return &temp, nil
 }
 
-func (r *queryResolver) GetBootstrapVersions(ctx context.Context, filter map[string]interface{}) (*generated.GetBootstrapVersions, error) {
+func (r *queryResolver) GetBootstrapVersions(ctx context.Context, filter map[string]interface{}) (generated.GetBootstrapVersions, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getBootstrapVersions")
 	defer wrapper.end()
-	return &generated.GetBootstrapVersions{}, nil
+	return generated.GetBootstrapVersions{}, nil
 }
 
 type getBootstrapVersionsResolver struct{ *Resolver }
 
-func (r *getBootstrapVersionsResolver) BootstrapVersions(ctx context.Context, obj *generated.GetBootstrapVersions) ([]*generated.BootstrapVersion, error) {
+func (r *getBootstrapVersionsResolver) BootstrapVersions(ctx context.Context, obj *generated.GetBootstrapVersions) ([]generated.BootstrapVersion, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetBootstrapVersions.bootstrapVersions")
 	defer wrapper.end()
 
@@ -128,7 +131,7 @@ func (r *getBootstrapVersionsResolver) BootstrapVersions(ctx context.Context, ob
 		return nil, errors.New("bootstrap releases not found")
 	}
 
-	converted := make([]*generated.BootstrapVersion, len(bootstrapVersions))
+	converted := make([]generated.BootstrapVersion, len(bootstrapVersions))
 	for k, v := range bootstrapVersions {
 		converted[k] = DBBootstrapVersionToGenerated(&v)
 	}

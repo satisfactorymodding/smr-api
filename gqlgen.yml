@@ -1,5 +1,9 @@
 skip_mod_tidy: true
 
+omit_slice_element_pointers: true
+struct_fields_always_pointers: false
+resolvers_always_return_pointers: false
+
 schema:
   - schemas/*.graphql
 

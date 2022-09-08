@@ -46,7 +46,8 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 		return nil, err
 	}
 
-	return DBSMLVersionToGenerated(resultSMLVersion), nil
+	temp := DBSMLVersionToGenerated(resultSMLVersion)
+	return &temp, nil
 }
 
 func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID string, smlVersion generated.UpdateSMLVersion) (*generated.SMLVersion, error) {
@@ -74,7 +75,8 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 
 	postgres.Save(newCtx, &dbSMLVersion)
 
-	return DBSMLVersionToGenerated(dbSMLVersion), nil
+	temp := DBSMLVersionToGenerated(dbSMLVersion)
+	return &temp, nil
 }
 
 func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID string) (bool, error) {
@@ -96,18 +98,19 @@ func (r *queryResolver) GetSMLVersion(ctx context.Context, smlVersionID string) 
 	wrapper, newCtx := WrapQueryTrace(ctx, "getSMLVersion")
 	defer wrapper.end()
 
-	return DBSMLVersionToGenerated(postgres.GetSMLVersionByID(newCtx, smlVersionID)), nil
+	temp := DBSMLVersionToGenerated(postgres.GetSMLVersionByID(newCtx, smlVersionID))
+	return &temp, nil
 }
 
-func (r *queryResolver) GetSMLVersions(ctx context.Context, filter map[string]interface{}) (*generated.GetSMLVersions, error) {
+func (r *queryResolver) GetSMLVersions(ctx context.Context, filter map[string]interface{}) (generated.GetSMLVersions, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getSMLVersions")
 	defer wrapper.end()
-	return &generated.GetSMLVersions{}, nil
+	return generated.GetSMLVersions{}, nil
 }
 
 type getSMLVersionsResolver struct{ *Resolver }
 
-func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, obj *generated.GetSMLVersions) ([]*generated.SMLVersion, error) {
+func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, obj *generated.GetSMLVersions) ([]generated.SMLVersion, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetSMLVersions.smlVersions")
 	defer wrapper.end()
 
@@ -130,7 +133,7 @@ func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, obj *generated
 		return nil, errors.New("sml releases not found")
 	}
 
-	converted := make([]*generated.SMLVersion, len(smlVersions))
+	converted := make([]generated.SMLVersion, len(smlVersions))
 	for k, v := range smlVersions {
 		converted[k] = DBSMLVersionToGenerated(&v)
 	}

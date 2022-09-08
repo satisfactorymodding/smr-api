@@ -39,6 +39,6 @@ extend type Query {
 
 extend type Mutation {
     createAnnouncement(announcement: NewAnnouncement!): Announcement @canEditAnnouncements @isLoggedIn
-    updateAnnouncement(announcementId: AnnouncementID!, announcement: UpdateAnnouncement!): Announcement! @canEditAnnouncements @isLoggedIn
+    updateAnnouncement(announcementId: AnnouncementID!, announcement: UpdateAnnouncement!): Announcement @canEditAnnouncements @isLoggedIn
     deleteAnnouncement(announcementId: AnnouncementID!): Boolean! @canEditAnnouncements @isLoggedIn
 }

@@ -14,7 +14,7 @@ type OAuthOptions {
 }
 
 type Query {
-    getOAuthOptions(callback_url: String!): OAuthOptions!
+    getOAuthOptions(callback_url: String!): OAuthOptions
 }
 
 type Mutation {

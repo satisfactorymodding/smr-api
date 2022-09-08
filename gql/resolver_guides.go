@@ -48,7 +48,8 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, guide generated.NewG
 	}
 
 	// Need to get the guide again to populate tags
-	return DBGuideToGenerated(postgres.GetGuideByIDNoCache(newCtx, resultGuide.ID)), nil
+	temp := DBGuideToGenerated(postgres.GetGuideByIDNoCache(newCtx, resultGuide.ID))
+	return &temp, nil
 }
 
 func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, guide generated.UpdateGuide) (*generated.Guide, error) {
@@ -77,7 +78,8 @@ func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, guid
 
 	postgres.Save(newCtx, &dbGuide)
 
-	return DBGuideToGenerated(dbGuide), nil
+	temp := DBGuideToGenerated(dbGuide)
+	return &temp, nil
 }
 
 func (r *mutationResolver) DeleteGuide(ctx context.Context, guideID string) (bool, error) {
@@ -107,18 +109,19 @@ func (r *queryResolver) GetGuide(ctx context.Context, guideID string) (*generate
 		}
 	}
 
-	return DBGuideToGenerated(guide), nil
+	temp := DBGuideToGenerated(guide)
+	return &temp, nil
 }
 
-func (r *queryResolver) GetGuides(ctx context.Context, filter map[string]interface{}) (*generated.GetGuides, error) {
+func (r *queryResolver) GetGuides(ctx context.Context, filter map[string]interface{}) (generated.GetGuides, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getGuides")
 	defer wrapper.end()
-	return &generated.GetGuides{}, nil
+	return generated.GetGuides{}, nil
 }
 
 type getGuidesResolver struct{ *Resolver }
 
-func (r *getGuidesResolver) Guides(ctx context.Context, obj *generated.GetGuides) ([]*generated.Guide, error) {
+func (r *getGuidesResolver) Guides(ctx context.Context, obj *generated.GetGuides) ([]generated.Guide, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetGuides.guides")
 	defer wrapper.end()
 
@@ -141,7 +144,7 @@ func (r *getGuidesResolver) Guides(ctx context.Context, obj *generated.GetGuides
 		return nil, errors.New("guides not found")
 	}
 
-	converted := make([]*generated.Guide, len(guides))
+	converted := make([]generated.Guide, len(guides))
 	for k, v := range guides {
 		converted[k] = DBGuideToGenerated(&v)
 	}
@@ -179,5 +182,6 @@ func (r *guideResolver) User(ctx context.Context, obj *generated.Guide) (*genera
 		return nil, errors.New("user not found")
 	}
 
-	return DBUserToGenerated(user), nil
+	temp := DBUserToGenerated(user)
+	return &temp, nil
 }
