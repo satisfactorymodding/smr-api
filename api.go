@@ -4,9 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	// Import pprof
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
+	"syscall"
+	"time"
 
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/config"
@@ -25,9 +29,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/oauth"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/redis/jobs"
-
-	"syscall"
-	"time"
 
 	// Load redis consumers
 	_ "github.com/satisfactorymodding/smr-api/redis/jobs/consumers"
@@ -168,11 +169,11 @@ func Serve() {
 		MaxMemory:     100 << 20,
 	})
 
-	gqlHandler.SetQueryCache(lru.New(1000))
+	gqlHandler.SetQueryCache(lru.New(5000))
 
 	gqlHandler.Use(extension.Introspection{})
 	gqlHandler.Use(extension.AutomaticPersistedQuery{
-		Cache: lru.New(100),
+		Cache: lru.New(5000),
 	})
 
 	v2Query.Any("", echo.WrapHandler(gqlHandler))
