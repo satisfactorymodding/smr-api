@@ -148,7 +148,8 @@ func (r *mutationResolver) UpdateVersion(ctx context.Context, versionID string, 
 
 	postgres.Save(newCtx, &dbVersion)
 
-	return DBVersionToGenerated(dbVersion), nil
+	temp := DBVersionToGenerated(dbVersion)
+	return &temp, nil
 }
 
 func (r *mutationResolver) DeleteVersion(ctx context.Context, versionID string) (bool, error) {
@@ -214,31 +215,32 @@ func (r *mutationResolver) DenyVersion(ctx context.Context, versionID string) (b
 func (r *queryResolver) GetVersion(ctx context.Context, versionID string) (*generated.Version, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getVersion")
 	defer wrapper.end()
-	return DBVersionToGenerated(postgres.GetVersion(newCtx, versionID)), nil
+	temp := DBVersionToGenerated(postgres.GetVersion(newCtx, versionID))
+	return &temp, nil
 }
 
-func (r *queryResolver) GetVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
+func (r *queryResolver) GetVersions(ctx context.Context, _ map[string]interface{}) (generated.GetVersions, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getVersions")
 	defer wrapper.end()
-	return &generated.GetVersions{}, nil
+	return generated.GetVersions{}, nil
 }
 
-func (r *queryResolver) GetUnapprovedVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
+func (r *queryResolver) GetUnapprovedVersions(ctx context.Context, _ map[string]interface{}) (generated.GetVersions, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getUnapprovedVersions")
 	defer wrapper.end()
-	return &generated.GetVersions{}, nil
+	return generated.GetVersions{}, nil
 }
 
-func (r *queryResolver) GetMyVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetMyVersions, error) {
+func (r *queryResolver) GetMyVersions(ctx context.Context, _ map[string]interface{}) (generated.GetMyVersions, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMyVersions")
 	defer wrapper.end()
-	return &generated.GetMyVersions{}, nil
+	return generated.GetMyVersions{}, nil
 }
 
-func (r *queryResolver) GetMyUnapprovedVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetMyVersions, error) {
+func (r *queryResolver) GetMyUnapprovedVersions(ctx context.Context, _ map[string]interface{}) (generated.GetMyVersions, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMyUnapprovedVersions")
 	defer wrapper.end()
-	return &generated.GetMyVersions{}, nil
+	return generated.GetMyVersions{}, nil
 }
 
 func (r *queryResolver) CheckVersionUploadState(ctx context.Context, modID string, versionID string) (*generated.CreateVersionResponse, error) {
@@ -264,7 +266,7 @@ func (r *queryResolver) CheckVersionUploadState(ctx context.Context, modID strin
 
 type getVersionsResolver struct{ *Resolver }
 
-func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVersions) ([]*generated.Version, error) {
+func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVersions) ([]generated.Version, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetVersions.versions")
 	defer wrapper.end()
 
@@ -293,7 +295,7 @@ func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVers
 		return nil, errors.New("versions not found")
 	}
 
-	converted := make([]*generated.Version, len(versions))
+	converted := make([]generated.Version, len(versions))
 	for k, v := range versions {
 		converted[k] = DBVersionToGenerated(&v)
 	}
@@ -327,7 +329,7 @@ func (r *versionResolver) Link(_ context.Context, obj *generated.Version) (strin
 	return "/v1/version/" + obj.ID + "/download", nil
 }
 
-func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*generated.Mod, error) {
+func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (generated.Mod, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "Version.mod")
 	defer wrapper.end()
 
@@ -342,7 +344,7 @@ var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config{
 
 const versionDependencyCacheTTL = time.Minute * 10
 
-func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Version) ([]*generated.VersionDependency, error) {
+func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Version) ([]generated.VersionDependency, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "Version.dependencies")
 	defer wrapper.end()
 
@@ -363,7 +365,7 @@ func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Versi
 		versionDependencyCache.SetWithTTL(obj.ID, dependencies, int64(len(dependencies)), versionDependencyCacheTTL)
 	}
 
-	converted := make([]*generated.VersionDependency, len(dependencies))
+	converted := make([]generated.VersionDependency, len(dependencies))
 	for k, v := range dependencies {
 		converted[k] = DBVersionDependencyToGenerated(&v)
 	}
@@ -373,7 +375,7 @@ func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Versi
 
 type getMyVersionsResolver struct{ *Resolver }
 
-func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMyVersions) ([]*generated.Version, error) {
+func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMyVersions) ([]generated.Version, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetMyVersions.versions")
 	defer wrapper.end()
 
@@ -402,7 +404,7 @@ func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMy
 		return nil, errors.New("versions not found")
 	}
 
-	converted := make([]*generated.Version, len(versions))
+	converted := make([]generated.Version, len(versions))
 	for k, v := range versions {
 		converted[k] = DBVersionToGenerated(&v)
 	}

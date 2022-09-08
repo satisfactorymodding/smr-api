@@ -106,7 +106,7 @@ extend type Mutation {
     uploadVersionPart(modId: ModID!, versionId: VersionID!, part: Int!, file: Upload!): Boolean! @canEditMod(field: "modId") @isLoggedIn
     finalizeCreateVersion(modId: ModID!, versionId: VersionID!, version: NewVersion!): Boolean! @canEditMod(field: "modId") @isLoggedIn
 
-    updateVersion(versionId: VersionID!, version: UpdateVersion!): Version! @canEditVersion(field: "versionId") @isLoggedIn
+    updateVersion(versionId: VersionID!, version: UpdateVersion!): Version @canEditVersion(field: "versionId") @isLoggedIn
     deleteVersion(versionId: VersionID!): Boolean! @canEditVersion(field: "versionId") @isLoggedIn
 
     approveVersion(versionId: VersionID!): Boolean! @canApproveVersions @isLoggedIn

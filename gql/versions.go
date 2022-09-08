@@ -170,8 +170,9 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)
 	}
 
+	temp := DBVersionToGenerated(dbVersion)
 	return &generated.CreateVersionResponse{
 		AutoApproved: autoApproved,
-		Version:      DBVersionToGenerated(dbVersion),
+		Version:      &temp,
 	}, nil
 }
