@@ -3,10 +3,11 @@ package smr
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
+	"syscall"
+	"time"
 
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/config"
@@ -26,9 +27,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/redis/jobs"
 
-	"syscall"
-	"time"
-
 	// Load redis consumers
 	_ "github.com/satisfactorymodding/smr-api/redis/jobs/consumers"
 	"github.com/satisfactorymodding/smr-api/storage"
@@ -40,6 +38,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/felixge/fgprof"
+	"github.com/labstack/echo-contrib/pprof"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
@@ -84,9 +84,16 @@ func Serve() {
 
 	migrations.RunMigrations(ctx)
 
-	if !viper.GetBool("production") {
+	if viper.GetBool("profiler") {
 		go func() {
-			log.Err(http.ListenAndServe("0.0.0.0:6060", nil)).Msg("Debug server")
+			debugServer := echo.New()
+			pprof.Register(debugServer)
+			debugServer.Any("/debug/fgprof", echo.WrapHandler(fgprof.Handler()))
+			debugServer.HideBanner = true
+			debugServer.HidePort = true
+			address := ":6060"
+			log.Info().Str("address", address).Msg("starting profiler")
+			debugServer.Logger.Fatal(debugServer.Start(address))
 		}()
 	}
 
@@ -168,11 +175,11 @@ func Serve() {
 		MaxMemory:     100 << 20,
 	})
 
-	gqlHandler.SetQueryCache(lru.New(1000))
+	gqlHandler.SetQueryCache(lru.New(5000))
 
 	gqlHandler.Use(extension.Introspection{})
 	gqlHandler.Use(extension.AutomaticPersistedQuery{
-		Cache: lru.New(100),
+		Cache: lru.New(5000),
 	})
 
 	v2Query.Any("", echo.WrapHandler(gqlHandler))
