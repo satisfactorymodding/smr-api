@@ -13,11 +13,13 @@ require (
 	github.com/cespare/xxhash v1.1.0
 	github.com/chai2010/webp v1.1.1
 	github.com/dgraph-io/ristretto v0.1.0
+	github.com/felixge/fgprof v0.9.3
 	github.com/finnbear/moderation v0.11.4
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/lab259/go-migration v1.3.1
+	github.com/labstack/echo-contrib v0.13.0
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/microcosm-cc/bluemonday v1.0.18
 	github.com/mitchellh/hashstructure/v2 v2.0.2
@@ -42,8 +44,8 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.7.0
 	go.opentelemetry.io/otel/sdk v1.7.0
 	go.opentelemetry.io/otel/trace v1.7.0
-	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
+	golang.org/x/net v0.0.0-20220728030405-41545e8bf201
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gorm.io/driver/postgres v1.3.5
@@ -84,6 +86,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
@@ -135,17 +138,17 @@ require (
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.7.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.16.0 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20210220032938-85be41e4509f // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
+	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac // indirect
-	google.golang.org/grpc v1.46.0 // indirect
+	google.golang.org/grpc v1.48.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect

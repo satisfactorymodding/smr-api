@@ -3,9 +3,6 @@ package smr
 import (
 	"context"
 	"fmt"
-	"net/http"
-	// Import pprof
-	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -41,6 +38,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/felixge/fgprof"
+	"github.com/labstack/echo-contrib/pprof"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
@@ -87,7 +86,10 @@ func Serve() {
 
 	if !viper.GetBool("production") {
 		go func() {
-			log.Err(http.ListenAndServe("0.0.0.0:6060", nil)).Msg("Debug server")
+			debugServer := echo.New()
+			pprof.Register(debugServer)
+			debugServer.Any("/debug/fgprof", echo.WrapHandler(fgprof.Handler()))
+			debugServer.Logger.Fatal(debugServer.Start(":6060"))
 		}()
 	}
 
