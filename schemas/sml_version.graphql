@@ -71,6 +71,6 @@ extend type Query {
 
 extend type Mutation {
     createSMLVersion(smlVersion: NewSMLVersion!): SMLVersion @isLoggedIn
-    updateSMLVersion(smlVersionId: SMLVersionID!, smlVersion: UpdateSMLVersion!): SMLVersion @canEditSMLVersions @isLoggedIn
+    updateSMLVersion(smlVersionId: SMLVersionID!, smlVersion: UpdateSMLVersion!): SMLVersion! @canEditSMLVersions @isLoggedIn
     deleteSMLVersion(smlVersionId: SMLVersionID!): Boolean! @canEditSMLVersions @isLoggedIn
 }

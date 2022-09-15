@@ -90,8 +90,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 	}
 
 	// Need to get the mod again to populate tags
-	temp := DBModToGenerated(postgres.GetModByIDNoCache(newCtx, resultMod.ID))
-	return &temp, nil
+	return DBModToGenerated(postgres.GetModByIDNoCache(newCtx, resultMod.ID)), nil
 }
 
 func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod generated.UpdateMod) (*generated.Mod, error) {
@@ -191,8 +190,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 		}
 	}
 
-	temp := DBModToGenerated(dbMod)
-	return &temp, nil
+	return DBModToGenerated(dbMod), nil
 }
 
 func (r *mutationResolver) UpdateModCompatibility(ctx context.Context, modID string, compatibility generated.CompatibilityInfoInput) (bool, error) {
@@ -280,8 +278,7 @@ func (r *queryResolver) GetMod(ctx context.Context, modID string) (*generated.Mo
 		}
 	}
 
-	temp := DBModToGenerated(mod)
-	return &temp, nil
+	return DBModToGenerated(mod), nil
 }
 
 func (r *queryResolver) GetModByReference(ctx context.Context, modReference string) (*generated.Mod, error) {
@@ -296,37 +293,36 @@ func (r *queryResolver) GetModByReference(ctx context.Context, modReference stri
 		}
 	}
 
-	temp := DBModToGenerated(mod)
-	return &temp, nil
+	return DBModToGenerated(mod), nil
 }
 
-func (r *queryResolver) GetMods(ctx context.Context, filter map[string]interface{}) (generated.GetMods, error) {
+func (r *queryResolver) GetMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMods")
 	defer wrapper.end()
-	return generated.GetMods{}, nil
+	return &generated.GetMods{}, nil
 }
 
-func (r *queryResolver) GetUnapprovedMods(ctx context.Context, filter map[string]interface{}) (generated.GetMods, error) {
+func (r *queryResolver) GetUnapprovedMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getUnapprovedMods")
 	defer wrapper.end()
-	return generated.GetMods{}, nil
+	return &generated.GetMods{}, nil
 }
 
-func (r *queryResolver) GetMyMods(ctx context.Context, filter map[string]interface{}) (generated.GetMyMods, error) {
+func (r *queryResolver) GetMyMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMyMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMyMods")
 	defer wrapper.end()
-	return generated.GetMyMods{}, nil
+	return &generated.GetMyMods{}, nil
 }
 
-func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, filter map[string]interface{}) (generated.GetMyMods, error) {
+func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMyMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMyUnapprovedMods")
 	defer wrapper.end()
-	return generated.GetMyMods{}, nil
+	return &generated.GetMyMods{}, nil
 }
 
 type getModsResolver struct{ *Resolver }
 
-func (r *getModsResolver) Mods(ctx context.Context, obj *generated.GetMods) ([]generated.Mod, error) {
+func (r *getModsResolver) Mods(ctx context.Context, obj *generated.GetMods) ([]*generated.Mod, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetMods.mods")
 	defer wrapper.end()
 
@@ -349,7 +345,7 @@ func (r *getModsResolver) Mods(ctx context.Context, obj *generated.GetMods) ([]g
 		return nil, errors.New("mods not found")
 	}
 
-	converted := make([]generated.Mod, len(mods))
+	converted := make([]*generated.Mod, len(mods))
 	for k, v := range mods {
 		converted[k] = DBModToGenerated(&v)
 	}
@@ -379,7 +375,7 @@ func (r *getModsResolver) Count(ctx context.Context, obj *generated.GetMods) (in
 
 type getMyModsResolver struct{ *Resolver }
 
-func (r *getMyModsResolver) Mods(ctx context.Context, obj *generated.GetMyMods) ([]generated.Mod, error) {
+func (r *getMyModsResolver) Mods(ctx context.Context, obj *generated.GetMyMods) ([]*generated.Mod, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetMyMods.mods")
 	defer wrapper.end()
 
@@ -408,7 +404,7 @@ func (r *getMyModsResolver) Mods(ctx context.Context, obj *generated.GetMyMods) 
 		return nil, errors.New("mods not found")
 	}
 
-	converted := make([]generated.Mod, len(mods))
+	converted := make([]*generated.Mod, len(mods))
 	for k, v := range mods {
 		converted[k] = DBModToGenerated(&v)
 	}
@@ -438,7 +434,7 @@ func (r *getMyModsResolver) Count(ctx context.Context, obj *generated.GetMyMods)
 
 type modResolver struct{ *Resolver }
 
-func (r *modResolver) Authors(ctx context.Context, obj *generated.Mod) ([]generated.UserMod, error) {
+func (r *modResolver) Authors(ctx context.Context, obj *generated.Mod) ([]*generated.UserMod, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "Mod.authors")
 	defer wrapper.end()
 
@@ -452,9 +448,9 @@ func (r *modResolver) Authors(ctx context.Context, obj *generated.Mod) ([]genera
 		return nil, errors.New("authors not found")
 	}
 
-	converted := make([]generated.UserMod, len(authors))
+	converted := make([]*generated.UserMod, len(authors))
 	for k, v := range authors {
-		converted[k] = generated.UserMod{
+		converted[k] = &generated.UserMod{
 			UserID: v.UserID,
 			ModID:  v.ModID,
 			Role:   v.Role,
@@ -467,8 +463,7 @@ func (r *modResolver) Authors(ctx context.Context, obj *generated.Mod) ([]genera
 func (r *modResolver) Version(ctx context.Context, obj *generated.Mod, version string) (*generated.Version, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "Mod.version")
 	defer wrapper.end()
-	temp := DBVersionToGenerated(postgres.GetModVersionByName(newCtx, obj.ID, version))
-	return &temp, nil
+	return DBVersionToGenerated(postgres.GetModVersionByName(newCtx, obj.ID, version)), nil
 }
 
 var versionNoMetaCache, _ = ristretto.NewCache(&ristretto.Config{
@@ -479,7 +474,7 @@ var versionNoMetaCache, _ = ristretto.NewCache(&ristretto.Config{
 
 const versionNoMetaCacheTTL = time.Second * 30
 
-func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter map[string]interface{}) ([]generated.Version, error) {
+func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter map[string]interface{}) ([]*generated.Version, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "Mod.versions")
 	defer wrapper.end()
 
@@ -531,7 +526,7 @@ func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter m
 		return nil, errors.New("versions not found")
 	}
 
-	converted := make([]generated.Version, len(versions))
+	converted := make([]*generated.Version, len(versions))
 	for k, v := range versions {
 		converted[k] = DBVersionToGenerated(&v)
 	}
@@ -539,32 +534,31 @@ func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter m
 	return converted, nil
 }
 
-func (r *modResolver) LatestVersions(ctx context.Context, obj *generated.Mod) (generated.LatestVersions, error) {
+func (r *modResolver) LatestVersions(ctx context.Context, obj *generated.Mod) (*generated.LatestVersions, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "Mod.latestVersions")
 	defer wrapper.end()
 
 	versions := postgres.GetModLatestVersions(newCtx, obj.ID, false)
 
 	if versions == nil {
-		return generated.LatestVersions{}, nil
+		return nil, errors.New("versions not found")
 	}
 
 	versionsD := *versions
 
 	converted := generated.LatestVersions{}
 	for _, v := range versionsD {
-		temp := DBVersionToGenerated(&v)
 		switch v.Stability {
 		case string(generated.VersionStabilitiesAlpha):
-			converted.Alpha = &temp
+			converted.Alpha = DBVersionToGenerated(&v)
 		case string(generated.VersionStabilitiesBeta):
-			converted.Beta = &temp
+			converted.Beta = DBVersionToGenerated(&v)
 		case string(generated.VersionStabilitiesRelease):
-			converted.Release = &temp
+			converted.Release = DBVersionToGenerated(&v)
 		}
 	}
 
-	return converted, nil
+	return &converted, nil
 }
 
 func (r *queryResolver) GetModByIDOrReference(ctx context.Context, modIDOrReference string) (*generated.Mod, error) {
@@ -579,11 +573,10 @@ func (r *queryResolver) GetModByIDOrReference(ctx context.Context, modIDOrRefere
 		}
 	}
 
-	temp := DBModToGenerated(mod)
-	return &temp, nil
+	return DBModToGenerated(mod), nil
 }
 
-func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []generated.ModVersionConstraint) ([]generated.ModVersion, error) {
+func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []*generated.ModVersionConstraint) ([]*generated.ModVersion, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "resolveModVersions")
 	defer wrapper.end()
 
@@ -600,7 +593,7 @@ func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []generat
 		return nil, errors.New("no mods found")
 	}
 
-	modVersions := make([]generated.ModVersion, len(mods))
+	modVersions := make([]*generated.ModVersion, len(mods))
 	for i, mod := range mods {
 		constraint, ok := constraintMapping[mod.ID]
 		if !ok {
@@ -609,12 +602,12 @@ func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []generat
 
 		versions := postgres.GetModVersionsConstraint(newCtx, mod.ID, constraint)
 
-		converted := make([]generated.Version, len(versions))
+		converted := make([]*generated.Version, len(versions))
 		for k, v := range versions {
 			converted[k] = DBVersionToGenerated(&v)
 		}
 
-		modVersions[i] = generated.ModVersion{
+		modVersions[i] = &generated.ModVersion{
 			ID:           mod.ID,
 			ModReference: mod.ModReference,
 			Versions:     converted,
