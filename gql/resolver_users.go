@@ -71,8 +71,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 
 	postgres.Save(newCtx, &dbUser)
 
-	temp := DBUserToGenerated(dbUser)
-	return &temp, nil
+	return DBUserToGenerated(dbUser), nil
 }
 
 func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
@@ -88,18 +87,16 @@ func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
 func (r *queryResolver) GetMe(ctx context.Context) (*generated.User, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMe")
 	defer wrapper.end()
-	temp := DBUserToGenerated(ctx.Value(postgres.UserKey{}).(*postgres.User))
-	return &temp, nil
+	return DBUserToGenerated(ctx.Value(postgres.UserKey{}).(*postgres.User)), nil
 }
 
 func (r *queryResolver) GetUser(ctx context.Context, userID string) (*generated.User, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getUser")
 	defer wrapper.end()
-	temp := DBUserToGenerated(postgres.GetUserByID(newCtx, userID))
-	return &temp, nil
+	return DBUserToGenerated(postgres.GetUserByID(newCtx, userID)), nil
 }
 
-func (r *queryResolver) GetUsers(ctx context.Context, userIds []string) ([]generated.User, error) {
+func (r *queryResolver) GetUsers(ctx context.Context, userIds []string) ([]*generated.User, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getUsers")
 	defer wrapper.end()
 
@@ -109,7 +106,7 @@ func (r *queryResolver) GetUsers(ctx context.Context, userIds []string) ([]gener
 		return nil, errors.New("users not found")
 	}
 
-	converted := make([]generated.User, len(*users))
+	converted := make([]*generated.User, len(*users))
 	for k, v := range *users {
 		converted[k] = DBUserToGenerated(&v)
 	}
@@ -119,19 +116,19 @@ func (r *queryResolver) GetUsers(ctx context.Context, userIds []string) ([]gener
 
 type userResolver struct{ *Resolver }
 
-func (r *userResolver) Mods(ctx context.Context, obj *generated.User) ([]generated.UserMod, error) {
+func (r *userResolver) Mods(ctx context.Context, obj *generated.User) ([]*generated.UserMod, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "User.mods")
 	defer wrapper.end()
 
 	mods := postgres.GetUserMods(newCtx, obj.ID)
 
 	if mods == nil {
-		return []generated.UserMod{}, nil
+		return []*generated.UserMod{}, nil
 	}
 
-	converted := make([]generated.UserMod, len(mods))
+	converted := make([]*generated.UserMod, len(mods))
 	for k, v := range mods {
-		converted[k] = generated.UserMod{
+		converted[k] = &generated.UserMod{
 			UserID: v.UserID,
 			ModID:  v.ModID,
 			Role:   v.Role,
@@ -141,7 +138,7 @@ func (r *userResolver) Mods(ctx context.Context, obj *generated.User) ([]generat
 	return converted, nil
 }
 
-func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]generated.Guide, error) {
+func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]*generated.Guide, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
@@ -151,7 +148,7 @@ func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]gener
 		return nil, errors.New("guides not found")
 	}
 
-	converted := make([]generated.Guide, len(guides))
+	converted := make([]*generated.Guide, len(guides))
 	for k, v := range guides {
 		converted[k] = DBGuideToGenerated(&v)
 	}
@@ -159,7 +156,7 @@ func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]gener
 	return converted, nil
 }
 
-func (r *userResolver) Groups(ctx context.Context, obj *generated.User) ([]generated.Group, error) {
+func (r *userResolver) Groups(ctx context.Context, obj *generated.User) ([]*generated.Group, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
@@ -167,9 +164,9 @@ func (r *userResolver) Groups(ctx context.Context, obj *generated.User) ([]gener
 
 	groups := user.GetGroups(newCtx)
 
-	converted := make([]generated.Group, len(groups))
+	converted := make([]*generated.Group, len(groups))
 	for k, v := range groups {
-		converted[k] = generated.Group{
+		converted[k] = &generated.Group{
 			ID:   v.ID,
 			Name: v.Name,
 		}
@@ -178,7 +175,7 @@ func (r *userResolver) Groups(ctx context.Context, obj *generated.User) ([]gener
 	return converted, nil
 }
 
-func (r *userResolver) Roles(ctx context.Context, obj *generated.User) (generated.UserRoles, error) {
+func (r *userResolver) Roles(ctx context.Context, obj *generated.User) (*generated.UserRoles, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
@@ -186,7 +183,7 @@ func (r *userResolver) Roles(ctx context.Context, obj *generated.User) (generate
 
 	roles := user.GetRoles(newCtx)
 
-	userRoles := generated.UserRoles{}
+	userRoles := &generated.UserRoles{}
 
 	if hasRole, ok := roles[auth.RoleApproveMods]; ok && hasRole {
 		userRoles.ApproveMods = true
@@ -239,8 +236,7 @@ func (r *userModResolver) User(ctx context.Context, obj *generated.UserMod) (*ge
 		return nil, errors.New("user not found")
 	}
 
-	temp := DBUserToGenerated(user)
-	return &temp, nil
+	return DBUserToGenerated(user), nil
 }
 
 func (r *userModResolver) Mod(ctx context.Context, obj *generated.UserMod) (*generated.Mod, error) {
@@ -253,8 +249,7 @@ func (r *userModResolver) Mod(ctx context.Context, obj *generated.UserMod) (*gen
 		return nil, errors.New("mod not found")
 	}
 
-	temp := DBModToGenerated(mod)
-	return &temp, nil
+	return DBModToGenerated(mod), nil
 }
 
 func (r *mutationResolver) DiscourseSso(ctx context.Context, sso string, sig string) (*string, error) {

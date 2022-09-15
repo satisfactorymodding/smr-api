@@ -45,8 +45,8 @@ type UserMod {
     mod_id: ModID!
     role: String!
 
-    user: User
-    mod: Mod
+    user: User!
+    mod: Mod!
 }
 
 ### Inputs
@@ -62,13 +62,13 @@ input UpdateUser {
 extend type Query {
     getMe: User @isLoggedIn
     getUser(userId: UserID!): User
-    getUsers(userIds: [UserID!]!): [User!]!
+    getUsers(userIds: [UserID!]!): [User]!
 }
 
 ### Mutations
 
 extend type Mutation {
-    updateUser(userId: UserID!, input: UpdateUser!): User @canEditUser(field: "userId", object: false) @isLoggedIn
+    updateUser(userId: UserID!, input: UpdateUser!): User! @canEditUser(field: "userId", object: false) @isLoggedIn
     logout: Boolean! @isLoggedIn
 
     oAuthGithub(code: String!, state: String!): UserSession @isNotLoggedIn

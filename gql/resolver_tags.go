@@ -2,10 +2,9 @@ package gql
 
 import (
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
-
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"golang.org/x/net/context"
 )
 
 func (r *mutationResolver) CreateTag(ctx context.Context, tagName string) (*generated.Tag, error) {
@@ -20,11 +19,10 @@ func (r *mutationResolver) CreateTag(ctx context.Context, tagName string) (*gene
 	if err != nil {
 		return nil, err
 	}
-	temp := DBTagToGenerated(resultTag)
-	return &temp, nil
+	return DBTagToGenerated(resultTag), nil
 }
 
-func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tagNames []string) ([]generated.Tag, error) {
+func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tagNames []string) ([]*generated.Tag, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "createMultipleTags")
 	defer wrapper.end()
 
@@ -80,8 +78,7 @@ func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName str
 
 	postgres.Save(newCtx, &dbTag)
 
-	temp := DBTagToGenerated(dbTag)
-	return &temp, nil
+	return DBTagToGenerated(dbTag), nil
 }
 
 func (r *queryResolver) GetTag(ctx context.Context, id string) (*generated.Tag, error) {
@@ -90,11 +87,10 @@ func (r *queryResolver) GetTag(ctx context.Context, id string) (*generated.Tag, 
 
 	tag := postgres.GetTagByID(newCtx, id)
 
-	temp := DBTagToGenerated(tag)
-	return &temp, nil
+	return DBTagToGenerated(tag), nil
 }
 
-func (r *queryResolver) GetTags(ctx context.Context, filter *generated.TagFilter) ([]generated.Tag, error) {
+func (r *queryResolver) GetTags(ctx context.Context, filter *generated.TagFilter) ([]*generated.Tag, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getTags")
 	defer wrapper.end()
 

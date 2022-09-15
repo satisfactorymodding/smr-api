@@ -7,15 +7,15 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated"
 )
 
-func DBUserToGenerated(user *postgres.User) generated.User {
+func DBUserToGenerated(user *postgres.User) *generated.User {
 	if user == nil {
-		return generated.User{}
+		return nil
 	}
 
 	Email := (*user).Email
 	Avatar := (*user).Avatar
 
-	result := generated.User{
+	result := &generated.User{
 		ID:         (*user).ID,
 		Username:   (*user).Username,
 		Email:      &Email,
@@ -29,9 +29,9 @@ func DBUserToGenerated(user *postgres.User) generated.User {
 	return result
 }
 
-func DBModToGenerated(mod *postgres.Mod) generated.Mod {
+func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 	if mod == nil {
-		return generated.Mod{}
+		return nil
 	}
 
 	Logo := (*mod).Logo
@@ -43,7 +43,7 @@ func DBModToGenerated(mod *postgres.Mod) generated.Mod {
 		LastVersionDate = (*mod).LastVersionDate.Format(time.RFC3339Nano)
 	}
 
-	return generated.Mod{
+	return &generated.Mod{
 		ID:               mod.ID,
 		Name:             mod.Name,
 		ShortDescription: mod.ShortDescription,
@@ -66,9 +66,9 @@ func DBModToGenerated(mod *postgres.Mod) generated.Mod {
 	}
 }
 
-func DBVersionToGenerated(version *postgres.Version) generated.Version {
+func DBVersionToGenerated(version *postgres.Version) *generated.Version {
 	if version == nil {
-		return generated.Version{}
+		return nil
 	}
 
 	size := 0
@@ -77,7 +77,7 @@ func DBVersionToGenerated(version *postgres.Version) generated.Version {
 		size = int(*version.Size)
 	}
 
-	return generated.Version{
+	return &generated.Version{
 		ID:         version.ID,
 		Version:    version.Version,
 		SmlVersion: version.SMLVersion,
@@ -94,12 +94,12 @@ func DBVersionToGenerated(version *postgres.Version) generated.Version {
 	}
 }
 
-func DBGuideToGenerated(guide *postgres.Guide) generated.Guide {
+func DBGuideToGenerated(guide *postgres.Guide) *generated.Guide {
 	if guide == nil {
-		return generated.Guide{}
+		return nil
 	}
 
-	return generated.Guide{
+	return &generated.Guide{
 		ID:               guide.ID,
 		Name:             guide.Name,
 		ShortDescription: guide.ShortDescription,
@@ -112,12 +112,12 @@ func DBGuideToGenerated(guide *postgres.Guide) generated.Guide {
 	}
 }
 
-func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) generated.SMLVersion {
+func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) *generated.SMLVersion {
 	if smlVersion == nil {
-		return generated.SMLVersion{}
+		return nil
 	}
 
-	return generated.SMLVersion{
+	return &generated.SMLVersion{
 		ID:                  smlVersion.ID,
 		Version:             smlVersion.Version,
 		SatisfactoryVersion: smlVersion.SatisfactoryVersion,
@@ -131,12 +131,12 @@ func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) generated.SMLVersi
 	}
 }
 
-func DBBootstrapVersionToGenerated(bootstrapVersion *postgres.BootstrapVersion) generated.BootstrapVersion {
+func DBBootstrapVersionToGenerated(bootstrapVersion *postgres.BootstrapVersion) *generated.BootstrapVersion {
 	if bootstrapVersion == nil {
-		return generated.BootstrapVersion{}
+		return nil
 	}
 
-	return generated.BootstrapVersion{
+	return &generated.BootstrapVersion{
 		ID:                  bootstrapVersion.ID,
 		Version:             bootstrapVersion.Version,
 		SatisfactoryVersion: bootstrapVersion.SatisfactoryVersion,
@@ -149,12 +149,12 @@ func DBBootstrapVersionToGenerated(bootstrapVersion *postgres.BootstrapVersion) 
 	}
 }
 
-func DBVersionDependencyToGenerated(versionDependency *postgres.VersionDependency) generated.VersionDependency {
+func DBVersionDependencyToGenerated(versionDependency *postgres.VersionDependency) *generated.VersionDependency {
 	if versionDependency == nil {
-		return generated.VersionDependency{}
+		return nil
 	}
 
-	return generated.VersionDependency{
+	return &generated.VersionDependency{
 		VersionID: versionDependency.VersionID,
 		ModID:     versionDependency.ModID,
 		Condition: versionDependency.Condition,
@@ -162,38 +162,38 @@ func DBVersionDependencyToGenerated(versionDependency *postgres.VersionDependenc
 	}
 }
 
-func DBAnnouncementToGenerated(announcement *postgres.Announcement) generated.Announcement {
+func DBAnnouncementToGenerated(announcement *postgres.Announcement) *generated.Announcement {
 	if announcement == nil {
-		return generated.Announcement{}
+		return nil
 	}
 
-	return generated.Announcement{
+	return &generated.Announcement{
 		ID:         announcement.ID,
 		Message:    announcement.Message,
 		Importance: generated.AnnouncementImportance(announcement.Importance),
 	}
 }
 
-func DBAnnouncementsToGeneratedSlice(announcements []postgres.Announcement) []generated.Announcement {
-	converted := make([]generated.Announcement, len(announcements))
+func DBAnnouncementsToGeneratedSlice(announcements []postgres.Announcement) []*generated.Announcement {
+	converted := make([]*generated.Announcement, len(announcements))
 	for i, announcement := range announcements {
 		converted[i] = DBAnnouncementToGenerated(&announcement)
 	}
 	return converted
 }
 
-func DBTagToGenerated(tag *postgres.Tag) generated.Tag {
+func DBTagToGenerated(tag *postgres.Tag) *generated.Tag {
 	if tag == nil {
-		return generated.Tag{}
+		return nil
 	}
-	return generated.Tag{
+	return &generated.Tag{
 		Name: tag.Name,
 		ID:   tag.ID,
 	}
 }
 
-func DBTagsToGeneratedSlice(tags []postgres.Tag) []generated.Tag {
-	converted := make([]generated.Tag, len(tags))
+func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
+	converted := make([]*generated.Tag, len(tags))
 	for i, tag := range tags {
 		converted[i] = DBTagToGenerated(&tag)
 	}
@@ -210,7 +210,7 @@ func GenCompInfoToDBCompInfo(gen *generated.CompatibilityInfoInput) *postgres.Co
 	}
 }
 
-func GenCompToDBComp(gen generated.CompatibilityInput) postgres.Compatibility {
+func GenCompToDBComp(gen *generated.CompatibilityInput) postgres.Compatibility {
 	r := postgres.Compatibility{
 		State: string(gen.State),
 	}
@@ -228,8 +228,8 @@ func DBCompInfoToGenCompInfo(gen *postgres.CompatibilityInfo) *generated.Compati
 	}
 }
 
-func DBCompToGenComp(db postgres.Compatibility) generated.Compatibility {
-	return generated.Compatibility{
+func DBCompToGenComp(db postgres.Compatibility) *generated.Compatibility {
+	return &generated.Compatibility{
 		State: generated.CompatibilityState(db.State),
 		Note:  &db.Note,
 	}

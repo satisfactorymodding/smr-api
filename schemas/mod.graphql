@@ -125,7 +125,7 @@ extend type Query {
 
 extend type Mutation {
     createMod(mod: NewMod!): Mod @isLoggedIn
-    updateMod(modId: ModID!, mod: UpdateMod!): Mod @canEditMod(field: "modId") @isLoggedIn
+    updateMod(modId: ModID!, mod: UpdateMod!): Mod! @canEditMod(field: "modId") @isLoggedIn
     deleteMod(modId: ModID!): Boolean! @canEditMod(field: "modId") @isLoggedIn
 
     approveMod(modId: ModID!): Boolean! @canApproveMods @isLoggedIn

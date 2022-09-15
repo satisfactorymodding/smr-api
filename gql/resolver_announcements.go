@@ -4,9 +4,8 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"gopkg.in/go-playground/validator.v9"
-
 	"github.com/satisfactorymodding/smr-api/util"
+	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
@@ -30,8 +29,7 @@ func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement 
 	if err != nil {
 		return nil, err
 	}
-	temp := DBAnnouncementToGenerated(resultAnnouncement)
-	return &temp, nil
+	return DBAnnouncementToGenerated(resultAnnouncement), nil
 }
 
 func (r *mutationResolver) DeleteAnnouncement(ctx context.Context, announcementID string) (bool, error) {
@@ -69,8 +67,7 @@ func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementI
 
 	postgres.Save(newCtx, &dbAnnouncement)
 
-	temp := DBAnnouncementToGenerated(dbAnnouncement)
-	return &temp, nil
+	return DBAnnouncementToGenerated(dbAnnouncement), nil
 }
 
 func (r *queryResolver) GetAnnouncement(ctx context.Context, announcementID string) (*generated.Announcement, error) {
@@ -79,11 +76,10 @@ func (r *queryResolver) GetAnnouncement(ctx context.Context, announcementID stri
 
 	announcement := postgres.GetAnnouncementByID(newCtx, announcementID)
 
-	temp := DBAnnouncementToGenerated(announcement)
-	return &temp, nil
+	return DBAnnouncementToGenerated(announcement), nil
 }
 
-func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]generated.Announcement, error) {
+func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]*generated.Announcement, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncements")
 	defer wrapper.end()
 
@@ -92,7 +88,7 @@ func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]generated.Annou
 	return DBAnnouncementsToGeneratedSlice(announcements), nil
 }
 
-func (r *queryResolver) GetAnnouncementsByImportance(ctx context.Context, importance generated.AnnouncementImportance) ([]generated.Announcement, error) {
+func (r *queryResolver) GetAnnouncementsByImportance(ctx context.Context, importance generated.AnnouncementImportance) ([]*generated.Announcement, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncementsByImportance")
 	defer wrapper.end()
 
