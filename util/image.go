@@ -11,9 +11,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/satisfactorymodding/smr-api/util/converter"
-
 	"github.com/pkg/errors"
+	"github.com/satisfactorymodding/smr-api/util/converter"
 )
 
 func LinkToWebp(ctx context.Context, url string) ([]byte, error) {

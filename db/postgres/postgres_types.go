@@ -95,7 +95,7 @@ type Version struct {
 	Approved     bool   `gorm:"default:false;not null"`
 	Denied       bool   `gorm:"default:false;not null"`
 	Hotness      uint
-	Arch         []ModArch `gorm:"foreignKey:mod_version_arch_id" gorm:"preload:true"`
+	Arch         []ModArch `gorm:"foreignKey:mod_version_arch_id;preload:true"`
 	Metadata     *string
 	ModReference *string
 	VersionMajor *int
@@ -133,7 +133,7 @@ type SMLVersion struct {
 	Stability           string `sql:"type:version_stability"`
 	Date                time.Time
 	Link                string
-	Arch                []SMLArch `gorm:"foreignKey:sml_version_arch_id" gorm:"preload:true"`
+	Arch                []SMLArch `gorm:"foreignKey:sml_version_arch_id;preload:true"`
 	Changelog           string
 	BootstrapVersion    *string
 }

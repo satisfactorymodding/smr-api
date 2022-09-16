@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres/otel"
-
 	"github.com/patrickmn/go-cache"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/satisfactorymodding/smr-api/db/postgres/otel"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

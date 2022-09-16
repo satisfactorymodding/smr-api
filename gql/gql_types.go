@@ -216,10 +216,7 @@ func DBModArchToGenerated(modArch *postgres.ModArch) *generated.ModArch {
 		return nil
 	}
 
-	size := 0
-	if &modArch.Size != nil {
-		size = int(modArch.Size)
-	}
+	size := int(modArch.Size)
 
 	return &generated.ModArch{
 		ID:               modArch.ID,

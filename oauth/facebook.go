@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/satisfactorymodding/smr-api/redis"
-
 	"github.com/pkg/errors"
-
+	"github.com/satisfactorymodding/smr-api/redis"
 	"golang.org/x/oauth2"
 )
 
