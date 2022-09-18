@@ -69,13 +69,6 @@ jobs:
       - name: Go Generate
         run: go generate -tags tools -x ./...
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          skip-pkg-cache: true
-          skip-build-cache: true
-          args: --timeout 5m
-
       - name: Start stack
         run: docker-compose -f docker-compose-dev.yml up -d
 
