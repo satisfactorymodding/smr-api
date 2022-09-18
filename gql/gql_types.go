@@ -61,6 +61,7 @@ func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 		LastVersionDate:  &LastVersionDate,
 		ModReference:     mod.ModReference,
 		Hidden:           mod.Hidden,
+		Versions:         DBVersionsToGeneratedSlice(mod.Versions),
 		Tags:             DBTagsToGeneratedSlice(mod.Tags),
 		Compatibility:    DBCompInfoToGenCompInfo(mod.Compatibility),
 	}
@@ -84,6 +85,7 @@ func DBVersionToGenerated(version *postgres.Version) *generated.Version {
 		Changelog:  version.Changelog,
 		Downloads:  int(version.Downloads),
 		Stability:  generated.VersionStabilities(version.Stability),
+		Arch:       DBModArchsToGeneratedSlice(version.Arch),
 		Approved:   version.Approved,
 		UpdatedAt:  version.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:  version.CreatedAt.Format(time.RFC3339Nano),
@@ -92,6 +94,14 @@ func DBVersionToGenerated(version *postgres.Version) *generated.Version {
 		Hash:       version.Hash,
 		Size:       &size,
 	}
+}
+
+func DBVersionsToGeneratedSlice(versions []postgres.Version) []*generated.Version {
+	converted := make([]*generated.Version, len(versions))
+	for i, version := range versions {
+		converted[i] = DBVersionToGenerated(&version)
+	}
+	return converted
 }
 
 func DBGuideToGenerated(guide *postgres.Guide) *generated.Guide {
@@ -124,6 +134,7 @@ func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) *generated.SMLVers
 		BootstrapVersion:    smlVersion.BootstrapVersion,
 		Stability:           generated.VersionStabilities(smlVersion.Stability),
 		Link:                smlVersion.Link,
+		Arch:                DBSMLArchsToGeneratedSlice(smlVersion.Arch),
 		Changelog:           smlVersion.Changelog,
 		Date:                smlVersion.Date.Format(time.RFC3339Nano),
 		UpdatedAt:           smlVersion.UpdatedAt.Format(time.RFC3339Nano),
@@ -196,6 +207,51 @@ func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
 	converted := make([]*generated.Tag, len(tags))
 	for i, tag := range tags {
 		converted[i] = DBTagToGenerated(&tag)
+	}
+	return converted
+}
+
+func DBModArchToGenerated(modArch *postgres.ModArch) *generated.ModArch {
+	if modArch == nil {
+		return nil
+	}
+
+	size := int(modArch.Size)
+
+	return &generated.ModArch{
+		ID:               modArch.ID,
+		ModVersionArchID: modArch.ModVersionArchID,
+		Platform:         modArch.Platform,
+		Hash:             &modArch.Hash,
+		Size:             &size,
+	}
+}
+
+func DBModArchsToGeneratedSlice(modArchs []postgres.ModArch) []*generated.ModArch {
+	converted := make([]*generated.ModArch, len(modArchs))
+	for i, modArch := range modArchs {
+		converted[i] = DBModArchToGenerated(&modArch)
+	}
+	return converted
+}
+
+func DBSMLArchToGenerated(smlLink *postgres.SMLArch) *generated.SMLArch {
+	if smlLink == nil {
+		return nil
+	}
+
+	return &generated.SMLArch{
+		ID:               smlLink.ID,
+		SMLVersionArchID: smlLink.SMLVersionArchID,
+		Platform:         smlLink.Platform,
+		Link:             smlLink.Link,
+	}
+}
+
+func DBSMLArchsToGeneratedSlice(smlLinks []postgres.SMLArch) []*generated.SMLArch {
+	converted := make([]*generated.SMLArch, len(smlLinks))
+	for i, smlLink := range smlLinks {
+		converted[i] = DBSMLArchToGenerated(&smlLink)
 	}
 	return converted
 }

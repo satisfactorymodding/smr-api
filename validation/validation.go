@@ -78,7 +78,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			dataFile = v
 			break
 		}
-		if v.Name == modReference+".uplugin" {
+		if v.Name == "WindowsNoEditor/"+modReference+".uplugin" {
 			uPlugin = v
 			break
 		}
@@ -101,7 +101,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	}
 
 	if modInfo == nil {
-		return nil, errors.New("missing " + modReference + ".uplugin or data.json")
+		return nil, errors.New("missing WindowsNoEditor/" + modReference + ".uplugin or data.json")
 	}
 
 	if withMetadata {
@@ -221,7 +221,7 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 	// Validate that all listed files are accounted for in data.json
 	for _, archiveFile := range archive.File {
 		if archiveFile != nil {
-			if strings.HasSuffix(archiveFile.Name, ".dll") || strings.HasSuffix(archiveFile.Name, ".pak") {
+			if strings.HasSuffix(archiveFile.Name, ".dll") || strings.HasSuffix(archiveFile.Name, ".pak") || strings.HasSuffix(archiveFile.Name, ".so") {
 				found := false
 				for _, obj := range modInfo.Objects {
 					if obj.Path == archiveFile.Name {
@@ -340,7 +340,7 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 					Path: file.Name,
 					Type: "pak",
 				})
-			} else if extension == "dll" {
+			} else if extension == "dll" || extension == "so" {
 				modInfo.Objects = append(modInfo.Objects, ModObject{
 					Path: file.Name,
 					Type: "sml_mod",

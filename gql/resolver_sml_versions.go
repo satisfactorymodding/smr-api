@@ -42,6 +42,23 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 
 	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
 
+	for _, smlLink := range smlVersion.Arch {
+		dbSMLArchs := &postgres.SMLArch{
+			ID:               util.GenerateUniqueID(),
+			SMLVersionArchID: string(resultSMLVersion.ID),
+			Platform:         string(smlLink.Platform),
+			Link:             string(smlLink.Link),
+		}
+
+		resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArchs)
+
+		if err != nil {
+			return nil, err
+		}
+
+		DBSMLArchToGenerated(resultSMLArch)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +89,17 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	SetStringINNOE(smlVersion.Changelog, &dbSMLVersion.Changelog)
 	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
 
+	for _, smlLink := range smlVersion.Arch {
+		dbSMLArch := postgres.GetSMLArch(newCtx, smlLink.ID)
+
+		SetStringINNOE((*string)(&smlLink.ID), &dbSMLArch.ID)
+		SetStringINNOE((*string)(&smlLink.SMLVersionArchID), &dbSMLArch.SMLVersionArchID)
+		SetStringINNOE((*string)(&smlLink.Platform), &dbSMLArch.Platform)
+		SetStringINNOE((*string)(&smlLink.Link), &dbSMLArch.Link)
+
+		postgres.Save(newCtx, dbSMLArch)
+	}
+
 	postgres.Save(newCtx, &dbSMLVersion)
 
 	return DBSMLVersionToGenerated(dbSMLVersion), nil
@@ -85,6 +113,16 @@ func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID st
 
 	if dbSMLVersion == nil {
 		return false, errors.New("smlVersion not found")
+	}
+
+	for _, smlLink := range dbSMLVersion.Arch {
+		dbSMLArch := postgres.GetSMLArch(newCtx, smlLink.ID)
+
+		if dbSMLVersion == nil {
+			return false, errors.New("smlLink not found")
+		}
+
+		postgres.Delete(newCtx, &dbSMLArch)
 	}
 
 	postgres.Delete(newCtx, &dbSMLVersion)
