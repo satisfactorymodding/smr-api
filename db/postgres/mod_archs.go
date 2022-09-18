@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/patrickmn/go-cache"
+
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
 )
@@ -29,7 +30,7 @@ func GetModArch(ctx context.Context, modArchID string) *ModArch {
 		return nil
 	}
 
-	dbCache.Set(cacheKey, modArch, cache.DefaultExpiration)
+	dbCache.Set(cacheKey, &modArch, cache.DefaultExpiration)
 
 	return &modArch
 }
@@ -74,7 +75,7 @@ func GetModArchByID(ctx context.Context, modArchID string) *ModArch {
 		return nil
 	}
 
-	dbCache.Set(cacheKey, modArch, cache.DefaultExpiration)
+	dbCache.Set(cacheKey, &modArch, cache.DefaultExpiration)
 
 	return &modArch
 }

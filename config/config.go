@@ -11,9 +11,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-func InitializeConfig() context.Context {
+var configDir = "."
+
+func SetConfigDir(newConfigDir string) {
+	configDir = newConfigDir
+}
+
+func InitializeConfig(baseCtx context.Context) context.Context {
 	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(configDir)
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("repo")
 
@@ -30,7 +36,12 @@ func InitializeConfig() context.Context {
 	}
 
 	log.Logger = zerolog.New(out).With().Str("service", "api").Timestamp().Logger()
-	ctx := log.Logger.WithContext(context.Background())
+
+	if baseCtx == nil {
+		baseCtx = context.Background()
+	}
+
+	ctx := log.Logger.WithContext(baseCtx)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("config initialized using defaults and environment only!")

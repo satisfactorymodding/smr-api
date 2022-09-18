@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/patrickmn/go-cache"
+
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
 )
@@ -24,16 +25,16 @@ func GetSMLArch(ctx context.Context, smlLinkID string) *SMLArch {
 		return smlLink.(*SMLArch)
 	}
 
-	var smlLink SMLArch
-	DBCtx(ctx).Find(&smlLink, "id = ?", smlLinkID)
+	var smlArch SMLArch
+	DBCtx(ctx).Find(&smlArch, "id = ?", smlLinkID)
 
-	if smlLink.ID == "" {
+	if smlArch.ID == "" {
 		return nil
 	}
 
-	dbCache.Set(cacheKey, smlLink, cache.DefaultExpiration)
+	dbCache.Set(cacheKey, &smlArch, cache.DefaultExpiration)
 
-	return &smlLink
+	return &smlArch
 }
 
 func GetSMLArchs(ctx context.Context, filter *models.SMLArchFilter) []SMLArch {
@@ -55,34 +56,34 @@ func GetSMLArchs(ctx context.Context, filter *models.SMLArchFilter) []SMLArch {
 }
 
 func GetSMLArchByID(ctx context.Context, smlLinkID string) []SMLArch {
-	var smlLinks []SMLArch
+	var smlArchs []SMLArch
 
-	DBCtx(ctx).Find(&smlLinks, "id in ?", smlLinkID)
+	DBCtx(ctx).Find(&smlArchs, "id in ?", smlLinkID)
 
-	if len(smlLinks) != 0 {
+	if len(smlArchs) != 0 {
 		return nil
 	}
 
-	return smlLinks
+	return smlArchs
 }
 
-func GetSMLArchsByID(ctx context.Context, smlLinkIds []string) []SMLArch {
-	var smlLinks []SMLArch
+func GetSMLArchsByID(ctx context.Context, smlArchIds []string) []SMLArch {
+	var smlArchs []SMLArch
 
-	DBCtx(ctx).Find(&smlLinks, "id in (?)", smlLinkIds)
+	DBCtx(ctx).Find(&smlArchs, "id in (?)", smlArchIds)
 
-	if len(smlLinkIds) != len(smlLinks) {
+	if len(smlArchIds) != len(smlArchs) {
 		return nil
 	}
 
-	return smlLinks
+	return smlArchs
 }
 
 func GetSMLArchDownload(ctx context.Context, smlVersionID string, platform string) string {
 	var smlPlatform SMLArch
 	DBCtx(ctx).First(&smlPlatform, "sml_version_arch_id = ? AND platform = ?", smlVersionID, platform)
 
-	if smlPlatform.SMLVersionArchID == "" {
+	if smlPlatform.ID == "" {
 		return ""
 	}
 

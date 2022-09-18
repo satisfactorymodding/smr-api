@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/patrickmn/go-cache"
+
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -27,7 +28,7 @@ func GetAnnouncementByID(ctx context.Context, announcementID string) *Announceme
 		return nil
 	}
 
-	dbCache.Set(cacheKey, announcement, cache.DefaultExpiration)
+	dbCache.Set(cacheKey, &announcement, cache.DefaultExpiration)
 
 	return &announcement
 }

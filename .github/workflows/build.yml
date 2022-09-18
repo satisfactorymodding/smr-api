@@ -21,6 +21,54 @@ jobs:
       - name: Go Generate
         run: go generate -tags tools -x ./...
 
+      - name: Build
+        run: go build -v -o api-linux-amd64 .
+        env:
+          CGO_ENABLED: 1
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+
+      - name: Download dependencies
+        run: sudo apt update && sudo apt install -y build-essential libpng-dev
+
+      - name: Go Generate
+        run: go generate -tags tools -x ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          skip-pkg-cache: true
+          skip-build-cache: true
+          args: --timeout 5m
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+
+      - name: Download dependencies
+        run: sudo apt update && sudo apt install -y build-essential libpng-dev
+
+      - name: Go Generate
+        run: go generate -tags tools -x ./...
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
@@ -29,6 +77,6 @@ jobs:
           args: --timeout 5m
 
       - name: Build
-        run: go build -v -o api-linux-amd64 .
+        run: go test -v ./...
         env:
           CGO_ENABLED: 1

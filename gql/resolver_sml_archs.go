@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/satisfactorymodding/smr-api/util"
 	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/satisfactorymodding/smr-api/util"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
@@ -21,10 +22,9 @@ func (r *mutationResolver) CreateSMLArch(ctx context.Context, smlLink generated.
 	}
 
 	dbSMLArchs := &postgres.SMLArch{
-		ID:               string(util.GenerateUniqueID()),
-		SMLVersionArchID: string(smlLink.SMLVersionArchID),
-		Platform:         string(smlLink.Platform),
-		Link:             string(smlLink.Link),
+		ID:       util.GenerateUniqueID(),
+		Platform: smlLink.Platform,
+		Link:     smlLink.Link,
 	}
 
 	resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArchs)
@@ -65,9 +65,8 @@ func (r *mutationResolver) UpdateSMLArch(ctx context.Context, smlLinkID string, 
 		return nil, errors.New("sml link not found")
 	}
 
-	SetStringINNOE((*string)(&smlLink.SMLVersionArchID), &dbSMLArch.SMLVersionArchID)
-	SetStringINNOE((*string)(&smlLink.Platform), &dbSMLArch.Platform)
-	SetStringINNOE((*string)(&smlLink.Link), &dbSMLArch.Link)
+	SetStringINNOE(&smlLink.Platform, &dbSMLArch.Platform)
+	SetStringINNOE(&smlLink.Link, &dbSMLArch.Link)
 
 	postgres.Save(newCtx, &dbSMLArch)
 

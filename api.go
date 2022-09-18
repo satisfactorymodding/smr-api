@@ -64,8 +64,8 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return errors.Wrap(cv.validator.Struct(i), "validation error")
 }
 
-func Serve() {
-	ctx := config.InitializeConfig()
+func Initialize(baseCtx context.Context) context.Context {
+	ctx := config.InitializeConfig(baseCtx)
 
 	if os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != "" {
 		cleanup := installExportPipeline(ctx)
@@ -82,8 +82,16 @@ func Serve() {
 	jobs.InitializeJobs(ctx)
 	validation.InitializeVirusTotal()
 
-	migrations.RunMigrations(ctx)
+	return ctx
+}
 
+func Migrate(ctx context.Context) {
+	migrations.RunMigrations(ctx)
+}
+
+var e *echo.Echo
+
+func Setup(ctx context.Context) {
 	if viper.GetBool("profiler") {
 		go func() {
 			debugServer := echo.New()
@@ -101,7 +109,7 @@ func Serve() {
 
 	dataValidator := validator.New()
 
-	e := echo.New()
+	e = echo.New()
 	e.HideBanner = true
 	e.Validator = &CustomValidator{validator: dataValidator}
 
@@ -271,7 +279,9 @@ func Serve() {
 		<-signals
 		_ = e.Close()
 	}()
+}
 
+func Serve() {
 	address := fmt.Sprintf(":%d", viper.GetInt("port"))
 	log.Info().Str("address", address).Msg("starting server")
 
@@ -310,4 +320,15 @@ func newResource() *resource.Resource {
 		),
 	)
 	return r
+}
+
+func Start() {
+	ctx := Initialize(context.Background())
+	Migrate(ctx)
+	Setup(ctx)
+	Serve()
+}
+
+func Stop() error {
+	return errors.Wrap(e.Close(), "failed to stop http server")
 }

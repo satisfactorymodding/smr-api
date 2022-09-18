@@ -30,15 +30,6 @@ input ModArchFilter {
     ids: [String!]
 }
 
-input NewModArch {
-    id: ModArchID
-    ModVersionArchID: String!
-    platform: String!
-    key: String!
-    size: Int
-    hash: String
-}
-
 ### Queries
 
 extend type Query {

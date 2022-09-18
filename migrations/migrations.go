@@ -21,6 +21,12 @@ func RunMigrations(ctx context.Context) {
 	log.Info().Msg("Migrations Complete")
 }
 
+var migrationDir = "./migrations"
+
+func SetMigrationDir(newMigrationDir string) {
+	migrationDir = newMigrationDir
+}
+
 func databaseMigrations(ctx context.Context) {
 	db, _ := postgres2.DBCtx(ctx).DB()
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
@@ -29,7 +35,7 @@ func databaseMigrations(ctx context.Context) {
 		panic(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://./migrations/sql", "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://"+migrationDir+"/sql", "postgres", driver)
 
 	if err != nil {
 		panic(err)

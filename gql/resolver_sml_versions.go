@@ -45,9 +45,9 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 	for _, smlLink := range smlVersion.Arch {
 		dbSMLArchs := &postgres.SMLArch{
 			ID:               util.GenerateUniqueID(),
-			SMLVersionArchID: string(resultSMLVersion.ID),
-			Platform:         string(smlLink.Platform),
-			Link:             string(smlLink.Link),
+			SMLVersionArchID: resultSMLVersion.ID,
+			Platform:         smlLink.Platform,
+			Link:             smlLink.Link,
 		}
 
 		resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArchs)
@@ -92,10 +92,10 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	for _, smlLink := range smlVersion.Arch {
 		dbSMLArch := postgres.GetSMLArch(newCtx, smlLink.ID)
 
-		SetStringINNOE((*string)(&smlLink.ID), &dbSMLArch.ID)
-		SetStringINNOE((*string)(&smlLink.SMLVersionArchID), &dbSMLArch.SMLVersionArchID)
-		SetStringINNOE((*string)(&smlLink.Platform), &dbSMLArch.Platform)
-		SetStringINNOE((*string)(&smlLink.Link), &dbSMLArch.Link)
+		SetStringINNOE(&smlLink.ID, &dbSMLArch.ID)
+		SetStringINNOE(&smlLink.SMLVersionArchID, &dbSMLArch.SMLVersionArchID)
+		SetStringINNOE(&smlLink.Platform, &dbSMLArch.Platform)
+		SetStringINNOE(&smlLink.Link, &dbSMLArch.Link)
 
 		postgres.Save(newCtx, dbSMLArch)
 	}

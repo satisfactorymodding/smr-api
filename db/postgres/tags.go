@@ -9,13 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/hashstructure/v2"
 	"github.com/satisfactorymodding/smr-api/generated"
-
 	"github.com/satisfactorymodding/smr-api/util"
 
 	"github.com/finnbear/moderation"
-
+	"github.com/mitchellh/hashstructure/v2"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -88,7 +86,7 @@ func GetTagByName(ctx context.Context, tagName string) *Tag {
 		return nil
 	}
 
-	dbCache.Set(cacheKey, tag, cache.DefaultExpiration)
+	dbCache.Set(cacheKey, &tag, cache.DefaultExpiration)
 
 	return &tag
 }
@@ -107,7 +105,7 @@ func GetTagByID(ctx context.Context, tagID string) *Tag {
 		return nil
 	}
 
-	dbCache.Set(cacheKey, tag, cache.DefaultExpiration)
+	dbCache.Set(cacheKey, &tag, cache.DefaultExpiration)
 
 	return &tag
 }
