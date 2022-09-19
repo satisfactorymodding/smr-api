@@ -21,7 +21,7 @@ func TestGuides(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
-	token, userId, err := makeUser(ctx)
+	token, userID, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
 
 	// Run Twice to detect any cache issues
@@ -65,7 +65,7 @@ func TestGuides(t *testing.T) {
 		testza.AssertEqual(t, "Hello World", queryGuideResponse.GetGuide.Name)
 		testza.AssertEqual(t, "Short description about the guide", queryGuideResponse.GetGuide.ShortDescription)
 		testza.AssertEqual(t, "The full guide text goes here.", queryGuideResponse.GetGuide.Guide)
-		testza.AssertEqual(t, userId, queryGuideResponse.GetGuide.User.ID)
+		testza.AssertEqual(t, userID, queryGuideResponse.GetGuide.User.ID)
 
 		// Update
 		updateGuide := authRequest(`mutation ($id: GuideID!) {
@@ -111,7 +111,7 @@ func TestGuides(t *testing.T) {
 		testza.AssertEqual(t, "Foo Bar", queryGuidesResponse.GetGuides.Guides[0].Name)
 		testza.AssertEqual(t, "Short description about the guide", queryGuidesResponse.GetGuides.Guides[0].ShortDescription)
 		testza.AssertEqual(t, "The full guide text goes here.", queryGuidesResponse.GetGuides.Guides[0].Guide)
-		testza.AssertEqual(t, userId, queryGuidesResponse.GetGuides.Guides[0].User.ID)
+		testza.AssertEqual(t, userID, queryGuidesResponse.GetGuides.Guides[0].User.ID)
 
 		// Delete
 		deleteGuide := authRequest(`mutation ($id: GuideID!) {
