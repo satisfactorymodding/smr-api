@@ -8,12 +8,13 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/satisfactorymodding/smr-api/db/postgres/otel"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
+
+	"github.com/satisfactorymodding/smr-api/db/postgres/otel"
 )
 
 var db *gorm.DB
@@ -108,10 +109,12 @@ func Save(ctx context.Context, object interface{}) {
 
 func Delete(ctx context.Context, object interface{}) {
 	DBCtx(ctx).Delete(object)
+	ClearCache()
 }
 
 func DeleteForced(ctx context.Context, object interface{}) {
 	DBCtx(ctx).Unscoped().Delete(object)
+	ClearCache()
 }
 
 func DBCtx(ctx context.Context) *gorm.DB {
@@ -125,4 +128,8 @@ func DBCtx(ctx context.Context) *gorm.DB {
 	}
 
 	return db
+}
+
+func ClearCache() {
+	dbCache.Flush()
 }
