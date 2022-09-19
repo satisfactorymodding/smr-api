@@ -6,6 +6,7 @@ import (
 	"github.com/MarvinJWendt/testza"
 
 	"github.com/satisfactorymodding/smr-api/config"
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/migrations"
 )
@@ -13,6 +14,7 @@ import (
 func init() {
 	migrations.SetMigrationDir("../migrations")
 	config.SetConfigDir("../")
+	postgres.EnableDebug()
 }
 
 func TestAnnouncements(t *testing.T) {

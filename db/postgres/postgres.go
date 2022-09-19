@@ -70,6 +70,8 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 	}
 }
 
+var debugEnabled = false
+
 func InitializePostgres(ctx context.Context) {
 	connection := postgres.Open(fmt.Sprintf(
 		"sslmode=disable host=%s port=%d user=%s dbname=%s password=%s",
@@ -95,6 +97,10 @@ func InitializePostgres(ctx context.Context) {
 	}
 
 	db = dbInit
+
+	if debugEnabled {
+		db = db.Debug()
+	}
 
 	dbCache = cache.New(time.Second*5, time.Second*10)
 
@@ -132,4 +138,12 @@ func DBCtx(ctx context.Context) *gorm.DB {
 
 func ClearCache() {
 	dbCache.Flush()
+}
+
+func EnableDebug() {
+	if db != nil {
+		db = db.Debug()
+	}
+
+	debugEnabled = true
 }
