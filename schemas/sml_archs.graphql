@@ -29,6 +29,8 @@ input SMLArchFilter {
 }
 
 input NewSMLArch {
+    id: SMLArchID!
+    SMLVersionArchID: String!
     platform: String!
     link: String!
 }
