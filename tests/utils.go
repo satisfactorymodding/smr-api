@@ -10,6 +10,7 @@ import (
 	"github.com/satisfactorymodding/smr-api"
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -17,6 +18,8 @@ func setup() (context.Context, *graphql.Client, func()) {
 	client := graphql.NewClient("http://localhost:5020/v2/query")
 
 	ctx := smr.Initialize(context.Background())
+
+	redis.FlushRedis()
 
 	var out []struct {
 		TableName string
@@ -56,7 +59,7 @@ func setup() (context.Context, *graphql.Client, func()) {
 	}
 }
 
-func makeUser(ctx context.Context) (string, error) {
+func makeUser(ctx context.Context) (string, string, error) {
 	user := postgres.User{
 		SMRModel: postgres.SMRModel{
 			ID: util.GenerateUniqueID(),
@@ -67,7 +70,7 @@ func makeUser(ctx context.Context) (string, error) {
 
 	err := postgres.DBCtx(ctx).Create(&user).Error
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	log.Info().Str("id", user.ID).Msg("created fake test_user")
@@ -79,7 +82,7 @@ func makeUser(ctx context.Context) (string, error) {
 
 	err = postgres.DBCtx(ctx).Create(&userGroup).Error
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	log.Info().Msg("created user admin group")
@@ -94,12 +97,12 @@ func makeUser(ctx context.Context) (string, error) {
 
 	err = postgres.DBCtx(ctx).Create(&session).Error
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	log.Info().Str("token", session.Token).Msg("created fake user session")
 
-	return session.Token, nil
+	return session.Token, user.ID, nil
 }
 
 func authRequest(q string, token string) *graphql.Request {

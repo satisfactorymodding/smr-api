@@ -137,3 +137,7 @@ func GetVersionUploadState(versionID string) (*generated.CreateVersionResponse, 
 
 	return data.Data, nil
 }
+
+func FlushRedis() {
+	client.FlushDB()
+}

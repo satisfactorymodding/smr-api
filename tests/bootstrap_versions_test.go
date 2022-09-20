@@ -22,7 +22,7 @@ func TestBootstrapVersions(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
-	token, err := makeUser(ctx)
+	token, _, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
 
 	// Run Twice to detect any cache issues
