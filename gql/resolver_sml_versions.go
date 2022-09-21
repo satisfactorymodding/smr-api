@@ -42,12 +42,12 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 
 	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
 
-	for _, smlLink := range smlVersion.Arch {
+	for _, smlArch := range smlVersion.Arch {
 		dbSMLArchs := &postgres.SMLArch{
 			ID:               util.GenerateUniqueID(),
 			SMLVersionArchID: resultSMLVersion.ID,
-			Platform:         smlLink.Platform,
-			Link:             smlLink.Link,
+			Platform:         smlArch.Platform,
+			Link:             smlArch.Link,
 		}
 
 		resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArchs)
@@ -89,13 +89,15 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	SetStringINNOE(smlVersion.Changelog, &dbSMLVersion.Changelog)
 	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
 
-	for _, smlLink := range smlVersion.Arch {
-		dbSMLArch := postgres.GetSMLArch(newCtx, smlLink.ID)
+	dbSMLArch := postgres.GetSMLArchBySMLID(newCtx, smlVersionID)
 
-		SetStringINNOE(&smlLink.ID, &dbSMLArch.ID)
-		SetStringINNOE(&smlLink.SMLVersionArchID, &dbSMLArch.SMLVersionArchID)
-		SetStringINNOE(&smlLink.Platform, &dbSMLArch.Platform)
-		SetStringINNOE(&smlLink.Link, &dbSMLArch.Link)
+	if len(dbSMLArch) == len(smlVersion.Arch) {
+
+		for i, smlArch := range smlVersion.Arch {
+
+			SetStringINNOE(&smlArch.SMLVersionArchID, &dbSMLArch[i].SMLVersionArchID)
+			SetStringINNOE(&smlArch.Platform, &dbSMLArch[i].Platform)
+			SetStringINNOE(&smlArch.Link, &dbSMLArch[i].Link)
 
 		postgres.Save(newCtx, dbSMLArch)
 	}
@@ -115,11 +117,11 @@ func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID st
 		return false, errors.New("smlVersion not found")
 	}
 
-	for _, smlLink := range dbSMLVersion.Arch {
-		dbSMLArch := postgres.GetSMLArch(newCtx, smlLink.ID)
+	for _, smlArch := range dbSMLVersion.Arch {
+		dbSMLArch := postgres.GetSMLArch(newCtx, smlArch.ID)
 
 		if dbSMLVersion == nil {
-			return false, errors.New("smlLink not found")
+			return false, errors.New("smlArch not found")
 		}
 
 		postgres.Delete(newCtx, &dbSMLArch)
