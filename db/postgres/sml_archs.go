@@ -79,6 +79,14 @@ func GetSMLArchsByID(ctx context.Context, smlArchIds []string) []SMLArch {
 	return smlArchs
 }
 
+func GetSMLArchBySMLID(ctx context.Context, smlVersionID string) []SMLArch {
+	var smlArchs []SMLArch
+
+	DBCtx(ctx).Find(&smlArchs, "sml_version_arch_id = ?", smlVersionID)
+
+	return smlArchs
+}
+
 func GetSMLArchDownload(ctx context.Context, smlVersionID string, platform string) string {
 	var smlPlatform SMLArch
 	DBCtx(ctx).First(&smlPlatform, "sml_version_arch_id = ? AND platform = ?", smlVersionID, platform)

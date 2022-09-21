@@ -99,7 +99,37 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 			SetStringINNOE(&smlArch.Platform, &dbSMLArch[i].Platform)
 			SetStringINNOE(&smlArch.Link, &dbSMLArch[i].Link)
 
-		postgres.Save(newCtx, dbSMLArch)
+			postgres.Save(newCtx, dbSMLArch)
+		}
+	} else {
+
+		for _, smlArch := range dbSMLVersion.Arch {
+			dbSMLArch := postgres.GetSMLArchBySMLID(newCtx, smlVersionID)
+
+			if dbSMLVersion == nil {
+				return nil, errors.New("smlArch not found" + smlArch.Platform)
+			}
+
+			postgres.Delete(newCtx, &dbSMLArch)
+		}
+
+		for _, smlArch := range smlVersion.Arch {
+			dbSMLArch := &postgres.SMLArch{
+				ID:               util.GenerateUniqueID(),
+				SMLVersionArchID: smlVersionID,
+				Platform:         smlArch.Platform,
+				Link:             smlArch.Link,
+			}
+
+			resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArch)
+
+			if err != nil {
+				return nil, err
+			}
+
+			DBSMLArchToGenerated(resultSMLArch)
+		}
+
 	}
 
 	postgres.Save(newCtx, &dbSMLVersion)
