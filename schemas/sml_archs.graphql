@@ -4,7 +4,7 @@ scalar SMLArchID
 
 type SMLArch {
     id: SMLArchID!
-    smlVersionID: String!
+    SMLVersionID: String!
     platform: String!
     link: String!
 }
@@ -29,13 +29,13 @@ input SMLArchFilter {
 }
 
 input NewSMLArch {
-    smlVersionID: String!
+    SMLVersionID: String!
     platform: String!
     link: String!
 }
 
 input UpdateSMLArch {
-    smlVersionID: String!
+    SMLVersionID: String!
     platform: String!
     link: String!
 }
