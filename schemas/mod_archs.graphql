@@ -4,7 +4,7 @@ scalar ModArchID
 
 type ModArch {
     id: ModArchID!
-    ModVersionArchID: String!
+    modVersionID: String!
     platform: String!
     asset: String!
     size: Int

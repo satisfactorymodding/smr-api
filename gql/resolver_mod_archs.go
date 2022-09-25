@@ -10,7 +10,7 @@ import (
 type modlinkResolver struct{ *Resolver }
 
 func (r *modlinkResolver) Asset(_ context.Context, obj *generated.ModArch) (string, error) {
-	return "/v1/version/" + obj.ModVersionArchID + "/" + obj.Platform + "/download", nil
+	return "/v1/version/" + obj.ModVersionID + "/" + obj.Platform + "/download", nil
 }
 
 func (r *queryResolver) GetModArch(ctx context.Context, modArchID string) (*generated.ModArch, error) {

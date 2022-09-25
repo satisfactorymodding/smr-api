@@ -95,7 +95,7 @@ type Version struct {
 	Approved     bool   `gorm:"default:false;not null"`
 	Denied       bool   `gorm:"default:false;not null"`
 	Hotness      uint
-	Arch         []ModArch `gorm:"foreignKey:mod_version_arch_id;preload:true"`
+	Arch         []ModArch `gorm:"foreignKey:ModVersionID;preload:true"`
 	Metadata     *string
 	ModReference *string
 	VersionMajor *int
@@ -133,7 +133,7 @@ type SMLVersion struct {
 	Stability           string `sql:"type:version_stability"`
 	Date                time.Time
 	Link                string
-	Arch                []SMLArch `gorm:"foreignKey:sml_version_arch_id;preload:true"`
+	Arch                []SMLArch `gorm:"foreignKey:SMLVersionID;preload:true"`
 	Changelog           string
 	BootstrapVersion    *string
 }
@@ -195,12 +195,12 @@ type Compatibility struct {
 }
 
 type ModArch struct {
-	ID               string `gorm:"primary_key;type:varchar(16)"`
-	ModVersionArchID string
-	Platform         string
-	Key              string
-	Size             int64
-	Hash             string
+	ID           string `gorm:"primary_key;type:varchar(16)"`
+	ModVersionID string `gorm:"column:mod_version_arch_id"`
+	Platform     string
+	Key          string
+	Size         int64
+	Hash         string
 }
 
 func (ModArch) TableName() string {
@@ -208,10 +208,10 @@ func (ModArch) TableName() string {
 }
 
 type SMLArch struct {
-	ID               string `gorm:"primary_key;type:varchar(14)"`
-	SMLVersionArchID string
-	Platform         string
-	Link             string
+	ID           string `gorm:"primary_key;type:varchar(14)"`
+	SMLVersionID string `gorm:"column:sml_version_arch_id"`
+	Platform     string
+	Link         string
 }
 
 func (SMLArch) TableName() string {

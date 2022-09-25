@@ -219,11 +219,11 @@ func DBModArchToGenerated(modArch *postgres.ModArch) *generated.ModArch {
 	size := int(modArch.Size)
 
 	return &generated.ModArch{
-		ID:               modArch.ID,
-		ModVersionArchID: modArch.ModVersionArchID,
-		Platform:         modArch.Platform,
-		Hash:             &modArch.Hash,
-		Size:             &size,
+		ID:           modArch.ID,
+		ModVersionID: modArch.ModVersionID,
+		Platform:     modArch.Platform,
+		Hash:         &modArch.Hash,
+		Size:         &size,
 	}
 }
 
@@ -241,10 +241,10 @@ func DBSMLArchToGenerated(smlArch *postgres.SMLArch) *generated.SMLArch {
 	}
 
 	return &generated.SMLArch{
-		ID:               smlArch.ID,
-		SMLVersionArchID: smlArch.SMLVersionArchID,
-		Platform:         smlArch.Platform,
-		Link:             smlArch.Link,
+		ID:           smlArch.ID,
+		SmlVersionID: smlArch.SMLVersionID,
+		Platform:     smlArch.Platform,
+		Link:         smlArch.Link,
 	}
 }
 
