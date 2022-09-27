@@ -242,7 +242,7 @@ func DBSMLArchToGenerated(smlArch *postgres.SMLArch) *generated.SMLArch {
 
 	return &generated.SMLArch{
 		ID:           smlArch.ID,
-		SmlVersionID: smlArch.SMLVersionID,
+		SMLVersionID: smlArch.SMLVersionID,
 		Platform:     smlArch.Platform,
 		Link:         smlArch.Link,
 	}

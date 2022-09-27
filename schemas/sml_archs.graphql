@@ -29,13 +29,11 @@ input SMLArchFilter {
 }
 
 input NewSMLArch {
-    SMLVersionID: String!
     platform: String!
     link: String!
 }
 
 input UpdateSMLArch {
-    SMLVersionID: String!
     platform: String!
     link: String!
 }
