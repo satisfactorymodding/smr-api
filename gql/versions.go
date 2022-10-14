@@ -6,6 +6,10 @@ import (
 	"io"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/integrations"
@@ -13,10 +17,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
-
-	"github.com/pkg/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
@@ -31,7 +31,6 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	}
 
 	modFile, err := storage.GetMod(mod.ID, mod.Name, versionID)
-
 	if err != nil {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 		return nil, err
@@ -39,15 +38,15 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 	// TODO Optimize
 	fileData, err := io.ReadAll(modFile)
-
 	if err != nil {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 		return nil, errors.Wrap(err, "failed reading mod file")
 	}
 
 	modInfo, err := validation.ExtractModInfo(ctx, fileData, true, true, mod.ModReference)
-
 	if err != nil {
+		spew.Dump(err)
+		l.Err(err).Msg("failed extracting mod info")
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 		return nil, err
 	}
@@ -121,7 +120,6 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &dbVersion)
 	}
 
-	//Okay, uploaded file is read and readable... let's dump it and separate, and re-save as ModName-Combined-SemVersion in ModArch
 	separated := storage.SeparateMod(ctx, fileData, mod.ID, mod.Name, dbVersion.ID, modInfo.Version)
 
 	if !separated {
@@ -174,6 +172,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
 		storage.DeleteModArch(ctx, mod.ID, mod.Name, versionID, "Combined")
+		storage.DeleteModArch(ctx, mod.ID, mod.Name, dbVersion.Version, "Combined")
 	} else {
 		l.Info().Msg("Submitting version job for virus scan")
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)

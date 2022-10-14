@@ -32,34 +32,20 @@ func NewUserLoader(config UserLoaderConfig) *UserLoader {
 
 // UserLoader batches and caches requests
 type UserLoader struct {
-	// this method provides the data for the loader
-	fetch func(keys []string) ([]*postgres.User, []error)
-
-	// how long to done before sending a batch
-	wait time.Duration
-
-	// this will limit the maximum number of keys to send in one batch, 0 = no limit
+	fetch    func(keys []string) ([]*postgres.User, []error)
+	cache    map[string]*postgres.User
+	batch    *userLoaderBatch
+	wait     time.Duration
 	maxBatch int
-
-	// INTERNAL
-
-	// lazily created cache
-	cache map[string]*postgres.User
-
-	// the current batch. keys will continue to be collected until timeout is hit,
-	// then everything will be sent to the fetch method and out to the listeners
-	batch *userLoaderBatch
-
-	// mutex to prevent races
-	mu sync.Mutex
+	mu       sync.Mutex
 }
 
 type userLoaderBatch struct {
+	done    chan struct{}
 	keys    []string
 	data    []*postgres.User
 	error   []error
 	closing bool
-	done    chan struct{}
 }
 
 // Load a User by key, batching and caching will be applied automatically

@@ -17,8 +17,10 @@ import (
 	"github.com/satisfactorymodding/smr-api/db/postgres/otel"
 )
 
-var db *gorm.DB
-var dbCache *cache.Cache
+var (
+	db      *gorm.DB
+	dbCache *cache.Cache
+)
 
 type UserKey struct{}
 

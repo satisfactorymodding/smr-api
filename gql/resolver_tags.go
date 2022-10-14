@@ -2,9 +2,10 @@ package gql
 
 import (
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
-	"golang.org/x/net/context"
 )
 
 func (r *mutationResolver) CreateTag(ctx context.Context, tagName string) (*generated.Tag, error) {

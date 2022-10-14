@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/satisfactorymodding/smr-api/util"
-
 	"github.com/finnbear/moderation"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/patrickmn/go-cache"
+
+	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func ValidateTagName(tag string) error {
@@ -124,7 +124,7 @@ func GetTags(ctx context.Context, filter *generated.TagFilter) []Tag {
 
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
-			cleanSearch := strings.Replace(strings.TrimSpace(*filter.Search), " ", " & ", -1)
+			cleanSearch := strings.ReplaceAll(strings.TrimSpace(*filter.Search), " ", " & ")
 			sub := DBCtx(ctx).Table("tags")
 			sub = sub.Select("id, similarity(name, ?) as s", cleanSearch, cleanSearch, cleanSearch)
 

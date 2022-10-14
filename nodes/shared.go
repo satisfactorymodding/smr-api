@@ -1,9 +1,9 @@
 package nodes
 
 import (
-	"github.com/satisfactorymodding/smr-api/db/postgres"
-
 	"github.com/labstack/echo/v4"
+
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 )
 
 type DataFunction func(c echo.Context) (data interface{}, err *ErrorResponse)
@@ -11,7 +11,6 @@ type DataFunction func(c echo.Context) (data interface{}, err *ErrorResponse)
 func dataWrapper(nested DataFunction) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		data, err := nested(c)
-
 		if err != nil {
 			return c.JSON(err.Status, GenericResponse{
 				Success: false,
@@ -29,7 +28,7 @@ func dataWrapper(nested DataFunction) func(c echo.Context) error {
 type AuthorizedDataFunction func(user *postgres.User, c echo.Context) (data interface{}, err *ErrorResponse)
 
 func authorized(nested AuthorizedDataFunction) DataFunction {
-	return func(c echo.Context) (data interface{}, err *ErrorResponse) {
+	return func(c echo.Context) (interface{}, *ErrorResponse) {
 		user := userFromContext(c)
 
 		if user == nil {

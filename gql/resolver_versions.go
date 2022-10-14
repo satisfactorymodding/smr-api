@@ -7,6 +7,11 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/dgraph-io/ristretto"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
@@ -15,12 +20,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/pkg/errors"
-
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/dgraph-io/ristretto"
-	"github.com/rs/zerolog/log"
 )
 
 func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (string, error) {
@@ -72,7 +71,6 @@ func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, 
 
 	// TODO Optimize
 	fileData, err := io.ReadAll(file.File)
-
 	if err != nil {
 		return false, errors.Wrap(err, "failed to read file")
 	}
@@ -187,6 +185,7 @@ func (r *mutationResolver) ApproveVersion(ctx context.Context, versionID string)
 
 	go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
 	go storage.DeleteModArch(ctx, dbVersion.ModID, mod.Name, versionID, "Combined")
+	go storage.DeleteModArch(ctx, dbVersion.ModID, mod.Name, dbVersion.Version, "Combined")
 
 	return true, nil
 }
@@ -273,7 +272,6 @@ func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVers
 	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedVersions"
 
 	versionFilter, err := models.ProcessVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +308,6 @@ func (r *getVersionsResolver) Count(ctx context.Context, _ *generated.GetVersion
 	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedVersions"
 
 	versionFilter, err := models.ProcessVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return 0, err
 	}
@@ -382,7 +379,6 @@ func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMy
 	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedVersions"
 
 	versionFilter, err := models.ProcessVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return nil, err
 	}
@@ -419,7 +415,6 @@ func (r *getMyVersionsResolver) Count(ctx context.Context, _ *generated.GetMyVer
 	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedVersions"
 
 	versionFilter, err := models.ProcessVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return 0, err
 	}

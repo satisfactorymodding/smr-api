@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
-
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
+
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 )
 
 type loadersKey struct{}

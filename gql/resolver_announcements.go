@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/satisfactorymodding/smr-api/util"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement generated.NewAnnouncement) (*generated.Announcement, error) {

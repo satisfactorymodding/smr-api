@@ -5,8 +5,8 @@ import (
 )
 
 type config struct {
-	serviceName    string
 	tracerProvider oteltrace.TracerProvider
+	serviceName    string
 }
 
 // Option is used to configure the client.

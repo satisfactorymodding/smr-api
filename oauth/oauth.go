@@ -3,21 +3,23 @@ package oauth
 import (
 	"context"
 
-	"github.com/satisfactorymodding/smr-api/redis"
-	"github.com/satisfactorymodding/smr-api/util"
-
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/facebook"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
+
+	"github.com/satisfactorymodding/smr-api/redis"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 var ctx = context.Background()
 
-var githubAuth *oauth2.Config
-var googleAuth *oauth2.Config
-var facebookAuth *oauth2.Config
+var (
+	githubAuth   *oauth2.Config
+	googleAuth   *oauth2.Config
+	facebookAuth *oauth2.Config
+)
 
 type Site string
 

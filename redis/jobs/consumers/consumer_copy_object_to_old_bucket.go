@@ -3,12 +3,11 @@ package consumers
 import (
 	"encoding/json"
 
+	"github.com/pkg/errors"
+	"github.com/vmihailenco/taskq/v3"
+
 	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
 	"github.com/satisfactorymodding/smr-api/storage"
-
-	"github.com/pkg/errors"
-
-	"github.com/vmihailenco/taskq/v3"
 )
 
 func init() {

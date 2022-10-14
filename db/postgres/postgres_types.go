@@ -22,56 +22,47 @@ type SMRModel struct {
 }
 
 type User struct {
+	GithubID   *string
+	GoogleID   *string
+	FacebookID *string
 	SMRModel
-
 	Email      string `gorm:"type:varchar(256);unique_index"`
 	Username   string `gorm:"type:varchar(32)"`
 	Avatar     string
 	JoinedFrom string
-	Banned     bool `gorm:"default:false;not null"`
-
-	GithubID   *string
-	GoogleID   *string
-	FacebookID *string
-
-	Mods []Mod `gorm:"many2many:user_mods;"`
+	Mods       []Mod `gorm:"many2many:user_mods;"`
+	Banned     bool  `gorm:"default:false;not null"`
 }
 
 type UserSession struct {
 	SMRModel
-
-	UserID string
-	User   User
-
+	UserID    string
 	Token     string `gorm:"type:varchar(256);unique_index"`
 	UserAgent string
+	User      User
 }
 
 type Mod struct {
+	LastVersionDate *time.Time
+	Compatibility   *CompatibilityInfo `gorm:"serializer:json"`
 	SMRModel
-
-	Name             string `gorm:"type:varchar(32)"`
-	ShortDescription string `gorm:"type:varchar(128)"`
-	FullDescription  string
+	CreatorID        string
 	Logo             string
 	SourceURL        string
-	CreatorID        string
-	Approved         bool `gorm:"default:false;not null"`
-	Denied           bool `gorm:"default:false;not null"`
-	Views            uint
-	Downloads        uint
-	Hotness          uint
-	Popularity       uint
-	LastVersionDate  *time.Time
+	FullDescription  string
+	ShortDescription string `gorm:"type:varchar(128)"`
+	Name             string `gorm:"type:varchar(32)"`
 	ModReference     string
+	Versions         []Version
+	Tags             []Tag  `gorm:"many2many:mod_tags"`
+	Users            []User `gorm:"many2many:user_mods;"`
+	Downloads        uint
+	Popularity       uint
+	Hotness          uint
+	Views            uint
 	Hidden           bool
-	Compatibility    *CompatibilityInfo `gorm:"serializer:json"`
-
-	Users []User `gorm:"many2many:user_mods;"`
-
-	Tags []Tag `gorm:"many2many:mod_tags"`
-
-	Versions []Version
+	Denied           bool `gorm:"default:false;not null"`
+	Approved         bool `gorm:"default:false;not null"`
 }
 
 type UserMod struct {
@@ -82,40 +73,36 @@ type UserMod struct {
 
 // If updated, update dataloader
 type Version struct {
-	SMRModel
-
-	ModID string
-
-	Version      string `gorm:"type:varchar(16)"`
-	SMLVersion   string `gorm:"type:varchar(16)"`
-	Changelog    string
-	Downloads    uint
-	Key          string
-	Stability    string `gorm:"default:'alpha'" sql:"type:version_stability"`
-	Approved     bool   `gorm:"default:false;not null"`
-	Denied       bool   `gorm:"default:false;not null"`
-	Hotness      uint
-	Arch         []ModArch `gorm:"foreignKey:ModVersionID;preload:true"`
 	Metadata     *string
-	ModReference *string
-	VersionMajor *int
-	VersionMinor *int
-	VersionPatch *int
-	Size         *int64
 	Hash         *string
+	Size         *int64
+	VersionPatch *int
+	VersionMinor *int
+	VersionMajor *int
+	ModReference *string
+	SMRModel
+	Changelog  string
+	Stability  string `gorm:"default:'alpha'" sql:"type:version_stability"`
+	Key        string
+	SMLVersion string `gorm:"type:varchar(16)"`
+	Version    string `gorm:"type:varchar(16)"`
+	ModID      string
+	Arch       []ModArch `gorm:"foreignKey:ModVersionID;preload:true"`
+	Hotness    uint
+	Downloads  uint
+	Denied     bool `gorm:"default:false;not null"`
+	Approved   bool `gorm:"default:false;not null"`
 }
 
 type Guide struct {
 	SMRModel
-
 	Name             string `gorm:"type:varchar(50)"`
 	ShortDescription string `gorm:"type:varchar(128)"`
 	Guide            string
-	Views            uint
+	UserID           string
 	Tags             []Tag `gorm:"many2many:guide_tags"`
-
-	UserID string
-	User   User
+	User             User
+	Views            uint
 }
 
 type UserGroup struct {
@@ -126,16 +113,15 @@ type UserGroup struct {
 }
 
 type SMLVersion struct {
+	Date             time.Time
+	BootstrapVersion *string
 	SMRModel
-
 	Version             string `gorm:"type:varchar(32);unique_index"`
-	SatisfactoryVersion int
 	Stability           string `sql:"type:version_stability"`
-	Date                time.Time
 	Link                string
-	Arch                []SMLArch `gorm:"foreignKey:SMLVersionID;preload:true"`
 	Changelog           string
-	BootstrapVersion    *string
+	Arch                []SMLArch `gorm:"foreignKey:SMLVersionID;preload:true"`
+	SatisfactoryVersion int
 }
 
 type VersionDependency struct {
@@ -149,14 +135,13 @@ type VersionDependency struct {
 }
 
 type BootstrapVersion struct {
+	Date time.Time
 	SMRModel
-
 	Version             string `gorm:"type:varchar(32);unique_index"`
-	SatisfactoryVersion int
 	Stability           string `sql:"type:version_stability"`
-	Date                time.Time
 	Link                string
 	Changelog           string
+	SatisfactoryVersion int
 }
 
 type Announcement struct {
@@ -199,8 +184,8 @@ type ModArch struct {
 	ModVersionID string `gorm:"column:mod_version_arch_id"`
 	Platform     string
 	Key          string
-	Size         int64
 	Hash         string
+	Size         int64
 }
 
 func (ModArch) TableName() string {

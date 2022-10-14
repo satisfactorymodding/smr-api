@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"net/url"
 
+	"github.com/labstack/echo/v4"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/oauth"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/labstack/echo/v4"
 )
 
 // @Summary Retrieve a list of OAuth methods
@@ -21,7 +21,6 @@ import (
 func getOAuth(c echo.Context) (interface{}, *ErrorResponse) {
 	callbackURL := c.Param("url")
 	unescapedURL, err := url.PathUnescape(callbackURL)
-
 	if err != nil {
 		return nil, GenericUserError(err)
 	}
@@ -51,7 +50,6 @@ func getGithub(c echo.Context) (interface{}, *ErrorResponse) {
 	}
 
 	user, err := oauth.GithubCallback(code, state)
-
 	if err != nil {
 		return nil, GenericUserError(err)
 	}
@@ -65,7 +63,6 @@ func getGithub(c echo.Context) (interface{}, *ErrorResponse) {
 
 	if avatarURL != "" && newUser {
 		avatarData, err := util.LinkToWebp(c.Request().Context(), avatarURL)
-
 		if err != nil {
 			return nil, GenericUserError(err)
 		}

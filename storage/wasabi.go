@@ -5,12 +5,11 @@ import (
 	"io"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -30,7 +29,6 @@ func initializeWasabi(ctx context.Context, config Config) *Wasabi {
 	}
 
 	newSession, err := session.NewSession(s3Config)
-
 	if err != nil {
 		log.Err(err).Msg("failed to create session")
 		return nil
@@ -49,7 +47,6 @@ func (wasabi *Wasabi) Get(key string) (io.ReadCloser, error) {
 		Bucket: wasabi.Bucket,
 		Key:    aws.String(key),
 	})
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get object")
 	}
@@ -63,7 +60,6 @@ func (wasabi *Wasabi) Put(ctx context.Context, key string, body io.ReadSeeker) (
 		Bucket: wasabi.Bucket,
 		Key:    aws.String(key),
 	})
-
 	if err != nil {
 		return key, errors.Wrap(err, "failed to put object")
 	}
@@ -78,7 +74,6 @@ func (wasabi *Wasabi) SignGet(key string) (string, error) {
 	})
 
 	urlStr, err := req.Presign(15 * time.Minute)
-
 	if err != nil {
 		return "", errors.Wrap(err, "failed to sign url")
 	}
@@ -93,7 +88,6 @@ func (wasabi *Wasabi) SignPut(key string) (string, error) {
 	})
 
 	urlStr, err := req.Presign(15 * time.Minute)
-
 	if err != nil {
 		return "", errors.Wrap(err, "failed to sign url")
 	}

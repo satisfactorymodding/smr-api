@@ -9,30 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/satisfactorymodding/smr-api/auth"
-	"github.com/satisfactorymodding/smr-api/config"
-	"github.com/satisfactorymodding/smr-api/dataloader"
-	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
-
-	"github.com/pkg/errors"
-
-	// Load REST docs
-	_ "github.com/satisfactorymodding/smr-api/docs"
-	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/satisfactorymodding/smr-api/gql"
-	"github.com/satisfactorymodding/smr-api/migrations"
-	"github.com/satisfactorymodding/smr-api/nodes"
-	"github.com/satisfactorymodding/smr-api/oauth"
-	"github.com/satisfactorymodding/smr-api/redis"
-	"github.com/satisfactorymodding/smr-api/redis/jobs"
-
-	// Load redis consumers
-	_ "github.com/satisfactorymodding/smr-api/redis/jobs/consumers"
-	"github.com/satisfactorymodding/smr-api/storage"
-	"github.com/satisfactorymodding/smr-api/util"
-	"github.com/satisfactorymodding/smr-api/validation"
-
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -42,6 +18,7 @@ import (
 	"github.com/labstack/echo-contrib/pprof"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -54,6 +31,27 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/satisfactorymodding/smr-api/auth"
+	"github.com/satisfactorymodding/smr-api/config"
+	"github.com/satisfactorymodding/smr-api/dataloader"
+	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/gql"
+	"github.com/satisfactorymodding/smr-api/migrations"
+	"github.com/satisfactorymodding/smr-api/nodes"
+	"github.com/satisfactorymodding/smr-api/oauth"
+	"github.com/satisfactorymodding/smr-api/redis"
+	"github.com/satisfactorymodding/smr-api/redis/jobs"
+	"github.com/satisfactorymodding/smr-api/storage"
+	"github.com/satisfactorymodding/smr-api/util"
+	"github.com/satisfactorymodding/smr-api/validation"
+
+	// Load REST docs
+	_ "github.com/satisfactorymodding/smr-api/docs"
+	// Load redis consumers
+	_ "github.com/satisfactorymodding/smr-api/redis/jobs/consumers"
 )
 
 type CustomValidator struct {

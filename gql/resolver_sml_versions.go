@@ -4,15 +4,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/pkg/errors"
+	"gopkg.in/go-playground/validator.v9"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/pkg/errors"
-
-	"github.com/99designs/gqlgen/graphql"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion generated.NewSMLVersion) (*generated.SMLVersion, error) {
@@ -25,7 +24,6 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 	}
 
 	date, err := time.Parse(time.RFC3339Nano, smlVersion.Date)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse date")
 	}
@@ -51,7 +49,6 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 		}
 
 		resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArchs)
-
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +115,6 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 			}
 
 			resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArch)
-
 			if err != nil {
 				return nil, err
 			}
@@ -178,7 +174,6 @@ func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, obj *generated
 
 	resolverContext := graphql.GetFieldContext(ctx)
 	smlVersionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +204,6 @@ func (r *getSMLVersionsResolver) Count(ctx context.Context, obj *generated.GetSM
 
 	resolverContext := graphql.GetFieldContext(ctx)
 	smlVersionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return 0, err
 	}

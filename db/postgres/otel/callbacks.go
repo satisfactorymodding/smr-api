@@ -4,12 +4,10 @@ import (
 	"strings"
 
 	"go.opentelemetry.io/otel/attribute"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
-
-	"gorm.io/gorm"
-
 	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	oteltrace "go.opentelemetry.io/otel/trace"
+	"gorm.io/gorm"
 )
 
 const (

@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/patrickmn/go-cache"
+
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/patrickmn/go-cache"
 )
 
 var semverCheck = regexp.MustCompile(`^(<=|<|>|>=|\^)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
@@ -216,7 +216,7 @@ func GetVersionsNew(ctx context.Context, filter *models.VersionFilter, unapprove
 			Order(string(*filter.OrderBy) + " " + string(*filter.Order))
 
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 
 		if filter.Fields != nil && len(filter.Fields) > 0 {
@@ -248,7 +248,7 @@ func GetVersionCountNew(ctx context.Context, filter *models.VersionFilter, unapp
 
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 	}
 

@@ -26,29 +26,30 @@ type ModObject struct {
 }
 
 type ModInfo struct {
-	ModReference         string                                `json:"mod_reference"`
-	Version              string                                `json:"version"`
-	Objects              []ModObject                           `json:"objects"`
 	Dependencies         map[string]string                     `json:"dependencies"`
 	OptionalDependencies map[string]string                     `json:"optional_dependencies"`
+	Semver               *semver.Version                       `json:"-"`
+	ModReference         string                                `json:"mod_reference"`
+	Version              string                                `json:"version"`
+	Hash                 string                                `json:"-"`
+	SMLVersion           string                                `json:"sml_version"`
+	Objects              []ModObject                           `json:"objects"`
 	Metadata             []map[string]map[string][]interface{} `json:"-"`
 	Size                 int64                                 `json:"-"`
-	Hash                 string                                `json:"-"`
-	Semver               *semver.Version                       `json:"-"`
-	SMLVersion           string                                `json:"sml_version"`
 }
 
-var dataJSONSchema gojsonschema.JSONLoader
-var uPluginJSONSchema gojsonschema.JSONLoader
+var (
+	dataJSONSchema    gojsonschema.JSONLoader
+	uPluginJSONSchema gojsonschema.JSONLoader
+)
 
 func InitializeValidator() {
 	absPath, err := filepath.Abs("static/data-json-schema.json")
-
 	if err != nil {
 		panic(err)
 	}
 
-	dataJSONSchema = gojsonschema.NewReferenceLoader("file://" + strings.Replace(absPath, "\\", "/", -1))
+	dataJSONSchema = gojsonschema.NewReferenceLoader("file://" + strings.ReplaceAll(absPath, "\\", "/"))
 
 	absPath, err = filepath.Abs("static/uplugin-json-schema.json")
 
@@ -56,7 +57,7 @@ func InitializeValidator() {
 		panic(err)
 	}
 
-	uPluginJSONSchema = gojsonschema.NewReferenceLoader("file://" + strings.Replace(absPath, "\\", "/", -1))
+	uPluginJSONSchema = gojsonschema.NewReferenceLoader("file://" + strings.ReplaceAll(absPath, "\\", "/"))
 }
 
 func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withValidation bool, modReference string) (*ModInfo, error) {
@@ -65,7 +66,6 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	}
 
 	archive, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
-
 	if err != nil {
 		return nil, errors.New("invalid zip archive")
 	}
@@ -112,14 +112,12 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 				for _, archiveFile := range archive.File {
 					if obj.Path == archiveFile.Name {
 						data, err := archiveFile.Open()
-
 						if err != nil {
 							log.Err(err).Msg("failed opening archive file")
 							break
 						}
 
 						pakData, err := io.ReadAll(data)
-
 						if err != nil {
 							log.Err(err).Msg("failed reading archive file")
 							break
@@ -130,7 +128,6 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 						}
 
 						pak, err := AttemptExtractDataFromPak(ctx, reader)
-
 						if err != nil {
 							log.Err(err).Msg("failed parsing archive file")
 							break
@@ -156,7 +153,6 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	modInfo.Hash = hex.EncodeToString(hash.Sum(nil))
 
 	version, err := semver.StrictNewVersion(modInfo.Version)
-
 	if err != nil {
 		log.Err(err).Msg("error parsing semver")
 		return nil, errors.Wrap(err, "error parsing semver")
@@ -178,13 +174,11 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 	}
 
 	dataJSON, err := io.ReadAll(rc)
-
 	if err != nil {
 		return nil, errors.New("invalid zip archive")
 	}
 
 	result, err := gojsonschema.Validate(dataJSONSchema, gojsonschema.NewBytesLoader(dataJSON))
-
 	if err != nil {
 		return nil, errors.New("data.json doesn't follow schema. please view the help page. (" + err.Error() + ")")
 	}
@@ -255,15 +249,15 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 
 type UPlugin struct {
 	SemVersion *string  `json:"SemVersion"`
-	Version    int64    `json:"Version"`
 	Plugins    []Plugin `json:"Plugins"`
+	Version    int64    `json:"Version"`
 }
 
 type Plugin struct {
-	Name          string `json:"Name"`
-	SemVersion    string `json:"SemVersion"`
 	BIsBasePlugin *bool  `json:"bIsBasePlugin"`
 	BIsOptional   *bool  `json:"bIsOptional"`
+	Name          string `json:"Name"`
+	SemVersion    string `json:"SemVersion"`
 }
 
 func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidation bool, modReference string) (*ModInfo, error) {
@@ -277,13 +271,11 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 	}
 
 	uPluginJSON, err := io.ReadAll(rc)
-
 	if err != nil {
 		return nil, errors.New("invalid zip archive")
 	}
 
 	result, err := gojsonschema.Validate(uPluginJSONSchema, gojsonschema.NewBytesLoader(uPluginJSON))
-
 	if err != nil {
 		return nil, errors.New(uPluginFile.Name + " doesn't follow schema. please view the help page. (" + err.Error() + ")")
 	}

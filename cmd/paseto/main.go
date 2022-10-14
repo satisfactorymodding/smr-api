@@ -7,7 +7,6 @@ import (
 
 func main() {
 	publicKey, privateKey, err := ed25519.GenerateKey(nil)
-
 	if err != nil {
 		panic(err)
 	}

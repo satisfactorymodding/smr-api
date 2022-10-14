@@ -5,21 +5,21 @@ import (
 	"os"
 	"strings"
 
+	"github.com/lab259/go-migration"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+
 	postgres2 "github.com/satisfactorymodding/smr-api/db/postgres"
 
 	// Import all migrations
 	_ "github.com/satisfactorymodding/smr-api/migrations/code"
-
-	"github.com/lab259/go-migration"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 type codeMigrationLogger struct {
 	log *zerolog.Logger
 }
 
-func (c codeMigrationLogger) Write(p []byte) (n int, err error) {
+func (c codeMigrationLogger) Write(p []byte) (int, error) {
 	message := strings.TrimRight(string(p), "\n")
 	if len(message) > 0 {
 		log.Info().Msg(message)

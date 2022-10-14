@@ -9,8 +9,10 @@ import (
 	"golang.org/x/crypto/ed25519"
 )
 
-var privateKey ed25519.PrivateKey
-var pasetoV2 *paseto.V2
+var (
+	privateKey ed25519.PrivateKey
+	pasetoV2   *paseto.V2
+)
 
 func InitializeSecurity() {
 	var err error
@@ -29,7 +31,6 @@ func GenerateUserToken() string {
 	}
 
 	token, err := pasetoV2.Sign(privateKey, jsonToken, nil)
-
 	if err != nil {
 		panic(err)
 	}

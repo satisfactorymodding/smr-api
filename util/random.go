@@ -12,8 +12,10 @@ import (
 
 var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-var randBuffer = [4]byte{}
-var randMutex = sync.Mutex{}
+var (
+	randBuffer = [4]byte{}
+	randMutex  = sync.Mutex{}
+)
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 

@@ -10,12 +10,12 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
-
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/rs/zerolog/log"
 	"github.com/russross/blackfriday"
 	"github.com/spf13/viper"
+
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 )
 
 func NewMod(ctx context.Context, mod *postgres.Mod) {
@@ -58,7 +58,6 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 	}
 
 	payloadJSON, err := json.Marshal(payload)
-
 	if err != nil {
 		log.Err(err).Msg("error marshaling discord webhook")
 		return
@@ -143,7 +142,6 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 	}
 
 	payloadJSON, err := json.Marshal(payload)
-
 	if err != nil {
 		log.Err(err).Msg("error marshaling discord webhook")
 		return

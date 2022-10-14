@@ -45,7 +45,7 @@ func GetModArchs(ctx context.Context, filter *models.ModArchFilter) []ModArch {
 			Order(string(*filter.OrderBy) + " " + string(*filter.Order))
 
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 	}
 

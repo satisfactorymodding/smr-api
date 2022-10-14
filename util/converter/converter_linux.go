@@ -5,26 +5,23 @@ import (
 	"context"
 	"image"
 
-	// GIF Support
-	_ "image/gif"
-
-	// JPEG Support
-	_ "image/jpeg"
-
-	// PNG Support
-	_ "image/png"
-
 	"github.com/chai2010/webp"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	giftowebp "github.com/sizeofint/gif-to-webp"
+
+	// GIF Support
+	_ "image/gif"
+	// JPEG Support
+	_ "image/jpeg"
+	// PNG Support
+	_ "image/png"
 )
 
 var converter = giftowebp.NewConverter()
 
 func ConvertAnyImageToWebp(ctx context.Context, imageAsBytes []byte) ([]byte, error) {
 	imageData, imageType, err := image.Decode(bytes.NewReader(imageAsBytes))
-
 	if err != nil {
 		message := "error converting image to webp"
 		log.Err(err).Msg(message)
@@ -35,7 +32,6 @@ func ConvertAnyImageToWebp(ctx context.Context, imageAsBytes []byte) ([]byte, er
 
 	if imageType == "gif" {
 		webpBin, err := converter.Convert(imageAsBytes)
-
 		if err != nil {
 			message := "error converting image to webp"
 			log.Err(err).Msg(message)

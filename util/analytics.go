@@ -25,13 +25,13 @@ func serveReverseProxy(target string, res http.ResponseWriter, req *http.Request
 
 	req.URL.RawQuery = query.Encode()
 
-	req.URL.Path = strings.Replace(req.URL.Path, "analytics/cozzect", "collect", -1)
-	req.URL.Path = strings.Replace(req.URL.Path, "analytics/r/cozzect", "r/collect", -1)
-	req.URL.Path = strings.Replace(req.URL.Path, "analytics/j/cozzect", "j/collect", -1)
+	req.URL.Path = strings.ReplaceAll(req.URL.Path, "analytics/cozzect", "collect")
+	req.URL.Path = strings.ReplaceAll(req.URL.Path, "analytics/r/cozzect", "r/collect")
+	req.URL.Path = strings.ReplaceAll(req.URL.Path, "analytics/j/cozzect", "j/collect")
 
-	req.RequestURI = strings.Replace(req.RequestURI, "analytics/cozzect", "collect", -1)
-	req.RequestURI = strings.Replace(req.RequestURI, "analytics/r/cozzect", "r/collect", -1)
-	req.RequestURI = strings.Replace(req.RequestURI, "analytics/j/cozzect", "j/collect", -1)
+	req.RequestURI = strings.ReplaceAll(req.RequestURI, "analytics/cozzect", "collect")
+	req.RequestURI = strings.ReplaceAll(req.RequestURI, "analytics/r/cozzect", "r/collect")
+	req.RequestURI = strings.ReplaceAll(req.RequestURI, "analytics/j/cozzect", "j/collect")
 
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
 	req.Host = redirectURL.Host

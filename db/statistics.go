@@ -5,10 +5,10 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/redis"
-
-	"github.com/rs/zerolog/log"
 )
 
 var keyRegex = regexp.MustCompile(`^([^:]+):([^:]+):([^:]+):([^:]+)$`)
@@ -34,7 +34,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 						resultMap[entityType][action] = make(map[string]uint)
 					}
 
-					resultMap[entityType][action][entityID] = resultMap[entityType][action][entityID] + 1
+					resultMap[entityType][action][entityID]++
 				}
 			}
 
@@ -45,27 +45,25 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 						ctxWithTx := postgres.ContextWithDB(ctx, updateTx)
 						switch entityType {
 						case "mod":
-							switch action {
-							case "view":
+							if action == "view" {
 								mod := postgres.GetModByID(ctxWithTx, entityID)
 								if mod != nil {
 									currentHotness := mod.Hotness
 									if currentHotness > 4 {
 										// Preserve some of the hotness
-										currentHotness = currentHotness / 4
+										currentHotness /= 4
 									}
 									updateTx.Model(&mod).UpdateColumns(postgres.Mod{Hotness: currentHotness + count})
 								}
 							}
 						case "version":
-							switch action {
-							case "download":
+							if action == "download" {
 								version := postgres.GetVersion(ctxWithTx, entityID)
 								if version != nil {
 									currentHotness := version.Hotness
 									if currentHotness > 4 {
 										// Preserve some of the popularity
-										currentHotness = currentHotness / 4
+										currentHotness /= 4
 									}
 									updateTx.Model(&version).UpdateColumns(postgres.Version{Hotness: currentHotness + count})
 								}
@@ -94,7 +92,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 					currentPopularity := mod.Popularity
 					if currentPopularity > 4 {
 						// Preserve some of the popularity
-						currentPopularity = currentPopularity / 4
+						currentPopularity /= 4
 					}
 					updateTx.Model(&mod).UpdateColumns(postgres.Mod{
 						Popularity: currentPopularity + row.Hotness,

@@ -6,13 +6,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/validation"
-
-	"github.com/pkg/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 func UpdateModDataFromStorage(ctx context.Context, modID string, versionID string, metadata bool) error {
@@ -25,7 +24,6 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	response, _ := http.Get(link)
 
 	fileData, err := io.ReadAll(response.Body)
-
 	if err != nil {
 		return errors.Wrap(err, "failed to read response body")
 	}
@@ -37,7 +35,6 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	}
 
 	info, err := validation.ExtractModInfo(ctx, fileData, metadata, false, mod.ModReference)
-
 	if err != nil {
 		log.Warn().Err(err).Msgf("[%s] Failed updating mod, likely outdated", versionID)
 		// Outdated version

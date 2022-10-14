@@ -11,6 +11,9 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
+
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -18,10 +21,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/util/converter"
-
-	"github.com/pkg/errors"
-
-	"github.com/spf13/viper"
 )
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input generated.UpdateUser) (*generated.User, error) {
@@ -36,13 +35,11 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 
 	if input.Avatar != nil {
 		file, err := io.ReadAll(input.Avatar.File)
-
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read avatar file")
 		}
 
 		avatarData, err := converter.ConvertAnyImageToWebp(ctx, file)
-
 		if err != nil {
 			return nil, err
 		}
@@ -227,7 +224,6 @@ func (r *userModResolver) User(ctx context.Context, obj *generated.UserMod) (*ge
 	defer wrapper.end()
 
 	user, err := dataloader.For(ctx).UserByID.Load(obj.UserID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +260,6 @@ func (r *mutationResolver) DiscourseSso(ctx context.Context, sso string, sig str
 	}
 
 	nonceString, err := base64.StdEncoding.DecodeString(sso)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode sso")
 	}

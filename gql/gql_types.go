@@ -12,18 +12,18 @@ func DBUserToGenerated(user *postgres.User) *generated.User {
 		return nil
 	}
 
-	Email := (*user).Email
-	Avatar := (*user).Avatar
+	Email := user.Email
+	Avatar := user.Avatar
 
 	result := &generated.User{
-		ID:         (*user).ID,
-		Username:   (*user).Username,
+		ID:         user.ID,
+		Username:   user.Username,
 		Email:      &Email,
 		Avatar:     &Avatar,
 		CreatedAt:  user.CreatedAt.Format(time.RFC3339Nano),
-		GithubID:   (*user).GithubID,
-		GoogleID:   (*user).GoogleID,
-		FacebookID: (*user).FacebookID,
+		GithubID:   user.GithubID,
+		GoogleID:   user.GoogleID,
+		FacebookID: user.FacebookID,
 	}
 
 	return result
@@ -34,13 +34,13 @@ func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 		return nil
 	}
 
-	Logo := (*mod).Logo
-	SourceURL := (*mod).SourceURL
-	FullDescription := (*mod).FullDescription
+	Logo := mod.Logo
+	SourceURL := mod.SourceURL
+	FullDescription := mod.FullDescription
 
 	var LastVersionDate string
-	if (*mod).LastVersionDate != nil {
-		LastVersionDate = (*mod).LastVersionDate.Format(time.RFC3339Nano)
+	if mod.LastVersionDate != nil {
+		LastVersionDate = mod.LastVersionDate.Format(time.RFC3339Nano)
 	}
 
 	return &generated.Mod{

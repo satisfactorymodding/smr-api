@@ -1,14 +1,14 @@
 package nodes
 
 type GenericResponse struct {
-	Success bool        `json:"success"`
 	Data    interface{} `json:"data,omitempty"`
 	Error   interface{} `json:"error,omitempty"`
+	Success bool        `json:"success"`
 }
 
 type ErrorResponse struct {
-	Code    int    `json:"code"`
 	Message string `json:"message"`
+	Code    int    `json:"code"`
 	Status  int    `json:"-"`
 }
 

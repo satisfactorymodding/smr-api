@@ -4,15 +4,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/pkg/errors"
+	"gopkg.in/go-playground/validator.v9"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/pkg/errors"
-
-	"github.com/99designs/gqlgen/graphql"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 func (r *mutationResolver) CreateBootstrapVersion(ctx context.Context, bootstrapVersion generated.NewBootstrapVersion) (*generated.BootstrapVersion, error) {
@@ -25,7 +24,6 @@ func (r *mutationResolver) CreateBootstrapVersion(ctx context.Context, bootstrap
 	}
 
 	date, err := time.Parse(time.RFC3339Nano, bootstrapVersion.Date)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse date")
 	}
@@ -40,7 +38,6 @@ func (r *mutationResolver) CreateBootstrapVersion(ctx context.Context, bootstrap
 	}
 
 	resultBootstrapVersion, err := postgres.CreateBootstrapVersion(newCtx, dbBootstrapVersion)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create bootstrap version")
 	}
@@ -111,7 +108,6 @@ func (r *getBootstrapVersionsResolver) BootstrapVersions(ctx context.Context, ob
 
 	resolverContext := graphql.GetFieldContext(ctx)
 	bootstrapVersionFilter, err := models.ProcessBootstrapVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +138,6 @@ func (r *getBootstrapVersionsResolver) Count(ctx context.Context, obj *generated
 
 	resolverContext := graphql.GetFieldContext(ctx)
 	bootstrapVersionFilter, err := models.ProcessBootstrapVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return 0, err
 	}

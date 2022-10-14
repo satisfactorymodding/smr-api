@@ -78,6 +78,7 @@ func initializeDefaults() {
 	viper.SetDefault("storage.endpoint", "http://localhost:9000")
 	viper.SetDefault("storage.region", "eu-central-1")
 	viper.SetDefault("storage.base_url", "http://localhost:9000")
+	viper.SetDefault("storage.keypath", "%s/file/%s/%s")
 
 	viper.SetDefault("oauth.github.client_id", "")
 	viper.SetDefault("oauth.github.client_secret", "")

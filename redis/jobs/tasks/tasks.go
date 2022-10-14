@@ -2,11 +2,13 @@ package tasks
 
 import "github.com/vmihailenco/taskq/v3"
 
-var UpdateDBFromModVersionFileTask *taskq.Task
-var UpdateDBFromModVersionJSONFileTask *taskq.Task
-var CopyObjectFromOldBucketTask *taskq.Task
-var CopyObjectToOldBucketTask *taskq.Task
-var ScanModOnVirusTotalTask *taskq.Task
+var (
+	UpdateDBFromModVersionFileTask     *taskq.Task
+	UpdateDBFromModVersionJSONFileTask *taskq.Task
+	CopyObjectFromOldBucketTask        *taskq.Task
+	CopyObjectToOldBucketTask          *taskq.Task
+	ScanModOnVirusTotalTask            *taskq.Task
+)
 
 type UpdateDBFromModVersionFileData struct {
 	ModID     string `json:"mod_id"`

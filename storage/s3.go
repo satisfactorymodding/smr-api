@@ -7,17 +7,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/satisfactorymodding/smr-api/redis"
-
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/satisfactorymodding/smr-api/redis"
 )
 
 type S3 struct {
@@ -36,7 +35,6 @@ func initializeS3(ctx context.Context, config Config) *S3 {
 	}
 
 	newSession, err := session.NewSession(s3Config)
-
 	if err != nil {
 		log.Err(err).Msg("failed to create S3 session")
 		return nil
@@ -59,7 +57,6 @@ func (s3o *S3) Get(key string) (io.ReadCloser, error) {
 		Bucket: aws.String(s3o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get object")
 	}
@@ -77,7 +74,6 @@ func (s3o *S3) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 		Bucket: aws.String(viper.GetString("storage.bucket")),
 		Key:    aws.String(cleanedKey),
 	})
-
 	if err != nil {
 		return cleanedKey, errors.Wrap(err, "failed to upload file")
 	}
@@ -88,7 +84,7 @@ func (s3o *S3) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 func (s3o *S3) SignGet(key string) (string, error) {
 	// Public Bucket
 	cleanedKey := strings.TrimPrefix(key, "/")
-	return fmt.Sprintf("%s/file/%s/%s", s3o.BaseURL, viper.GetString("storage.bucket"), cleanedKey), nil
+	return fmt.Sprintf(viper.GetString("storage.keypath"), s3o.BaseURL, viper.GetString("storage.bucket"), cleanedKey), nil
 }
 
 func (s3o *S3) SignPut(key string) (string, error) {
@@ -102,7 +98,6 @@ func (s3o *S3) StartMultipartUpload(key string) error {
 		Bucket: aws.String(viper.GetString("storage.bucket")),
 		Key:    aws.String(cleanedKey),
 	})
-
 	if err != nil {
 		return errors.Wrap(err, "failed to create multipart upload")
 	}
@@ -123,7 +118,6 @@ func (s3o *S3) UploadPart(key string, part int64, data io.ReadSeeker) error {
 		PartNumber: aws.Int64(part),
 		UploadId:   aws.String(id),
 	})
-
 	if err != nil {
 		return errors.Wrap(err, "failed to upload part")
 	}
@@ -175,8 +169,20 @@ func (s3o *S3) Delete(key string) error {
 			KeyMarker: aws.String(cleanedKey),
 			Prefix:    aws.String(cleanedKey),
 		})
-
 		if err != nil {
+			if strings.Contains(err.Error(), "NotImplemented") {
+				_, err = s3o.S3Client.DeleteObject(&s3.DeleteObjectInput{
+					Bucket: aws.String(viper.GetString("storage.bucket")),
+					Key:    aws.String(cleanedKey),
+				})
+
+				if err != nil {
+					return errors.Wrap(err, "failed to delete objects")
+				}
+
+				return nil
+			}
+
 			return errors.Wrap(err, "failed to list object versions")
 		}
 
@@ -222,7 +228,6 @@ func (s3o *S3) Meta(key string) (*ObjectMeta, error) {
 		Bucket: aws.String(viper.GetString("storage.bucket")),
 		Key:    aws.String(cleanedKey),
 	})
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get object meta")
 	}

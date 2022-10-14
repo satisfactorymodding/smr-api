@@ -7,20 +7,20 @@ import (
 )
 
 type Mod struct {
-	ID               string    `json:"id"`
-	Name             string    `json:"name"`
-	ShortDescription string    `json:"short_description"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
+	CreatorID        string    `json:"creator_id"`
 	FullDescription  string    `json:"full_description"`
 	Logo             string    `json:"logo"`
 	SourceURL        string    `json:"source_url"`
-	CreatorID        string    `json:"creator_id"`
-	Approved         bool      `json:"approved"`
+	ID               string    `json:"id"`
+	ShortDescription string    `json:"short_description"`
+	Name             string    `json:"name"`
 	Views            uint      `json:"views"`
 	Downloads        uint      `json:"downloads"`
 	Hotness          uint      `json:"hotness"`
 	Popularity       uint      `json:"popularity"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	CreatedAt        time.Time `json:"created_at"`
+	Approved         bool      `json:"approved"`
 }
 
 func ModToMod(mod *postgres.Mod, short bool) *Mod {
@@ -48,16 +48,16 @@ func ModToMod(mod *postgres.Mod, short bool) *Mod {
 }
 
 type Version struct {
+	UpdatedAt  time.Time `json:"updated_at"`
+	CreatedAt  time.Time `json:"created_at"`
 	ID         string    `json:"id"`
 	Version    string    `json:"version"`
 	SMLVersion string    `json:"sml_version"`
 	Changelog  string    `json:"changelog"`
-	Downloads  uint      `json:"downloads"`
 	Stability  string    `json:"stability"`
 	ModID      string    `json:"mod_id"`
+	Downloads  uint      `json:"downloads"`
 	Approved   bool      `json:"approved"`
-	UpdatedAt  time.Time `json:"updated_at"`
-	CreatedAt  time.Time `json:"created_at"`
 }
 
 func VersionToVersion(version *postgres.Version) *Version {
@@ -88,16 +88,16 @@ func ModUserToModUser(userMod *postgres.UserMod) *ModUser {
 }
 
 type SMLVersion struct {
-	ID                  string    `json:"id"`
-	Version             string    `json:"version"`
-	SatisfactoryVersion int       `json:"satisfactory_version"`
-	BootstrapVersion    *string   `json:"bootstrap_version"`
-	Stability           string    `json:"stability"`
 	Date                time.Time `json:"date"`
-	Link                string    `json:"link"`
-	Changelog           string    `json:"changelog"`
 	UpdatedAt           time.Time `json:"updated_at"`
 	CreatedAt           time.Time `json:"created_at"`
+	BootstrapVersion    *string   `json:"bootstrap_version"`
+	ID                  string    `json:"id"`
+	Version             string    `json:"version"`
+	Stability           string    `json:"stability"`
+	Link                string    `json:"link"`
+	Changelog           string    `json:"changelog"`
+	SatisfactoryVersion int       `json:"satisfactory_version"`
 }
 
 func SMLVersionToSMLVersion(version *postgres.SMLVersion) *SMLVersion {

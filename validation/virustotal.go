@@ -5,9 +5,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/VirusTotal/vt-go"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -24,18 +23,17 @@ func InitializeVirusTotal() {
 
 type AnalysisResults struct {
 	Attributes struct {
-		Status string `json:"status"`
-		Stats  *struct {
+		Stats *struct {
 			Suspicious *int `json:"suspicious,omitempty"`
 			Malicious  *int `json:"malicious,omitempty"`
 		} `json:"stats,omitempty"`
+		Status string `json:"status"`
 	} `json:"attributes,omitempty"`
 }
 
 func ScanFiles(ctx context.Context, files []io.Reader, names []string) (bool, error) {
 	for i, file := range files {
 		scan, err := client.NewFileScanner().Scan(file, names[i], nil)
-
 		if err != nil {
 			return false, errors.Wrap(err, "failed to scan file")
 		}

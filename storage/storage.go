@@ -11,12 +11,11 @@ import (
 	"strings"
 
 	"github.com/avast/retry-go/v3"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
-
 	"github.com/pkg/errors"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+
+	"github.com/satisfactorymodding/smr-api/db/postgres"
 )
 
 type Storage interface {
@@ -144,7 +143,6 @@ func UploadModLogo(ctx context.Context, modID string, data io.ReadSeeker) (bool,
 	key := fmt.Sprintf("/images/mods/%s/logo.webp", modID)
 
 	key, err := storage.Put(ctx, key, data)
-
 	if err != nil {
 		log.Err(err).Msg("failed to upload mod logo")
 		return false, ""
@@ -172,7 +170,6 @@ func UploadUserAvatar(ctx context.Context, userID string, data io.ReadSeeker) (b
 			log.Err(err).Msgf("failed to upload user avatar, retrying [%d]", n)
 		}),
 	)
-
 	if err != nil {
 		log.Err(err).Msg("failed to upload user avatar")
 		return false, ""
@@ -187,7 +184,6 @@ func GenerateDownloadLink(key string) string {
 	}
 
 	url, err := storage.SignGet(key)
-
 	if err != nil {
 		return ""
 	}
@@ -285,6 +281,8 @@ func DeleteVersion(ctx context.Context, modID string, name string, versionID str
 	cleanName := cleanModName(name)
 
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
+
+	log.Info().Str("key", key).Msg("deleting version")
 	if err := storage.Delete(key); err != nil {
 		log.Err(err).Msg("failed to delete version")
 		return false
@@ -302,7 +300,7 @@ func DeleteMod(ctx context.Context, modID string, name string, versionID string)
 
 	query := postgres.GetModVersion(ctx, modID, versionID)
 
-	if len(query.Arch) != 0 {
+	if query != nil && len(query.Arch) != 0 {
 		for _, link := range query.Arch {
 			if success := DeleteModArch(ctx, modID, cleanName, versionID, link.Platform); !success {
 				return false
@@ -311,6 +309,7 @@ func DeleteMod(ctx context.Context, modID string, name string, versionID string)
 	} else {
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
 
+		log.Info().Str("key", key).Msg("deleting mod")
 		if err := storage.Delete(key); err != nil {
 			log.Ctx(ctx).Err(err).Msg("failed to delete version")
 			return false
@@ -328,6 +327,7 @@ func DeleteModArch(ctx context.Context, modID string, name string, versionID str
 	cleanName := cleanModName(name)
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+platform+"-"+versionID)
 
+	log.Info().Str("key", key).Msg("deleting mod arch")
 	if err := storage.Delete(key); err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to delete version link")
 		return false
@@ -397,9 +397,7 @@ func EncodeName(name string) string {
 }
 
 func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID string, modVersion string) bool {
-	//read combined file
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
-
 	if err != nil {
 		return false
 	}
@@ -444,14 +442,12 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 func WriteZipFile(ctx context.Context, file *zip.File, platform string, zipWriter *zip.Writer) error {
 	fileName := strings.ReplaceAll(file.Name, platform+"/", "")
 	zipFile, err := zipWriter.Create(fileName)
-
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("Failed to create smod file for " + platform)
 		return errors.Wrap(err, "Failed to open smod file for "+platform)
 	}
 
 	rawFile, err := file.Open()
-
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("Failed to open smod file for " + platform)
 		return errors.Wrap(err, "Failed to open smod file for "+platform)
@@ -477,7 +473,6 @@ func WriteZipFile(ctx context.Context, file *zip.File, platform string, zipWrite
 
 func WriteModArch(ctx context.Context, key string, versionID string, platform string, buffer *bytes.Buffer) error {
 	_, err := storage.Put(ctx, key, bytes.NewReader(buffer.Bytes()))
-
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to write smod: " + key)
 		return errors.Wrap(err, "Failed to load smod:"+key)

@@ -6,10 +6,9 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 
-	"github.com/satisfactorymodding/smr-api/util"
-
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func (r *mutationResolver) CreateSMLArch(ctx context.Context, smlArch generated.NewSMLArch) (*generated.SMLArch, error) {
@@ -28,7 +27,6 @@ func (r *mutationResolver) CreateSMLArch(ctx context.Context, smlArch generated.
 	}
 
 	resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArchs)
-
 	if err != nil {
 		return nil, err
 	}

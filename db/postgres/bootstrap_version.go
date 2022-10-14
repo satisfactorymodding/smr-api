@@ -37,7 +37,7 @@ func GetBootstrapVersions(ctx context.Context, filter *models.BootstrapVersionFi
 			Order(string(*filter.OrderBy) + " " + string(*filter.Order))
 
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 	}
 
@@ -62,7 +62,7 @@ func GetBootstrapVersionCount(ctx context.Context, filter *models.BootstrapVersi
 
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 	}
 
