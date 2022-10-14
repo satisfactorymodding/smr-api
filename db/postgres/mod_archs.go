@@ -101,7 +101,7 @@ func GetModArchByPlatform(ctx context.Context, versionID string, platform string
 	var modplatform ModArch
 	DBCtx(ctx).First(&modplatform, "mod_version_arch_id = ? AND platform = ?", versionID, platform)
 
-	if modplatform.ModVersionArchID == "" {
+	if modplatform.ModVersionID == "" {
 		return nil
 	}
 
@@ -114,7 +114,7 @@ func GetModArchDownload(ctx context.Context, versionID string, platform string) 
 	var modPlatform ModArch
 	DBCtx(ctx).First(&modPlatform, "mod_version_arch_id = ? AND platform = ?", versionID, platform)
 
-	if modPlatform.ModVersionArchID == "" {
+	if modPlatform.ModVersionID == "" {
 		return ""
 	}
 

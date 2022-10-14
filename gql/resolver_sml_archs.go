@@ -12,19 +12,19 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated"
 )
 
-func (r *mutationResolver) CreateSMLArch(ctx context.Context, smlLink generated.NewSMLArch) (*generated.SMLArch, error) {
+func (r *mutationResolver) CreateSMLArch(ctx context.Context, smlArch generated.NewSMLArch) (*generated.SMLArch, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "createSMLArch")
 	defer wrapper.end()
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
-	if err := val.Struct(&smlLink); err != nil {
+	if err := val.Struct(&smlArch); err != nil {
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
 	dbSMLArchs := &postgres.SMLArch{
 		ID:       util.GenerateUniqueID(),
-		Platform: smlLink.Platform,
-		Link:     smlLink.Link,
+		Platform: smlArch.Platform,
+		Link:     smlArch.Link,
 	}
 
 	resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArchs)
@@ -51,11 +51,11 @@ func (r *mutationResolver) DeleteSMLArch(ctx context.Context, linksID string) (b
 	return true, nil
 }
 
-func (r *mutationResolver) UpdateSMLArch(ctx context.Context, smlLinkID string, smlLink generated.UpdateSMLArch) (*generated.SMLArch, error) {
+func (r *mutationResolver) UpdateSMLArch(ctx context.Context, smlLinkID string, smlArch generated.UpdateSMLArch) (*generated.SMLArch, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "updateSMLArch")
 	defer wrapper.end()
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
-	if err := val.Struct(&smlLink); err != nil {
+	if err := val.Struct(&smlArch); err != nil {
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
@@ -65,8 +65,8 @@ func (r *mutationResolver) UpdateSMLArch(ctx context.Context, smlLinkID string, 
 		return nil, errors.New("sml link not found")
 	}
 
-	SetStringINNOE(&smlLink.Platform, &dbSMLArch.Platform)
-	SetStringINNOE(&smlLink.Link, &dbSMLArch.Link)
+	SetStringINNOE(&smlArch.Platform, &dbSMLArch.Platform)
+	SetStringINNOE(&smlArch.Link, &dbSMLArch.Link)
 
 	postgres.Save(newCtx, &dbSMLArch)
 
@@ -77,9 +77,9 @@ func (r *queryResolver) GetSMLArch(ctx context.Context, smlLinkID string) (*gene
 	wrapper, newCtx := WrapQueryTrace(ctx, "getSMLArch")
 	defer wrapper.end()
 
-	smlLink := postgres.GetSMLArch(newCtx, smlLinkID)
+	smlArch := postgres.GetSMLArch(newCtx, smlLinkID)
 
-	return DBSMLArchToGenerated(smlLink), nil
+	return DBSMLArchToGenerated(smlArch), nil
 }
 
 func (r *queryResolver) GetSMLArchs(ctx context.Context, filter map[string]interface{}) (*generated.GetSMLArchs, error) {
@@ -88,9 +88,16 @@ func (r *queryResolver) GetSMLArchs(ctx context.Context, filter map[string]inter
 	return &generated.GetSMLArchs{}, nil
 }
 
+func (r *queryResolver) GetSMLArchBySMLID(ctx context.Context, smlVersionID string) ([]postgres.SMLArch, error) {
+	wrapper, newCtx := WrapQueryTrace(ctx, "GetSMLArchBySMLID")
+	defer wrapper.end()
+	smlArch := postgres.GetSMLArchBySMLID(newCtx, smlVersionID)
+	return smlArch, nil
+}
+
 func (r *queryResolver) GetSMLDownload(ctx context.Context, smlVersionID string, platform string) (string, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getSMLDownload")
 	defer wrapper.end()
-	smlLink := postgres.GetSMLArchDownload(newCtx, smlVersionID, platform)
-	return smlLink, nil
+	smlArch := postgres.GetSMLArchDownload(newCtx, smlVersionID, platform)
+	return smlArch, nil
 }

@@ -270,7 +270,7 @@ func GetModByIDOrReference(ctx context.Context, modIDOrReference string) *Mod {
 	}
 
 	var mod Mod
-	DBCtx(ctx).Preload("Tags").Find(&mod, "mod_reference = ? OR id = ?", modIDOrReference, modIDOrReference)
+	DBCtx(ctx).Preload("Tags").Preload("Versions.Arch").Find(&mod, "mod_reference = ? OR id = ?", modIDOrReference, modIDOrReference)
 
 	if mod.ID == "" {
 		return nil

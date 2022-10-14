@@ -219,11 +219,11 @@ func DBModArchToGenerated(modArch *postgres.ModArch) *generated.ModArch {
 	size := int(modArch.Size)
 
 	return &generated.ModArch{
-		ID:               modArch.ID,
-		ModVersionArchID: modArch.ModVersionArchID,
-		Platform:         modArch.Platform,
-		Hash:             &modArch.Hash,
-		Size:             &size,
+		ID:           modArch.ID,
+		ModVersionID: modArch.ModVersionID,
+		Platform:     modArch.Platform,
+		Hash:         &modArch.Hash,
+		Size:         &size,
 	}
 }
 
@@ -235,23 +235,23 @@ func DBModArchsToGeneratedSlice(modArchs []postgres.ModArch) []*generated.ModArc
 	return converted
 }
 
-func DBSMLArchToGenerated(smlLink *postgres.SMLArch) *generated.SMLArch {
-	if smlLink == nil {
+func DBSMLArchToGenerated(smlArch *postgres.SMLArch) *generated.SMLArch {
+	if smlArch == nil {
 		return nil
 	}
 
 	return &generated.SMLArch{
-		ID:               smlLink.ID,
-		SMLVersionArchID: smlLink.SMLVersionArchID,
-		Platform:         smlLink.Platform,
-		Link:             smlLink.Link,
+		ID:           smlArch.ID,
+		SMLVersionID: smlArch.SMLVersionID,
+		Platform:     smlArch.Platform,
+		Link:         smlArch.Link,
 	}
 }
 
 func DBSMLArchsToGeneratedSlice(smlLinks []postgres.SMLArch) []*generated.SMLArch {
 	converted := make([]*generated.SMLArch, len(smlLinks))
-	for i, smlLink := range smlLinks {
-		converted[i] = DBSMLArchToGenerated(&smlLink)
+	for i, smlArch := range smlLinks {
+		converted[i] = DBSMLArchToGenerated(&smlArch)
 	}
 	return converted
 }

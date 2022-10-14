@@ -10,19 +10,19 @@ import (
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func CreateSMLArch(ctx context.Context, smlLink *SMLArch) (*SMLArch, error) {
-	smlLink.ID = util.GenerateUniqueID()
+func CreateSMLArch(ctx context.Context, smlArch *SMLArch) (*SMLArch, error) {
+	smlArch.ID = util.GenerateUniqueID()
 
-	DBCtx(ctx).Create(&smlLink)
+	DBCtx(ctx).Create(&smlArch)
 
-	return smlLink, nil
+	return smlArch, nil
 }
 
 func GetSMLArch(ctx context.Context, smlLinkID string) *SMLArch {
 	cacheKey := "GetSMLArch_" + smlLinkID
 
-	if smlLink, ok := dbCache.Get(cacheKey); ok {
-		return smlLink.(*SMLArch)
+	if smlArch, ok := dbCache.Get(cacheKey); ok {
+		return smlArch.(*SMLArch)
 	}
 
 	var smlArch SMLArch
@@ -75,6 +75,14 @@ func GetSMLArchsByID(ctx context.Context, smlArchIds []string) []SMLArch {
 	if len(smlArchIds) != len(smlArchs) {
 		return nil
 	}
+
+	return smlArchs
+}
+
+func GetSMLArchBySMLID(ctx context.Context, smlVersionID string) []SMLArch {
+	var smlArchs []SMLArch
+
+	DBCtx(ctx).Find(&smlArchs, "sml_version_arch_id = ?", smlVersionID)
 
 	return smlArchs
 }

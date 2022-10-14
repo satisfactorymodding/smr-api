@@ -487,11 +487,11 @@ func WriteModArch(ctx context.Context, key string, versionID string, platform st
 	hash.Write(buffer.Bytes())
 
 	dbModArch := &postgres.ModArch{
-		ModVersionArchID: versionID,
-		Platform:         platform,
-		Key:              key,
-		Hash:             hex.EncodeToString(hash.Sum(nil)),
-		Size:             int64(len(buffer.Bytes())),
+		ModVersionID: versionID,
+		Platform:     platform,
+		Key:          key,
+		Hash:         hex.EncodeToString(hash.Sum(nil)),
+		Size:         int64(len(buffer.Bytes())),
 	}
 
 	_, err = postgres.CreateModArch(ctx, dbModArch)
