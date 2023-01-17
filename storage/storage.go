@@ -427,12 +427,14 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 			zipWriter.Close()
 		}
 
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+ModPlatform+"-"+modVersion)
+		if bufPlatform.Len() > 22 { // Has to be at least 22 due to empty file is created with 22 unread bytes
+			key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+ModPlatform+"-"+modVersion)
 
-		err = WriteModArch(ctx, key, versionID, ModPlatform, bufPlatform)
-		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("Failed to save " + ModPlatform + " smod")
-			return false
+			err = WriteModArch(ctx, key, versionID, ModPlatform, bufPlatform)
+			if err != nil {
+				log.Ctx(ctx).Err(err).Msg("Failed to save " + ModPlatform + " smod")
+				return false
+			}
 		}
 	}
 
