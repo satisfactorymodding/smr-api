@@ -216,13 +216,14 @@ func DBModArchToGenerated(modArch *postgres.ModArch) *generated.ModArch {
 		return nil
 	}
 
+	hash := string(modArch.Hash)
 	size := int(modArch.Size)
 
 	return &generated.ModArch{
 		ID:           modArch.ID,
 		ModVersionID: modArch.ModVersionID,
 		Platform:     modArch.Platform,
-		Hash:         &modArch.Hash,
+		Hash:         &hash,
 		Size:         &size,
 	}
 }
