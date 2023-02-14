@@ -156,9 +156,16 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 	dbModArch := postgres.GetModArchByPlatform(ctx, dbVersion.ID, "WindowsNoEditor")
 
-	dbVersion.Key = dbModArch.Key
-	dbVersion.Hash = &dbModArch.Hash
-	dbVersion.Size = &dbModArch.Size
+	if (dbModArch == nil) {
+		dbVersion.Key = ""
+		dbVersion.Hash = nil
+		dbVersion.Size = nil
+	} else {
+		dbVersion.Key = dbModArch.Key
+		dbVersion.Hash = &dbModArch.Hash
+		dbVersion.Size = &dbModArch.Size
+	}
+
 	postgres.Save(ctx, &dbVersion)
 	postgres.Save(ctx, &mod)
 
