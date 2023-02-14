@@ -78,7 +78,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			dataFile = v
 			break
 		}
-		if v.Name == "WindowsNoEditor/"+modReference+".uplugin" {
+		if strings.Contains(v.Name, modReference+".uplugin") {
 			uPlugin = v
 			break
 		}
@@ -101,7 +101,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	}
 
 	if modInfo == nil {
-		return nil, errors.New("missing WindowsNoEditor/" + modReference + ".uplugin or data.json")
+		return nil, errors.New("missing " + modReference + ".uplugin or data.json")
 	}
 
 	if withMetadata {
