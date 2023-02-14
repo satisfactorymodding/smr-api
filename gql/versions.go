@@ -171,8 +171,6 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &mod)
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
-		storage.DeleteModArch(ctx, mod.ID, mod.Name, versionID, "Combined")
-		storage.DeleteModArch(ctx, mod.ID, mod.Name, dbVersion.Version, "Combined")
 	} else {
 		l.Info().Msg("Submitting version job for virus scan")
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)
