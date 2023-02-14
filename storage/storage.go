@@ -479,7 +479,10 @@ func WriteModArch(ctx context.Context, key string, versionID string, platform st
 	}
 
 	hash := sha256.New()
-	hash.Write(buffer.Bytes())
+	_, err = hash.Write(buffer.Bytes())
+	if err != nil {
+		log.Err(err).Msg("error hashing pak")
+	}
 
 	dbModArch := &postgres.ModArch{
 		ModVersionID: versionID,
