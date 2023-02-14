@@ -412,7 +412,7 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 			zipWriter := zip.NewWriter(bufPlatform)
 
 			for _, file := range zipReader.File {
-				if strings.HasPrefix(file.Name, ".pdb") || strings.HasPrefix(file.Name, ".debug") || !strings.Contains(file.Name, ModPlatform) {
+				if !strings.Contains(file.Name, ModPlatform) || (file.Name == cleanName+"-"+ModPlatform+"-"+modVersion) {
 					continue
 				}
 
