@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/validation"
 )
 
 type Storage interface {
@@ -427,6 +428,12 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 			zipWriter.Close()
 		}
 
+		_, err = validation.ExtractModInfo(ctx, bufPlatform.Bytes(), false, true, name)
+
+		if err != nil {
+			continue
+		}
+
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+ModPlatform+"-"+modVersion)
 
 		err = WriteModArch(ctx, key, versionID, ModPlatform, bufPlatform)
@@ -435,7 +442,6 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 			return false
 		}
 	}
-
 	return true
 }
 
