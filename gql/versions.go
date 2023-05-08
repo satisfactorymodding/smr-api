@@ -122,45 +122,50 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &dbVersion)
 	}
 
-	separated := storage.SeparateMod(ctx, fileData, mod.ID, mod.Name, dbVersion.ID, modInfo.Version)
+	// TODO: Should legacy plugins be supported?
+	var modArchs []*postgres.ModArch
 
-	if !separated {
-		for modID, condition := range modInfo.Dependencies {
-			dependency := postgres.VersionDependency{
-				VersionID: dbVersion.ID,
-				ModID:     modID,
-				Condition: condition,
-				Optional:  false,
-			}
+	for _, target := range modInfo.Targets {
+		dbModArch, _ := postgres.CreateModArch(ctx, &postgres.ModArch{
+			ModVersionID: dbVersion.ID,
+			Platform:     target,
+		})
 
-			postgres.DeleteForced(ctx, &dependency)
+		modArchs = append(modArchs, dbModArch)
+	}
+
+	separateSuccess := true
+	for _, modArch := range modArchs {
+		log.Info().Str("modArch", modArch.Platform).Str("mod", mod.Name).Str("version", dbVersion.Version).Msg("separating mod")
+		success, key, hash, size := storage.SeparateModPlatform(ctx, fileData, mod.ID, mod.Name, dbVersion.Version, modArch.Platform)
+
+		if !success {
+			separateSuccess = false
+			break
 		}
 
-		for modID, condition := range modInfo.OptionalDependencies {
-			dependency := postgres.VersionDependency{
-				VersionID: dbVersion.ID,
-				ModID:     modID,
-				Condition: condition,
-				Optional:  true,
-			}
+		modArch.Key = key
+		modArch.Hash = hash
+		modArch.Size = size
 
-			postgres.DeleteForced(ctx, &dependency)
-		}
+		postgres.Save(ctx, modArch)
+	}
 
-		postgres.DeleteForced(ctx, &dbVersion)
-		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+	if !separateSuccess {
+		removeMod(ctx, modInfo, mod, dbVersion)
 
-		for _, dbModArch := range dbVersion.Arch {
-			postgres.DeleteForced(ctx, &dbModArch)
-		}
+		return nil, errors.New("failed to separate mod")
+	}
+
+	success, key := storage.RenameVersion(ctx, mod.ID, mod.Name, versionID, modInfo.Version)
+
+	if !success {
+		removeMod(ctx, modInfo, mod, dbVersion)
+
 		return nil, errors.New("failed to upload mod")
 	}
 
-	dbModArch := postgres.GetModArchByPlatform(ctx, dbVersion.ID, "WindowsNoEditor")
-
-	dbVersion.Key = dbModArch.Key
-	dbVersion.Hash = &dbModArch.Hash
-	dbVersion.Size = &dbModArch.Size
+	dbVersion.Key = key
 	postgres.Save(ctx, &dbVersion)
 	postgres.Save(ctx, &mod)
 
@@ -180,4 +185,45 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		AutoApproved: autoApproved,
 		Version:      DBVersionToGenerated(dbVersion),
 	}, nil
+}
+
+func removeMod(ctx context.Context, modInfo *validation.ModInfo, mod *postgres.Mod, dbVersion *postgres.Version) {
+	for modID, condition := range modInfo.Dependencies {
+		dependency := postgres.VersionDependency{
+			VersionID: dbVersion.ID,
+			ModID:     modID,
+			Condition: condition,
+			Optional:  false,
+		}
+
+		postgres.DeleteForced(ctx, &dependency)
+	}
+
+	for modID, condition := range modInfo.OptionalDependencies {
+		dependency := postgres.VersionDependency{
+			VersionID: dbVersion.ID,
+			ModID:     modID,
+			Condition: condition,
+			Optional:  true,
+		}
+
+		postgres.DeleteForced(ctx, &dependency)
+	}
+
+	for _, target := range modInfo.Targets {
+		// TODO: ModArch should have VersionID and Platform as primary key
+		dbModArch := postgres.ModArch{
+			ModVersionID: dbVersion.ID,
+			Platform:     target,
+		}
+
+		postgres.DeleteForced(ctx, &dbModArch)
+	}
+
+	postgres.DeleteForced(ctx, &dbVersion)
+
+	storage.DeleteMod(ctx, mod.ID, mod.Name, dbVersion.ID)
+	for _, target := range modInfo.Targets {
+		storage.DeleteModPlatform(ctx, mod.ID, mod.Name, dbVersion.ID, target)
+	}
 }
