@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -20,10 +21,21 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+// TODO UE5: WindowsNoEditor -> Windows
+var AllowedTargets = []string{"WindowsNoEditor", "WindowsServer", "LinuxServer"}
+
 type ModObject struct {
 	Path string `json:"path"`
 	Type string `json:"type"`
 }
+
+type ModType int
+
+const (
+	DataJson            ModType = iota
+	UEPlugin                    = 1
+	MultiTargetUEPlugin         = 2
+)
 
 type ModInfo struct {
 	Dependencies         map[string]string                     `json:"dependencies"`
@@ -36,6 +48,8 @@ type ModInfo struct {
 	Objects              []ModObject                           `json:"objects"`
 	Metadata             []map[string]map[string][]interface{} `json:"-"`
 	Size                 int64                                 `json:"-"`
+	Targets              []string                              `json:"-"`
+	Type                 ModType                               `json:"-"`
 }
 
 var (
@@ -78,7 +92,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			dataFile = v
 			break
 		}
-		if v.Name == "WindowsNoEditor/"+modReference+".uplugin" {
+		if v.Name == modReference+".uplugin" {
 			uPlugin = v
 			break
 		}
@@ -101,7 +115,16 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	}
 
 	if modInfo == nil {
-		return nil, errors.New("missing WindowsNoEditor/" + modReference + ".uplugin or data.json")
+
+		// Neither data.json nor .uplugin found, try multi-target .uplugin
+		modInfo, err = validateMultiTargetPlugin(archive, withValidation, modReference)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if modInfo == nil {
+		return nil, errors.New("missing " + modReference + ".uplugin or data.json")
 	}
 
 	if withMetadata {
@@ -244,6 +267,8 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 		}
 	}
 
+	modInfo.Type = DataJson
+
 	return &modInfo, nil
 }
 
@@ -357,5 +382,81 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 		return nil, errors.New(uPluginFile.Name + " doesn't contain SML as a dependency.")
 	}
 
+	modInfo.Type = UEPlugin
+
 	return &modInfo, nil
+}
+
+func validateMultiTargetPlugin(archive *zip.Reader, withValidation bool, modReference string) (*ModInfo, error) {
+	var targets []string
+	var uPluginFiles []*zip.File
+	for _, file := range archive.File {
+		if path.Base(file.Name) == modReference+".uplugin" && path.Dir(file.Name) != "." {
+			targets = append(targets, path.Dir(file.Name))
+			uPluginFiles = append(uPluginFiles, file)
+		}
+	}
+
+	if withValidation {
+		for _, target := range targets {
+			found := false
+			for _, allowedTarget := range AllowedTargets {
+				if target == allowedTarget {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return nil, errors.New("multi-target plugin contains invalid target: " + target)
+			}
+		}
+
+		for _, file := range archive.File {
+			found := false
+			for _, target := range targets {
+				if strings.HasPrefix(file.Name, target+"/") {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return nil, errors.New("multi-target plugin contains file outside of target directories: " + file.Name)
+			}
+		}
+	}
+
+	if len(uPluginFiles) == 0 {
+		return nil, errors.New("multi-target plugin doesn't contain any .uplugin files")
+	}
+
+	if withValidation {
+		var lastData []byte
+		for _, uPluginFile := range uPluginFiles {
+			file, err := uPluginFile.Open()
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to open .uplugin file")
+			}
+			data, err := io.ReadAll(file)
+			file.Close()
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to read .uplugin file")
+			}
+
+			if lastData != nil && !bytes.Equal(lastData, data) {
+				return nil, errors.New("multi-target plugin contains different .uplugin files")
+			}
+			lastData = data
+		}
+	}
+
+	// All the .uplugin files should be the same at this point (assuming validation is enabled)
+	modInfo, err := validateUPluginJSON(archive, uPluginFiles[0], withValidation, modReference)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to validate multi-target plugin")
+	}
+
+	modInfo.Targets = targets
+	modInfo.Type = MultiTargetUEPlugin
+
+	return modInfo, nil
 }
