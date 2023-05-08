@@ -67,6 +67,8 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		ModID:        mod.ID,
 		Stability:    string(version.Stability),
 		ModReference: &modInfo.ModReference,
+		Size:         &modInfo.Size,
+		Hash:         &modInfo.Hash,
 		VersionMajor: &versionMajor,
 		VersionMinor: &versionMinor,
 		VersionPatch: &versionPatch,
@@ -162,8 +164,6 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	postgres.Save(ctx, &dbVersion)
 	postgres.Save(ctx, &mod)
 
-	storage.DeleteVersion(ctx, mod.ID, mod.Name, versionID)
-
 	if autoApproved {
 		mod := postgres.GetModByID(ctx, dbVersion.ModID)
 		now := time.Now()
@@ -171,8 +171,6 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &mod)
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
-		storage.DeleteModArch(ctx, mod.ID, mod.Name, versionID, "Combined")
-		storage.DeleteModArch(ctx, mod.ID, mod.Name, dbVersion.Version, "Combined")
 	} else {
 		l.Info().Msg("Submitting version job for virus scan")
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)

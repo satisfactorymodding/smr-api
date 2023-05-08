@@ -38,10 +38,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	log.Info().Msgf("starting virus scan of mod %s version %s", task.ModID, task.VersionID)
 
 	version := postgres.GetVersion(ctx, task.VersionID)
-	mod := postgres.GetModByID(ctx, version.ModID)
-
-	modArch := postgres.GetModArchByPlatform(ctx, task.VersionID, "Combined")
-	link := storage.GenerateDownloadLink(modArch.Key)
+	link := storage.GenerateDownloadLink(version.Key)
 
 	response, _ := http.Get(link)
 
@@ -91,10 +88,6 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), version)
 	}
-
-	go storage.DeleteModArch(ctx, mod.ID, mod.Name, version.ID, "Combined")
-	go storage.DeleteModArch(ctx, mod.ID, mod.Name, version.Version, "Combined")
-	go postgres.Delete(ctx, modArch)
 
 	return nil
 }

@@ -402,30 +402,28 @@ func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID
 		return false
 	}
 
-	ModPlatforms := []string{"Combined", "WindowsNoEditor", "WindowsServer", "LinuxServer"}
+	ModPlatforms := []string{"WindowsNoEditor", "WindowsServer", "LinuxServer"}
 	cleanName := cleanModName(name)
 	bufPlatform := bytes.NewBuffer(body)
 
 	for _, ModPlatform := range ModPlatforms {
-		if ModPlatform != "Combined" {
-			bufPlatform = new(bytes.Buffer)
-			zipWriter := zip.NewWriter(bufPlatform)
+		bufPlatform = new(bytes.Buffer)
+		zipWriter := zip.NewWriter(bufPlatform)
 
-			for _, file := range zipReader.File {
-				if strings.HasPrefix(file.Name, ".pdb") || strings.HasPrefix(file.Name, ".debug") || !strings.Contains(file.Name, ModPlatform) {
-					continue
-				}
-
-				err = WriteZipFile(ctx, file, ModPlatform, zipWriter)
-
-				if err != nil {
-					log.Ctx(ctx).Err(err).Msg("Failed to write zip to " + ModPlatform + " smod")
-					return false
-				}
+		for _, file := range zipReader.File {
+			if strings.HasPrefix(file.Name, ".pdb") || strings.HasPrefix(file.Name, ".debug") || !strings.Contains(file.Name, ModPlatform) {
+				continue
 			}
 
-			zipWriter.Close()
+			err = WriteZipFile(ctx, file, ModPlatform, zipWriter)
+
+			if err != nil {
+				log.Ctx(ctx).Err(err).Msg("Failed to write zip to " + ModPlatform + " smod")
+				return false
+			}
 		}
+
+		zipWriter.Close()
 
 		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+ModPlatform+"-"+modVersion)
 
