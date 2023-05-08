@@ -319,8 +319,34 @@ func (r *getVersionsResolver) Count(ctx context.Context, _ *generated.GetVersion
 
 type versionResolver struct{ *Resolver }
 
-func (r *versionResolver) Link(_ context.Context, obj *generated.Version) (string, error) {
-	return "/v1/version/" + obj.ID + "/download", nil
+func findWindowsTarget(obj *generated.Version) *generated.VersionTarget {
+	var windowsTarget *generated.VersionTarget
+	for _, target := range obj.Targets {
+		if target.TargetName == "WindowsNoEditor" {
+			windowsTarget = target
+			break
+		}
+		// TODO UE5: Also check for Windows target
+		// if target.TargetName == "Windows" {
+		//  	windowsTarget = target
+		//  	break
+		// }
+	}
+	return windowsTarget
+}
+
+func (r *versionResolver) Link(ctx context.Context, obj *generated.Version) (string, error) {
+	wrapper, _ := WrapQueryTrace(ctx, "Version.link")
+	defer wrapper.end()
+
+	link := "/v1/version/" + obj.ID + "/download"
+
+	windowsTarget := findWindowsTarget(obj)
+	if windowsTarget != nil {
+		link, _ = r.VersionTarget().Link(ctx, windowsTarget)
+	}
+
+	return link, nil
 }
 
 func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*generated.Mod, error) {
@@ -328,6 +354,50 @@ func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*gen
 	defer wrapper.end()
 
 	return DBModToGenerated(postgres.GetModByID(newCtx, obj.ModID)), nil
+}
+
+func (r *versionResolver) Hash(ctx context.Context, obj *generated.Version) (*string, error) {
+	wrapper, _ := WrapQueryTrace(ctx, "Version.hash")
+	defer wrapper.end()
+
+	hash := ""
+
+	windowsTarget := findWindowsTarget(obj)
+	if windowsTarget == nil {
+		if obj.Hash == nil {
+			return nil, nil
+		}
+		hash = *obj.Hash
+	} else {
+		if windowsTarget.Hash == nil {
+			return nil, nil
+		}
+		hash = *windowsTarget.Hash
+	}
+
+	return &hash, nil
+}
+
+func (r *versionResolver) Size(ctx context.Context, obj *generated.Version) (*int, error) {
+	wrapper, _ := WrapQueryTrace(ctx, "Version.size")
+	defer wrapper.end()
+
+	size := 0
+
+	windowsTarget := findWindowsTarget(obj)
+	if windowsTarget == nil {
+		if obj.Size == nil {
+			return nil, nil
+		}
+		size = *obj.Size
+	} else {
+		if windowsTarget.Size == nil {
+			return nil, nil
+		}
+		size = *windowsTarget.Size
+	}
+
+	return &size, nil
 }
 
 var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config{
