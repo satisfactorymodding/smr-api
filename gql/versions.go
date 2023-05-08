@@ -123,7 +123,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	}
 
 	// TODO: Should legacy plugins be supported?
-	var targets []*postgres.VersionTarget
+	targets := make([]*postgres.VersionTarget, 0)
 
 	for _, target := range modInfo.Targets {
 		dbVersionTarget := &postgres.VersionTarget{

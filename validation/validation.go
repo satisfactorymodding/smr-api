@@ -32,7 +32,7 @@ type ModObject struct {
 type ModType int
 
 const (
-	DataJson            ModType = iota
+	DataJSON            ModType = iota
 	UEPlugin                    = 1
 	MultiTargetUEPlugin         = 2
 )
@@ -47,8 +47,8 @@ type ModInfo struct {
 	SMLVersion           string                                `json:"sml_version"`
 	Objects              []ModObject                           `json:"objects"`
 	Metadata             []map[string]map[string][]interface{} `json:"-"`
-	Size                 int64                                 `json:"-"`
 	Targets              []string                              `json:"-"`
+	Size                 int64                                 `json:"-"`
 	Type                 ModType                               `json:"-"`
 }
 
@@ -115,7 +115,6 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	}
 
 	if modInfo == nil {
-
 		// Neither data.json nor .uplugin found, try multi-target .uplugin
 		modInfo, err = validateMultiTargetPlugin(archive, withValidation, modReference)
 		if err != nil {
@@ -267,7 +266,7 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 		}
 	}
 
-	modInfo.Type = DataJson
+	modInfo.Type = DataJSON
 
 	return &modInfo, nil
 }
