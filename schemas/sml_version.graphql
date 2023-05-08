@@ -8,13 +8,19 @@ type SMLVersion {
     satisfactory_version: Int!
     stability: VersionStabilities!
     link: String!
-    arch: [SMLArch]!
+    targets: [SMLVersionTarget]!
     changelog: String!
     date: Date!
     bootstrap_version: String
 
     updated_at: Date!
     created_at: Date!
+}
+
+type SMLVersionTarget {
+    VersionID: SMLVersionID!
+    targetName: String!
+    link: String!
 }
 
 type GetSMLVersions {
@@ -37,7 +43,7 @@ input NewSMLVersion {
     satisfactory_version: Int!
     stability: VersionStabilities!
     link: String!
-    arch: [NewSMLArch!]!
+    targets: [NewSMLVersionTarget!]!
     changelog: String!
     date: Date!
     bootstrap_version: String
@@ -48,10 +54,20 @@ input UpdateSMLVersion {
     satisfactory_version: Int
     stability: VersionStabilities
     link: String
-    arch: [UpdateSMLArch]!
+    targets: [UpdateSMLVersionTarget]!
     changelog: String
     date: Date
     bootstrap_version: String
+}
+
+input NewSMLVersionTarget {
+    targetName: String!
+    link: String!
+}
+
+input UpdateSMLVersionTarget {
+    targetName: String!
+    link: String!
 }
 
 input SMLVersionFilter {

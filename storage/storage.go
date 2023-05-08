@@ -289,15 +289,15 @@ func DeleteMod(ctx context.Context, modID string, name string, versionID string)
 	return true
 }
 
-func DeleteModPlatform(ctx context.Context, modID string, name string, versionID string, platform string) bool {
+func DeleteModTarget(ctx context.Context, modID string, name string, versionID string, target string) bool {
 	if storage == nil {
 		return false
 	}
 
 	cleanName := cleanModName(name)
-	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+platform+"-"+versionID)
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+target+"-"+versionID)
 
-	log.Info().Str("key", key).Msg("deleting mod platform")
+	log.Info().Str("key", key).Msg("deleting mod target")
 	if err := storage.Delete(key); err != nil {
 		log.Err(err).Msg("failed to delete version link")
 		return false
@@ -366,7 +366,7 @@ func EncodeName(name string) string {
 	return result
 }
 
-func SeparateModPlatform(ctx context.Context, body []byte, modID, name, modVersion, platform string) (bool, string, string, int64) {
+func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion, target string) (bool, string, string, int64) {
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
 		return false, "", "", 0
@@ -378,14 +378,14 @@ func SeparateModPlatform(ctx context.Context, body []byte, modID, name, modVersi
 	zipWriter := zip.NewWriter(buf)
 
 	for _, file := range zipReader.File {
-		if !strings.HasPrefix(file.Name, platform+"/") && file.Name != platform+"/" {
+		if !strings.HasPrefix(file.Name, target+"/") && file.Name != target+"/" {
 			continue
 		}
 
-		err = copyModFileToArchZip(file, zipWriter, strings.TrimPrefix(file.Name, platform+"/"))
+		err = copyModFileToArchZip(file, zipWriter, strings.TrimPrefix(file.Name, target+"/"))
 
 		if err != nil {
-			log.Err(err).Msg("failed to add file to " + platform + " archive")
+			log.Err(err).Msg("failed to add file to " + target + " archive")
 			return false, "", "", 0
 		}
 
@@ -393,11 +393,11 @@ func SeparateModPlatform(ctx context.Context, body []byte, modID, name, modVersi
 
 	zipWriter.Close()
 
-	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+platform+"-"+modVersion)
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+target+"-"+modVersion)
 
 	_, err = storage.Put(ctx, key, bytes.NewReader(buf.Bytes()))
 	if err != nil {
-		log.Err(err).Msg("failed to save " + platform + " archive")
+		log.Err(err).Msg("failed to save " + target + " archive")
 		return false, "", "", 0
 	}
 

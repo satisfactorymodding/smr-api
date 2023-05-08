@@ -123,32 +123,34 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	}
 
 	// TODO: Should legacy plugins be supported?
-	var modArchs []*postgres.ModArch
+	var targets []*postgres.VersionTarget
 
 	for _, target := range modInfo.Targets {
-		dbModArch, _ := postgres.CreateModArch(ctx, &postgres.ModArch{
-			ModVersionID: dbVersion.ID,
-			Platform:     target,
-		})
+		dbVersionTarget := &postgres.VersionTarget{
+			VersionID:  dbVersion.ID,
+			TargetName: target,
+		}
 
-		modArchs = append(modArchs, dbModArch)
+		postgres.Save(ctx, dbVersionTarget)
+
+		targets = append(targets, dbVersionTarget)
 	}
 
 	separateSuccess := true
-	for _, modArch := range modArchs {
-		log.Info().Str("modArch", modArch.Platform).Str("mod", mod.Name).Str("version", dbVersion.Version).Msg("separating mod")
-		success, key, hash, size := storage.SeparateModPlatform(ctx, fileData, mod.ID, mod.Name, dbVersion.Version, modArch.Platform)
+	for _, target := range targets {
+		log.Info().Str("target", target.TargetName).Str("mod", mod.Name).Str("version", dbVersion.Version).Msg("separating mod")
+		success, key, hash, size := storage.SeparateModTarget(ctx, fileData, mod.ID, mod.Name, dbVersion.Version, target.TargetName)
 
 		if !success {
 			separateSuccess = false
 			break
 		}
 
-		modArch.Key = key
-		modArch.Hash = hash
-		modArch.Size = size
+		target.Key = key
+		target.Hash = hash
+		target.Size = size
 
-		postgres.Save(ctx, modArch)
+		postgres.Save(ctx, target)
 	}
 
 	if !separateSuccess {
@@ -211,19 +213,18 @@ func removeMod(ctx context.Context, modInfo *validation.ModInfo, mod *postgres.M
 	}
 
 	for _, target := range modInfo.Targets {
-		// TODO: ModArch should have VersionID and Platform as primary key
-		dbModArch := postgres.ModArch{
-			ModVersionID: dbVersion.ID,
-			Platform:     target,
+		dbVersionTarget := postgres.VersionTarget{
+			VersionID:  dbVersion.ID,
+			TargetName: target,
 		}
 
-		postgres.DeleteForced(ctx, &dbModArch)
+		postgres.DeleteForced(ctx, &dbVersionTarget)
 	}
 
 	postgres.DeleteForced(ctx, &dbVersion)
 
 	storage.DeleteMod(ctx, mod.ID, mod.Name, dbVersion.ID)
 	for _, target := range modInfo.Targets {
-		storage.DeleteModPlatform(ctx, mod.ID, mod.Name, dbVersion.ID, target)
+		storage.DeleteModTarget(ctx, mod.ID, mod.Name, dbVersion.ID, target)
 	}
 }

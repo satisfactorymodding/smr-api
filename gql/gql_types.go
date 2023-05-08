@@ -85,7 +85,7 @@ func DBVersionToGenerated(version *postgres.Version) *generated.Version {
 		Changelog:  version.Changelog,
 		Downloads:  int(version.Downloads),
 		Stability:  generated.VersionStabilities(version.Stability),
-		Arch:       DBModArchsToGeneratedSlice(version.Arch),
+		Targets:    DBVersionTargetsToGeneratedSlice(version.Targets),
 		Approved:   version.Approved,
 		UpdatedAt:  version.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:  version.CreatedAt.Format(time.RFC3339Nano),
@@ -134,7 +134,7 @@ func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) *generated.SMLVers
 		BootstrapVersion:    smlVersion.BootstrapVersion,
 		Stability:           generated.VersionStabilities(smlVersion.Stability),
 		Link:                smlVersion.Link,
-		Arch:                DBSMLArchsToGeneratedSlice(smlVersion.Arch),
+		Targets:             DBSMLVersionTargetToGeneratedSlice(smlVersion.Targets),
 		Changelog:           smlVersion.Changelog,
 		Date:                smlVersion.Date.Format(time.RFC3339Nano),
 		UpdatedAt:           smlVersion.UpdatedAt.Format(time.RFC3339Nano),
@@ -211,47 +211,46 @@ func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
 	return converted
 }
 
-func DBModArchToGenerated(modArch *postgres.ModArch) *generated.ModArch {
-	if modArch == nil {
+func DBVersionTargetToGenerated(versionTarget *postgres.VersionTarget) *generated.VersionTarget {
+	if versionTarget == nil {
 		return nil
 	}
 
-	size := int(modArch.Size)
+	hash := versionTarget.Hash
+	size := int(versionTarget.Size)
 
-	return &generated.ModArch{
-		ID:           modArch.ID,
-		ModVersionID: modArch.ModVersionID,
-		Platform:     modArch.Platform,
-		Hash:         &modArch.Hash,
-		Size:         &size,
+	return &generated.VersionTarget{
+		VersionID:  versionTarget.VersionID,
+		TargetName: versionTarget.TargetName,
+		Hash:       &hash,
+		Size:       &size,
 	}
 }
 
-func DBModArchsToGeneratedSlice(modArchs []postgres.ModArch) []*generated.ModArch {
-	converted := make([]*generated.ModArch, len(modArchs))
-	for i, modArch := range modArchs {
-		converted[i] = DBModArchToGenerated(&modArch)
+func DBVersionTargetsToGeneratedSlice(versionTargets []postgres.VersionTarget) []*generated.VersionTarget {
+	converted := make([]*generated.VersionTarget, len(versionTargets))
+	for i, versionTarget := range versionTargets {
+		converted[i] = DBVersionTargetToGenerated(&versionTarget)
 	}
 	return converted
 }
 
-func DBSMLArchToGenerated(smlArch *postgres.SMLArch) *generated.SMLArch {
-	if smlArch == nil {
+func DBSMLVersionTargetToGenerated(smlVersionTarget *postgres.SMLVersionTarget) *generated.SMLVersionTarget {
+	if smlVersionTarget == nil {
 		return nil
 	}
 
-	return &generated.SMLArch{
-		ID:           smlArch.ID,
-		SMLVersionID: smlArch.SMLVersionID,
-		Platform:     smlArch.Platform,
-		Link:         smlArch.Link,
+	return &generated.SMLVersionTarget{
+		VersionID:  smlVersionTarget.VersionID,
+		TargetName: smlVersionTarget.TargetName,
+		Link:       smlVersionTarget.Link,
 	}
 }
 
-func DBSMLArchsToGeneratedSlice(smlLinks []postgres.SMLArch) []*generated.SMLArch {
-	converted := make([]*generated.SMLArch, len(smlLinks))
-	for i, smlArch := range smlLinks {
-		converted[i] = DBSMLArchToGenerated(&smlArch)
+func DBSMLVersionTargetToGeneratedSlice(smlLinks []postgres.SMLVersionTarget) []*generated.SMLVersionTarget {
+	converted := make([]*generated.SMLVersionTarget, len(smlLinks))
+	for i, smlVersionTarget := range smlLinks {
+		converted[i] = DBSMLVersionTargetToGenerated(&smlVersionTarget)
 	}
 	return converted
 }

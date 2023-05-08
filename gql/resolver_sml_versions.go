@@ -40,20 +40,12 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 
 	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
 
-	for _, smlArch := range smlVersion.Arch {
-		dbSMLArchs := &postgres.SMLArch{
-			ID:           util.GenerateUniqueID(),
-			SMLVersionID: resultSMLVersion.ID,
-			Platform:     smlArch.Platform,
-			Link:         smlArch.Link,
-		}
-
-		resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArchs)
-		if err != nil {
-			return nil, err
-		}
-
-		DBSMLArchToGenerated(resultSMLArch)
+	for _, smlVersionTarget := range smlVersion.Targets {
+		postgres.Save(newCtx, &postgres.SMLVersionTarget{
+			VersionID:  resultSMLVersion.ID,
+			TargetName: smlVersionTarget.TargetName,
+			Link:       smlVersionTarget.Link,
+		})
 	}
 
 	if err != nil {
@@ -86,41 +78,28 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	SetStringINNOE(smlVersion.Changelog, &dbSMLVersion.Changelog)
 	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
 
-	dbSMLArch := postgres.GetSMLArchBySMLID(newCtx, smlVersionID)
+	dbSMLTargets := postgres.GetSMLVersionTargets(newCtx, smlVersionID)
 
-	if len(dbSMLArch) == len(smlVersion.Arch) {
-		for i, smlArch := range smlVersion.Arch {
-			SetStringINNOE(&smlArch.Platform, &dbSMLArch[i].Platform)
-			SetStringINNOE(&smlArch.Link, &dbSMLArch[i].Link)
+	for _, dbSMLTarget := range dbSMLTargets {
+		found := false
 
-			postgres.Save(newCtx, dbSMLArch)
-		}
-	} else {
-		for _, smlArch := range dbSMLVersion.Arch {
-			dbSMLArch := postgres.GetSMLArchBySMLID(newCtx, smlVersionID)
-
-			if dbSMLVersion == nil {
-				return nil, errors.New("smlArch not found" + smlArch.Platform)
+		for _, smlTarget := range smlVersion.Targets {
+			if dbSMLTarget.TargetName == smlTarget.TargetName {
+				found = true
 			}
-
-			postgres.Delete(newCtx, &dbSMLArch)
 		}
 
-		for _, smlArch := range smlVersion.Arch {
-			dbSMLArch := &postgres.SMLArch{
-				ID:           util.GenerateUniqueID(),
-				SMLVersionID: smlVersionID,
-				Platform:     smlArch.Platform,
-				Link:         smlArch.Link,
-			}
-
-			resultSMLArch, err := postgres.CreateSMLArch(newCtx, dbSMLArch)
-			if err != nil {
-				return nil, err
-			}
-
-			DBSMLArchToGenerated(resultSMLArch)
+		if !found {
+			postgres.Delete(ctx, &dbSMLTargets)
 		}
+	}
+
+	for _, smlTarget := range smlVersion.Targets {
+		postgres.Save(newCtx, &postgres.SMLVersionTarget{
+			VersionID:  smlVersionID,
+			TargetName: smlTarget.TargetName,
+			Link:       smlTarget.Link,
+		})
 	}
 
 	postgres.Save(newCtx, &dbSMLVersion)
@@ -138,14 +117,10 @@ func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID st
 		return false, errors.New("smlVersion not found")
 	}
 
-	for _, smlArch := range dbSMLVersion.Arch {
-		dbSMLArch := postgres.GetSMLArch(newCtx, smlArch.ID)
+	dbSMLVersionTargets := postgres.GetSMLVersionTargets(newCtx, smlVersionID)
 
-		if dbSMLVersion == nil {
-			return false, errors.New("smlArch not found")
-		}
-
-		postgres.Delete(newCtx, &dbSMLArch)
+	for _, dbSMLVersionTarget := range dbSMLVersionTargets {
+		postgres.Delete(newCtx, &dbSMLVersionTarget)
 	}
 
 	postgres.Delete(newCtx, &dbSMLVersion)
