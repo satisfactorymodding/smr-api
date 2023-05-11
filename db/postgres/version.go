@@ -268,7 +268,7 @@ func GetVersionTarget(ctx context.Context, versionID string, target string) *Ver
 	}
 
 	var versionTarget VersionTarget
-	DBCtx(ctx).First(&versionTarget, "version_id = ? AND target = ?", versionID, target)
+	DBCtx(ctx).First(&versionTarget, "version_id = ? AND target_name = ?", versionID, target)
 
 	if versionTarget.VersionID == "" {
 		return nil
