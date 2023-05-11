@@ -247,9 +247,9 @@ func DBSMLVersionTargetToGenerated(smlVersionTarget *postgres.SMLVersionTarget) 
 	}
 }
 
-func DBSMLVersionTargetToGeneratedSlice(smlLinks []postgres.SMLVersionTarget) []*generated.SMLVersionTarget {
-	converted := make([]*generated.SMLVersionTarget, len(smlLinks))
-	for i, smlVersionTarget := range smlLinks {
+func DBSMLVersionTargetToGeneratedSlice(smlVersionTargets []postgres.SMLVersionTarget) []*generated.SMLVersionTarget {
+	converted := make([]*generated.SMLVersionTarget, len(smlVersionTargets))
+	for i, smlVersionTarget := range smlVersionTargets {
 		converted[i] = DBSMLVersionTargetToGenerated(&smlVersionTarget)
 	}
 	return converted

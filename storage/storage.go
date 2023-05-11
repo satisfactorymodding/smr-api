@@ -299,7 +299,7 @@ func DeleteModTarget(ctx context.Context, modID string, name string, versionID s
 
 	log.Info().Str("key", key).Msg("deleting mod target")
 	if err := storage.Delete(key); err != nil {
-		log.Err(err).Msg("failed to delete version link")
+		log.Err(err).Msg("failed to delete version target")
 		return false
 	}
 
