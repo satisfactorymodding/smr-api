@@ -23,20 +23,18 @@ import (
 	"github.com/satisfactorymodding/smr-api/util/converter"
 )
 
-func ModReferenceBanned(modReference string) bool {
-	disallowedModReferences := [...]string{
-		"Satisfactory",
-		"FactoryGame",
-		"SML",
-		"SatisfactoryModLoader",
-		"ExampleMod",
-		"DocMod",
-	}
+var DisallowedModReferences = map[string]struct{}{
+	"satisfactory":          {},
+	"factorygame":           {},
+	"sml":                   {},
+	"satisfactorymodloader": {},
+	"examplemod":            {},
+	"docmod":                {},
+}
 
-	for _, entry := range disallowedModReferences {
-		if strings.EqualFold(modReference, entry) {
-			return true
-		}
+func ModReferenceBanned(modReference string) bool {
+	if _, found := DisallowedModReferences[strings.ToLower(modReference)]; found {
+		return true
 	}
 	return false
 }
