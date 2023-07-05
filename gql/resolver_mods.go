@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -22,6 +23,24 @@ import (
 	"github.com/satisfactorymodding/smr-api/util/converter"
 )
 
+func ModReferenceBanned(modReference string) bool {
+	disallowedModReferences := [...]string{
+		"Satisfactory",
+		"FactoryGame",
+		"SML",
+		"SatisfactoryModLoader",
+		"ExampleMod",
+		"DocMod",
+	}
+
+	for _, entry := range disallowedModReferences {
+		if strings.EqualFold(modReference, entry) {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) (*generated.Mod, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "createMod")
 	defer wrapper.end()
@@ -29,6 +48,10 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&mod); err != nil {
 		return nil, errors.Wrap(err, "validation failed")
+	}
+
+	if ModReferenceBanned(mod.ModReference) {
+		return nil, errors.New("using this mod reference is not allowed")
 	}
 
 	if postgres.GetModByReference(newCtx, mod.ModReference) != nil {
