@@ -9,7 +9,7 @@ WHERE EXISTS (
         version_targets.key = versions.key AND 
         version_targets.hash = versions.hash AND 
         version_targets.size = versions.size
-    )
+    );
 
 --SML Targets--
 DELETE FROM sml_version_targets
@@ -20,4 +20,4 @@ WHERE EXISTS (
         sml_version_targets.version_id = sml_versions.id AND 
         sml_version_targets.platform = 'Windows' AND 
         sml_version_targets.link = sml_versions.link
-    )
+    );
