@@ -260,7 +260,7 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 		}
 	}
 
-	return query.Debug()
+	return query
 }
 
 func GetModByIDOrReference(ctx context.Context, modIDOrReference string) *Mod {
