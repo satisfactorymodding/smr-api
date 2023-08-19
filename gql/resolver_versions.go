@@ -322,15 +322,10 @@ type versionResolver struct{ *Resolver }
 func findWindowsTarget(obj *generated.Version) *generated.VersionTarget {
 	var windowsTarget *generated.VersionTarget
 	for _, target := range obj.Targets {
-		if target.TargetName == "WindowsNoEditor" {
+		if target.TargetName == "Windows" {
 			windowsTarget = target
 			break
 		}
-		// TODO UE5: Also check for Windows target
-		// if target.TargetName == "Windows" {
-		//  	windowsTarget = target
-		//  	break
-		// }
 	}
 	return windowsTarget
 }

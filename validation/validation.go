@@ -21,8 +21,7 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-// TODO UE5: WindowsNoEditor -> Windows
-var AllowedTargets = []string{"WindowsNoEditor", "WindowsServer", "LinuxServer"}
+var AllowedTargets = []string{"Windows", "WindowsServer", "LinuxServer"}
 
 type ModObject struct {
 	Path string `json:"path"`
