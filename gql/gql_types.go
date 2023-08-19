@@ -221,7 +221,7 @@ func DBVersionTargetToGenerated(versionTarget *postgres.VersionTarget) *generate
 
 	return &generated.VersionTarget{
 		VersionID:  versionTarget.VersionID,
-		TargetName: versionTarget.TargetName,
+		TargetName: generated.TargetName(versionTarget.TargetName),
 		Hash:       &hash,
 		Size:       &size,
 	}
@@ -242,7 +242,7 @@ func DBSMLVersionTargetToGenerated(smlVersionTarget *postgres.SMLVersionTarget) 
 
 	return &generated.SMLVersionTarget{
 		VersionID:  smlVersionTarget.VersionID,
-		TargetName: smlVersionTarget.TargetName,
+		TargetName: generated.TargetName(smlVersionTarget.TargetName),
 		Link:       smlVersionTarget.Link,
 	}
 }

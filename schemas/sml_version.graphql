@@ -19,7 +19,7 @@ type SMLVersion {
 
 type SMLVersionTarget {
     VersionID: SMLVersionID!
-    targetName: String!
+    targetName: TargetName!
     link: String!
 }
 
@@ -61,12 +61,12 @@ input UpdateSMLVersion {
 }
 
 input NewSMLVersionTarget {
-    targetName: String!
+    targetName: TargetName!
     link: String!
 }
 
 input UpdateSMLVersionTarget {
-    targetName: String!
+    targetName: TargetName!
     link: String!
 }
 

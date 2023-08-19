@@ -43,7 +43,7 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 	for _, smlVersionTarget := range smlVersion.Targets {
 		postgres.Save(newCtx, &postgres.SMLVersionTarget{
 			VersionID:  resultSMLVersion.ID,
-			TargetName: smlVersionTarget.TargetName,
+			TargetName: string(smlVersionTarget.TargetName),
 			Link:       smlVersionTarget.Link,
 		})
 	}
@@ -84,7 +84,7 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 		found := false
 
 		for _, smlTarget := range smlVersion.Targets {
-			if dbSMLTarget.TargetName == smlTarget.TargetName {
+			if dbSMLTarget.TargetName == string(smlTarget.TargetName) {
 				found = true
 			}
 		}
@@ -97,7 +97,7 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	for _, smlTarget := range smlVersion.Targets {
 		postgres.Save(newCtx, &postgres.SMLVersionTarget{
 			VersionID:  smlVersionID,
-			TargetName: smlTarget.TargetName,
+			TargetName: string(smlTarget.TargetName),
 			Link:       smlTarget.Link,
 		})
 	}

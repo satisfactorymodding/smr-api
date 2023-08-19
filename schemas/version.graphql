@@ -43,7 +43,7 @@ type Version {
 
 type VersionTarget {
     VersionID: VersionID!
-    targetName: String!
+    targetName: TargetName!
     link: String!
     size: Int
     hash: String

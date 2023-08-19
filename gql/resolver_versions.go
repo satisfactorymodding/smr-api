@@ -435,7 +435,7 @@ func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Versi
 type versionTargetResolver struct{ *Resolver }
 
 func (r *versionTargetResolver) Link(_ context.Context, obj *generated.VersionTarget) (string, error) {
-	return "/v1/version/" + obj.VersionID + "/" + obj.TargetName + "/download", nil
+	return "/v1/version/" + obj.VersionID + "/" + string(obj.TargetName) + "/download", nil
 }
 
 type getMyVersionsResolver struct{ *Resolver }
