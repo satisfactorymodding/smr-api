@@ -64,6 +64,30 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
+	dbSMLTargets := postgres.GetSMLVersionTargets(newCtx, smlVersionID)
+
+	for _, dbSMLTarget := range dbSMLTargets {
+		found := false
+
+		for _, smlTarget := range smlVersion.Targets {
+			if dbSMLTarget.TargetName == string(smlTarget.TargetName) {
+				found = true
+			}
+		}
+
+		if !found {
+			postgres.Delete(newCtx, &dbSMLTarget)
+		}
+	}
+
+	for _, smlTarget := range smlVersion.Targets {
+		postgres.Save(newCtx, &postgres.SMLVersionTarget{
+			VersionID:  smlVersionID,
+			TargetName: string(smlTarget.TargetName),
+			Link:       smlTarget.Link,
+		})
+	}
+
 	dbSMLVersion := postgres.GetSMLVersionByID(newCtx, smlVersionID)
 
 	if dbSMLVersion == nil {
@@ -77,30 +101,6 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	SetStringINNOE(smlVersion.Link, &dbSMLVersion.Link)
 	SetStringINNOE(smlVersion.Changelog, &dbSMLVersion.Changelog)
 	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
-
-	dbSMLTargets := postgres.GetSMLVersionTargets(newCtx, smlVersionID)
-
-	for _, dbSMLTarget := range dbSMLTargets {
-		found := false
-
-		for _, smlTarget := range smlVersion.Targets {
-			if dbSMLTarget.TargetName == string(smlTarget.TargetName) {
-				found = true
-			}
-		}
-
-		if !found {
-			postgres.Delete(ctx, &dbSMLTargets)
-		}
-	}
-
-	for _, smlTarget := range smlVersion.Targets {
-		postgres.Save(newCtx, &postgres.SMLVersionTarget{
-			VersionID:  smlVersionID,
-			TargetName: string(smlTarget.TargetName),
-			Link:       smlTarget.Link,
-		})
-	}
 
 	postgres.Save(newCtx, &dbSMLVersion)
 
