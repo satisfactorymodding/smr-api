@@ -87,7 +87,7 @@ type Version struct {
 	SMLVersion string `gorm:"type:varchar(16)"`
 	Version    string `gorm:"type:varchar(16)"`
 	ModID      string
-	Targets    []VersionTarget `gorm:"foreignKey:VersionID;preload:true"`
+	Targets    []VersionTarget `gorm:"foreignKey:VersionID"`
 	Hotness    uint
 	Downloads  uint
 	Denied     bool `gorm:"default:false;not null"`
@@ -120,7 +120,7 @@ type SMLVersion struct {
 	Stability           string `sql:"type:version_stability"`
 	Link                string
 	Changelog           string
-	Targets             []SMLVersionTarget `gorm:"foreignKey:VersionID;preload:true"`
+	Targets             []SMLVersionTarget `gorm:"foreignKey:VersionID"`
 	SatisfactoryVersion int
 }
 
