@@ -1,3 +1,4 @@
+-- Mod version targets --
 ALTER TABLE mod_archs RENAME TO version_targets;
 
 DROP INDEX idx_mod_arch_id;
@@ -15,6 +16,7 @@ ALTER TABLE version_targets
 
 ALTER TABLE sml_archs RENAME TO sml_version_targets;
 
+-- SML version targets --
 DROP INDEX idx_sml_archs_id;
 
 ALTER TABLE sml_version_targets

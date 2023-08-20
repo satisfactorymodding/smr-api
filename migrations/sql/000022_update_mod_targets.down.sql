@@ -1,3 +1,5 @@
+-- ID generation --
+-- This is not as random as the original ID, but it should be good enough --
 Create or replace function update_mod_platform_down_random_string(length integer) returns text as
 $$
 declare
@@ -15,6 +17,7 @@ begin
 end;
 $$ language plpgsql;
 
+-- Mod version targets --
 ALTER TABLE version_targets RENAME TO mod_archs;
 
 ALTER TABLE mod_archs
@@ -24,7 +27,6 @@ ALTER TABLE mod_archs
 ALTER TABLE mod_archs
     ADD COLUMN id varchar(14);
 
--- This is not as random as the original ID, but it should be good enough
 UPDATE mod_archs SET id = update_mod_platform_down_random_string(14) WHERE true;
 
 ALTER TABLE mod_archs
@@ -37,6 +39,7 @@ ALTER TABLE mod_archs
 
 CREATE INDEX IF NOT EXISTS idx_mod_arch_id ON mod_archs (mod_version_arch_id, platform);
 
+-- SML version targets --
 ALTER TABLE sml_version_targets RENAME TO sml_archs;
 
 ALTER TABLE sml_archs
@@ -46,7 +49,6 @@ ALTER TABLE sml_archs
 ALTER TABLE sml_archs
     ADD COLUMN id varchar(14);
 
--- This is not as random as the original ID, but it should be good enough
 UPDATE sml_archs SET id = update_mod_platform_down_random_string(14) WHERE true;
 
 ALTER TABLE sml_archs
