@@ -122,7 +122,10 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &dbVersion)
 	}
 
-	// TODO: Should legacy plugins be supported?
+	if modInfo.Type != validation.MultiTargetUEPlugin {
+		return nil, errors.New("mods must be in the multi-target format")
+	}
+
 	targets := make([]*postgres.VersionTarget, 0)
 
 	for _, target := range modInfo.Targets {
