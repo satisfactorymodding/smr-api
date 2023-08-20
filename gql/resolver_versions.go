@@ -334,14 +334,12 @@ func (r *versionResolver) Link(ctx context.Context, obj *generated.Version) (str
 	wrapper, _ := WrapQueryTrace(ctx, "Version.link")
 	defer wrapper.end()
 
-	link := "/v1/version/" + obj.ID + "/download"
-
 	windowsTarget := findWindowsTarget(obj)
 	if windowsTarget != nil {
-		link, _ = r.VersionTarget().Link(ctx, windowsTarget)
+		return r.VersionTarget().Link(ctx, windowsTarget)
 	}
 
-	return link, nil
+	return "/v1/version/" + obj.ID + "/download", nil
 }
 
 func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*generated.Mod, error) {
