@@ -6,7 +6,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
@@ -45,10 +44,8 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 	modInfo, err := validation.ExtractModInfo(ctx, fileData, true, true, mod.ModReference)
 	if err != nil {
-		spew.Dump(err)
-		l.Err(err).Msg("failed extracting mod info")
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		return nil, err
+		return nil, errors.Wrap(err, "failed extracting mod info")
 	}
 
 	if modInfo.ModReference != mod.ModReference {
