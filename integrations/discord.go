@@ -43,7 +43,7 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 		"embeds": []interface{}{
 			map[string]interface{}{
 				"title":       "**" + mod.Name + "**",
-				"url":         "https://ficsit.app/mod/" + mod.ID,
+				"url":         "https://ficsit.app/mod/" + mod.ModReference,
 				"color":       16750592,
 				"description": mod.ShortDescription,
 				"fields": []interface{}{
@@ -116,7 +116,7 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 		"embeds": []interface{}{
 			map[string]interface{}{
 				"title":       "**" + mod.Name + " v" + version.Version + "**",
-				"url":         "https://ficsit.app/mod/" + mod.ID + "/version/" + version.ID,
+				"url":         "https://ficsit.app/mod/" + mod.ModReference + "/version/" + version.ID,
 				"color":       16750592,
 				"description": "New Version Available!",
 				"fields": []interface{}{
