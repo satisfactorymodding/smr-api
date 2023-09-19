@@ -53,6 +53,11 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		return nil, errors.New("data.json mod_reference does not match mod reference")
 	}
 
+	if modInfo.Type != validation.UEPlugin {
+		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		return nil, errors.New("only UE Plugin mods are currently supported")
+	}
+
 	versionMajor := int(modInfo.Semver.Major())
 	versionMinor := int(modInfo.Semver.Minor())
 	versionPatch := int(modInfo.Semver.Patch())
@@ -119,44 +124,42 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		postgres.Save(ctx, &dbVersion)
 	}
 
-	if modInfo.Type != validation.MultiTargetUEPlugin {
-		return nil, errors.New("mods must be in the multi-target format")
-	}
+	if modInfo.Type == validation.MultiTargetUEPlugin {
+		targets := make([]*postgres.VersionTarget, 0)
 
-	targets := make([]*postgres.VersionTarget, 0)
+		for _, target := range modInfo.Targets {
+			dbVersionTarget := &postgres.VersionTarget{
+				VersionID:  dbVersion.ID,
+				TargetName: target,
+			}
 
-	for _, target := range modInfo.Targets {
-		dbVersionTarget := &postgres.VersionTarget{
-			VersionID:  dbVersion.ID,
-			TargetName: target,
+			postgres.Save(ctx, dbVersionTarget)
+
+			targets = append(targets, dbVersionTarget)
 		}
 
-		postgres.Save(ctx, dbVersionTarget)
+		separateSuccess := true
+		for _, target := range targets {
+			log.Info().Str("target", target.TargetName).Str("mod", mod.Name).Str("version", dbVersion.Version).Msg("separating mod")
+			success, key, hash, size := storage.SeparateModTarget(ctx, fileData, mod.ID, mod.Name, dbVersion.Version, target.TargetName)
 
-		targets = append(targets, dbVersionTarget)
-	}
+			if !success {
+				separateSuccess = false
+				break
+			}
 
-	separateSuccess := true
-	for _, target := range targets {
-		log.Info().Str("target", target.TargetName).Str("mod", mod.Name).Str("version", dbVersion.Version).Msg("separating mod")
-		success, key, hash, size := storage.SeparateModTarget(ctx, fileData, mod.ID, mod.Name, dbVersion.Version, target.TargetName)
+			target.Key = key
+			target.Hash = hash
+			target.Size = size
 
-		if !success {
-			separateSuccess = false
-			break
+			postgres.Save(ctx, target)
 		}
 
-		target.Key = key
-		target.Hash = hash
-		target.Size = size
+		if !separateSuccess {
+			removeMod(ctx, modInfo, mod, dbVersion)
 
-		postgres.Save(ctx, target)
-	}
-
-	if !separateSuccess {
-		removeMod(ctx, modInfo, mod, dbVersion)
-
-		return nil, errors.New("failed to separate mod")
+			return nil, errors.New("failed to separate mod")
+		}
 	}
 
 	success, key := storage.RenameVersion(ctx, mod.ID, mod.Name, versionID, modInfo.Version)
@@ -165,6 +168,18 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		removeMod(ctx, modInfo, mod, dbVersion)
 
 		return nil, errors.New("failed to upload mod")
+	}
+
+	if modInfo.Type == validation.UEPlugin {
+		dbVersionTarget := &postgres.VersionTarget{
+			VersionID:  dbVersion.ID,
+			TargetName: "Windows",
+			Key:        key,
+			Hash:       *dbVersion.Hash,
+			Size:       *dbVersion.Size,
+		}
+
+		postgres.Save(ctx, dbVersionTarget)
 	}
 
 	dbVersion.Key = key
@@ -220,6 +235,9 @@ func removeMod(ctx context.Context, modInfo *validation.ModInfo, mod *postgres.M
 
 		postgres.DeleteForced(ctx, &dbVersionTarget)
 	}
+
+	// For UEPlugin mods, a Windows target is created.
+	// However, that happens after the last possible call to this function, therefore we can ignore it
 
 	postgres.DeleteForced(ctx, &dbVersion)
 
