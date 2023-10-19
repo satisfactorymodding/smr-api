@@ -16,7 +16,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download dependencies
-        run: sudo apt update && sudo apt install -y build-essential libpng-dev
+        run: |
+          sudo apt update && sudo apt install -y build-essential libpng-dev protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
       - name: Go Generate
         run: go generate -tags tools -x ./...
@@ -39,7 +42,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download dependencies
-        run: sudo apt update && sudo apt install -y build-essential libpng-dev
+        run: |
+          sudo apt update && sudo apt install -y build-essential libpng-dev protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
       - name: Go Generate
         run: go generate -tags tools -x ./...
@@ -65,7 +71,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download dependencies
-        run: sudo apt update && sudo apt install -y build-essential libpng-dev
+        run: |
+          sudo apt update && sudo apt install -y build-essential libpng-dev protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
       - name: Go Generate
         run: go generate -tags tools -x ./...

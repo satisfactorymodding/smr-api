@@ -11,7 +11,7 @@ import (
 	"io"
 	"path"
 	"path/filepath"
-	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -147,8 +147,8 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			smlVersions := postgres.GetSMLVersions(ctx, nil)
 
 			// Sort decrementing by version
-			slices.SortFunc(smlVersions, func(a, b postgres.SMLVersion) int {
-				return semver.MustParse(b.Version).Compare(semver.MustParse(a.Version))
+			sort.Slice(smlVersions, func(a, b int) bool {
+				return semver.MustParse(smlVersions[a].Version).Compare(semver.MustParse(smlVersions[b].Version)) > 0
 			})
 
 			for _, version := range smlVersions {

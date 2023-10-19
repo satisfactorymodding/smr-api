@@ -100,7 +100,7 @@ type TinyVersion struct {
 	SMRModel
 	SMLVersion   string              `gorm:"type:varchar(16)"`
 	Version      string              `gorm:"type:varchar(16)"`
-	Arch         []VersionTarget     `gorm:"foreignKey:ModVersionID;preload:true"`
+	Targets      []VersionTarget     `gorm:"foreignKey:VersionID;preload:true"`
 	Dependencies []VersionDependency `gorm:"foreignKey:VersionID"`
 }
 

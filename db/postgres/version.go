@@ -96,7 +96,7 @@ func GetAllModVersionsWithDependencies(ctx context.Context, modID string) []Tiny
 	var versions []TinyVersion
 	DBCtx(ctx).Debug().
 		Preload("Dependencies").
-		Preload("Arch").
+		Preload("Targets").
 		Where("approved = ? AND denied = ?", true, false).
 		Find(&versions, "mod_id = ?", modID)
 

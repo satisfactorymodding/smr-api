@@ -59,7 +59,7 @@ type Version struct {
 	Downloads    uint                `json:"downloads,omitempty"`
 	Approved     bool                `json:"approved,omitempty"`
 	Dependencies []VersionDependency `json:"dependencies,omitempty"`
-	Arch         []VersionTarget     `json:"arch,omitempty"`
+	Targets      []VersionTarget     `json:"targets,omitempty"`
 }
 
 type VersionDependency struct {
@@ -85,11 +85,11 @@ func TinyVersionToVersion(version *postgres.TinyVersion) *Version {
 		}
 	}
 
-	var archs []VersionTarget
-	if version.Arch != nil {
-		archs = make([]VersionTarget, len(version.Arch))
-		for i, v := range version.Arch {
-			archs[i] = VersionArchToVersionArch(v)
+	var targets []VersionTarget
+	if version.Targets != nil {
+		targets = make([]VersionTarget, len(version.Targets))
+		for i, v := range version.Targets {
+			targets[i] = VersionTargetToVersionTarget(v)
 		}
 	}
 
@@ -100,7 +100,7 @@ func TinyVersionToVersion(version *postgres.TinyVersion) *Version {
 		Version:      version.Version,
 		SMLVersion:   version.SMLVersion,
 		Dependencies: dependencies,
-		Arch:         archs,
+		Targets:      targets,
 	}
 }
 
@@ -127,7 +127,7 @@ func VersionDependencyToVersionDependency(version postgres.VersionDependency) Ve
 	}
 }
 
-func VersionArchToVersionArch(version postgres.VersionTarget) VersionTarget {
+func VersionTargetToVersionTarget(version postgres.VersionTarget) VersionTarget {
 	return VersionTarget{
 		VersionID:  version.VersionID,
 		TargetName: version.TargetName,
