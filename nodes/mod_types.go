@@ -56,10 +56,10 @@ type Version struct {
 	Changelog    string              `json:"changelog,omitempty"`
 	Stability    string              `json:"stability,omitempty"`
 	ModID        string              `json:"mod_id,omitempty"`
-	Downloads    uint                `json:"downloads,omitempty"`
-	Approved     bool                `json:"approved,omitempty"`
 	Dependencies []VersionDependency `json:"dependencies,omitempty"`
 	Targets      []VersionTarget     `json:"targets,omitempty"`
+	Downloads    uint                `json:"downloads,omitempty"`
+	Approved     bool                `json:"approved,omitempty"`
 }
 
 type VersionDependency struct {
