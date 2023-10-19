@@ -289,20 +289,20 @@ func downloadModVersion(c echo.Context) error {
 	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))
 }
 
-// @Summary Download a Mod Version by Platform
+// @Summary Download a Mod Version by TargetName
 // @Tags Mod
-// @Description Download a mod version by mod ID and version ID and Platform
+// @Description Download a mod version by mod ID and version ID and TargetName
 // @Accept  json
 // @Produce  json
 // @Param modId path string true "Mod ID"
 // @Param versionId path string true "Version ID"
-// @Param versionId path string true "Platform"
+// @Param target path string true "TargetName"
 // @Success 200
-// @Router /mod/{modId}/versions/{versionId}/{platform}/download [get]
-func downloadModVersionArch(c echo.Context) error {
+// @Router /mod/{modId}/versions/{versionId}/{target}/download [get]
+func downloadModVersionTarget(c echo.Context) error {
 	modID := c.Param("modId")
 	versionID := c.Param("versionId")
-	platform := c.Param("platform")
+	target := c.Param("target")
 
 	mod := postgres.GetModByID(c.Request().Context(), modID)
 
@@ -316,15 +316,42 @@ func downloadModVersionArch(c echo.Context) error {
 		return c.String(404, "version not found, modID:"+modID+" versionID:"+versionID)
 	}
 
-	arch := postgres.GetModArchByPlatform(c.Request().Context(), versionID, platform)
+	versionTarget := postgres.GetVersionTarget(c.Request().Context(), versionID, target)
 
-	if arch == nil {
-		return c.String(404, "platform not found, modID:"+modID+" versionID:"+versionID+" platform:"+platform)
+	if versionTarget == nil {
+		return c.String(404, "target not found, modID:"+modID+" versionID:"+versionID+" target:"+target)
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
 		postgres.IncrementVersionDownloads(c.Request().Context(), version)
 	}
 
-	return c.Redirect(302, storage.GenerateDownloadLink(arch.Key))
+	return c.Redirect(302, storage.GenerateDownloadLink(versionTarget.Key))
+}
+
+// @Summary Retrieve all Mod Versions
+// @Tags Mod
+// @Description Retrieve all mod versions by mod ID
+// @Accept  json
+// @Produce  json
+// @Param modId path string true "Mod ID"
+// @Success 200
+// @Router /mod/{modId}/versions/all [get]
+func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
+	modID := c.Param("modId")
+
+	mod := postgres.GetModByID(c.Request().Context(), modID)
+
+	if mod == nil {
+		return nil, &ErrorModNotFound
+	}
+
+	versions := postgres.GetAllModVersionsWithDependencies(c.Request().Context(), mod.ID)
+
+	converted := make([]*Version, len(versions))
+	for k, v := range versions {
+		converted[k] = TinyVersionToVersion(&v)
+	}
+
+	return converted, nil
 }

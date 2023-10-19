@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "github.com/satisfactorymodding/smr-api/proto/parser";
+
+service Parser {
+  rpc Parse (ParseRequest) returns (stream AssetResponse);
+}
+
+message ParseRequest {
+  bytes zip_data = 1;
+  string engine_version = 2;
+}
+
+message AssetResponse {
+  string path = 1;
+  bytes data = 2;
+}

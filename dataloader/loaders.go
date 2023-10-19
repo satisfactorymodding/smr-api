@@ -109,7 +109,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 						var entities []postgres.Version
 						reqCtx := c.Request().Context()
-						postgres.DBCtx(reqCtx).Preload("Arch").Where("approved = ? AND denied = ? AND mod_id IN ?", true, false, fetchIds).Order("created_at desc").Find(&entities)
+						postgres.DBCtx(reqCtx).Preload("Targets").Where("approved = ? AND denied = ? AND mod_id IN ?", true, false, fetchIds).Order("created_at desc").Find(&entities)
 
 						for _, entity := range entities {
 							byID[entity.ModID] = append(byID[entity.ModID], entity)
@@ -145,7 +145,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 						var entities []postgres.Version
 						reqCtx := c.Request().Context()
-						postgres.DBCtx(reqCtx).Preload("Arch").Select(
+						postgres.DBCtx(reqCtx).Preload("Targets").Select(
 							"id",
 							"created_at",
 							"updated_at",

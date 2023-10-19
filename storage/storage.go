@@ -9,13 +9,12 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/avast/retry-go/v3"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 )
 
 type Storage interface {
@@ -29,11 +28,17 @@ type Storage interface {
 	Rename(from string, to string) error
 	Delete(key string) error
 	Meta(key string) (*ObjectMeta, error)
+	List(key string) ([]Object, error)
 }
 
 type ObjectMeta struct {
 	ContentLength *int64
 	ContentType   *string
+}
+
+type Object struct {
+	Key          *string
+	LastModified *time.Time
 }
 
 type Config struct {
@@ -273,7 +278,7 @@ func RenameVersion(ctx context.Context, modID string, name string, versionID str
 	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(cleanName)+"-"+version)
 }
 
-func DeleteVersion(ctx context.Context, modID string, name string, versionID string) bool {
+func DeleteMod(ctx context.Context, modID string, name string, versionID string) bool {
 	if storage == nil {
 		return false
 	}
@@ -291,45 +296,17 @@ func DeleteVersion(ctx context.Context, modID string, name string, versionID str
 	return true
 }
 
-func DeleteMod(ctx context.Context, modID string, name string, versionID string) bool {
+func DeleteModTarget(ctx context.Context, modID string, name string, versionID string, target string) bool {
 	if storage == nil {
 		return false
 	}
 
 	cleanName := cleanModName(name)
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+target+"-"+versionID)
 
-	query := postgres.GetModVersion(ctx, modID, versionID)
-
-	if query != nil && len(query.Arch) != 0 {
-		for _, link := range query.Arch {
-			if success := DeleteModArch(ctx, modID, cleanName, versionID, link.Platform); !success {
-				return false
-			}
-		}
-	} else {
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
-
-		log.Info().Str("key", key).Msg("deleting mod")
-		if err := storage.Delete(key); err != nil {
-			log.Ctx(ctx).Err(err).Msg("failed to delete version")
-			return false
-		}
-	}
-
-	return true
-}
-
-func DeleteModArch(ctx context.Context, modID string, name string, versionID string, platform string) bool {
-	if storage == nil {
-		return false
-	}
-
-	cleanName := cleanModName(name)
-	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+platform+"-"+versionID)
-
-	log.Info().Str("key", key).Msg("deleting mod arch")
+	log.Info().Str("key", key).Msg("deleting mod target")
 	if err := storage.Delete(key); err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to delete version link")
+		log.Err(err).Msg("failed to delete version target")
 		return false
 	}
 
@@ -396,105 +373,107 @@ func EncodeName(name string) string {
 	return result
 }
 
-func SeparateMod(ctx context.Context, body []byte, modID, name string, versionID string, modVersion string) bool {
+func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion, target string) (bool, string, string, int64) {
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
-		return false
+		return false, "", "", 0
 	}
 
-	ModPlatforms := []string{"Combined", "WindowsNoEditor", "WindowsServer", "LinuxServer"}
 	cleanName := cleanModName(name)
-	bufPlatform := bytes.NewBuffer(body)
 
-	for _, ModPlatform := range ModPlatforms {
-		if ModPlatform != "Combined" {
-			bufPlatform = new(bytes.Buffer)
-			zipWriter := zip.NewWriter(bufPlatform)
+	buf := new(bytes.Buffer)
+	zipWriter := zip.NewWriter(buf)
 
-			for _, file := range zipReader.File {
-				if strings.HasPrefix(file.Name, ".pdb") || strings.HasPrefix(file.Name, ".debug") || !strings.Contains(file.Name, ModPlatform) {
-					continue
-				}
-
-				err = WriteZipFile(ctx, file, ModPlatform, zipWriter)
-
-				if err != nil {
-					log.Ctx(ctx).Err(err).Msg("Failed to write zip to " + ModPlatform + " smod")
-					return false
-				}
-			}
-
-			zipWriter.Close()
+	for _, file := range zipReader.File {
+		if !strings.HasPrefix(file.Name, target+"/") && file.Name != target+"/" {
+			continue
 		}
 
-		key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+ModPlatform+"-"+modVersion)
+		err = copyModFileToArchZip(file, zipWriter, strings.TrimPrefix(file.Name, target+"/"))
 
-		err = WriteModArch(ctx, key, versionID, ModPlatform, bufPlatform)
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("Failed to save " + ModPlatform + " smod")
-			return false
+			log.Err(err).Msg("failed to add file to " + target + " archive")
+			return false, "", "", 0
 		}
 	}
 
-	return true
+	zipWriter.Close()
+
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+target+"-"+modVersion)
+
+	_, err = storage.Put(ctx, key, bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		log.Err(err).Msg("failed to save " + target + " archive")
+		return false, "", "", 0
+	}
+
+	hash := sha256.New()
+	hash.Write(buf.Bytes())
+
+	return true, key, hex.EncodeToString(hash.Sum(nil)), int64(buf.Len())
 }
 
-func WriteZipFile(ctx context.Context, file *zip.File, platform string, zipWriter *zip.Writer) error {
-	fileName := strings.ReplaceAll(file.Name, platform+"/", "")
-	zipFile, err := zipWriter.Create(fileName)
+func copyModFileToArchZip(file *zip.File, zipWriter *zip.Writer, newName string) error {
+	fileHeader := file.FileHeader
+	fileHeader.Name = newName
+
+	zipFile, err := zipWriter.CreateHeader(&fileHeader)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("Failed to create smod file for " + platform)
-		return errors.Wrap(err, "Failed to open smod file for "+platform)
+		return errors.Wrap(err, "failed to create file")
 	}
 
 	rawFile, err := file.Open()
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("Failed to open smod file for " + platform)
-		return errors.Wrap(err, "Failed to open smod file for "+platform)
+		return errors.Wrap(err, "failed to open file")
 	}
+	defer rawFile.Close()
 
 	buf := new(bytes.Buffer)
 	_, err = buf.ReadFrom(rawFile)
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("Failed to read from buffer for " + platform)
-		return errors.Wrap(err, "Failed to read from buffer for "+platform)
+		return errors.Wrap(err, "failed to read file")
 	}
 
 	_, err = zipFile.Write(buf.Bytes())
 
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("Failed to write to smod file: " + platform)
-		return errors.Wrap(err, "Failed to write smod file for "+platform)
+		return errors.Wrap(err, "failed to write file")
 	}
 
 	return nil
 }
 
-func WriteModArch(ctx context.Context, key string, versionID string, platform string, buffer *bytes.Buffer) error {
-	_, err := storage.Put(ctx, key, bytes.NewReader(buffer.Bytes()))
+func DeleteOldModAssets(modReference string, before time.Time) {
+	list, err := storage.List(fmt.Sprintf("/assets/mods/%s", modReference))
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to write smod: " + key)
-		return errors.Wrap(err, "Failed to load smod:"+key)
+		log.Err(err).Msg("failed to list assets")
+		return
 	}
 
-	hash := sha256.New()
-	hash.Write(buffer.Bytes())
+	for _, object := range list {
+		if object.Key == nil {
+			continue
+		}
 
-	dbModArch := &postgres.ModArch{
-		ModVersionID: versionID,
-		Platform:     platform,
-		Key:          key,
-		Hash:         hex.EncodeToString(hash.Sum(nil)),
-		Size:         int64(len(buffer.Bytes())),
+		if object.LastModified == nil || object.LastModified.Before(before) {
+			if err := storage.Delete(*object.Key); err != nil {
+				log.Err(err).Str("key", *object.Key).Msg("failed deleting old asset")
+				return
+			}
+		}
+	}
+}
+
+func UploadModAsset(ctx context.Context, modReference string, path string, data []byte) {
+	if storage == nil {
+		return
 	}
 
-	_, err = postgres.CreateModArch(ctx, dbModArch)
+	key := fmt.Sprintf("/assets/mods/%s/%s", modReference, strings.TrimPrefix(path, "/"))
 
+	_, err := storage.Put(ctx, key, bytes.NewReader(data))
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("Failed to create ModArch: " + versionID + "-" + platform)
-		return errors.Wrap(err, "Failed to create ModArch: "+versionID+"-"+platform)
+		log.Err(err).Str("path", path).Msg("failed to upload mod asset")
 	}
-
-	return nil
 }

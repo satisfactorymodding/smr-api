@@ -49,6 +49,14 @@ Main configuration options:
 
 The config format can be seen in `config/config.go` (each dot means a new level of nesting).
 
+After startup requires the following minio commands to be executed:
+
+```shell
+mc alias set local http://localhost:9000 minio minio123
+mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET
+mc anonymous set public local/smr
+```
+
 ## Contributing
 
 Before contributing, please run the [linter](https://golangci-lint.run/) to ensure the code is clean and well-formed:

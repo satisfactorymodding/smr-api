@@ -87,11 +87,25 @@ type Version struct {
 	SMLVersion string `gorm:"type:varchar(16)"`
 	Version    string `gorm:"type:varchar(16)"`
 	ModID      string
-	Arch       []ModArch `gorm:"foreignKey:ModVersionID;preload:true"`
+	Targets    []VersionTarget `gorm:"foreignKey:VersionID"`
 	Hotness    uint
 	Downloads  uint
 	Denied     bool `gorm:"default:false;not null"`
 	Approved   bool `gorm:"default:false;not null"`
+}
+
+type TinyVersion struct {
+	Hash *string
+	Size *int64
+	SMRModel
+	SMLVersion   string              `gorm:"type:varchar(16)"`
+	Version      string              `gorm:"type:varchar(16)"`
+	Targets      []VersionTarget     `gorm:"foreignKey:VersionID;preload:true"`
+	Dependencies []VersionDependency `gorm:"foreignKey:VersionID"`
+}
+
+func (TinyVersion) TableName() string {
+	return "versions"
 }
 
 type Guide struct {
@@ -120,7 +134,8 @@ type SMLVersion struct {
 	Stability           string `sql:"type:version_stability"`
 	Link                string
 	Changelog           string
-	Arch                []SMLArch `gorm:"foreignKey:SMLVersionID;preload:true"`
+	EngineVersion       string
+	Targets             []SMLVersionTarget `gorm:"foreignKey:VersionID"`
 	SatisfactoryVersion int
 }
 
@@ -179,26 +194,16 @@ type Compatibility struct {
 	Note  string
 }
 
-type ModArch struct {
-	ID           string `gorm:"primary_key;type:varchar(16)"`
-	ModVersionID string `gorm:"column:mod_version_arch_id"`
-	Platform     string
-	Key          string
-	Hash         string
-	Size         int64
+type VersionTarget struct {
+	VersionID  string `gorm:"primary_key;type:varchar(14)"`
+	TargetName string `gorm:"primary_key;type:varchar(16)"`
+	Key        string
+	Hash       string
+	Size       int64
 }
 
-func (ModArch) TableName() string {
-	return "mod_archs"
-}
-
-type SMLArch struct {
-	ID           string `gorm:"primary_key;type:varchar(14)"`
-	SMLVersionID string `gorm:"column:sml_version_arch_id"`
-	Platform     string
-	Link         string
-}
-
-func (SMLArch) TableName() string {
-	return "sml_archs"
+type SMLVersionTarget struct {
+	VersionID  string `gorm:"primary_key;type:varchar(14)"`
+	TargetName string `gorm:"primary_key;type:varchar(16)"`
+	Link       string
 }

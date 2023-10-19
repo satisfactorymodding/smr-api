@@ -1,6 +1,8 @@
-FROM golang:1.18-alpine AS builder
+FROM golang:1.19-alpine3.18 AS builder
 
-RUN apk add --no-cache git build-base libpng-dev
+RUN apk add --no-cache git build-base libpng-dev protoc
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
 WORKDIR $GOPATH/src/github.com/satisfactorymodding/smr-api/
 
