@@ -48,16 +48,60 @@ func ModToMod(mod *postgres.Mod, short bool) *Mod {
 }
 
 type Version struct {
-	UpdatedAt  time.Time `json:"updated_at"`
-	CreatedAt  time.Time `json:"created_at"`
-	ID         string    `json:"id"`
-	Version    string    `json:"version"`
-	SMLVersion string    `json:"sml_version"`
-	Changelog  string    `json:"changelog"`
-	Stability  string    `json:"stability"`
-	ModID      string    `json:"mod_id"`
-	Downloads  uint      `json:"downloads"`
-	Approved   bool      `json:"approved"`
+	UpdatedAt    time.Time           `json:"updated_at,omitempty"`
+	CreatedAt    time.Time           `json:"created_at,omitempty"`
+	ID           string              `json:"id,omitempty"`
+	Version      string              `json:"version,omitempty"`
+	SMLVersion   string              `json:"sml_version,omitempty"`
+	Changelog    string              `json:"changelog,omitempty"`
+	Stability    string              `json:"stability,omitempty"`
+	ModID        string              `json:"mod_id,omitempty"`
+	Downloads    uint                `json:"downloads,omitempty"`
+	Approved     bool                `json:"approved,omitempty"`
+	Dependencies []VersionDependency `json:"dependencies,omitempty"`
+	Arch         []VersionTarget     `json:"arch,omitempty"`
+}
+
+type VersionDependency struct {
+	ModID     string `json:"mod_id"`
+	Condition string `json:"condition"`
+	Optional  bool   `json:"optional"`
+}
+
+type VersionTarget struct {
+	VersionID  string `json:"version_id"`
+	TargetName string `json:"target_name"`
+	Key        string `json:"key"`
+	Hash       string `json:"hash"`
+	Size       int64  `json:"size"`
+}
+
+func TinyVersionToVersion(version *postgres.TinyVersion) *Version {
+	var dependencies []VersionDependency
+	if version.Dependencies != nil {
+		dependencies = make([]VersionDependency, len(version.Dependencies))
+		for i, v := range version.Dependencies {
+			dependencies[i] = VersionDependencyToVersionDependency(v)
+		}
+	}
+
+	var archs []VersionTarget
+	if version.Arch != nil {
+		archs = make([]VersionTarget, len(version.Arch))
+		for i, v := range version.Arch {
+			archs[i] = VersionArchToVersionArch(v)
+		}
+	}
+
+	return &Version{
+		UpdatedAt:    version.UpdatedAt,
+		CreatedAt:    version.CreatedAt,
+		ID:           version.ID,
+		Version:      version.Version,
+		SMLVersion:   version.SMLVersion,
+		Dependencies: dependencies,
+		Arch:         archs,
+	}
 }
 
 func VersionToVersion(version *postgres.Version) *Version {
@@ -72,6 +116,24 @@ func VersionToVersion(version *postgres.Version) *Version {
 		UpdatedAt:  version.UpdatedAt,
 		CreatedAt:  version.CreatedAt,
 		ModID:      version.ModID,
+	}
+}
+
+func VersionDependencyToVersionDependency(version postgres.VersionDependency) VersionDependency {
+	return VersionDependency{
+		ModID:     version.ModID,
+		Condition: version.Condition,
+		Optional:  version.Optional,
+	}
+}
+
+func VersionArchToVersionArch(version postgres.VersionTarget) VersionTarget {
+	return VersionTarget{
+		VersionID:  version.VersionID,
+		TargetName: version.TargetName,
+		Key:        version.Key,
+		Hash:       version.Hash,
+		Size:       version.Size,
 	}
 }
 

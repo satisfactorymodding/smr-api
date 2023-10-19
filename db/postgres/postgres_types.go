@@ -94,6 +94,20 @@ type Version struct {
 	Approved   bool `gorm:"default:false;not null"`
 }
 
+type TinyVersion struct {
+	Hash *string
+	Size *int64
+	SMRModel
+	SMLVersion   string              `gorm:"type:varchar(16)"`
+	Version      string              `gorm:"type:varchar(16)"`
+	Arch         []VersionTarget     `gorm:"foreignKey:ModVersionID;preload:true"`
+	Dependencies []VersionDependency `gorm:"foreignKey:VersionID"`
+}
+
+func (TinyVersion) TableName() string {
+	return "versions"
+}
+
 type Guide struct {
 	SMRModel
 	Name             string `gorm:"type:varchar(50)"`
@@ -120,6 +134,7 @@ type SMLVersion struct {
 	Stability           string `sql:"type:version_stability"`
 	Link                string
 	Changelog           string
+	EngineVersion       string
 	Targets             []SMLVersionTarget `gorm:"foreignKey:VersionID"`
 	SatisfactoryVersion int
 }

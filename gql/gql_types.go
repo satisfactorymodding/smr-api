@@ -139,6 +139,7 @@ func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) *generated.SMLVers
 		Date:                smlVersion.Date.Format(time.RFC3339Nano),
 		UpdatedAt:           smlVersion.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:           smlVersion.CreatedAt.Format(time.RFC3339Nano),
+		EngineVersion:       smlVersion.EngineVersion,
 	}
 }
 

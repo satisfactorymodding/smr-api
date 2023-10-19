@@ -328,3 +328,30 @@ func downloadModVersionTarget(c echo.Context) error {
 
 	return c.Redirect(302, storage.GenerateDownloadLink(versionTarget.Key))
 }
+
+// @Summary Retrieve all Mod Versions
+// @Tags Mod
+// @Description Retrieve all mod versions by mod ID
+// @Accept  json
+// @Produce  json
+// @Param modId path string true "Mod ID"
+// @Success 200
+// @Router /mod/{modId}/versions/all [get]
+func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
+	modID := c.Param("modId")
+
+	mod := postgres.GetModByID(c.Request().Context(), modID)
+
+	if mod == nil {
+		return nil, &ErrorModNotFound
+	}
+
+	versions := postgres.GetAllModVersionsWithDependencies(c.Request().Context(), mod.ID)
+
+	converted := make([]*Version, len(versions))
+	for k, v := range versions {
+		converted[k] = TinyVersionToVersion(&v)
+	}
+
+	return converted, nil
+}

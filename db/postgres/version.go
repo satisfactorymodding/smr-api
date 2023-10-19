@@ -87,6 +87,24 @@ func GetModVersions(ctx context.Context, modID string, limit int, offset int, or
 	return versions
 }
 
+func GetAllModVersionsWithDependencies(ctx context.Context, modID string) []TinyVersion {
+	cacheKey := "GetAllModVersionsWithDependencies_" + modID
+	if versions, ok := dbCache.Get(cacheKey); ok {
+		return versions.([]TinyVersion)
+	}
+
+	var versions []TinyVersion
+	DBCtx(ctx).Debug().
+		Preload("Dependencies").
+		Preload("Arch").
+		Where("approved = ? AND denied = ?", true, false).
+		Find(&versions, "mod_id = ?", modID)
+
+	dbCache.Set(cacheKey, versions, cache.DefaultExpiration)
+
+	return versions
+}
+
 func GetModVersionsNew(ctx context.Context, modID string, filter *models.VersionFilter, unapproved bool) []Version {
 	hash, err := filter.Hash()
 	cacheKey := ""

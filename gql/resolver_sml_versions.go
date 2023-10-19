@@ -36,6 +36,7 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 		Link:                smlVersion.Link,
 		Changelog:           smlVersion.Changelog,
 		Date:                date,
+		EngineVersion:       smlVersion.EngineVersion,
 	}
 
 	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
@@ -101,6 +102,7 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	SetStringINNOE(smlVersion.Link, &dbSMLVersion.Link)
 	SetStringINNOE(smlVersion.Changelog, &dbSMLVersion.Changelog)
 	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
+	SetStringINNOE(smlVersion.EngineVersion, &dbSMLVersion.EngineVersion)
 
 	postgres.Save(newCtx, &dbSMLVersion)
 

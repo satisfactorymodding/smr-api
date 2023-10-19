@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/avast/retry-go/v3"
 	"github.com/pkg/errors"
@@ -27,11 +28,17 @@ type Storage interface {
 	Rename(from string, to string) error
 	Delete(key string) error
 	Meta(key string) (*ObjectMeta, error)
+	List(key string) ([]Object, error)
 }
 
 type ObjectMeta struct {
 	ContentLength *int64
 	ContentType   *string
+}
+
+type Object struct {
+	Key          *string
+	LastModified *time.Time
 }
 
 type Config struct {
@@ -435,4 +442,38 @@ func copyModFileToArchZip(file *zip.File, zipWriter *zip.Writer, newName string)
 	}
 
 	return nil
+}
+
+func DeleteOldModAssets(modReference string, before time.Time) {
+	list, err := storage.List(fmt.Sprintf("/assets/mods/%s", modReference))
+	if err != nil {
+		log.Err(err).Msg("failed to list assets")
+		return
+	}
+
+	for _, object := range list {
+		if object.Key == nil {
+			continue
+		}
+
+		if object.LastModified == nil || object.LastModified.Before(before) {
+			if err := storage.Delete(*object.Key); err != nil {
+				log.Err(err).Str("key", *object.Key).Msg("failed deleting old asset")
+				return
+			}
+		}
+	}
+}
+
+func UploadModAsset(ctx context.Context, modReference string, path string, data []byte) {
+	if storage == nil {
+		return
+	}
+
+	key := fmt.Sprintf("/assets/mods/%s/%s", modReference, strings.TrimPrefix(path, "/"))
+
+	_, err := storage.Put(ctx, key, bytes.NewReader(data))
+	if err != nil {
+		log.Err(err).Str("path", path).Msg("failed to upload mod asset")
+	}
 }

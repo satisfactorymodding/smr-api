@@ -118,3 +118,7 @@ func (wasabi *Wasabi) Delete(key string) error {
 func (wasabi *Wasabi) Meta(key string) (*ObjectMeta, error) {
 	return nil, errors.New("Unsupported")
 }
+
+func (wasabi *Wasabi) List(key string) ([]Object, error) {
+	return nil, errors.New("Unsupported")
+}

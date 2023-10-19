@@ -203,6 +203,15 @@ func (s3o *S3) Delete(key string) error {
 		}
 
 		if len(objects) == 0 {
+			_, err = s3o.S3Client.DeleteObject(&s3.DeleteObjectInput{
+				Bucket: aws.String(viper.GetString("storage.bucket")),
+				Key:    aws.String(cleanedKey),
+			})
+
+			if err != nil {
+				return errors.Wrap(err, "failed to delete objects")
+			}
+
 			return nil
 		}
 
@@ -236,4 +245,24 @@ func (s3o *S3) Meta(key string) (*ObjectMeta, error) {
 		ContentLength: data.ContentLength,
 		ContentType:   data.ContentType,
 	}, nil
+}
+
+func (s3o *S3) List(prefix string) ([]Object, error) {
+	objects, err := s3o.S3Client.ListObjects(&s3.ListObjectsInput{
+		Bucket: aws.String(viper.GetString("storage.bucket")),
+		Prefix: aws.String(prefix),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list objects")
+	}
+
+	out := make([]Object, len(objects.Contents))
+	for i, obj := range objects.Contents {
+		out[i] = Object{
+			Key:          obj.Key,
+			LastModified: obj.LastModified,
+		}
+	}
+
+	return out, nil
 }

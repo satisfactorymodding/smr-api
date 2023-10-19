@@ -53,9 +53,14 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		return nil, errors.New("data.json mod_reference does not match mod reference")
 	}
 
-	if modInfo.Type != validation.UEPlugin {
+	if modInfo.Type == validation.DataJSON {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		return nil, errors.New("only UE Plugin mods are currently supported")
+		return nil, errors.New("data.json mods are obsolete and not allowed")
+	}
+
+	if modInfo.Type == validation.MultiTargetUEPlugin && !util.FlagEnabled(util.FeatureFlagAllowMultiTargetUpload) {
+		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		return nil, errors.New("multi-target mods are not allowed")
 	}
 
 	versionMajor := int(modInfo.Semver.Major())

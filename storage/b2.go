@@ -222,3 +222,7 @@ func (b2o *B2) Meta(key string) (*ObjectMeta, error) {
 		ContentType:   data.ContentType,
 	}, nil
 }
+
+func (b2o *B2) List(key string) ([]Object, error) {
+	return nil, errors.New("Unsupported")
+}
