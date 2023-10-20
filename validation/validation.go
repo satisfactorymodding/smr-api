@@ -188,11 +188,14 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 		for {
 			asset, err := stream.Recv()
 			if err != nil {
-				if errors.Is(err, io.EOF) {
+				//nolint
+				if errors.Is(err, io.EOF) || err == io.EOF {
 					break
 				}
 				return nil, errors.Wrap(err, "failed reading parser stream")
 			}
+
+			log.Ctx(ctx).Info().Str("path", asset.GetPath()).Msg("received asset from parser")
 
 			if asset.Path == "metadata.json" {
 				out, err := ExtractMetadata(asset.Data)
