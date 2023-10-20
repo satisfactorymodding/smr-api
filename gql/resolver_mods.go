@@ -23,20 +23,13 @@ import (
 	"github.com/satisfactorymodding/smr-api/util/converter"
 )
 
-var DisallowedModReferences = map[string]struct{}{
-	"satisfactory":          {},
-	"factorygame":           {},
-	"sml":                   {},
-	"satisfactorymodloader": {},
-	"examplemod":            {},
-	"docmod":                {},
-}
-
-func ModReferenceBanned(modReference string) bool {
-	if _, found := DisallowedModReferences[strings.ToLower(modReference)]; found {
-		return true
-	}
-	return false
+var DisallowedModReferences = map[string]bool{
+	"satisfactory":          true,
+	"factorygame":           true,
+	"sml":                   true,
+	"satisfactorymodloader": true,
+	"examplemod":            true,
+	"docmod":                true,
 }
 
 func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) (*generated.Mod, error) {
@@ -48,7 +41,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	if ModReferenceBanned(mod.ModReference) {
+	if DisallowedModReferences[strings.ToLower(mod.ModReference)] {
 		return nil, errors.New("using this mod reference is not allowed")
 	}
 
