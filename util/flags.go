@@ -1,6 +1,9 @@
 package util
 
-import "github.com/spf13/viper"
+import (
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
+)
 
 type FeatureFlag string
 
@@ -10,4 +13,10 @@ const (
 
 func FlagEnabled(flag FeatureFlag) bool {
 	return viper.GetBool("feature_flags." + string(flag))
+}
+
+func PrintFeatureFlags() {
+	for _, flag := range []FeatureFlag{FeatureFlagAllowMultiTargetUpload} {
+		log.Info().Str("flag", string(flag)).Bool("enabled", FlagEnabled(flag)).Msg("flag")
+	}
 }
