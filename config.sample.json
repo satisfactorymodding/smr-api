@@ -27,7 +27,8 @@
     "key": "REPLACE_ME_KEY",
     "secret": "REPLACE_ME_SECRET",
     "endpoint": "http://localhost:9000",
-    "base_url": "http://localhost:9000"
+    "base_url": "http://localhost:9000",
+    "keypath": "%s/%s/%s"
   },
 
   "oauth": {
@@ -52,5 +53,9 @@
 
   "frontend": {
     "url": "http://localhost:4200"
+  },
+
+  "feature_flags": {
+    "allow_multi_target_upload": false
   }
 }

@@ -79,6 +79,7 @@ func Initialize(baseCtx context.Context) context.Context {
 	auth.InitializeAuth()
 	jobs.InitializeJobs(ctx)
 	validation.InitializeVirusTotal()
+	util.PrintFeatureFlags()
 
 	return ctx
 }

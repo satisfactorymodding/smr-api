@@ -184,8 +184,6 @@ func (r *mutationResolver) ApproveVersion(ctx context.Context, versionID string)
 	postgres.Save(newCtx, &mod)
 
 	go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
-	go storage.DeleteModArch(ctx, dbVersion.ModID, mod.Name, versionID, "Combined")
-	go storage.DeleteModArch(ctx, dbVersion.ModID, mod.Name, dbVersion.Version, "Combined")
 
 	return true, nil
 }
@@ -321,7 +319,27 @@ func (r *getVersionsResolver) Count(ctx context.Context, _ *generated.GetVersion
 
 type versionResolver struct{ *Resolver }
 
-func (r *versionResolver) Link(_ context.Context, obj *generated.Version) (string, error) {
+func findWindowsTarget(obj *generated.Version) *generated.VersionTarget {
+	var windowsTarget *generated.VersionTarget
+	for _, target := range obj.Targets {
+		if target.TargetName == "Windows" {
+			windowsTarget = target
+			break
+		}
+	}
+	return windowsTarget
+}
+
+func (r *versionResolver) Link(ctx context.Context, obj *generated.Version) (string, error) {
+	wrapper, _ := WrapQueryTrace(ctx, "Version.link")
+	defer wrapper.end()
+
+	windowsTarget := findWindowsTarget(obj)
+	if windowsTarget != nil {
+		link, _ := r.VersionTarget().Link(ctx, windowsTarget)
+		return link, nil
+	}
+
 	return "/v1/version/" + obj.ID + "/download", nil
 }
 
@@ -330,6 +348,50 @@ func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*gen
 	defer wrapper.end()
 
 	return DBModToGenerated(postgres.GetModByID(newCtx, obj.ModID)), nil
+}
+
+func (r *versionResolver) Hash(ctx context.Context, obj *generated.Version) (*string, error) {
+	wrapper, _ := WrapQueryTrace(ctx, "Version.hash")
+	defer wrapper.end()
+
+	hash := ""
+
+	windowsTarget := findWindowsTarget(obj)
+	if windowsTarget == nil {
+		if obj.Hash == nil {
+			return nil, nil
+		}
+		hash = *obj.Hash
+	} else {
+		if windowsTarget.Hash == nil {
+			return nil, nil
+		}
+		hash = *windowsTarget.Hash
+	}
+
+	return &hash, nil
+}
+
+func (r *versionResolver) Size(ctx context.Context, obj *generated.Version) (*int, error) {
+	wrapper, _ := WrapQueryTrace(ctx, "Version.size")
+	defer wrapper.end()
+
+	size := 0
+
+	windowsTarget := findWindowsTarget(obj)
+	if windowsTarget == nil {
+		if obj.Size == nil {
+			return nil, nil
+		}
+		size = *obj.Size
+	} else {
+		if windowsTarget.Size == nil {
+			return nil, nil
+		}
+		size = *windowsTarget.Size
+	}
+
+	return &size, nil
 }
 
 var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config{
@@ -367,6 +429,12 @@ func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Versi
 	}
 
 	return converted, nil
+}
+
+type versionTargetResolver struct{ *Resolver }
+
+func (r *versionTargetResolver) Link(_ context.Context, obj *generated.VersionTarget) (string, error) {
+	return "/v1/version/" + obj.VersionID + "/" + string(obj.TargetName) + "/download", nil
 }
 
 type getMyVersionsResolver struct{ *Resolver }

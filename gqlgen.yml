@@ -20,10 +20,6 @@ models:
   UpdateMod:
     model: github.com/satisfactorymodding/smr-api/generated.UpdateMod
 
-  ModArchFilter:
-    model: "map[string]interface{}"
-  SMLArchFilter:
-    model: "map[string]interface{}"
   VersionFilter:
     model: "map[string]interface{}"
   ModFilter:
@@ -57,11 +53,6 @@ models:
       latestVersions:
         resolver: true
 
-  ModArch:
-    fields:
-      asset:
-        resolver: true
-
   UserMod:
     fields:
       user:
@@ -76,6 +67,15 @@ models:
       mod:
         resolver: true
       dependencies:
+        resolver: true
+      size:
+        resolver: true
+      hash:
+        resolver: true
+
+  VersionTarget:
+    fields:
+      link:
         resolver: true
 
   GetMods:

@@ -9,21 +9,40 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/Vilsol/ue4pak/parser"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/proto/parser"
+	"github.com/satisfactorymodding/smr-api/storage"
 )
+
+var AllowedTargets = []string{"Windows", "WindowsServer", "LinuxServer"}
 
 type ModObject struct {
 	Path string `json:"path"`
 	Type string `json:"type"`
 }
+
+type ModType int
+
+const (
+	DataJSON            ModType = iota
+	UEPlugin                    = 1
+	MultiTargetUEPlugin         = 2
+)
 
 type ModInfo struct {
 	Dependencies         map[string]string                     `json:"dependencies"`
@@ -35,7 +54,9 @@ type ModInfo struct {
 	SMLVersion           string                                `json:"sml_version"`
 	Objects              []ModObject                           `json:"objects"`
 	Metadata             []map[string]map[string][]interface{} `json:"-"`
+	Targets              []string                              `json:"-"`
 	Size                 int64                                 `json:"-"`
+	Type                 ModType                               `json:"-"`
 }
 
 var (
@@ -78,7 +99,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			dataFile = v
 			break
 		}
-		if v.Name == "WindowsNoEditor/"+modReference+".uplugin" {
+		if v.Name == modReference+".uplugin" {
 			uPlugin = v
 			break
 		}
@@ -101,44 +122,93 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	}
 
 	if modInfo == nil {
-		return nil, errors.New("missing WindowsNoEditor/" + modReference + ".uplugin or data.json")
+		// Neither data.json nor .uplugin found, try multi-target .uplugin
+		modInfo, err = validateMultiTargetPlugin(archive, withValidation, modReference)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if modInfo == nil {
+		return nil, errors.New("missing " + modReference + ".uplugin or data.json")
 	}
 
 	if withMetadata {
 		// Extract all possible metadata
-		modInfo.Metadata = make([]map[string]map[string][]interface{}, 0)
-		for _, obj := range modInfo.Objects {
-			if strings.ToLower(obj.Type) == "pak" {
-				for _, archiveFile := range archive.File {
-					if obj.Path == archiveFile.Name {
-						data, err := archiveFile.Open()
-						if err != nil {
-							log.Err(err).Msg("failed opening archive file")
-							break
-						}
+		conn, err := grpc.Dial(viper.GetString("extractor_host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to connect to metadata server")
+		}
+		defer conn.Close()
 
-						pakData, err := io.ReadAll(data)
-						if err != nil {
-							log.Err(err).Msg("failed reading archive file")
-							break
-						}
+		engineVersion := "4.26"
 
-						reader := &parser.PakByteReader{
-							Bytes: pakData,
-						}
+		//nolint
+		if postgres.DBCtx(nil) != nil {
+			smlVersions := postgres.GetSMLVersions(ctx, nil)
 
-						pak, err := AttemptExtractDataFromPak(ctx, reader)
-						if err != nil {
-							log.Err(err).Msg("failed parsing archive file")
-							break
-						}
+			// Sort decrementing by version
+			sort.Slice(smlVersions, func(a, b int) bool {
+				return semver.MustParse(smlVersions[a].Version).Compare(semver.MustParse(smlVersions[b].Version)) > 0
+			})
 
-						modInfo.Metadata = append(modInfo.Metadata, pak)
-						break
-					}
+			for _, version := range smlVersions {
+				constraint, err := semver.NewConstraint(modInfo.SMLVersion)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to create semver constraint")
+				}
+
+				if constraint.Check(semver.MustParse(version.Version)) {
+					engineVersion = version.EngineVersion
+					break
 				}
 			}
 		}
+
+		parserClient := parser.NewParserClient(conn)
+		stream, err := parserClient.Parse(ctx, &parser.ParseRequest{
+			ZipData:       body,
+			EngineVersion: engineVersion,
+		},
+			grpc.MaxCallSendMsgSize(1024*1024*1024), // 1GB
+			grpc.MaxCallRecvMsgSize(1024*1024*1024), // 1GB
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse mod")
+		}
+
+		defer func(stream parser.Parser_ParseClient) {
+			err := stream.CloseSend()
+			if err != nil {
+				log.Ctx(ctx).Err(err).Msg("failed closing parser stream")
+			}
+		}(stream)
+
+		beforeUpload := time.Now().Add(-time.Minute)
+		for {
+			asset, err := stream.Recv()
+			if err != nil {
+				//nolint
+				if errors.Is(err, io.EOF) || err == io.EOF {
+					break
+				}
+				return nil, errors.Wrap(err, "failed reading parser stream")
+			}
+
+			log.Ctx(ctx).Info().Str("path", asset.GetPath()).Msg("received asset from parser")
+
+			if asset.Path == "metadata.json" {
+				out, err := ExtractMetadata(asset.Data)
+				if err != nil {
+					return nil, err
+				}
+				modInfo.Metadata = append(modInfo.Metadata, out)
+			}
+
+			storage.UploadModAsset(ctx, modInfo.ModReference, asset.GetPath(), asset.GetData())
+		}
+
+		storage.DeleteOldModAssets(modInfo.ModReference, beforeUpload)
 	}
 
 	modInfo.Size = int64(len(body))
@@ -243,6 +313,8 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 			return nil, errors.New("data.json objects refer to non-existent path: " + obj.Path)
 		}
 	}
+
+	modInfo.Type = DataJSON
 
 	return &modInfo, nil
 }
@@ -357,5 +429,81 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 		return nil, errors.New(uPluginFile.Name + " doesn't contain SML as a dependency.")
 	}
 
+	modInfo.Type = UEPlugin
+
 	return &modInfo, nil
+}
+
+func validateMultiTargetPlugin(archive *zip.Reader, withValidation bool, modReference string) (*ModInfo, error) {
+	var targets []string
+	var uPluginFiles []*zip.File
+	for _, file := range archive.File {
+		if path.Base(file.Name) == modReference+".uplugin" && path.Dir(file.Name) != "." {
+			targets = append(targets, path.Dir(file.Name))
+			uPluginFiles = append(uPluginFiles, file)
+		}
+	}
+
+	if withValidation {
+		for _, target := range targets {
+			found := false
+			for _, allowedTarget := range AllowedTargets {
+				if target == allowedTarget {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return nil, errors.New("multi-target plugin contains invalid target: " + target)
+			}
+		}
+
+		for _, file := range archive.File {
+			found := false
+			for _, target := range targets {
+				if strings.HasPrefix(file.Name, target+"/") {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return nil, errors.New("multi-target plugin contains file outside of target directories: " + file.Name)
+			}
+		}
+	}
+
+	if len(uPluginFiles) == 0 {
+		return nil, errors.New("multi-target plugin doesn't contain any .uplugin files")
+	}
+
+	if withValidation {
+		var lastData []byte
+		for _, uPluginFile := range uPluginFiles {
+			file, err := uPluginFile.Open()
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to open .uplugin file")
+			}
+			data, err := io.ReadAll(file)
+			file.Close()
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to read .uplugin file")
+			}
+
+			if lastData != nil && !bytes.Equal(lastData, data) {
+				return nil, errors.New("multi-target plugin contains different .uplugin files")
+			}
+			lastData = data
+		}
+	}
+
+	// All the .uplugin files should be the same at this point (assuming validation is enabled)
+	modInfo, err := validateUPluginJSON(archive, uPluginFiles[0], withValidation, modReference)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to validate multi-target plugin")
+	}
+
+	modInfo.Targets = targets
+	modInfo.Type = MultiTargetUEPlugin
+
+	return modInfo, nil
 }
