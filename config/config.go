@@ -102,4 +102,6 @@ func initializeDefaults() {
 	viper.SetDefault("virustotal.key", "")
 
 	viper.SetDefault("feature_flags.allow_multi_target_upload", false)
+
+	viper.SetDefault("extractor_host", "localhost:50051")
 }

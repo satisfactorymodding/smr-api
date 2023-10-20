@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"path"
 	"path/filepath"
@@ -134,7 +135,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 
 	if withMetadata {
 		// Extract all possible metadata
-		conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc.Dial(viper.GetString("extractor_host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to connect to metadata server")
 		}
