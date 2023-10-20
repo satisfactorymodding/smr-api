@@ -340,7 +340,7 @@ func downloadModVersionTarget(c echo.Context) error {
 func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 
-	mod := postgres.GetModByID(c.Request().Context(), modID)
+	mod := postgres.GetModByIDOrReference(c.Request().Context(), modID)
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
