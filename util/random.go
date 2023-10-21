@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/btcsuite/btcd/btcutil/base58"
 )
 
 var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))

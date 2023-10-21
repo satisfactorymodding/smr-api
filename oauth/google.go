@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/pkg/errors"
@@ -19,26 +20,26 @@ func GoogleCallback(code string, state string) (*UserData, error) {
 
 	token, err := googleAuth.Exchange(ctx, code, oauth2.SetAuthURLParam("redirect_uri", viper.GetString("frontend.url")))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to exchange code")
+		return nil, fmt.Errorf("failed to exchange code: %w", err)
 	}
 
 	client := googleAuth.Client(ctx, token)
 
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get user info")
+		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
 
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read user info")
+		return nil, fmt.Errorf("failed to read user info: %w", err)
 	}
 
 	var userData map[string]interface{}
 	err = json.Unmarshal(bytes, &userData)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal user info")
+		return nil, fmt.Errorf("failed to unmarshal user info: %w", err)
 	}
 
 	return &UserData{

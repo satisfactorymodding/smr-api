@@ -2,12 +2,13 @@ package validation
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
+	"github.com/Vilsol/slox"
 	"github.com/VirusTotal/vt-go"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 )
@@ -32,7 +33,7 @@ type AnalysisResults struct {
 	} `json:"attributes,omitempty"`
 }
 
-func ScanFiles(ctx context.Context, files []io.Reader, names []string) (bool, error) {
+func ScanFiles(_ context.Context, files []io.Reader, names []string) (bool, error) {
 	errs, gctx := errgroup.WithContext(context.Background())
 	fileCount := len(files)
 
@@ -43,7 +44,7 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) (bool, er
 		errs.Go(func() error {
 			ok, err := scanFile(gctx, files[count], names[count])
 			if err != nil {
-				return errors.Wrap(err, "failed to scan file")
+				return fmt.Errorf("failed to scan file: %w", err)
 			}
 			c <- ok
 			return nil
@@ -63,7 +64,7 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) (bool, er
 	}
 
 	if err := errs.Wait(); err != nil {
-		return false, errors.Wrap(err, "failed to scan file")
+		return false, fmt.Errorf("failed to scan file: %w", err)
 	}
 
 	return success, nil
@@ -72,12 +73,12 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) (bool, er
 func scanFile(ctx context.Context, file io.Reader, name string) (bool, error) {
 	scan, err := client.NewFileScanner().Scan(file, name, nil)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to scan file")
+		return false, fmt.Errorf("failed to scan file: %w", err)
 	}
 
 	analysisID := scan.ID()
 
-	log.Info().Msgf("uploaded virus scan for file %s and analysis ID: %s", name, analysisID)
+	slox.Info(ctx, "uploaded virus scan", slog.String("file", name), slog.String("analysis_id", analysisID))
 
 	for {
 		time.Sleep(time.Second * 15)
@@ -86,7 +87,7 @@ func scanFile(ctx context.Context, file io.Reader, name string) (bool, error) {
 		_, err = client.GetData(vt.URL("analyses/%s", analysisID), &target)
 
 		if err != nil {
-			return false, errors.Wrap(err, "failed to get analysis results")
+			return false, fmt.Errorf("failed to get analysis results: %w", err)
 		}
 
 		if target.Attributes.Status != "completed" {
@@ -94,18 +95,18 @@ func scanFile(ctx context.Context, file io.Reader, name string) (bool, error) {
 		}
 
 		if target.Attributes.Stats == nil {
-			log.Error().Msgf("no stats available. failing file: %s", name)
+			slox.Error(ctx, "no stats available", slog.Any("err", err), slog.String("file", name))
 			return false, nil
 		}
 
 		if target.Attributes.Stats.Malicious == nil || target.Attributes.Stats.Suspicious == nil {
-			log.Error().Msgf("unable to determine malicious or suspicious File: %s", name)
+			slox.Error(ctx, "unable to determine malicious or suspicious file", slog.Any("err", err), slog.String("file", name))
 			return false, nil
 		}
 
 		// Why 1? Well because some company made a shitty AI and it flags random mods.
 		if *target.Attributes.Stats.Malicious > 1 || *target.Attributes.Stats.Suspicious > 1 {
-			log.Error().Msgf("suspicious or malicious file found: %s", name)
+			slox.Error(ctx, "suspicious or malicious file found", slog.Any("err", err), slog.String("file", name))
 			return false, nil
 		}
 

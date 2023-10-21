@@ -3,11 +3,13 @@ package consumers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
+	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/storage"
@@ -16,7 +18,7 @@ import (
 
 func UpdateModDataFromStorage(ctx context.Context, modID string, versionID string, metadata bool) error {
 	// perform task
-	log.Info().Msgf("[%s] Updating DB for mod %s version with metadata: %v", versionID, modID, metadata)
+	slox.Info(ctx, "Updating DB for mod version with metadata", slog.String("mod", modID), slog.String("version", versionID), slog.Bool("metadata", metadata))
 
 	version := postgres.GetVersion(ctx, versionID)
 	link := storage.GenerateDownloadLink(version.Key)
@@ -25,7 +27,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 
 	fileData, err := io.ReadAll(response.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to read response body")
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	mod := postgres.GetModByID(ctx, modID)
@@ -36,7 +38,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 
 	info, err := validation.ExtractModInfo(ctx, fileData, metadata, false, mod.ModReference)
 	if err != nil {
-		log.Warn().Err(err).Msgf("[%s] Failed updating mod, likely outdated", versionID)
+		slox.Warn(ctx, "failed updating mod, likely outdated", slog.Any("err", err), slog.String("version", versionID))
 		// Outdated version
 		return nil
 	}
@@ -66,7 +68,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	if metadata {
 		jsonData, err := json.Marshal(info.Metadata)
 		if err != nil {
-			log.Err(err).Msgf("[%s] failed serializing", versionID)
+			slox.Error(ctx, "failed serializing", slog.Any("err", err), slog.String("version", versionID))
 		} else {
 			metadata := string(jsonData)
 			version.Metadata = &metadata

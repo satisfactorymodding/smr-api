@@ -48,7 +48,7 @@ func NewPlugin(opts ...Option) *Plugin {
 		cfg: cfg,
 		tracer: cfg.tracerProvider.Tracer(
 			defaultTracerName,
-			oteltrace.WithInstrumentationVersion(contrib.SemVersion()),
+			oteltrace.WithInstrumentationVersion(contrib.Version()),
 		),
 	}
 }

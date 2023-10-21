@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
@@ -17,7 +18,7 @@ func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement 
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&announcement); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	dbAnnouncement := &postgres.Announcement{
@@ -53,7 +54,7 @@ func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementI
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&announcement); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	dbAnnouncement := postgres.GetAnnouncementByID(newCtx, announcementID)

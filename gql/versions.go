@@ -3,11 +3,13 @@ package gql
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
+	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
@@ -19,9 +21,9 @@ import (
 )
 
 func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
-	l := log.With().Str("mod_id", mod.ID).Str("version_id", versionID).Logger()
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
 
-	l.Info().Msg("Creating multipart upload")
+	slox.Info(ctx, "Creating multipart upload")
 	success, _ := storage.CompleteUploadMultipartMod(ctx, mod.ID, mod.Name, versionID)
 
 	if !success {
@@ -39,13 +41,13 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	fileData, err := io.ReadAll(modFile)
 	if err != nil {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		return nil, errors.Wrap(err, "failed reading mod file")
+		return nil, fmt.Errorf("failed reading mod file: %w", err)
 	}
 
 	modInfo, err := validation.ExtractModInfo(ctx, fileData, true, true, mod.ModReference)
 	if err != nil {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		return nil, errors.Wrap(err, "failed extracting mod info")
+		return nil, fmt.Errorf("failed extracting mod info: %w", err)
 	}
 
 	if modInfo.ModReference != mod.ModReference {
@@ -122,7 +124,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 	jsonData, err := json.Marshal(modInfo.Metadata)
 	if err != nil {
-		log.Err(err).Msgf("[%s] failed serializing", dbVersion.ID)
+		slox.Error(ctx, "failed serializing", slog.Any("err", err), slog.String("version_id", dbVersion.ID))
 	} else {
 		metadata := string(jsonData)
 		dbVersion.Metadata = &metadata
@@ -145,7 +147,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 		separateSuccess := true
 		for _, target := range targets {
-			log.Info().Str("target", target.TargetName).Str("mod", mod.Name).Str("version", dbVersion.Version).Msg("separating mod")
+			slox.Info(ctx, "separating mod", slog.String("target", target.TargetName), slog.String("mod", mod.Name), slog.String("version", dbVersion.Version))
 			success, key, hash, size := storage.SeparateModTarget(ctx, fileData, mod.ID, mod.Name, dbVersion.Version, target.TargetName)
 
 			if !success {
@@ -199,7 +201,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
 	} else {
-		l.Info().Msg("Submitting version job for virus scan")
+		slox.Info(ctx, "Submitting version job for virus scan")
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)
 	}
 

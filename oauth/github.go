@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -18,45 +19,45 @@ func GithubCallback(code string, state string) (*UserData, error) {
 
 	token, err := githubAuth.Exchange(ctx, code)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to exchange code")
+		return nil, fmt.Errorf("failed to exchange code: %w", err)
 	}
 
 	client := githubAuth.Client(ctx, token)
 
 	resp, err := client.Get("https://api.github.com/user")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get user data")
+		return nil, fmt.Errorf("failed to get user data: %w", err)
 	}
 
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read user data")
+		return nil, fmt.Errorf("failed to read user data: %w", err)
 	}
 
 	var userData map[string]interface{}
 	err = json.Unmarshal(bytes, &userData)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal user data")
+		return nil, fmt.Errorf("failed to unmarshal user data: %w", err)
 	}
 
 	resp, err = client.Get("https://api.github.com/user/emails")
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get user emails")
+		return nil, fmt.Errorf("failed to get user emails: %w", err)
 	}
 
 	bytes, err = io.ReadAll(resp.Body)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read user emails")
+		return nil, fmt.Errorf("failed to read user emails: %w", err)
 	}
 
 	var userEmailsData []map[string]interface{}
 	err = json.Unmarshal(bytes, &userEmailsData)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal user emails")
+		return nil, fmt.Errorf("failed to unmarshal user emails: %w", err)
 	}
 
 	if len(userEmailsData) == 0 {

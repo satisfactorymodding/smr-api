@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -21,7 +22,7 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, guide generated.NewG
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&guide); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	dbGuide := &postgres.Guide{
@@ -55,7 +56,7 @@ func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, guid
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&guide); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	err := postgres.ResetGuideTags(newCtx, guideID, guide.TagIDs)
@@ -108,7 +109,7 @@ func (r *queryResolver) GetGuide(ctx context.Context, guideID string) (*generate
 	return DBGuideToGenerated(guide), nil
 }
 
-func (r *queryResolver) GetGuides(ctx context.Context, filter map[string]interface{}) (*generated.GetGuides, error) {
+func (r *queryResolver) GetGuides(ctx context.Context, _ map[string]interface{}) (*generated.GetGuides, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getGuides")
 	defer wrapper.end()
 	return &generated.GetGuides{}, nil
@@ -116,7 +117,7 @@ func (r *queryResolver) GetGuides(ctx context.Context, filter map[string]interfa
 
 type getGuidesResolver struct{ *Resolver }
 
-func (r *getGuidesResolver) Guides(ctx context.Context, obj *generated.GetGuides) ([]*generated.Guide, error) {
+func (r *getGuidesResolver) Guides(ctx context.Context, _ *generated.GetGuides) ([]*generated.Guide, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetGuides.guides")
 	defer wrapper.end()
 
@@ -146,7 +147,7 @@ func (r *getGuidesResolver) Guides(ctx context.Context, obj *generated.GetGuides
 	return converted, nil
 }
 
-func (r *getGuidesResolver) Count(ctx context.Context, obj *generated.GetGuides) (int, error) {
+func (r *getGuidesResolver) Count(ctx context.Context, _ *generated.GetGuides) (int, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetGuides.count")
 	defer wrapper.end()
 

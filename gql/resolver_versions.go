@@ -3,14 +3,16 @@ package gql
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
+	"log/slog"
 	"runtime/debug"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/Vilsol/slox"
 	"github.com/dgraph-io/ristretto"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -72,7 +74,7 @@ func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, 
 	// TODO Optimize
 	fileData, err := io.ReadAll(file.File)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to read file")
+		return false, fmt.Errorf("failed to read file: %w", err)
 	}
 
 	success, _ := storage.UploadMultipartMod(ctx, mod.ID, mod.Name, versionID, int64(part), bytes.NewReader(fileData))
@@ -98,33 +100,35 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 		return false, errors.New("you must update your mod reference on the site to match your mod_reference in your data.json")
 	}
 
-	log.Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("finalization gql call")
+	newCtx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
+
+	slox.Info(newCtx, "finalization gql call")
 
 	go func(ctx context.Context, mod *postgres.Mod, versionID string, version generated.NewVersion) {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Error().Interface("recover", r).Str("stack", string(debug.Stack())).Msgf("recovered from version finalization")
+				slox.Error(ctx, "recovered from version finalization", slog.Any("recover", r), slog.String("stack", string(debug.Stack())))
 
 				if err := redis.StoreVersionUploadState(versionID, nil, errors.New("internal error, please try again, if it fails again, please report on discord")); err != nil {
-					log.Error().Err(err).Msg("failed to store version upload state")
+					slox.Error(ctx, "failed to store version upload state", slog.Any("err", err))
 				}
 			}
 		}()
 
-		log.Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("calling FinalizeVersionUploadAsync")
+		slox.Info(ctx, "calling FinalizeVersionUploadAsync")
 
 		data, err := FinalizeVersionUploadAsync(ctx, mod, versionID, version)
 		if err2 := redis.StoreVersionUploadState(versionID, data, err); err2 != nil {
-			log.Err(err2).Msg("error storing redis state")
+			slox.Error(ctx, "error storing redis state", slog.Any("err", err))
 			return
 		}
 
-		log.Info().Str("mod_id", mod.ID).Str("version_id", versionID).Msg("finished FinalizeVersionUploadAsync")
+		slox.Info(ctx, "finished FinalizeVersionUploadAsync")
 
 		if err != nil {
-			log.Err(err).Msgf("error completing version upload [%s]", versionID)
+			slox.Error(ctx, "error completing version upload", slog.Any("err", err))
 		} else {
-			log.Info().Msgf("completed version upload: %s", versionID)
+			slox.Info(ctx, "completed version upload")
 		}
 	}(util.ReWrapCtx(ctx), mod, versionID, version)
 

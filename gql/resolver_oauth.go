@@ -3,6 +3,7 @@ package gql
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -21,7 +22,7 @@ func (r *queryResolver) GetOAuthOptions(ctx context.Context, callbackURL string)
 
 	unescapedURL, err := url.PathUnescape(callbackURL)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to unescape callback url")
+		return nil, fmt.Errorf("unable to unescape callback url: %w", err)
 	}
 
 	authOptions := oauth.GetOAuthOptions(unescapedURL)

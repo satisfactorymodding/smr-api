@@ -4,16 +4,17 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"strconv"
 	"strings"
 
+	"github.com/Vilsol/slox"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
 	"github.com/satisfactorymodding/smr-api/redis"
@@ -36,7 +37,7 @@ func initializeS3(ctx context.Context, config Config) *S3 {
 
 	newSession, err := session.NewSession(s3Config)
 	if err != nil {
-		log.Err(err).Msg("failed to create S3 session")
+		slox.Error(ctx, "failed to create S3 session", slog.Any("err", err))
 		return nil
 	}
 
@@ -58,7 +59,7 @@ func (s3o *S3) Get(key string) (io.ReadCloser, error) {
 		Key:    aws.String(cleanedKey),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get object")
+		return nil, fmt.Errorf("failed to get object: %w", err)
 	}
 
 	return object.Body, nil
@@ -75,7 +76,7 @@ func (s3o *S3) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 		Key:    aws.String(cleanedKey),
 	})
 	if err != nil {
-		return cleanedKey, errors.Wrap(err, "failed to upload file")
+		return cleanedKey, fmt.Errorf("failed to upload file: %w", err)
 	}
 
 	return key, nil
@@ -87,7 +88,7 @@ func (s3o *S3) SignGet(key string) (string, error) {
 	return fmt.Sprintf(viper.GetString("storage.keypath"), s3o.BaseURL, viper.GetString("storage.bucket"), cleanedKey), nil
 }
 
-func (s3o *S3) SignPut(key string) (string, error) {
+func (s3o *S3) SignPut(_ string) (string, error) {
 	// Unsupported at the moment
 	return "", errors.New("Unsupported")
 }
@@ -99,7 +100,7 @@ func (s3o *S3) StartMultipartUpload(key string) error {
 		Key:    aws.String(cleanedKey),
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to create multipart upload")
+		return fmt.Errorf("failed to create multipart upload: %w", err)
 	}
 
 	redis.StoreMultipartUploadID(cleanedKey, *upload.UploadId)
@@ -119,7 +120,7 @@ func (s3o *S3) UploadPart(key string, part int64, data io.ReadSeeker) error {
 		UploadId:   aws.String(id),
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to upload part")
+		return fmt.Errorf("failed to upload part: %w", err)
 	}
 
 	redis.StoreMultipartCompletedPart(cleanedKey, *response.ETag, int(part))
@@ -145,7 +146,7 @@ func (s3o *S3) CompleteMultipartUpload(key string) error {
 		UploadId:        aws.String(id),
 	})
 
-	return errors.Wrap(err, "failed to complete multipart upload")
+	return fmt.Errorf("failed to complete multipart upload: %w", err)
 }
 
 func (s3o *S3) Rename(from string, to string) error {
@@ -157,7 +158,7 @@ func (s3o *S3) Rename(from string, to string) error {
 		Key:        aws.String(cleanedKey),
 	})
 
-	return errors.Wrap(err, "failed to copy object")
+	return fmt.Errorf("failed to copy object: %w", err)
 }
 
 func (s3o *S3) Delete(key string) error {
@@ -177,13 +178,13 @@ func (s3o *S3) Delete(key string) error {
 				})
 
 				if err != nil {
-					return errors.Wrap(err, "failed to delete objects")
+					return fmt.Errorf("failed to delete objects: %w", err)
 				}
 
 				return nil
 			}
 
-			return errors.Wrap(err, "failed to list object versions")
+			return fmt.Errorf("failed to list object versions: %w", err)
 		}
 
 		objects := make([]*s3.ObjectIdentifier, len(versions.Versions)+len(versions.DeleteMarkers))
@@ -209,7 +210,7 @@ func (s3o *S3) Delete(key string) error {
 			})
 
 			if err != nil {
-				return errors.Wrap(err, "failed to delete objects")
+				return fmt.Errorf("failed to delete objects: %w", err)
 			}
 
 			return nil
@@ -223,7 +224,7 @@ func (s3o *S3) Delete(key string) error {
 		})
 
 		if err != nil {
-			return errors.Wrap(err, "failed to delete objects")
+			return fmt.Errorf("failed to delete objects: %w", err)
 		}
 	}
 
@@ -238,7 +239,7 @@ func (s3o *S3) Meta(key string) (*ObjectMeta, error) {
 		Key:    aws.String(cleanedKey),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get object meta")
+		return nil, fmt.Errorf("failed to get object meta: %w", err)
 	}
 
 	return &ObjectMeta{
@@ -263,7 +264,7 @@ func (s3o *S3) List(prefix string) ([]Object, error) {
 		return true
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to list objects")
+		return nil, fmt.Errorf("failed to list objects: %w", err)
 	}
 
 	return out, nil

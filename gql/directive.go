@@ -37,7 +37,7 @@ type Directive struct {
 	generated.DirectiveRoot
 }
 
-func canEditMod(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (interface{}, error) {
+func canEditMod(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	dbMod := postgres.GetModByID(ctx, getArgument(ctx, field).(string))
@@ -57,7 +57,7 @@ func canEditMod(ctx context.Context, obj interface{}, next graphql.Resolver, fie
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canEditModCompatibility(ctx context.Context, obj interface{}, next graphql.Resolver, field *string) (interface{}, error) {
+func canEditModCompatibility(ctx context.Context, _ interface{}, next graphql.Resolver, field *string) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	if user.Has(ctx, auth.RoleEditAnyModCompatibility) || user.Has(ctx, auth.RoleEditAnyContent) {
@@ -81,7 +81,7 @@ func canEditModCompatibility(ctx context.Context, obj interface{}, next graphql.
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canEditVersion(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (interface{}, error) {
+func canEditVersion(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	dbVersion := postgres.GetVersion(ctx, getArgument(ctx, field).(string))
@@ -128,7 +128,7 @@ func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, fi
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canEditGuide(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (interface{}, error) {
+func canEditGuide(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	dbGuide := postgres.GetGuideByID(ctx, getArgument(ctx, field).(string))
@@ -148,7 +148,7 @@ func canEditGuide(ctx context.Context, obj interface{}, next graphql.Resolver, f
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func isLoggedIn(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func isLoggedIn(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	header := ctx.Value(util.ContextHeader{}).(http.Header)
 	authorization := header.Get("Authorization")
 
@@ -171,7 +171,7 @@ func isLoggedIn(ctx context.Context, obj interface{}, next graphql.Resolver) (in
 	return next(userCtx)
 }
 
-func isNotLoggedIn(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func isNotLoggedIn(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	header := ctx.Value(util.ContextHeader{}).(http.Header)
 	authorization := header.Get("Authorization")
 
@@ -190,7 +190,7 @@ func getArgument(ctx context.Context, key string) interface{} {
 	return graphql.GetFieldContext(ctx).Args[key]
 }
 
-func canApproveMods(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func canApproveMods(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	if user.Has(ctx, auth.RoleApproveMods) {
@@ -200,7 +200,7 @@ func canApproveMods(ctx context.Context, obj interface{}, next graphql.Resolver)
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canApproveVersions(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func canApproveVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	if user.Has(ctx, auth.RoleApproveVersions) {
@@ -210,7 +210,7 @@ func canApproveVersions(ctx context.Context, obj interface{}, next graphql.Resol
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canEditUsers(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func canEditUsers(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	if user.Has(ctx, auth.RoleEditUsers) {
@@ -220,7 +220,7 @@ func canEditUsers(ctx context.Context, obj interface{}, next graphql.Resolver) (
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canEditSMLVersions(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func canEditSMLVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	if user.Has(ctx, auth.RoleEditSMLVersions) {
@@ -230,7 +230,7 @@ func canEditSMLVersions(ctx context.Context, obj interface{}, next graphql.Resol
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canEditBootstrapVersions(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func canEditBootstrapVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	if user.Has(ctx, auth.RoleEditBootstrapVersions) {
@@ -240,7 +240,7 @@ func canEditBootstrapVersions(ctx context.Context, obj interface{}, next graphql
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canEditAnnouncements(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func canEditAnnouncements(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	if user.Has(ctx, auth.RoleEditAnnouncements) {
@@ -250,7 +250,7 @@ func canEditAnnouncements(ctx context.Context, obj interface{}, next graphql.Res
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canManageTags(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
+func canManageTags(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
 
 	if user.Has(ctx, auth.RoleManageTags) {

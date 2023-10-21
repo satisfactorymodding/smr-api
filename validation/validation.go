@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"path"
 	"path/filepath"
 	"sort"
@@ -17,8 +18,8 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
 	"google.golang.org/grpc"
@@ -137,7 +138,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 		// Extract all possible metadata
 		conn, err := grpc.Dial(viper.GetString("extractor_host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to connect to metadata server")
+			return nil, fmt.Errorf("failed to connect to metadata server: %w", err)
 		}
 		defer conn.Close()
 
@@ -155,7 +156,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			for _, version := range smlVersions {
 				constraint, err := semver.NewConstraint(modInfo.SMLVersion)
 				if err != nil {
-					return nil, errors.Wrap(err, "failed to create semver constraint")
+					return nil, fmt.Errorf("failed to create semver constraint: %w", err)
 				}
 
 				if constraint.Check(semver.MustParse(version.Version)) {
@@ -174,13 +175,13 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			grpc.MaxCallRecvMsgSize(1024*1024*1024), // 1GB
 		)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse mod")
+			return nil, fmt.Errorf("failed to parse mod: %w", err)
 		}
 
 		defer func(stream parser.Parser_ParseClient) {
 			err := stream.CloseSend()
 			if err != nil {
-				log.Ctx(ctx).Err(err).Msg("failed closing parser stream")
+				slox.Error(ctx, "failed closing parser stream", slog.Any("err", err))
 			}
 		}(stream)
 
@@ -192,10 +193,10 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 				if errors.Is(err, io.EOF) || err == io.EOF {
 					break
 				}
-				return nil, errors.Wrap(err, "failed reading parser stream")
+				return nil, fmt.Errorf("failed reading parser stream: %w", err)
 			}
 
-			log.Ctx(ctx).Info().Str("path", asset.GetPath()).Msg("received asset from parser")
+			slox.Info(ctx, "received asset from parser", slog.String("path", asset.GetPath()))
 
 			if asset.Path == "metadata.json" {
 				out, err := ExtractMetadata(asset.Data)
@@ -208,7 +209,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			storage.UploadModAsset(ctx, modInfo.ModReference, asset.GetPath(), asset.GetData())
 		}
 
-		storage.DeleteOldModAssets(modInfo.ModReference, beforeUpload)
+		storage.DeleteOldModAssets(ctx, modInfo.ModReference, beforeUpload)
 	}
 
 	modInfo.Size = int64(len(body))
@@ -217,15 +218,15 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	_, err = hash.Write(body)
 
 	if err != nil {
-		log.Err(err).Msg("error hashing pak")
+		slox.Error(ctx, "error hashing pak", slog.Any("err", err))
 	}
 
 	modInfo.Hash = hex.EncodeToString(hash.Sum(nil))
 
 	version, err := semver.StrictNewVersion(modInfo.Version)
 	if err != nil {
-		log.Err(err).Msg("error parsing semver")
-		return nil, errors.Wrap(err, "error parsing semver")
+		slox.Error(ctx, "error parsing semver", slog.Any("err", err))
+		return nil, fmt.Errorf("error parsing semver: %w", err)
 	}
 
 	modInfo.Semver = version
@@ -481,12 +482,12 @@ func validateMultiTargetPlugin(archive *zip.Reader, withValidation bool, modRefe
 		for _, uPluginFile := range uPluginFiles {
 			file, err := uPluginFile.Open()
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to open .uplugin file")
+				return nil, fmt.Errorf("failed to open .uplugin file: %w", err)
 			}
 			data, err := io.ReadAll(file)
 			file.Close()
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to read .uplugin file")
+				return nil, fmt.Errorf("failed to read .uplugin file: %w", err)
 			}
 
 			if lastData != nil && !bytes.Equal(lastData, data) {
@@ -499,7 +500,7 @@ func validateMultiTargetPlugin(archive *zip.Reader, withValidation bool, modRefe
 	// All the .uplugin files should be the same at this point (assuming validation is enabled)
 	modInfo, err := validateUPluginJSON(archive, uPluginFiles[0], withValidation, modReference)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to validate multi-target plugin")
+		return nil, fmt.Errorf("failed to validate multi-target plugin: %w", err)
 	}
 
 	modInfo.Targets = targets

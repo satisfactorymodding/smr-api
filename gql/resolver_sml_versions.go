@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -20,12 +21,12 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&smlVersion); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	date, err := time.Parse(time.RFC3339Nano, smlVersion.Date)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse date")
+		return nil, fmt.Errorf("failed to parse date: %w", err)
 	}
 
 	dbSMLVersion := &postgres.SMLVersion{
@@ -62,7 +63,7 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&smlVersion); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	dbSMLTargets := postgres.GetSMLVersionTargets(newCtx, smlVersionID)
@@ -137,7 +138,7 @@ func (r *queryResolver) GetSMLVersion(ctx context.Context, smlVersionID string) 
 	return DBSMLVersionToGenerated(postgres.GetSMLVersionByID(newCtx, smlVersionID)), nil
 }
 
-func (r *queryResolver) GetSMLVersions(ctx context.Context, filter map[string]interface{}) (*generated.GetSMLVersions, error) {
+func (r *queryResolver) GetSMLVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetSMLVersions, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getSMLVersions")
 	defer wrapper.end()
 	return &generated.GetSMLVersions{}, nil
@@ -145,7 +146,7 @@ func (r *queryResolver) GetSMLVersions(ctx context.Context, filter map[string]in
 
 type getSMLVersionsResolver struct{ *Resolver }
 
-func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, obj *generated.GetSMLVersions) ([]*generated.SMLVersion, error) {
+func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, _ *generated.GetSMLVersions) ([]*generated.SMLVersion, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetSMLVersions.smlVersions")
 	defer wrapper.end()
 
@@ -175,7 +176,7 @@ func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, obj *generated
 	return converted, nil
 }
 
-func (r *getSMLVersionsResolver) Count(ctx context.Context, obj *generated.GetSMLVersions) (int, error) {
+func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLVersions) (int, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetSMLVersions.count")
 	defer wrapper.end()
 

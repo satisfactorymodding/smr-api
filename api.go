@@ -3,6 +3,7 @@ package smr
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"runtime"
@@ -14,12 +15,11 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/Vilsol/slox"
 	"github.com/felixge/fgprof"
 	"github.com/labstack/echo-contrib/pprof"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -59,7 +59,10 @@ type CustomValidator struct {
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
-	return errors.Wrap(cv.validator.Struct(i), "validation error")
+	if err := cv.validator.Struct(i); err != nil {
+		return fmt.Errorf("validation error: %w", err)
+	}
+	return nil
 }
 
 func Initialize(baseCtx context.Context) context.Context {
@@ -79,7 +82,7 @@ func Initialize(baseCtx context.Context) context.Context {
 	auth.InitializeAuth()
 	jobs.InitializeJobs(ctx)
 	validation.InitializeVirusTotal()
-	util.PrintFeatureFlags()
+	util.PrintFeatureFlags(ctx)
 
 	return ctx
 }
@@ -99,7 +102,7 @@ func Setup(ctx context.Context) {
 			debugServer.HideBanner = true
 			debugServer.HidePort = true
 			address := ":6060"
-			log.Info().Str("address", address).Msg("starting profiler")
+			slog.Info("starting profiler", slog.String("address", address))
 			debugServer.Logger.Fatal(debugServer.Start(address))
 		}()
 	}
@@ -120,8 +123,7 @@ func Setup(ctx context.Context) {
 
 	v1.Use(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			newLogger := log.Ctx(ctx.Request().Context()).With().Str("facade", "REST").Logger()
-			newCtx := newLogger.WithContext(context.Background())
+			newCtx := slox.With(ctx.Request().Context(), slog.String("facade", "REST"))
 			ctx.SetRequest(ctx.Request().WithContext(newCtx))
 			return handlerFunc(ctx)
 		}
@@ -139,8 +141,7 @@ func Setup(ctx context.Context) {
 
 	v2.Use(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			newLogger := log.Ctx(ctx.Request().Context()).With().Str("facade", "GQL").Logger()
-			newCtx := newLogger.WithContext(context.Background())
+			newCtx := slox.With(ctx.Request().Context(), slog.String("facade", "GQL"))
 			newCtx = context.WithValue(newCtx, util.ContextHeader{}, ctx.Request().Header)
 			newCtx = context.WithValue(newCtx, util.ContextRequest{}, ctx.Request())
 			newCtx = context.WithValue(newCtx, util.ContextResponse{}, ctx.Response().Writer)
@@ -250,22 +251,23 @@ func Setup(ctx context.Context) {
 				bytesIn = "0"
 			}
 
-			log.Info().
-				Str("time_rfc3339", time.Now().Format(time.RFC3339)).
-				Str("remote_ip", c.RealIP()).
-				Str("host", req.Host).
-				Str("uri", req.RequestURI).
-				Str("method", req.Method).
-				Str("path", p).
-				Str("referer", req.Referer()).
-				Str("user_agent", req.UserAgent()).
-				Int("status", res.Status).
-				Int64("latency", stop.Sub(start).Nanoseconds()/1000).
-				Str("latency_human", stop.Sub(start).String()).
-				Str("bytes_in", bytesIn).
-				Int64("bytes_out", res.Size).
-				Str("trace_id", spanContext.TraceID().String()).
-				Msg("Handled request")
+			slog.Info(
+				"Handled request",
+				slog.String("time_rfc3339", time.Now().Format(time.RFC3339)),
+				slog.String("remote_ip", c.RealIP()),
+				slog.String("host", req.Host),
+				slog.String("uri", req.RequestURI),
+				slog.String("method", req.Method),
+				slog.String("path", p),
+				slog.String("referer", req.Referer()),
+				slog.String("user_agent", req.UserAgent()),
+				slog.Int("status", res.Status),
+				slog.Int64("latency", stop.Sub(start).Nanoseconds()/1000),
+				slog.String("latency_human", stop.Sub(start).String()),
+				slog.String("bytes_in", bytesIn),
+				slog.Int64("bytes_out", res.Size),
+				slog.String("trace_id", spanContext.TraceID().String()),
+			)
 
 			return nil
 		}
@@ -282,7 +284,7 @@ func Setup(ctx context.Context) {
 
 func Serve() {
 	address := fmt.Sprintf(":%d", viper.GetInt("port"))
-	log.Info().Str("address", address).Msg("starting server")
+	slog.Info("starting server", slog.String("address", address))
 
 	e.HidePort = true
 	e.Logger.Error(e.Start(address))
@@ -292,7 +294,8 @@ func installExportPipeline(ctx context.Context) func() {
 	client := otlptracehttp.NewClient()
 	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
-		log.Fatal().Err(err).Msg("creating OTLP trace exporter")
+		slog.Error("creating OTLP trace exporter", slog.Any("err", err))
+		os.Exit(1)
 	}
 
 	tracerProvider := sdktrace.NewTracerProvider(
@@ -304,7 +307,8 @@ func installExportPipeline(ctx context.Context) func() {
 
 	return func() {
 		if err := tracerProvider.Shutdown(ctx); err != nil {
-			log.Fatal().Err(err).Msg("stopping tracer provider")
+			slog.Error("stopping tracer provider", slog.Any("err", err))
+			os.Exit(1)
 		}
 	}
 }
@@ -329,5 +333,8 @@ func Start() {
 }
 
 func Stop() error {
-	return errors.Wrap(e.Close(), "failed to stop http server")
+	if err := e.Close(); err != nil {
+		return fmt.Errorf("failed to stop http server: %w", err)
+	}
+	return nil
 }

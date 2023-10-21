@@ -5,13 +5,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"path"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
+	"github.com/Vilsol/slox"
 	"github.com/vmihailenco/taskq/v3"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -32,10 +33,10 @@ func init() {
 func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	var task tasks.ScanModOnVirusTotalData
 	if err := json.Unmarshal(payload, &task); err != nil {
-		return errors.Wrap(err, "failed to unmarshal task data")
+		return fmt.Errorf("failed to unmarshal task data: %w", err)
 	}
 
-	log.Info().Msgf("starting virus scan of mod %s version %s", task.ModID, task.VersionID)
+	slox.Info(ctx, "starting virus scan of mod", slog.String("mod", task.ModID), slog.String("version", task.VersionID))
 
 	version := postgres.GetVersion(ctx, task.VersionID)
 	// Version got deleted?
@@ -50,12 +51,12 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 	fileData, err := io.ReadAll(response.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to read mod file")
+		return fmt.Errorf("failed to read mod file: %w", err)
 	}
 
 	archive, err := zip.NewReader(bytes.NewReader(fileData), int64(len(fileData)))
 	if err != nil {
-		return errors.Wrap(err, "failed to unzip mod file")
+		return fmt.Errorf("failed to unzip mod file: %w", err)
 	}
 
 	toScan := make([]io.Reader, 0)
@@ -64,7 +65,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 		if path.Ext(file.Name) == ".dll" || path.Ext(file.Name) == ".so" {
 			open, err := file.Open()
 			if err != nil {
-				return errors.Wrap(err, "failed to open mod file")
+				return fmt.Errorf("failed to open mod file: %w", err)
 			}
 
 			toScan = append(toScan, open)
@@ -78,12 +79,12 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	}
 
 	if !success {
-		log.Warn().Msgf("mod %s version %s failed to pass virus scan", task.ModID, task.VersionID)
+		slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", task.ModID), slog.String("version", task.VersionID))
 		return nil
 	}
 
 	if task.ApproveAfter {
-		log.Info().Msgf("approving mod %s version %s after successful virus scan", task.ModID, task.VersionID)
+		slox.Info(ctx, "approving mod after successful virus scan", slog.String("mod", task.ModID), slog.String("version", task.VersionID))
 		version.Approved = true
 		postgres.Save(ctx, &version)
 

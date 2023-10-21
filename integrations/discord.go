@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"html"
 	"io"
+	"log/slog"
 	"net/http"
 	"runtime/debug"
 	"strings"
 
+	"github.com/Vilsol/slox"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/rs/zerolog/log"
 	"github.com/russross/blackfriday"
 	"github.com/spf13/viper"
 
@@ -59,7 +60,7 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
-		log.Err(err).Msg("error marshaling discord webhook")
+		slox.Error(ctx, "error marshaling discord webhook", slog.Any("err", err))
 		return
 	}
 
@@ -78,7 +79,7 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 }
 
 func NewVersion(ctx context.Context, version *postgres.Version) {
-	log.Info().Str("stack", string(debug.Stack())).Msg("new version discord webhook")
+	slox.Info(ctx, "new version discord webhook", slog.String("stack", string(debug.Stack())))
 
 	if version == nil {
 		return
@@ -143,7 +144,7 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
-		log.Err(err).Msg("error marshaling discord webhook")
+		slox.Error(ctx, "error marshaling discord webhook", slog.Any("err", err))
 		return
 	}
 

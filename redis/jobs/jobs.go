@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
+	"github.com/Vilsol/slox"
 	"github.com/go-redis/redis/v8"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/vmihailenco/taskq/extra/taskqotel/v3"
 	"github.com/vmihailenco/taskq/v3"
@@ -54,7 +55,7 @@ func SubmitJobUpdateDBFromModVersionFileTask(ctx context.Context, modID string, 
 
 	err := queue.Add(tasks.UpdateDBFromModVersionFileTask.WithArgs(ctx, task))
 	if err != nil {
-		log.Err(err).Msg("error adding task")
+		slox.Error(ctx, "error adding task", slog.Any("err", err))
 	}
 }
 
@@ -66,7 +67,7 @@ func SubmitJobUpdateDBFromModVersionJSONFileTask(ctx context.Context, modID stri
 
 	err := queue.Add(tasks.UpdateDBFromModVersionJSONFileTask.WithArgs(ctx, task))
 	if err != nil {
-		log.Err(err).Msg("error adding task")
+		slox.Error(ctx, "error adding task", slog.Any("err", err))
 	}
 }
 
@@ -77,18 +78,7 @@ func SubmitJobCopyObjectFromOldBucketTask(ctx context.Context, key string) {
 
 	err := queue.Add(tasks.CopyObjectFromOldBucketTask.WithArgs(ctx, task))
 	if err != nil {
-		log.Err(err).Msg("error adding task")
-	}
-}
-
-func SubmitJobCopyObjectToOldBucketTask(ctx context.Context, key string) {
-	task, _ := json.Marshal(tasks.CopyObjectToOldBucketData{
-		Key: key,
-	})
-
-	err := queue.Add(tasks.CopyObjectToOldBucketTask.WithArgs(ctx, task))
-	if err != nil {
-		log.Err(err).Msg("error adding task")
+		slox.Error(ctx, "error adding task", slog.Any("err", err))
 	}
 }
 
@@ -101,6 +91,6 @@ func SubmitJobScanModOnVirusTotalTask(ctx context.Context, modID string, version
 
 	err := queue.Add(tasks.ScanModOnVirusTotalTask.WithArgs(ctx, task))
 	if err != nil {
-		log.Err(err).Msg("error adding task")
+		slox.Error(ctx, "error adding task", slog.Any("err", err))
 	}
 }

@@ -2,12 +2,11 @@ package migrations
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/lab259/go-migration"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	postgres2 "github.com/satisfactorymodding/smr-api/db/postgres"
 
@@ -15,14 +14,12 @@ import (
 	_ "github.com/satisfactorymodding/smr-api/migrations/code"
 )
 
-type codeMigrationLogger struct {
-	log *zerolog.Logger
-}
+type codeMigrationLogger struct{}
 
 func (c codeMigrationLogger) Write(p []byte) (int, error) {
 	message := strings.TrimRight(string(p), "\n")
 	if len(message) > 0 {
-		log.Info().Msg(message)
+		slog.Info(message)
 	}
 	return len(p), nil
 }
@@ -31,7 +28,7 @@ func codeMigrations(ctx context.Context) {
 	source := migration.DefaultCodeSource()
 
 	// TODO Custom reporter, this one's very ugly
-	reporter := migration.NewDefaultReporterWithParams(codeMigrationLogger{log: &log.Logger}, os.Exit)
+	reporter := migration.NewDefaultReporterWithParams(codeMigrationLogger{}, os.Exit)
 
 	db, _ := postgres2.DBCtx(ctx).DB()
 	manager := migration.NewDefaultManager(migration.NewPostgreSQLTarget(db), source)

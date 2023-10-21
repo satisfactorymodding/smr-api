@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -20,12 +21,12 @@ func (r *mutationResolver) CreateBootstrapVersion(ctx context.Context, bootstrap
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&bootstrapVersion); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	date, err := time.Parse(time.RFC3339Nano, bootstrapVersion.Date)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse date")
+		return nil, fmt.Errorf("failed to parse date: %w", err)
 	}
 
 	dbBootstrapVersion := &postgres.BootstrapVersion{
@@ -39,7 +40,7 @@ func (r *mutationResolver) CreateBootstrapVersion(ctx context.Context, bootstrap
 
 	resultBootstrapVersion, err := postgres.CreateBootstrapVersion(newCtx, dbBootstrapVersion)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create bootstrap version")
+		return nil, fmt.Errorf("failed to create bootstrap version: %w", err)
 	}
 
 	return DBBootstrapVersionToGenerated(resultBootstrapVersion), nil
@@ -51,7 +52,7 @@ func (r *mutationResolver) UpdateBootstrapVersion(ctx context.Context, bootstrap
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&bootstrapVersion); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	dbBootstrapVersion := postgres.GetBootstrapVersionByID(newCtx, bootstrapVersionID)
@@ -94,7 +95,7 @@ func (r *queryResolver) GetBootstrapVersion(ctx context.Context, bootstrapVersio
 	return DBBootstrapVersionToGenerated(postgres.GetBootstrapVersionByID(newCtx, bootstrapVersionID)), nil
 }
 
-func (r *queryResolver) GetBootstrapVersions(ctx context.Context, filter map[string]interface{}) (*generated.GetBootstrapVersions, error) {
+func (r *queryResolver) GetBootstrapVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetBootstrapVersions, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getBootstrapVersions")
 	defer wrapper.end()
 	return &generated.GetBootstrapVersions{}, nil
@@ -102,7 +103,7 @@ func (r *queryResolver) GetBootstrapVersions(ctx context.Context, filter map[str
 
 type getBootstrapVersionsResolver struct{ *Resolver }
 
-func (r *getBootstrapVersionsResolver) BootstrapVersions(ctx context.Context, obj *generated.GetBootstrapVersions) ([]*generated.BootstrapVersion, error) {
+func (r *getBootstrapVersionsResolver) BootstrapVersions(ctx context.Context, _ *generated.GetBootstrapVersions) ([]*generated.BootstrapVersion, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetBootstrapVersions.bootstrapVersions")
 	defer wrapper.end()
 
@@ -132,7 +133,7 @@ func (r *getBootstrapVersionsResolver) BootstrapVersions(ctx context.Context, ob
 	return converted, nil
 }
 
-func (r *getBootstrapVersionsResolver) Count(ctx context.Context, obj *generated.GetBootstrapVersions) (int, error) {
+func (r *getBootstrapVersionsResolver) Count(ctx context.Context, _ *generated.GetBootstrapVersions) (int, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetBootstrapVersions.count")
 	defer wrapper.end()
 

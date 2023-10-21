@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/pkg/errors"
@@ -20,26 +21,26 @@ func FacebookCallback(code string, state string) (*UserData, error) {
 
 	token, err := facebookAuth.Exchange(ctx, code, urlParam)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to exchange code")
+		return nil, fmt.Errorf("failed to exchange code: %w", err)
 	}
 
 	client := facebookAuth.Client(ctx, token)
 
 	resp, err := client.Get("https://graph.facebook.com/v5.0/me?fields=email,short_name,id,picture{url}")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get user data")
+		return nil, fmt.Errorf("failed to get user data: %w", err)
 	}
 
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read response body")
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	var userData map[string]interface{}
 	err = json.Unmarshal(bytes, &userData)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal user data")
+		return nil, fmt.Errorf("failed to unmarshal user data: %w", err)
 	}
 
 	return &UserData{

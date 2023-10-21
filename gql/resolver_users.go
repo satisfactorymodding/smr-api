@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -36,7 +37,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 	if input.Avatar != nil {
 		file, err := io.ReadAll(input.Avatar.File)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read avatar file")
+			return nil, fmt.Errorf("failed to read avatar file: %w", err)
 		}
 
 		avatarData, err := converter.ConvertAnyImageToWebp(ctx, file)
@@ -153,7 +154,7 @@ func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]*gene
 	return converted, nil
 }
 
-func (r *userResolver) Groups(ctx context.Context, obj *generated.User) ([]*generated.Group, error) {
+func (r *userResolver) Groups(ctx context.Context, _ *generated.User) ([]*generated.Group, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
@@ -172,7 +173,7 @@ func (r *userResolver) Groups(ctx context.Context, obj *generated.User) ([]*gene
 	return converted, nil
 }
 
-func (r *userResolver) Roles(ctx context.Context, obj *generated.User) (*generated.UserRoles, error) {
+func (r *userResolver) Roles(ctx context.Context, _ *generated.User) (*generated.UserRoles, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
@@ -261,7 +262,7 @@ func (r *mutationResolver) DiscourseSso(ctx context.Context, sso string, sig str
 
 	nonceString, err := base64.StdEncoding.DecodeString(sso)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode sso")
+		return nil, fmt.Errorf("failed to decode sso: %w", err)
 	}
 
 	user := ctx.Value(postgres.UserKey{}).(*postgres.User)

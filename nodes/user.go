@@ -31,7 +31,7 @@ func userFromContext(c echo.Context) *postgres.User {
 // @Produce  json
 // @Success 200
 // @Router /user/me [get]
-func getMe(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
+func getMe(user *postgres.User, _ echo.Context) (interface{}, *ErrorResponse) {
 	return UserToPrivateUser(user), nil
 }
 
@@ -42,7 +42,7 @@ func getMe(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
 // @Produce  json
 // @Success 200
 // @Router /user/me/logout [get]
-func getLogout(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
+func getLogout(_ *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
 	postgres.LogoutSession(c.Request().Context(), c.Request().Header.Get("Authorization"))
 	return nil, nil
 }

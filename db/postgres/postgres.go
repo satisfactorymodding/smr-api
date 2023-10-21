@@ -3,11 +3,11 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
+	"github.com/Vilsol/slox"
 	"github.com/patrickmn/go-cache"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -37,15 +37,15 @@ func (l *GormLogger) LogMode(mode logger.LogLevel) logger.Interface {
 }
 
 func (*GormLogger) Info(ctx context.Context, msg string, data ...interface{}) {
-	log.Info().Str("file", utils.FileWithLineNum()).Msgf(msg, data...)
+	slox.Info(ctx, fmt.Sprintf(msg, data...), slog.String("file", utils.FileWithLineNum()))
 }
 
 func (*GormLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
-	log.Warn().Str("file", utils.FileWithLineNum()).Msgf(msg, data...)
+	slox.Warn(ctx, fmt.Sprintf(msg, data...), slog.String("file", utils.FileWithLineNum()))
 }
 
 func (*GormLogger) Error(ctx context.Context, msg string, data ...interface{}) {
-	log.Error().Str("file", utils.FileWithLineNum()).Msgf(msg, data...)
+	slox.Error(ctx, fmt.Sprintf(msg, data...), slog.String("file", utils.FileWithLineNum()))
 }
 
 func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
@@ -54,25 +54,30 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 
 	sql, rows := fc()
 
-	var logEv *zerolog.Event
+	level := slog.LevelInfo
+	attrs := make([]slog.Attr, 0)
+	toLog := false
 	switch {
 	case err != nil:
-		logEv = log.Err(err)
+		level = slog.LevelError
+		attrs = append(attrs, slog.Any("err", err))
+		toLog = true
 	case since > l.SlowThreshold && l.SlowThreshold != 0:
-		logEv = log.Warn()
+		level = slog.LevelWarn
+		toLog = true
 	case l.Debug:
-		logEv = log.Info()
+		level = slog.LevelInfo
+		toLog = true
 	}
 
-	if logEv != nil {
+	if toLog {
 		if len(sql) > 256 {
 			sql = sql[:256]
 		}
 
-		logEv.Str("file", utils.FileWithLineNum()).
-			Float64("elapsed", elapsed).
-			Int64("rows", rows).
-			Msg(sql)
+		attrs = append(attrs, slog.Float64("elapsed", elapsed))
+		attrs = append(attrs, slog.Int64("rows", rows))
+		slox.LogAttrs(ctx, level, sql, attrs...)
 	}
 }
 
@@ -112,7 +117,7 @@ func InitializePostgres(ctx context.Context) {
 
 	// TODO Create search indexes
 
-	log.Info().Msg("Postgres initialized")
+	slox.Info(ctx, "Postgres initialized")
 }
 
 func Save(ctx context.Context, object interface{}) {

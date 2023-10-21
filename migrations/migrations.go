@@ -3,11 +3,12 @@ package migrations
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
+	"github.com/Vilsol/slox"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/rs/zerolog/log"
 
 	postgres2 "github.com/satisfactorymodding/smr-api/db/postgres"
 
@@ -18,7 +19,7 @@ import (
 func RunMigrations(ctx context.Context) {
 	databaseMigrations(ctx)
 	codeMigrations(ctx)
-	log.Info().Msg("Migrations Complete")
+	slox.Info(ctx, "Migrations Complete")
 }
 
 var migrationDir = "./migrations"
@@ -55,7 +56,7 @@ type SimpleLogger struct {
 }
 
 func (l SimpleLogger) Printf(format string, v ...interface{}) {
-	log.Ctx(l.ctx).Info().Msgf(strings.TrimRight(format, "\n"), v...)
+	slox.Info(l.ctx, fmt.Sprintf(strings.TrimRight(format, "\n"), v...))
 }
 
 func (l SimpleLogger) Verbose() bool {

@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
+	"log/slog"
 	"regexp"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	"github.com/Vilsol/slox"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/redis"
@@ -18,7 +19,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 		for {
 			start := time.Now()
 			keys := redis.GetAllKeys()
-			log.Info().Msgf("Fetched: %d keys in %s", len(keys), time.Since(start).String())
+			slox.Info(ctx, "statistics fetched", slog.Int("keys", len(keys)), slog.Duration("took", time.Since(start)))
 			resultMap := make(map[string]map[string]map[string]uint)
 			for _, key := range keys {
 				if matches := keyRegex.FindStringSubmatch(key); matches != nil {
@@ -102,7 +103,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 				updateTx.Commit()
 			}
 
-			log.Info().Msgf("Statistics Updated! Took %s", time.Since(start).String())
+			slox.Info(ctx, "statistics updated", slog.Duration("took", time.Since(start)))
 			time.Sleep(time.Minute)
 		}
 	}()

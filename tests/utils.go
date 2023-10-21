@@ -2,10 +2,11 @@ package tests
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 
+	"github.com/Vilsol/slox"
 	"github.com/machinebox/graphql"
-	"github.com/rs/zerolog/log"
 
 	"github.com/satisfactorymodding/smr-api"
 	"github.com/satisfactorymodding/smr-api/auth"
@@ -73,7 +74,7 @@ func makeUser(ctx context.Context) (string, string, error) {
 		return "", "", err
 	}
 
-	log.Info().Str("id", user.ID).Msg("created fake test_user")
+	slox.Info(ctx, "created fake test_user", slog.String("id", user.ID))
 
 	userGroup := postgres.UserGroup{
 		UserID:  user.ID,
@@ -85,7 +86,7 @@ func makeUser(ctx context.Context) (string, string, error) {
 		return "", "", err
 	}
 
-	log.Info().Msg("created user admin group")
+	slox.Info(ctx, "created user admin group")
 
 	session := postgres.UserSession{
 		SMRModel: postgres.SMRModel{
@@ -100,7 +101,7 @@ func makeUser(ctx context.Context) (string, string, error) {
 		return "", "", err
 	}
 
-	log.Info().Str("token", session.Token).Msg("created fake user session")
+	slox.Info(ctx, "created fake user session", slog.String("token", session.Token))
 
 	return session.Token, user.ID, nil
 }

@@ -1,13 +1,13 @@
 package models
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/generated"
@@ -72,7 +72,7 @@ func (f *VersionFilter) AddField(name string) {
 func (f *VersionFilter) Hash() (string, error) {
 	hash, err := hashstructure.Hash(f, hashstructure.FormatV2, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to hash VersionFilter")
+		return "", fmt.Errorf("failed to hash VersionFilter: %w", err)
 	}
 	return strconv.FormatUint(hash, 10), nil
 }
@@ -89,7 +89,7 @@ func ProcessVersionFilter(filter map[string]interface{}) (*VersionFilter, error)
 	}
 
 	if err := dataValidator.Struct(base); err != nil {
-		return nil, errors.Wrap(err, "failed to validate VersionFilter")
+		return nil, fmt.Errorf("failed to validate VersionFilter: %w", err)
 	}
 
 	return base, nil
@@ -150,7 +150,7 @@ func (f *ModFilter) AddField(name string) {
 func (f *ModFilter) Hash() (string, error) {
 	hash, err := hashstructure.Hash(f, hashstructure.FormatV2, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to hash ModFilter")
+		return "", fmt.Errorf("failed to hash ModFilter: %w", err)
 	}
 	return strconv.FormatUint(hash, 10), nil
 }
@@ -167,7 +167,7 @@ func ProcessModFilter(filter map[string]interface{}) (*ModFilter, error) {
 	}
 
 	if err := dataValidator.Struct(base); err != nil {
-		return nil, errors.Wrap(err, "failed to validate ModFilter")
+		return nil, fmt.Errorf("failed to validate ModFilter: %w", err)
 	}
 
 	return base, nil
@@ -186,7 +186,7 @@ type GuideFilter struct {
 func (f GuideFilter) Hash() (string, error) {
 	hash, err := hashstructure.Hash(f, hashstructure.FormatV2, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to hash GuideFilter")
+		return "", fmt.Errorf("failed to hash GuideFilter: %w", err)
 	}
 	return strconv.FormatUint(hash, 10), nil
 }
@@ -217,7 +217,7 @@ func ProcessGuideFilter(filter map[string]interface{}) (*GuideFilter, error) {
 	}
 
 	if err := dataValidator.Struct(base); err != nil {
-		return nil, errors.Wrap(err, "failed to validate GuideFilter")
+		return nil, fmt.Errorf("failed to validate GuideFilter: %w", err)
 	}
 
 	return base, nil
@@ -258,7 +258,7 @@ func ProcessSMLVersionFilter(filter map[string]interface{}) (*SMLVersionFilter, 
 	}
 
 	if err := dataValidator.Struct(base); err != nil {
-		return nil, errors.Wrap(err, "failed to validate SMLVersionFilter")
+		return nil, fmt.Errorf("failed to validate SMLVersionFilter: %w", err)
 	}
 
 	return base, nil
@@ -282,10 +282,10 @@ func ApplyChanges(changes interface{}, to interface{}) error {
 		},
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to create decoder")
+		return fmt.Errorf("failed to create decoder: %w", err)
 	}
 
-	return errors.Wrap(dec.Decode(changes), "failed to decode changes")
+	return fmt.Errorf("failed to decode changes: %w", dec.Decode(changes))
 }
 
 type BootstrapVersionFilter struct {
@@ -323,7 +323,7 @@ func ProcessBootstrapVersionFilter(filter map[string]interface{}) (*BootstrapVer
 	}
 
 	if err := dataValidator.Struct(base); err != nil {
-		return nil, errors.Wrap(err, "failed to validate BootstrapVersionFilter")
+		return nil, fmt.Errorf("failed to validate BootstrapVersionFilter: %w", err)
 	}
 
 	return base, nil

@@ -3,6 +3,7 @@ package gql
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -38,7 +39,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&mod); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	if DisallowedModReferences[strings.ToLower(mod.ModReference)] {
@@ -69,13 +70,13 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 	if mod.Logo != nil {
 		file, err := io.ReadAll(mod.Logo.File)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read logo file")
+			return nil, fmt.Errorf("failed to read logo file: %w", err)
 		}
 
 		logoData, err = converter.ConvertAnyImageToWebp(ctx, file)
 
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to convert logo file")
+			return nil, fmt.Errorf("failed to convert logo file: %w", err)
 		}
 	} else {
 		dbMod.Logo = ""
@@ -110,7 +111,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&mod); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	if mod.TagIDs != nil {
@@ -141,7 +142,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 	if mod.Logo != nil {
 		file, err := io.ReadAll(mod.Logo.File)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read logo file")
+			return nil, fmt.Errorf("failed to read logo file: %w", err)
 		}
 
 		logoData, err := converter.ConvertAnyImageToWebp(ctx, file)
@@ -305,25 +306,25 @@ func (r *queryResolver) GetModByReference(ctx context.Context, modReference stri
 	return DBModToGenerated(mod), nil
 }
 
-func (r *queryResolver) GetMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMods, error) {
+func (r *queryResolver) GetMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMods")
 	defer wrapper.end()
 	return &generated.GetMods{}, nil
 }
 
-func (r *queryResolver) GetUnapprovedMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMods, error) {
+func (r *queryResolver) GetUnapprovedMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getUnapprovedMods")
 	defer wrapper.end()
 	return &generated.GetMods{}, nil
 }
 
-func (r *queryResolver) GetMyMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMyMods, error) {
+func (r *queryResolver) GetMyMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMyMods")
 	defer wrapper.end()
 	return &generated.GetMyMods{}, nil
 }
 
-func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMyMods, error) {
+func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMyUnapprovedMods")
 	defer wrapper.end()
 	return &generated.GetMyMods{}, nil
@@ -331,7 +332,7 @@ func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, filter map[stri
 
 type getModsResolver struct{ *Resolver }
 
-func (r *getModsResolver) Mods(ctx context.Context, obj *generated.GetMods) ([]*generated.Mod, error) {
+func (r *getModsResolver) Mods(ctx context.Context, _ *generated.GetMods) ([]*generated.Mod, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetMods.mods")
 	defer wrapper.end()
 
@@ -361,7 +362,7 @@ func (r *getModsResolver) Mods(ctx context.Context, obj *generated.GetMods) ([]*
 	return converted, nil
 }
 
-func (r *getModsResolver) Count(ctx context.Context, obj *generated.GetMods) (int, error) {
+func (r *getModsResolver) Count(ctx context.Context, _ *generated.GetMods) (int, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetMods.count")
 	defer wrapper.end()
 
@@ -382,7 +383,7 @@ func (r *getModsResolver) Count(ctx context.Context, obj *generated.GetMods) (in
 
 type getMyModsResolver struct{ *Resolver }
 
-func (r *getMyModsResolver) Mods(ctx context.Context, obj *generated.GetMyMods) ([]*generated.Mod, error) {
+func (r *getMyModsResolver) Mods(ctx context.Context, _ *generated.GetMyMods) ([]*generated.Mod, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetMyMods.mods")
 	defer wrapper.end()
 
@@ -418,7 +419,7 @@ func (r *getMyModsResolver) Mods(ctx context.Context, obj *generated.GetMyMods) 
 	return converted, nil
 }
 
-func (r *getMyModsResolver) Count(ctx context.Context, obj *generated.GetMyMods) (int, error) {
+func (r *getMyModsResolver) Count(ctx context.Context, _ *generated.GetMyMods) (int, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "GetMyMods.count")
 	defer wrapper.end()
 
