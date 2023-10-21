@@ -164,7 +164,10 @@ func UploadUserAvatar(ctx context.Context, userID string, data io.ReadSeeker) (b
 		func() error {
 			var err error
 			key, err = storage.Put(ctx, key, data)
-			return fmt.Errorf("failed to upload user avatar: %w", err)
+			if err != nil {
+				return fmt.Errorf("failed to upload user avatar: %w", err)
+			}
+			return nil
 		},
 		retry.Attempts(3),
 		retry.LastErrorOnly(true),

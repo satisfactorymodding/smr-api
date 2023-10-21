@@ -57,9 +57,11 @@ func InitializeConfig(baseCtx context.Context) context.Context {
 			},
 		))
 	} else {
-		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			AddSource: true,
-		})))
+		slog.SetDefault(slog.New(StackRewriter{
+			Upstream: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+				AddSource: true,
+			}),
+		}))
 	}
 
 	if baseCtx == nil {

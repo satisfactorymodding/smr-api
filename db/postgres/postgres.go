@@ -77,7 +77,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 
 		attrs = append(attrs, slog.Float64("elapsed", elapsed))
 		attrs = append(attrs, slog.Int64("rows", rows))
-		slox.LogAttrs(ctx, level, sql, attrs...)
+		slog.LogAttrs(ctx, level, sql, attrs...)
 	}
 }
 

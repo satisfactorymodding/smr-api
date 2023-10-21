@@ -285,7 +285,11 @@ func ApplyChanges(changes interface{}, to interface{}) error {
 		return fmt.Errorf("failed to create decoder: %w", err)
 	}
 
-	return fmt.Errorf("failed to decode changes: %w", dec.Decode(changes))
+	if err := dec.Decode(changes); err != nil {
+		return fmt.Errorf("failed to decode changes: %w", err)
+	}
+
+	return nil
 }
 
 type BootstrapVersionFilter struct {

@@ -145,8 +145,11 @@ func (s3o *S3) CompleteMultipartUpload(key string) error {
 		MultipartUpload: &s3.CompletedMultipartUpload{Parts: completedParts},
 		UploadId:        aws.String(id),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to complete multipart upload: %w", err)
+	}
 
-	return fmt.Errorf("failed to complete multipart upload: %w", err)
+	return nil
 }
 
 func (s3o *S3) Rename(from string, to string) error {
@@ -157,8 +160,11 @@ func (s3o *S3) Rename(from string, to string) error {
 		CopySource: aws.String(viper.GetString("storage.bucket") + from),
 		Key:        aws.String(cleanedKey),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to copy object: %w", err)
+	}
 
-	return fmt.Errorf("failed to copy object: %w", err)
+	return nil
 }
 
 func (s3o *S3) Delete(key string) error {
