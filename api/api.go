@@ -1,4 +1,4 @@
-package smr
+package api
 
 import (
 	"context"
@@ -75,6 +75,11 @@ func Initialize(baseCtx context.Context) context.Context {
 
 	redis.InitializeRedis(ctx)
 	postgres.InitializePostgres(ctx)
+	ctx, err := db.WithDB(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	storage.InitializeStorage(ctx)
 	oauth.InitializeOAuth()
 	util.InitializeSecurity()

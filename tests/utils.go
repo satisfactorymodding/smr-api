@@ -8,7 +8,7 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/machinebox/graphql"
 
-	"github.com/satisfactorymodding/smr-api"
+	smr "github.com/satisfactorymodding/smr-api/api"
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/redis"
