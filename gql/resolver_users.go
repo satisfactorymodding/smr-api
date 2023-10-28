@@ -17,8 +17,10 @@ import (
 
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/dataloader"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/util/converter"
@@ -83,9 +85,15 @@ func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
 }
 
 func (r *queryResolver) GetMe(ctx context.Context) (*generated.User, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getMe")
+	wrapper, ctx := WrapQueryTrace(ctx, "getMe")
 	defer wrapper.end()
-	return DBUserToGenerated(ctx.Value(postgres.UserKey{}).(*postgres.User)), nil
+
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.UserImpl)(nil).Convert(user), nil
 }
 
 func (r *queryResolver) GetUser(ctx context.Context, userID string) (*generated.User, error) {
@@ -155,18 +163,25 @@ func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]*gene
 }
 
 func (r *userResolver) Groups(ctx context.Context, _ *generated.User) ([]*generated.Group, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
+	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	groups := user.GetGroups(newCtx)
+	groups, err := user.QueryGroups().All(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	converted := make([]*generated.Group, len(groups))
 	for k, v := range groups {
+		g := auth.GetGroupByID(v.GroupID)
 		converted[k] = &generated.Group{
-			ID:   v.ID,
-			Name: v.Name,
+			ID:   g.ID,
+			Name: g.Name,
 		}
 	}
 
@@ -174,12 +189,27 @@ func (r *userResolver) Groups(ctx context.Context, _ *generated.User) ([]*genera
 }
 
 func (r *userResolver) Roles(ctx context.Context, _ *generated.User) (*generated.UserRoles, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
+	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	roles := user.GetRoles(newCtx)
+	groups, err := user.QueryGroups().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	roles := make(map[*auth.Role]bool)
+
+	for _, group := range groups {
+		gr := auth.GetGroupByID(group.GroupID)
+		for _, role := range gr.Roles {
+			roles[role] = true
+		}
+	}
 
 	userRoles := &generated.UserRoles{}
 
@@ -265,7 +295,10 @@ func (r *mutationResolver) DiscourseSso(ctx context.Context, sso string, sig str
 		return nil, fmt.Errorf("failed to decode sso: %w", err)
 	}
 
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	if user == nil {
 		return nil, errors.New("user not logged in")

@@ -42,7 +42,7 @@ func GenerateUniqueID() string {
 
 	PutUint48(result[:6], uint64(time.Now().UnixNano()/1e6))
 
-	return string(base58.Encode(result))
+	return base58.Encode(result)
 }
 
 func PutUint48(b []byte, v uint64) {

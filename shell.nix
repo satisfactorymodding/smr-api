@@ -12,5 +12,6 @@ pkgs.mkShell {
     protoc-gen-go-grpc
     minio-client
     unstable.golangci-lint
+    unstable.delve
   ];
 }

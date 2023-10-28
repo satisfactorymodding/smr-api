@@ -3,17 +3,19 @@ package gql
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
-	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
+	"github.com/satisfactorymodding/smr-api/generated/ent/announcement"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement generated.NewAnnouncement) (*generated.Announcement, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "createAnnouncement")
+	wrapper, ctx := WrapMutationTrace(ctx, "createAnnouncement")
 	defer wrapper.end()
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
@@ -21,35 +23,33 @@ func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement 
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	dbAnnouncement := &postgres.Announcement{
-		Message:    announcement.Message,
-		Importance: string(announcement.Importance),
-	}
-
-	resultAnnouncement, err := postgres.CreateAnnouncement(newCtx, dbAnnouncement)
+	result, err := db.From(ctx).Announcement.
+		Create().
+		SetMessage(announcement.Message).
+		SetImportance(string(announcement.Importance)).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return DBAnnouncementToGenerated(resultAnnouncement), nil
+
+	return (*conv.AnnouncementImpl)(nil).Convert(result), nil
 }
 
 func (r *mutationResolver) DeleteAnnouncement(ctx context.Context, announcementID string) (bool, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "deleteAnnouncement")
+	wrapper, ctx := WrapMutationTrace(ctx, "deleteAnnouncement")
 	defer wrapper.end()
 
-	dbAnnouncement := postgres.GetAnnouncementByID(newCtx, announcementID)
+	slog.Info("deleting announcement", slog.String("id", announcementID))
 
-	if dbAnnouncement == nil {
-		return false, errors.New("announcement not found")
+	if err := db.From(ctx).Announcement.DeleteOneID(announcementID).Exec(ctx); err != nil {
+		return false, err
 	}
-
-	postgres.Delete(newCtx, &dbAnnouncement)
 
 	return true, nil
 }
 
 func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementID string, announcement generated.UpdateAnnouncement) (*generated.Announcement, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "updateAnnouncement")
+	wrapper, ctx := WrapMutationTrace(ctx, "updateAnnouncement")
 	defer wrapper.end()
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
@@ -57,43 +57,53 @@ func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementI
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	dbAnnouncement := postgres.GetAnnouncementByID(newCtx, announcementID)
+	update := db.From(ctx).Announcement.UpdateOneID(announcementID)
+	SetINNOEF(announcement.Message, update.SetMessage)
+	SetINNOEF((*string)(announcement.Importance), update.SetImportance)
 
-	if dbAnnouncement == nil {
-		return nil, errors.New("guide not found")
+	result, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	SetStringINNOE(announcement.Message, &dbAnnouncement.Message)
-	SetStringINNOE((*string)(announcement.Importance), &dbAnnouncement.Importance)
-
-	postgres.Save(newCtx, &dbAnnouncement)
-
-	return DBAnnouncementToGenerated(dbAnnouncement), nil
+	return (*conv.AnnouncementImpl)(nil).Convert(result), nil
 }
 
 func (r *queryResolver) GetAnnouncement(ctx context.Context, announcementID string) (*generated.Announcement, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncement")
 	defer wrapper.end()
 
-	announcement := postgres.GetAnnouncementByID(newCtx, announcementID)
+	result, err := db.From(newCtx).Announcement.Get(newCtx, announcementID)
+	if err != nil {
+		return nil, err
+	}
 
-	return DBAnnouncementToGenerated(announcement), nil
+	return (*conv.AnnouncementImpl)(nil).Convert(result), nil
 }
 
 func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]*generated.Announcement, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncements")
 	defer wrapper.end()
 
-	announcements := postgres.GetAnnouncements(newCtx)
+	result, err := db.From(newCtx).Debug().Announcement.Query().All(newCtx)
+	if err != nil {
+		return nil, err
+	}
 
-	return DBAnnouncementsToGeneratedSlice(announcements), nil
+	return (*conv.AnnouncementImpl)(nil).ConvertSlice(result), nil
 }
 
 func (r *queryResolver) GetAnnouncementsByImportance(ctx context.Context, importance generated.AnnouncementImportance) ([]*generated.Announcement, error) {
 	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncementsByImportance")
 	defer wrapper.end()
 
-	announcements := postgres.GetAnnouncementsByImportance(newCtx, string(importance))
+	result, err := db.From(newCtx).Announcement.
+		Query().
+		Where(announcement.ImportanceEQ(string(importance))).
+		All(newCtx)
+	if err != nil {
+		return nil, err
+	}
 
-	return DBAnnouncementsToGeneratedSlice(announcements), nil
+	return (*conv.AnnouncementImpl)(nil).ConvertSlice(result), nil
 }

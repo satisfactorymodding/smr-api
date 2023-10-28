@@ -149,23 +149,6 @@ type VersionDependency struct {
 	Optional  bool
 }
 
-type BootstrapVersion struct {
-	Date time.Time
-	SMRModel
-	Version             string `gorm:"type:varchar(32);unique_index"`
-	Stability           string `sql:"type:version_stability"`
-	Link                string
-	Changelog           string
-	SatisfactoryVersion int
-}
-
-type Announcement struct {
-	SMRModel
-
-	Message    string
-	Importance string
-}
-
 type Tag struct {
 	SMRModel
 

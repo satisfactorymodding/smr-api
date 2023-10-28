@@ -15,11 +15,11 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/vmihailenco/taskq/v3"
 
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
 	"github.com/satisfactorymodding/smr-api/storage"
-	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
@@ -93,7 +93,7 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 		mod.LastVersionDate = &now
 		postgres.Save(ctx, &mod)
 
-		go integrations.NewVersion(util.ReWrapCtx(ctx), version)
+		go integrations.NewVersion(db.ReWrapCtx(ctx), version)
 	}
 
 	return nil

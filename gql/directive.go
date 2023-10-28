@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/satisfactorymodding/smr-api/auth"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/util"
@@ -38,7 +39,10 @@ type Directive struct {
 }
 
 func canEditMod(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	dbMod := postgres.GetModByID(ctx, getArgument(ctx, field).(string))
 
@@ -46,11 +50,11 @@ func canEditMod(ctx context.Context, _ interface{}, next graphql.Resolver, field
 		return nil, errors.New("mod not found")
 	}
 
-	if postgres.UserCanUploadModVersions(ctx, user, dbMod.ID) {
+	if db.UserCanUploadModVersions(ctx, user, dbMod.ID) {
 		return next(ctx)
 	}
 
-	if user.Has(ctx, auth.RoleEditAnyContent) {
+	if db.UserHas(ctx, auth.RoleEditAnyContent, user) {
 		return next(ctx)
 	}
 
@@ -58,9 +62,12 @@ func canEditMod(ctx context.Context, _ interface{}, next graphql.Resolver, field
 }
 
 func canEditModCompatibility(ctx context.Context, _ interface{}, next graphql.Resolver, field *string) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if user.Has(ctx, auth.RoleEditAnyModCompatibility) || user.Has(ctx, auth.RoleEditAnyContent) {
+	if db.UserHas(ctx, auth.RoleEditAnyModCompatibility, user) || db.UserHas(ctx, auth.RoleEditAnyContent, user) {
 		return next(ctx)
 	}
 
@@ -74,7 +81,7 @@ func canEditModCompatibility(ctx context.Context, _ interface{}, next graphql.Re
 		return nil, errors.New("mod not found")
 	}
 
-	if postgres.UserCanUploadModVersions(ctx, user, dbMod.ID) {
+	if db.UserCanUploadModVersions(ctx, user, dbMod.ID) {
 		return next(ctx)
 	}
 
@@ -82,7 +89,10 @@ func canEditModCompatibility(ctx context.Context, _ interface{}, next graphql.Re
 }
 
 func canEditVersion(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	dbVersion := postgres.GetVersion(ctx, getArgument(ctx, field).(string))
 
@@ -90,11 +100,11 @@ func canEditVersion(ctx context.Context, _ interface{}, next graphql.Resolver, f
 		return nil, errors.New("version not found")
 	}
 
-	if postgres.UserCanUploadModVersions(ctx, user, dbVersion.ModID) {
+	if db.UserCanUploadModVersions(ctx, user, dbVersion.ModID) {
 		return next(ctx)
 	}
 
-	if user.Has(ctx, auth.RoleEditAnyContent) {
+	if db.UserHas(ctx, auth.RoleEditAnyContent, user) {
 		return next(ctx)
 	}
 
@@ -102,7 +112,10 @@ func canEditVersion(ctx context.Context, _ interface{}, next graphql.Resolver, f
 }
 
 func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, field string, object bool) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	var userID string
 	if object {
@@ -121,7 +134,7 @@ func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, fi
 		return next(ctx)
 	}
 
-	if user.Has(ctx, auth.RoleEditUsers) {
+	if db.UserHas(ctx, auth.RoleEditUsers, user) {
 		return next(ctx)
 	}
 
@@ -129,7 +142,10 @@ func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, fi
 }
 
 func canEditGuide(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	dbGuide := postgres.GetGuideByID(ctx, getArgument(ctx, field).(string))
 
@@ -141,7 +157,7 @@ func canEditGuide(ctx context.Context, _ interface{}, next graphql.Resolver, fie
 		return next(ctx)
 	}
 
-	if user.Has(ctx, auth.RoleEditAnyContent) {
+	if db.UserHas(ctx, auth.RoleEditAnyContent, user) {
 		return next(ctx)
 	}
 
@@ -149,26 +165,16 @@ func canEditGuide(ctx context.Context, _ interface{}, next graphql.Resolver, fie
 }
 
 func isLoggedIn(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	header := ctx.Value(util.ContextHeader{}).(http.Header)
-	authorization := header.Get("Authorization")
-
-	if authorization == "" {
-		return nil, errors.New("user not logged in")
-	}
-
-	user := postgres.GetUserByToken(ctx, authorization)
-
-	if user == nil {
-		return nil, errors.New("user not logged in")
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	if user.Banned {
 		return nil, errors.New("user banned")
 	}
 
-	userCtx := context.WithValue(ctx, postgres.UserKey{}, user)
-
-	return next(userCtx)
+	return next(ctx)
 }
 
 func isNotLoggedIn(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
@@ -191,9 +197,12 @@ func getArgument(ctx context.Context, key string) interface{} {
 }
 
 func canApproveMods(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if user.Has(ctx, auth.RoleApproveMods) {
+	if db.UserHas(ctx, auth.RoleApproveMods, user) {
 		return next(ctx)
 	}
 
@@ -201,9 +210,12 @@ func canApproveMods(ctx context.Context, _ interface{}, next graphql.Resolver) (
 }
 
 func canApproveVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if user.Has(ctx, auth.RoleApproveVersions) {
+	if db.UserHas(ctx, auth.RoleApproveVersions, user) {
 		return next(ctx)
 	}
 
@@ -211,9 +223,12 @@ func canApproveVersions(ctx context.Context, _ interface{}, next graphql.Resolve
 }
 
 func canEditUsers(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if user.Has(ctx, auth.RoleEditUsers) {
+	if db.UserHas(ctx, auth.RoleEditUsers, user) {
 		return next(ctx)
 	}
 
@@ -221,9 +236,12 @@ func canEditUsers(ctx context.Context, _ interface{}, next graphql.Resolver) (in
 }
 
 func canEditSMLVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if user.Has(ctx, auth.RoleEditSMLVersions) {
+	if db.UserHas(ctx, auth.RoleEditSMLVersions, user) {
 		return next(ctx)
 	}
 
@@ -231,9 +249,12 @@ func canEditSMLVersions(ctx context.Context, _ interface{}, next graphql.Resolve
 }
 
 func canEditBootstrapVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if user.Has(ctx, auth.RoleEditBootstrapVersions) {
+	if db.UserHas(ctx, auth.RoleEditBootstrapVersions, user) {
 		return next(ctx)
 	}
 
@@ -241,9 +262,12 @@ func canEditBootstrapVersions(ctx context.Context, _ interface{}, next graphql.R
 }
 
 func canEditAnnouncements(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if user.Has(ctx, auth.RoleEditAnnouncements) {
+	if db.UserHas(ctx, auth.RoleEditAnnouncements, user) {
 		return next(ctx)
 	}
 
@@ -251,9 +275,12 @@ func canEditAnnouncements(ctx context.Context, _ interface{}, next graphql.Resol
 }
 
 func canManageTags(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if user.Has(ctx, auth.RoleManageTags) {
+	if db.UserHas(ctx, auth.RoleManageTags, user) {
 		return next(ctx)
 	}
 

@@ -8,11 +8,12 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
 
-	gen "github.com/satisfactorymodding/smr-api/ent"
-	"github.com/satisfactorymodding/smr-api/ent/hook"
-	"github.com/satisfactorymodding/smr-api/ent/intercept"
+	gen "github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/hook"
+	"github.com/satisfactorymodding/smr-api/generated/ent/intercept"
 )
 
 // SoftDeleteMixin implements the soft delete pattern for schemas.
@@ -25,6 +26,12 @@ func (SoftDeleteMixin) Fields() []ent.Field {
 	return []ent.Field{
 		field.Time("deleted_at").
 			Optional(),
+	}
+}
+
+func (SoftDeleteMixin) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("deleted_at"),
 	}
 }
 
@@ -57,12 +64,12 @@ func (d SoftDeleteMixin) Hooks() []ent.Hook {
 				return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
 					// Skip soft-delete, means delete the entity permanently.
 					if skip, _ := ctx.Value(softDeleteKey{}).(bool); skip {
-						return next.Mutate(ctx, m)
+						return next.Mutate(ctx, m) // nolint
 					}
 					mx, ok := m.(interface {
 						SetOp(ent.Op)
 						Client() *gen.Client
-						SetDeleteTime(time.Time)
+						SetDeletedAt(time.Time)
 						WhereP(...func(*sql.Selector))
 					})
 					if !ok {
@@ -70,7 +77,7 @@ func (d SoftDeleteMixin) Hooks() []ent.Hook {
 					}
 					d.P(mx)
 					mx.SetOp(ent.OpUpdate)
-					mx.SetDeleteTime(time.Now())
+					mx.SetDeletedAt(time.Now())
 					return mx.Client().Mutate(ctx, m)
 				})
 			},

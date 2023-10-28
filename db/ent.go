@@ -4,28 +4,30 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"ariga.io/entcache"
 	"github.com/Vilsol/slox"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/satisfactorymodding/smr-api/ent"
 	"github.com/spf13/viper"
 
+	"github.com/satisfactorymodding/smr-api/generated/ent"
+
+	// Required PGX driver
 	_ "github.com/jackc/pgx/v5/stdlib"
-	_ "github.com/satisfactorymodding/smr-api/ent/runtime"
 )
 
-type dbKey struct{}
-type txKey struct{}
+type (
+	dbKey struct{}
+	txKey struct{}
+)
 
 type dbClient struct {
 	Client *ent.Client
 }
 
-type Config struct {
-	Address string
-}
+var debugEnabled = false
 
-type ShowDB struct{}
-
+// WithDB initializes a new database instance and puts it in the context
 func WithDB(ctx context.Context) (context.Context, error) {
 	slox.Info(ctx, "initializing db")
 
@@ -48,19 +50,28 @@ func WithDB(ctx context.Context) (context.Context, error) {
 
 	poolDriver := NewPgxPoolDriver(pool)
 
+	cacheDriver := entcache.NewDriver(
+		poolDriver,
+		entcache.ContextLevel(),
+	)
+
 	realClient := ent.NewClient(
-		ent.Driver(poolDriver),
+		ent.Driver(cacheDriver),
 		ent.Log(func(v ...interface{}) {
-			fmt.Println(v...)
 			slox.Info(ctx, fmt.Sprint(v...))
 		}),
 	)
+
+	if debugEnabled {
+		realClient = realClient.Debug()
+	}
 
 	return context.WithValue(ctx, dbKey{}, &dbClient{
 		Client: realClient,
 	}), nil
 }
 
+// From retrieves a database instance from the context
 func From(ctx context.Context) *ent.Client {
 	tx := ctx.Value(txKey{})
 	if tx != nil {
@@ -72,6 +83,15 @@ func From(ctx context.Context) *ent.Client {
 		return nil
 	}
 	return db.(*dbClient).Client
+}
+
+// TransferContext transfers a database instance from source to target context
+func TransferContext(source context.Context, target context.Context) context.Context {
+	db := source.Value(dbKey{})
+	if db == nil {
+		return target
+	}
+	return context.WithValue(target, dbKey{}, db)
 }
 
 func Tx(ctx context.Context, f func(newCtx context.Context, tx *ent.Tx) error, onError func() error) error {
@@ -95,7 +115,7 @@ func Tx(ctx context.Context, f func(newCtx context.Context, tx *ent.Tx) error, o
 		func() {
 			defer func() {
 				if err := recover(); err != nil {
-					finalError = errors.Join(finalError, fmt.Errorf("panic when rolling back: %w", err))
+					finalError = errors.Join(finalError, fmt.Errorf("panic when rolling back: %w", err.(error)))
 				}
 			}()
 
@@ -112,7 +132,7 @@ func Tx(ctx context.Context, f func(newCtx context.Context, tx *ent.Tx) error, o
 			}
 		}()
 
-		return finalError
+		return finalError // nolint
 	}
 
 	err = tx.Commit()
@@ -121,4 +141,8 @@ func Tx(ctx context.Context, f func(newCtx context.Context, tx *ent.Tx) error, o
 	}
 
 	return nil
+}
+
+func EnableDebug() {
+	debugEnabled = true
 }

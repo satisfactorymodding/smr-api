@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/models"
@@ -31,7 +32,10 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, guide generated.NewG
 		Guide:            guide.Guide,
 	}
 
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	dbGuide.UserID = user.ID
 

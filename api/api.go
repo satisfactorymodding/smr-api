@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"ariga.io/entcache"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -22,6 +24,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"github.com/vektah/gqlparser/v2/ast"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -49,7 +52,9 @@ import (
 	"github.com/satisfactorymodding/smr-api/validation"
 
 	// Load REST docs
-	_ "github.com/satisfactorymodding/smr-api/docs"
+	_ "github.com/satisfactorymodding/smr-api/generated/docs"
+	// Load ent
+	_ "github.com/satisfactorymodding/smr-api/generated/ent/runtime"
 	// Load redis consumers
 	_ "github.com/satisfactorymodding/smr-api/redis/jobs/consumers"
 )
@@ -75,6 +80,7 @@ func Initialize(baseCtx context.Context) context.Context {
 
 	redis.InitializeRedis(ctx)
 	postgres.InitializePostgres(ctx)
+
 	ctx, err := db.WithDB(ctx)
 	if err != nil {
 		panic(err)
@@ -195,6 +201,13 @@ func Setup(ctx context.Context) {
 		Cache: lru.New(5000),
 	})
 
+	gqlHandler.AroundResponses(func(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
+		if op := graphql.GetOperationContext(ctx).Operation; op != nil && op.Operation == ast.Query {
+			ctx = entcache.NewContext(ctx)
+		}
+		return next(ctx)
+	})
+
 	v2Query.Any("", echo.WrapHandler(gqlHandler))
 
 	e.Any("/analytics*", func(ctx echo.Context) error {
@@ -203,6 +216,14 @@ func Setup(ctx context.Context) {
 	})
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			req := c.Request()
+			c.SetRequest(req.WithContext(db.TransferContext(ctx, req.Context())))
+			return next(c)
+		}
+	})
 
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

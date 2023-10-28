@@ -14,6 +14,7 @@ import (
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -86,6 +87,31 @@ func SetCompatibilityINN(value *generated.CompatibilityInfoInput, target **postg
 	}
 	toDB := GenCompInfoToDBCompInfo(value)
 	*target = toDB
+}
+
+func SetINNF[T any, B any](value *T, target func(T) B) {
+	if value != nil {
+		target(*value)
+	}
+}
+
+func SetINNOEF[T comparable, B any](value *T, target func(T) B) {
+	if value != nil && *value != *(new(T)) {
+		target(*value)
+	}
+}
+
+func SetStabilityINNF[B any](value *generated.VersionStabilities, target func(smlversion.Stability) B) {
+	if value != nil {
+		target(smlversion.Stability(*value))
+	}
+}
+
+func SetDateINNF[B any](value *string, target func(time.Time) B) {
+	if value != nil {
+		t, _ := time.Parse(time.RFC3339Nano, *value)
+		target(t)
+	}
 }
 
 func RealIP(ctx context.Context) string {

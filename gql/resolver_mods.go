@@ -14,6 +14,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/integrations"
@@ -61,7 +62,10 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 	SetINN(mod.FullDescription, &dbMod.FullDescription)
 	SetINN(mod.Hidden, &dbMod.Hidden)
 
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	dbMod.CreatorID = user.ID
 
@@ -253,7 +257,7 @@ func (r *mutationResolver) ApproveMod(ctx context.Context, modID string) (bool, 
 
 	postgres.Save(newCtx, &dbMod)
 
-	go integrations.NewMod(util.ReWrapCtx(ctx), dbMod)
+	go integrations.NewMod(db.ReWrapCtx(ctx), dbMod)
 
 	return true, nil
 }

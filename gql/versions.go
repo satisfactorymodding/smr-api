@@ -11,6 +11,7 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
 
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/integrations"
@@ -199,7 +200,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		mod.LastVersionDate = &now
 		postgres.Save(ctx, &mod)
 
-		go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
+		go integrations.NewVersion(db.ReWrapCtx(ctx), dbVersion)
 	} else {
 		slox.Info(ctx, "Submitting version job for virus scan")
 		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)

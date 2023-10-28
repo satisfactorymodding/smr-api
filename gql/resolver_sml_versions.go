@@ -3,20 +3,25 @@ package gql
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
+	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion generated.NewSMLVersion) (*generated.SMLVersion, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "createSMLVersion")
+	wrapper, ctx := WrapMutationTrace(ctx, "createSMLVersion")
 	defer wrapper.end()
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
@@ -29,36 +34,56 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 		return nil, fmt.Errorf("failed to parse date: %w", err)
 	}
 
-	dbSMLVersion := &postgres.SMLVersion{
-		Version:             smlVersion.Version,
-		SatisfactoryVersion: smlVersion.SatisfactoryVersion,
-		BootstrapVersion:    smlVersion.BootstrapVersion,
-		Stability:           string(smlVersion.Stability),
-		Link:                smlVersion.Link,
-		Changelog:           smlVersion.Changelog,
-		Date:                date,
-		EngineVersion:       smlVersion.EngineVersion,
+	var result *ent.SmlVersion
+	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+		result, err = db.From(ctx).SmlVersion.
+			Create().
+			SetVersion(smlVersion.Version).
+			SetSatisfactoryVersion(smlVersion.SatisfactoryVersion).
+			SetNillableBootstrapVersion(smlVersion.BootstrapVersion).
+			SetStability(smlversion.Stability(smlVersion.Stability)).
+			SetLink(smlVersion.Link).
+			SetChangelog(smlVersion.Changelog).
+			SetDate(date).
+			SetEngineVersion(smlVersion.EngineVersion).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+
+		println(result.ID)
+
+		for _, smlVersionTarget := range smlVersion.Targets {
+			if _, err := db.From(ctx).SmlVersionTarget.
+				Create().
+				SetVersionID(result.ID).
+				SetTargetName(string(smlVersionTarget.TargetName)).
+				SetLink(smlVersionTarget.Link).
+				Save(ctx); err != nil {
+				println("HERE")
+				return err
+			}
+		}
+
+		return nil
+	}, nil); err != nil {
+		return nil, err
 	}
 
-	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
-
-	for _, smlVersionTarget := range smlVersion.Targets {
-		postgres.Save(newCtx, &postgres.SMLVersionTarget{
-			VersionID:  resultSMLVersion.ID,
-			TargetName: string(smlVersionTarget.TargetName),
-			Link:       smlVersionTarget.Link,
-		})
-	}
-
+	result, err = db.From(ctx).SmlVersion.
+		Query().
+		WithTargets().
+		Where(smlversion.ID(result.ID)).
+		First(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return DBSMLVersionToGenerated(resultSMLVersion), nil
+	return (*conv.SMLVersionImpl)(nil).Convert(result), nil
 }
 
 func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID string, smlVersion generated.UpdateSMLVersion) (*generated.SMLVersion, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "updateSMLVersion")
+	wrapper, ctx := WrapMutationTrace(ctx, "updateSMLVersion")
 	defer wrapper.end()
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
@@ -66,76 +91,105 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	dbSMLTargets := postgres.GetSMLVersionTargets(newCtx, smlVersionID)
+	err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+		dbSMLVersion, err := tx.SmlVersion.Get(ctx, smlVersionID)
+		if err != nil {
+			return err
+		}
 
-	for _, dbSMLTarget := range dbSMLTargets {
-		found := false
+		update := dbSMLVersion.Update()
 
-		for _, smlTarget := range smlVersion.Targets {
-			if dbSMLTarget.TargetName == string(smlTarget.TargetName) {
-				found = true
+		SetINNOEF(smlVersion.Version, update.SetVersion)
+		SetINNF(smlVersion.SatisfactoryVersion, update.SetSatisfactoryVersion)
+		SetINNOEF(smlVersion.BootstrapVersion, update.SetBootstrapVersion)
+		SetStabilityINNF(smlVersion.Stability, update.SetStability)
+		SetINNOEF(smlVersion.Link, update.SetLink)
+		SetINNOEF(smlVersion.Changelog, update.SetChangelog)
+		SetDateINNF(smlVersion.Date, update.SetDate)
+		SetINNOEF(smlVersion.EngineVersion, update.SetEngineVersion)
+
+		if err := update.Exec(ctx); err != nil {
+			return err
+		}
+
+		dbSMLTargets, err := dbSMLVersion.QueryTargets().All(ctx)
+		if err != nil {
+			return err
+		}
+
+		for _, dbSMLTarget := range dbSMLTargets {
+			found := false
+
+			for _, smlTarget := range smlVersion.Targets {
+				if dbSMLTarget.TargetName == string(smlTarget.TargetName) {
+					found = true
+				}
+			}
+
+			if !found {
+				tx.SmlVersionTarget.DeleteOneID(dbSMLTarget.ID)
 			}
 		}
 
-		if !found {
-			postgres.Delete(newCtx, &dbSMLTarget)
+		for _, smlTarget := range smlVersion.Targets {
+			if err := tx.SmlVersionTarget.Update().Where(
+				smlversiontarget.VersionID(dbSMLVersion.ID),
+				smlversiontarget.TargetName(string(smlTarget.TargetName)),
+			).SetLink(smlTarget.Link).Exec(ctx); err != nil {
+				return err
+			}
 		}
+
+		return nil
+	}, nil)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, smlTarget := range smlVersion.Targets {
-		postgres.Save(newCtx, &postgres.SMLVersionTarget{
-			VersionID:  smlVersionID,
-			TargetName: string(smlTarget.TargetName),
-			Link:       smlTarget.Link,
-		})
+	result, err := db.From(ctx).SmlVersion.
+		Query().
+		WithTargets().
+		Where(smlversion.ID(smlVersionID)).
+		First(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	dbSMLVersion := postgres.GetSMLVersionByID(newCtx, smlVersionID)
-
-	if dbSMLVersion == nil {
-		return nil, errors.New("smlVersion not found")
-	}
-
-	SetStringINNOE(smlVersion.Version, &dbSMLVersion.Version)
-	SetINN(smlVersion.SatisfactoryVersion, &dbSMLVersion.SatisfactoryVersion)
-	SetStringINNOE(smlVersion.BootstrapVersion, dbSMLVersion.BootstrapVersion)
-	SetStabilityINN(smlVersion.Stability, &dbSMLVersion.Stability)
-	SetStringINNOE(smlVersion.Link, &dbSMLVersion.Link)
-	SetStringINNOE(smlVersion.Changelog, &dbSMLVersion.Changelog)
-	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
-	SetStringINNOE(smlVersion.EngineVersion, &dbSMLVersion.EngineVersion)
-
-	postgres.Save(newCtx, &dbSMLVersion)
-
-	return DBSMLVersionToGenerated(dbSMLVersion), nil
+	return (*conv.SMLVersionImpl)(nil).Convert(result), nil
 }
 
 func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID string) (bool, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "deleteSMLVersion")
+	wrapper, ctx := WrapMutationTrace(ctx, "deleteSMLVersion")
 	defer wrapper.end()
 
-	dbSMLVersion := postgres.GetSMLVersionByID(newCtx, smlVersionID)
+	err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+		if _, err := tx.SmlVersionTarget.Delete().Where(smlversiontarget.VersionID(smlVersionID)).Exec(ctx); err != nil {
+			return err
+		}
 
-	if dbSMLVersion == nil {
-		return false, errors.New("smlVersion not found")
+		return tx.SmlVersion.DeleteOneID(smlVersionID).Exec(ctx)
+	}, nil)
+	if err != nil {
+		return false, err
 	}
-
-	dbSMLVersionTargets := postgres.GetSMLVersionTargets(newCtx, smlVersionID)
-
-	for _, dbSMLVersionTarget := range dbSMLVersionTargets {
-		postgres.Delete(newCtx, &dbSMLVersionTarget)
-	}
-
-	postgres.Delete(newCtx, &dbSMLVersion)
 
 	return true, nil
 }
 
 func (r *queryResolver) GetSMLVersion(ctx context.Context, smlVersionID string) (*generated.SMLVersion, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getSMLVersion")
+	wrapper, ctx := WrapQueryTrace(ctx, "getSMLVersion")
 	defer wrapper.end()
 
-	return DBSMLVersionToGenerated(postgres.GetSMLVersionByID(newCtx, smlVersionID)), nil
+	result, err := db.From(ctx).SmlVersion.
+		Query().
+		WithTargets().
+		Where(smlversion.ID(smlVersionID)).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.SMLVersionImpl)(nil).Convert(result), nil
 }
 
 func (r *queryResolver) GetSMLVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetSMLVersions, error) {
@@ -147,7 +201,7 @@ func (r *queryResolver) GetSMLVersions(ctx context.Context, _ map[string]interfa
 type getSMLVersionsResolver struct{ *Resolver }
 
 func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, _ *generated.GetSMLVersions) ([]*generated.SMLVersion, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "GetSMLVersions.smlVersions")
+	wrapper, ctx := WrapQueryTrace(ctx, "GetSMLVersions.smlVersions")
 	defer wrapper.end()
 
 	resolverContext := graphql.GetFieldContext(ctx)
@@ -156,28 +210,19 @@ func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, _ *generated.G
 		return nil, err
 	}
 
-	var smlVersions []postgres.SMLVersion
+	query := db.From(ctx).SmlVersion.Query().WithTargets()
+	query = convertFilter(query, smlVersionFilter)
 
-	if smlVersionFilter.Ids == nil || len(smlVersionFilter.Ids) == 0 {
-		smlVersions = postgres.GetSMLVersions(newCtx, smlVersionFilter)
-	} else {
-		smlVersions = postgres.GetSMLVersionsByID(newCtx, smlVersionFilter.Ids)
+	result, err := query.All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	if smlVersions == nil {
-		return nil, errors.New("sml releases not found")
-	}
-
-	converted := make([]*generated.SMLVersion, len(smlVersions))
-	for k, v := range smlVersions {
-		converted[k] = DBSMLVersionToGenerated(&v)
-	}
-
-	return converted, nil
+	return (*conv.SMLVersionImpl)(nil).ConvertSlice(result), nil
 }
 
 func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLVersions) (int, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "GetSMLVersions.count")
+	wrapper, ctx := WrapQueryTrace(ctx, "GetSMLVersions.count")
 	defer wrapper.end()
 
 	resolverContext := graphql.GetFieldContext(ctx)
@@ -186,9 +231,33 @@ func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLV
 		return 0, err
 	}
 
-	if smlVersionFilter.Ids != nil && len(smlVersionFilter.Ids) != 0 {
-		return len(smlVersionFilter.Ids), nil
+	query := db.From(ctx).SmlVersion.Query().WithTargets()
+	query = convertFilter(query, smlVersionFilter)
+
+	result, err := query.Count(ctx)
+	if err != nil {
+		return 0, err
 	}
 
-	return int(postgres.GetSMLVersionCount(newCtx, smlVersionFilter)), nil
+	return result, nil
+}
+
+func convertFilter(query *ent.SmlVersionQuery, filter *models.SMLVersionFilter) *ent.SmlVersionQuery {
+	if len(filter.Ids) > 0 {
+		query = query.Where(smlversion.IDIn(filter.Ids...))
+	} else if filter != nil {
+		query = query.
+			Limit(*filter.Limit).
+			Offset(*filter.Offset).
+			Order(sql.OrderByField(
+				filter.OrderBy.String(),
+				db.OrderToOrder(filter.Order.String()),
+			).ToFunc())
+		if filter.Search != nil && *filter.Search != "" {
+			query = query.Modify(func(s *sql.Selector) {
+				s.Where(sql.ExprP("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & ")))
+			}).Clone()
+		}
+	}
+	return query
 }

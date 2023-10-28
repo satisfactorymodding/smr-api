@@ -10,6 +10,7 @@ import (
 
 	smr "github.com/satisfactorymodding/smr-api/api"
 	"github.com/satisfactorymodding/smr-api/auth"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
@@ -26,6 +27,7 @@ func setup() (context.Context, *graphql.Client, func()) {
 		TableName string
 	}
 
+	// TODO Replace with ENT
 	err := postgres.DBCtx(ctx).Raw(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`).Scan(&out).Error
 	if err != nil {
 		panic(err)
@@ -54,52 +56,30 @@ func setup() (context.Context, *graphql.Client, func()) {
 		}
 	}()
 
-	return context.Background(), client, func() {
+	return ctx, client, func() {
 		stopChannel <- true
 		wg.Wait()
 	}
 }
 
 func makeUser(ctx context.Context) (string, string, error) {
-	user := postgres.User{
-		SMRModel: postgres.SMRModel{
-			ID: util.GenerateUniqueID(),
-		},
-		Email:    "test_user@ficsit.app",
-		Username: "test_user",
-	}
-
-	err := postgres.DBCtx(ctx).Create(&user).Error
-	if err != nil {
-		return "", "", err
-	}
+	user := db.From(ctx).User.
+		Create().
+		SetEmail("test_user@ficsit.app").
+		SetUsername("test_user").
+		SaveX(ctx)
 
 	slox.Info(ctx, "created fake test_user", slog.String("id", user.ID))
 
-	userGroup := postgres.UserGroup{
-		UserID:  user.ID,
-		GroupID: auth.GroupAdmin.ID,
-	}
-
-	err = postgres.DBCtx(ctx).Create(&userGroup).Error
-	if err != nil {
-		return "", "", err
-	}
+	db.From(ctx).UserGroup.Create().SetUser(user).SetGroupID(auth.GroupAdmin.ID).SaveX(ctx)
 
 	slox.Info(ctx, "created user admin group")
 
-	session := postgres.UserSession{
-		SMRModel: postgres.SMRModel{
-			ID: util.GenerateUniqueID(),
-		},
-		User:  user,
-		Token: util.GenerateUserToken(),
-	}
-
-	err = postgres.DBCtx(ctx).Create(&session).Error
-	if err != nil {
-		return "", "", err
-	}
+	session := db.From(ctx).UserSession.
+		Create().
+		SetUser(user).
+		SetToken(util.GenerateUserToken()).
+		SaveX(ctx)
 
 	slox.Info(ctx, "created fake user session", slog.String("token", session.Token))
 

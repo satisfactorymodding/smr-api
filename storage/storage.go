@@ -81,8 +81,6 @@ func configToStorage(ctx context.Context, config Config) Storage {
 	}
 
 	panic("Unknown storage type: " + viper.GetString("storage.type"))
-
-	return nil
 }
 
 func StartUploadMultipartMod(ctx context.Context, modID string, name string, versionID string) (bool, string) {

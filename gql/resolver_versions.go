@@ -15,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/integrations"
@@ -130,7 +131,7 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 		} else {
 			slox.Info(ctx, "completed version upload")
 		}
-	}(util.ReWrapCtx(ctx), mod, versionID, version)
+	}(db.ReWrapCtx(ctx), mod, versionID, version)
 
 	return true, nil
 }
@@ -187,7 +188,7 @@ func (r *mutationResolver) ApproveVersion(ctx context.Context, versionID string)
 	mod.LastVersionDate = &now
 	postgres.Save(newCtx, &mod)
 
-	go integrations.NewVersion(util.ReWrapCtx(ctx), dbVersion)
+	go integrations.NewVersion(db.ReWrapCtx(ctx), dbVersion)
 
 	return true, nil
 }

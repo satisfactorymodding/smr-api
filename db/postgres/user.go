@@ -137,22 +137,3 @@ func GetModAuthors(ctx context.Context, modID string) []UserMod {
 	DBCtx(ctx).Find(&authors, "mod_id = ?", modID)
 	return authors
 }
-
-func UserCanUploadModVersions(ctx context.Context, user *User, modID string) bool {
-	if user.Banned {
-		return false
-	}
-
-	var userMod UserMod
-	DBCtx(ctx).First(&userMod, "user_id = ? AND mod_id = ?", user.ID, modID)
-
-	if userMod.UserID == "" {
-		return false
-	}
-
-	if userMod.Role != "creator" && userMod.Role != "editor" {
-		return false
-	}
-
-	return true
-}

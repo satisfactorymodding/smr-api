@@ -5,9 +5,10 @@ package db
 import (
 	"context"
 	stdsql "database/sql"
+	"fmt"
+
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
-	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel"
@@ -35,12 +36,12 @@ func (e *EntPgxpoolDriver) Exec(ctx context.Context, query string, args, result 
 	switch result := result.(type) {
 	case nil:
 		if _, err := e.pool.Exec(ctx, query, argv...); err != nil {
-			return err
+			return err // nolint
 		}
 	case *sql.Result:
 		commandTag, err := e.pool.Exec(ctx, query, argv...)
 		if err != nil {
-			return err
+			return err // nolint
 		}
 		*result = execResult{rowsAffected: commandTag.RowsAffected()}
 	default:
@@ -60,11 +61,11 @@ func (e *EntPgxpoolDriver) Query(ctx context.Context, query string, args, v any)
 	}
 	pgxRows, err := e.pool.Query(ctx, query, argv...)
 	if err != nil {
-		return err
+		return err // nolint
 	}
 	columnScanner := &entPgxRows{pgxRows: pgxRows}
 	*vr = sql.Rows{
-		columnScanner,
+		ColumnScanner: columnScanner,
 	}
 	return nil
 }
@@ -72,7 +73,7 @@ func (e *EntPgxpoolDriver) Query(ctx context.Context, query string, args, v any)
 func (e *EntPgxpoolDriver) ExecContext(ctx context.Context, query string, args ...any) (stdsql.Result, error) {
 	commandTag, err := e.pool.Exec(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, err // nolint
 	}
 	return &execResult{rowsAffected: commandTag.RowsAffected()}, nil
 }
@@ -91,7 +92,7 @@ func (e *EntPgxpoolDriver) BeginTx(ctx context.Context, opts *sql.TxOptions) (di
 	}
 	tx, err := e.pool.BeginTx(ctx, *pgxOpts)
 	if err != nil {
-		return nil, err
+		return nil, err // nolint
 	}
 	return &EntPgxPoolTx{
 		tx: tx,
@@ -146,12 +147,12 @@ func (e *EntPgxPoolTx) Exec(ctx context.Context, query string, args, result any)
 	switch result := result.(type) {
 	case nil:
 		if _, err := e.tx.Exec(ctx, query, argv...); err != nil {
-			return err
+			return err // nolint
 		}
 	case *sql.Result:
 		commandTag, err := e.tx.Exec(ctx, query, argv...)
 		if err != nil {
-			return err
+			return err // nolint
 		}
 		*result = execResult{rowsAffected: commandTag.RowsAffected()}
 	default:
@@ -163,7 +164,7 @@ func (e *EntPgxPoolTx) Exec(ctx context.Context, query string, args, result any)
 func (e *EntPgxPoolTx) ExecContext(ctx context.Context, query string, args ...any) (stdsql.Result, error) {
 	commandTag, err := e.tx.Exec(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, err // nolint
 	}
 	return &execResult{rowsAffected: commandTag.RowsAffected()}, nil
 }
@@ -179,21 +180,21 @@ func (e *EntPgxPoolTx) Query(ctx context.Context, query string, args, v any) err
 	}
 	pgxRows, err := e.tx.Query(ctx, query, argv...)
 	if err != nil {
-		return err
+		return err // nolint
 	}
 	columnScanner := &entPgxRows{pgxRows: pgxRows}
 	*vr = sql.Rows{
-		columnScanner,
+		ColumnScanner: columnScanner,
 	}
 	return nil
 }
 
 func (e *EntPgxPoolTx) Commit() error {
-	return e.tx.Commit(context.TODO())
+	return e.tx.Commit(context.TODO()) // nolint
 }
 
 func (e *EntPgxPoolTx) Rollback() error {
-	return e.tx.Rollback(context.TODO())
+	return e.tx.Rollback(context.TODO()) // nolint
 }
 
 func (e *EntPgxPoolTx) PGXTransaction() pgx.Tx {
@@ -222,13 +223,12 @@ func (e entPgxRows) Columns() ([]string, error) {
 	columnNames := make([]string, len(fieldDescs))
 	for i, fd := range fieldDescs {
 		columnNames[i] = fd.Name
-
 	}
 	return columnNames, nil
 }
 
 func (e entPgxRows) Err() error {
-	return e.pgxRows.Err()
+	return e.pgxRows.Err() // nolint
 }
 
 func (e entPgxRows) Next() bool {
@@ -252,16 +252,16 @@ func (e entPgxRows) NextResultSet() bool {
 }
 
 func (e entPgxRows) Scan(dest ...any) error {
-	return e.pgxRows.Scan(dest...)
+	return e.pgxRows.Scan(dest...) // nolint
 }
 
 type execResult struct {
-	lastInsertId int64
+	lastInsertID int64
 	rowsAffected int64
 }
 
 func (e execResult) LastInsertId() (int64, error) {
-	return e.lastInsertId, nil
+	return e.lastInsertID, nil
 }
 
 func (e execResult) RowsAffected() (int64, error) {

@@ -36,7 +36,7 @@ run:
     - ./generated/generated.go
     - ./generated/models_gen.go
   skip-dirs:
-    - ./docs/
+    - ./generated/
 
 issues:
   exclude:

@@ -3,6 +3,7 @@ module github.com/satisfactorymodding/smr-api
 go 1.21
 
 require (
+	ariga.io/entcache v0.1.0
 	entgo.io/ent v0.12.4
 	github.com/99designs/gqlgen v0.17.39
 	github.com/MarvinJWendt/testza v0.5.2
@@ -101,6 +102,7 @@ require (
 	github.com/go-redis/redis_rate/v9 v9.1.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/glog v1.1.2 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/pprof v0.0.0-20230926050212-f7f687d19a98 // indirect
@@ -135,6 +137,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
+	github.com/mitchellh/hashstructure v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/pterm/pterm v0.12.69 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect

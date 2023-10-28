@@ -143,24 +143,6 @@ func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) *generated.SMLVers
 	}
 }
 
-func DBBootstrapVersionToGenerated(bootstrapVersion *postgres.BootstrapVersion) *generated.BootstrapVersion {
-	if bootstrapVersion == nil {
-		return nil
-	}
-
-	return &generated.BootstrapVersion{
-		ID:                  bootstrapVersion.ID,
-		Version:             bootstrapVersion.Version,
-		SatisfactoryVersion: bootstrapVersion.SatisfactoryVersion,
-		Stability:           generated.VersionStabilities(bootstrapVersion.Stability),
-		Link:                bootstrapVersion.Link,
-		Changelog:           bootstrapVersion.Changelog,
-		Date:                bootstrapVersion.Date.Format(time.RFC3339Nano),
-		UpdatedAt:           bootstrapVersion.UpdatedAt.Format(time.RFC3339Nano),
-		CreatedAt:           bootstrapVersion.CreatedAt.Format(time.RFC3339Nano),
-	}
-}
-
 func DBVersionDependencyToGenerated(versionDependency *postgres.VersionDependency) *generated.VersionDependency {
 	if versionDependency == nil {
 		return nil
@@ -172,26 +154,6 @@ func DBVersionDependencyToGenerated(versionDependency *postgres.VersionDependenc
 		Condition: versionDependency.Condition,
 		Optional:  versionDependency.Optional,
 	}
-}
-
-func DBAnnouncementToGenerated(announcement *postgres.Announcement) *generated.Announcement {
-	if announcement == nil {
-		return nil
-	}
-
-	return &generated.Announcement{
-		ID:         announcement.ID,
-		Message:    announcement.Message,
-		Importance: generated.AnnouncementImportance(announcement.Importance),
-	}
-}
-
-func DBAnnouncementsToGeneratedSlice(announcements []postgres.Announcement) []*generated.Announcement {
-	converted := make([]*generated.Announcement, len(announcements))
-	for i, announcement := range announcements {
-		converted[i] = DBAnnouncementToGenerated(&announcement)
-	}
-	return converted
 }
 
 func DBTagToGenerated(tag *postgres.Tag) *generated.Tag {

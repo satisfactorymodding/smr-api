@@ -22,8 +22,6 @@ var (
 	dbCache *cache.Cache
 )
 
-type UserKey struct{}
-
 type GormLogger struct {
 	SlowThreshold time.Duration
 	Debug         bool
