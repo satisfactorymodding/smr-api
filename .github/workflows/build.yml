@@ -25,7 +25,7 @@ jobs:
         run: go generate -tags tools -x ./...
 
       - name: Build
-        run: go build -v -o api-linux-amd64 .
+        run: go build -v -o api-linux-amd64 cmd/api/serve.go
         env:
           CGO_ENABLED: 1
 
