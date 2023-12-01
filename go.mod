@@ -10,11 +10,13 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Vilsol/slox v0.0.1
 	github.com/VirusTotal/vt-go v0.0.0-20230717142150-8431ff2cc00f
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.46.1
 	github.com/btcsuite/btcd/btcutil v1.1.3
 	github.com/cespare/xxhash v1.1.0
 	github.com/chai2010/webp v1.1.1
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/felixge/fgprof v0.9.3
 	github.com/finnbear/moderation v0.11.4
@@ -83,7 +85,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect

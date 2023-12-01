@@ -19,6 +19,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/Vilsol/slox"
+	"github.com/avast/retry-go"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -171,52 +172,66 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 
 		slox.Info(ctx, "decided engine version", slog.String("version", engineVersion))
 
-		parserClient := parser.NewParserClient(conn)
-		stream, err := parserClient.Parse(ctx, &parser.ParseRequest{
-			ZipData:       body,
-			EngineVersion: engineVersion,
-		},
-			grpc.MaxCallSendMsgSize(1024*1024*1024), // 1GB
-			grpc.MaxCallRecvMsgSize(1024*1024*1024), // 1GB
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse mod: %w", err)
-		}
-
-		defer func(stream parser.Parser_ParseClient) {
-			err := stream.CloseSend()
+		if err := retry.Do(func() error {
+			parserClient := parser.NewParserClient(conn)
+			stream, err := parserClient.Parse(ctx, &parser.ParseRequest{
+				ZipData:       body,
+				EngineVersion: engineVersion,
+			},
+				grpc.MaxCallSendMsgSize(1024*1024*1024), // 1GB
+				grpc.MaxCallRecvMsgSize(1024*1024*1024), // 1GB
+			)
 			if err != nil {
-				slox.Error(ctx, "failed closing parser stream", slog.Any("err", err))
-			}
-		}(stream)
-
-		beforeUpload := time.Now().Add(-time.Minute)
-		for {
-			asset, err := stream.Recv()
-			if err != nil {
-				//nolint
-				if errors.Is(err, io.EOF) || err == io.EOF {
-					break
-				}
-				spew.Config.DisablePointerMethods = false
-				spew.Dump(err)
-				return nil, fmt.Errorf("failed reading parser stream: %w", err)
+				return fmt.Errorf("failed to parse mod: %w", err)
 			}
 
-			slox.Info(ctx, "received asset from parser", slog.String("path", asset.GetPath()))
-
-			if asset.Path == "metadata.json" {
-				out, err := ExtractMetadata(asset.Data)
+			defer func(stream parser.Parser_ParseClient) {
+				err := stream.CloseSend()
 				if err != nil {
-					return nil, err
+					slox.Error(ctx, "failed closing parser stream", slog.Any("err", err))
 				}
-				modInfo.Metadata = append(modInfo.Metadata, out)
+			}(stream)
+
+			beforeUpload := time.Now().Add(-time.Minute)
+			for {
+				asset, err := stream.Recv()
+				if err != nil {
+					//nolint
+					if errors.Is(err, io.EOF) || err == io.EOF {
+						break
+					}
+					spew.Config.DisablePointerMethods = false
+					spew.Dump(err)
+					return fmt.Errorf("failed reading parser stream: %w", err)
+				}
+
+				slox.Info(ctx, "received asset from parser", slog.String("path", asset.GetPath()))
+
+				if asset.Path == "metadata.json" {
+					out, err := ExtractMetadata(asset.Data)
+					if err != nil {
+						return err
+					}
+					modInfo.Metadata = append(modInfo.Metadata, out)
+				}
+
+				storage.UploadModAsset(ctx, modInfo.ModReference, asset.GetPath(), asset.GetData())
 			}
 
-			storage.UploadModAsset(ctx, modInfo.ModReference, asset.GetPath(), asset.GetData())
-		}
+			storage.DeleteOldModAssets(ctx, modInfo.ModReference, beforeUpload)
 
-		storage.DeleteOldModAssets(ctx, modInfo.ModReference, beforeUpload)
+			return nil
+		},
+			retry.Attempts(10),
+			retry.Delay(time.Second*10),
+			retry.DelayType(retry.FixedDelay),
+			retry.OnRetry(func(n uint, err error) {
+				if n > 0 {
+					slox.Info(ctx, "retrying to extract metadata", slog.Uint64("n", uint64(n)))
+				}
+			})); err != nil {
+			return nil, err //nolint
+		}
 	}
 
 	modInfo.Size = int64(len(body))
