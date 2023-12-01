@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"io"
 	"log/slog"
 	"path"
@@ -20,6 +19,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/Vilsol/slox"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"

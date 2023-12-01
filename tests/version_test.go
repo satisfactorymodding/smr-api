@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/spf13/viper"
 	"io"
 	"math"
 	"mime/multipart"
@@ -19,10 +17,12 @@ import (
 	"time"
 
 	"github.com/MarvinJWendt/testza"
+	"github.com/spf13/viper"
 
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/migrations"
 )
 
@@ -61,7 +61,7 @@ func TestVersions(t *testing.T) {
 
 		defer response.Body.Close()
 
-		file, err := os.OpenFile(modPath, os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(modPath, os.O_CREATE|os.O_WRONLY, 0o644)
 		testza.AssertNoError(t, err)
 
 		_, err = io.Copy(file, response.Body)

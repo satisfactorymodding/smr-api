@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
 	"io"
 	"log/slog"
 	"time"
 
 	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/postgres"

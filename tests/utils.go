@@ -2,11 +2,10 @@ package tests
 
 import (
 	"context"
-	"github.com/Vilsol/slox"
-	"github.com/machinebox/graphql"
-	"github.com/satisfactorymodding/smr-api/validation"
 	"log/slog"
 	"sync"
+	"github.com/Vilsol/slox"
+	"github.com/machinebox/graphql"
 
 	smr "github.com/satisfactorymodding/smr-api/api"
 	"github.com/satisfactorymodding/smr-api/auth"
@@ -14,6 +13,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
+	"github.com/satisfactorymodding/smr-api/validation"
 )
 
 func setup() (context.Context, *graphql.Client, func()) {
