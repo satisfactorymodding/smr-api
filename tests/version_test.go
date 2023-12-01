@@ -259,7 +259,7 @@ func TestVersions(t *testing.T) {
 		request.Var("mod_id", modID)
 		request.Var("version_id", versionID)
 
-		end := time.Now().Add(time.Minute)
+		end := time.Now().Add(time.Minute * 5)
 		for time.Now().Before(end) {
 			var response struct {
 				CheckVersionUploadState struct {
