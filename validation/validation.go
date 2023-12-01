@@ -20,7 +20,6 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/Vilsol/slox"
 	"github.com/avast/retry-go"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
@@ -200,8 +199,6 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 					if errors.Is(err, io.EOF) || err == io.EOF {
 						break
 					}
-					spew.Config.DisablePointerMethods = false
-					spew.Dump(err)
 					return fmt.Errorf("failed reading parser stream: %w", err)
 				}
 
