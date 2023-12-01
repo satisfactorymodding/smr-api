@@ -28,7 +28,6 @@ type GuideQuery struct {
 	withUser      *UserQuery
 	withTags      *TagQuery
 	withGuideTags *GuideTagQuery
-	withFKs       bool
 	modifiers     []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -443,7 +442,6 @@ func (gq *GuideQuery) prepareQuery(ctx context.Context) error {
 func (gq *GuideQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Guide, error) {
 	var (
 		nodes       = []*Guide{}
-		withFKs     = gq.withFKs
 		_spec       = gq.querySpec()
 		loadedTypes = [3]bool{
 			gq.withUser != nil,
@@ -451,12 +449,6 @@ func (gq *GuideQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Guide,
 			gq.withGuideTags != nil,
 		}
 	)
-	if gq.withUser != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, guide.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Guide).scanValues(nil, columns)
 	}
@@ -505,10 +497,7 @@ func (gq *GuideQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*G
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*Guide)
 	for i := range nodes {
-		if nodes[i].user_id == nil {
-			continue
-		}
-		fk := *nodes[i].user_id
+		fk := nodes[i].UserID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -605,7 +594,7 @@ func (gq *GuideQuery) loadGuideTags(ctx context.Context, query *GuideTagQuery, n
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(guidetag.FieldGuideTag)
+		query.ctx.AppendFieldOnce(guidetag.FieldGuideID)
 	}
 	query.Where(predicate.GuideTag(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(guide.GuideTagsColumn), fks...))
@@ -615,10 +604,10 @@ func (gq *GuideQuery) loadGuideTags(ctx context.Context, query *GuideTagQuery, n
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.GuideTag
+		fk := n.GuideID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "guide_tag" returned %v for node %v`, fk, n)
+			return fmt.Errorf(`unexpected referenced foreign-key "guide_id" returned %v for node %v`, fk, n)
 		}
 		assign(node, n)
 	}
@@ -652,6 +641,9 @@ func (gq *GuideQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != guide.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if gq.withUser != nil {
+			_spec.Node.AddColumnOnce(guide.FieldUserID)
 		}
 	}
 	if ps := gq.predicates; len(ps) > 0 {

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
@@ -18,6 +20,7 @@ type SmlVersionTargetCreate struct {
 	config
 	mutation *SmlVersionTargetMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetVersionID sets the "version_id" field.
@@ -149,6 +152,7 @@ func (svtc *SmlVersionTargetCreate) createSpec() (*SmlVersionTarget, *sqlgraph.C
 		_node = &SmlVersionTarget{config: svtc.config}
 		_spec = sqlgraph.NewCreateSpec(smlversiontarget.Table, sqlgraph.NewFieldSpec(smlversiontarget.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = svtc.conflict
 	if id, ok := svtc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -181,11 +185,225 @@ func (svtc *SmlVersionTargetCreate) createSpec() (*SmlVersionTarget, *sqlgraph.C
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.SmlVersionTarget.Create().
+//		SetVersionID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SmlVersionTargetUpsert) {
+//			SetVersionID(v+v).
+//		}).
+//		Exec(ctx)
+func (svtc *SmlVersionTargetCreate) OnConflict(opts ...sql.ConflictOption) *SmlVersionTargetUpsertOne {
+	svtc.conflict = opts
+	return &SmlVersionTargetUpsertOne{
+		create: svtc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.SmlVersionTarget.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (svtc *SmlVersionTargetCreate) OnConflictColumns(columns ...string) *SmlVersionTargetUpsertOne {
+	svtc.conflict = append(svtc.conflict, sql.ConflictColumns(columns...))
+	return &SmlVersionTargetUpsertOne{
+		create: svtc,
+	}
+}
+
+type (
+	// SmlVersionTargetUpsertOne is the builder for "upsert"-ing
+	//  one SmlVersionTarget node.
+	SmlVersionTargetUpsertOne struct {
+		create *SmlVersionTargetCreate
+	}
+
+	// SmlVersionTargetUpsert is the "OnConflict" setter.
+	SmlVersionTargetUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetVersionID sets the "version_id" field.
+func (u *SmlVersionTargetUpsert) SetVersionID(v string) *SmlVersionTargetUpsert {
+	u.Set(smlversiontarget.FieldVersionID, v)
+	return u
+}
+
+// UpdateVersionID sets the "version_id" field to the value that was provided on create.
+func (u *SmlVersionTargetUpsert) UpdateVersionID() *SmlVersionTargetUpsert {
+	u.SetExcluded(smlversiontarget.FieldVersionID)
+	return u
+}
+
+// SetTargetName sets the "target_name" field.
+func (u *SmlVersionTargetUpsert) SetTargetName(v string) *SmlVersionTargetUpsert {
+	u.Set(smlversiontarget.FieldTargetName, v)
+	return u
+}
+
+// UpdateTargetName sets the "target_name" field to the value that was provided on create.
+func (u *SmlVersionTargetUpsert) UpdateTargetName() *SmlVersionTargetUpsert {
+	u.SetExcluded(smlversiontarget.FieldTargetName)
+	return u
+}
+
+// SetLink sets the "link" field.
+func (u *SmlVersionTargetUpsert) SetLink(v string) *SmlVersionTargetUpsert {
+	u.Set(smlversiontarget.FieldLink, v)
+	return u
+}
+
+// UpdateLink sets the "link" field to the value that was provided on create.
+func (u *SmlVersionTargetUpsert) UpdateLink() *SmlVersionTargetUpsert {
+	u.SetExcluded(smlversiontarget.FieldLink)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.SmlVersionTarget.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(smlversiontarget.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *SmlVersionTargetUpsertOne) UpdateNewValues() *SmlVersionTargetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(smlversiontarget.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.SmlVersionTarget.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *SmlVersionTargetUpsertOne) Ignore() *SmlVersionTargetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SmlVersionTargetUpsertOne) DoNothing() *SmlVersionTargetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SmlVersionTargetCreate.OnConflict
+// documentation for more info.
+func (u *SmlVersionTargetUpsertOne) Update(set func(*SmlVersionTargetUpsert)) *SmlVersionTargetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SmlVersionTargetUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetVersionID sets the "version_id" field.
+func (u *SmlVersionTargetUpsertOne) SetVersionID(v string) *SmlVersionTargetUpsertOne {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.SetVersionID(v)
+	})
+}
+
+// UpdateVersionID sets the "version_id" field to the value that was provided on create.
+func (u *SmlVersionTargetUpsertOne) UpdateVersionID() *SmlVersionTargetUpsertOne {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.UpdateVersionID()
+	})
+}
+
+// SetTargetName sets the "target_name" field.
+func (u *SmlVersionTargetUpsertOne) SetTargetName(v string) *SmlVersionTargetUpsertOne {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.SetTargetName(v)
+	})
+}
+
+// UpdateTargetName sets the "target_name" field to the value that was provided on create.
+func (u *SmlVersionTargetUpsertOne) UpdateTargetName() *SmlVersionTargetUpsertOne {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.UpdateTargetName()
+	})
+}
+
+// SetLink sets the "link" field.
+func (u *SmlVersionTargetUpsertOne) SetLink(v string) *SmlVersionTargetUpsertOne {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.SetLink(v)
+	})
+}
+
+// UpdateLink sets the "link" field to the value that was provided on create.
+func (u *SmlVersionTargetUpsertOne) UpdateLink() *SmlVersionTargetUpsertOne {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.UpdateLink()
+	})
+}
+
+// Exec executes the query.
+func (u *SmlVersionTargetUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SmlVersionTargetCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SmlVersionTargetUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *SmlVersionTargetUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: SmlVersionTargetUpsertOne.ID is not supported by MySQL driver. Use SmlVersionTargetUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *SmlVersionTargetUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // SmlVersionTargetCreateBulk is the builder for creating many SmlVersionTarget entities in bulk.
 type SmlVersionTargetCreateBulk struct {
 	config
 	err      error
 	builders []*SmlVersionTargetCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the SmlVersionTarget entities in the database.
@@ -215,6 +433,7 @@ func (svtcb *SmlVersionTargetCreateBulk) Save(ctx context.Context) ([]*SmlVersio
 					_, err = mutators[i+1].Mutate(root, svtcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = svtcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, svtcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -261,6 +480,162 @@ func (svtcb *SmlVersionTargetCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (svtcb *SmlVersionTargetCreateBulk) ExecX(ctx context.Context) {
 	if err := svtcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.SmlVersionTarget.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SmlVersionTargetUpsert) {
+//			SetVersionID(v+v).
+//		}).
+//		Exec(ctx)
+func (svtcb *SmlVersionTargetCreateBulk) OnConflict(opts ...sql.ConflictOption) *SmlVersionTargetUpsertBulk {
+	svtcb.conflict = opts
+	return &SmlVersionTargetUpsertBulk{
+		create: svtcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.SmlVersionTarget.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (svtcb *SmlVersionTargetCreateBulk) OnConflictColumns(columns ...string) *SmlVersionTargetUpsertBulk {
+	svtcb.conflict = append(svtcb.conflict, sql.ConflictColumns(columns...))
+	return &SmlVersionTargetUpsertBulk{
+		create: svtcb,
+	}
+}
+
+// SmlVersionTargetUpsertBulk is the builder for "upsert"-ing
+// a bulk of SmlVersionTarget nodes.
+type SmlVersionTargetUpsertBulk struct {
+	create *SmlVersionTargetCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.SmlVersionTarget.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(smlversiontarget.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *SmlVersionTargetUpsertBulk) UpdateNewValues() *SmlVersionTargetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(smlversiontarget.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.SmlVersionTarget.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *SmlVersionTargetUpsertBulk) Ignore() *SmlVersionTargetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SmlVersionTargetUpsertBulk) DoNothing() *SmlVersionTargetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SmlVersionTargetCreateBulk.OnConflict
+// documentation for more info.
+func (u *SmlVersionTargetUpsertBulk) Update(set func(*SmlVersionTargetUpsert)) *SmlVersionTargetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SmlVersionTargetUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetVersionID sets the "version_id" field.
+func (u *SmlVersionTargetUpsertBulk) SetVersionID(v string) *SmlVersionTargetUpsertBulk {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.SetVersionID(v)
+	})
+}
+
+// UpdateVersionID sets the "version_id" field to the value that was provided on create.
+func (u *SmlVersionTargetUpsertBulk) UpdateVersionID() *SmlVersionTargetUpsertBulk {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.UpdateVersionID()
+	})
+}
+
+// SetTargetName sets the "target_name" field.
+func (u *SmlVersionTargetUpsertBulk) SetTargetName(v string) *SmlVersionTargetUpsertBulk {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.SetTargetName(v)
+	})
+}
+
+// UpdateTargetName sets the "target_name" field to the value that was provided on create.
+func (u *SmlVersionTargetUpsertBulk) UpdateTargetName() *SmlVersionTargetUpsertBulk {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.UpdateTargetName()
+	})
+}
+
+// SetLink sets the "link" field.
+func (u *SmlVersionTargetUpsertBulk) SetLink(v string) *SmlVersionTargetUpsertBulk {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.SetLink(v)
+	})
+}
+
+// UpdateLink sets the "link" field to the value that was provided on create.
+func (u *SmlVersionTargetUpsertBulk) UpdateLink() *SmlVersionTargetUpsertBulk {
+	return u.Update(func(s *SmlVersionTargetUpsert) {
+		s.UpdateLink()
+	})
+}
+
+// Exec executes the query.
+func (u *SmlVersionTargetUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the SmlVersionTargetCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SmlVersionTargetCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SmlVersionTargetUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

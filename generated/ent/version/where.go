@@ -80,6 +80,11 @@ func DeletedAt(v time.Time) predicate.Version {
 	return predicate.Version(sql.FieldEQ(FieldDeletedAt, v))
 }
 
+// ModID applies equality check predicate on the "mod_id" field. It's identical to ModIDEQ.
+func ModID(v string) predicate.Version {
+	return predicate.Version(sql.FieldEQ(FieldModID, v))
+}
+
 // Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
 func Version(v string) predicate.Version {
 	return predicate.Version(sql.FieldEQ(FieldVersion, v))
@@ -283,6 +288,71 @@ func DeletedAtIsNil() predicate.Version {
 // DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
 func DeletedAtNotNil() predicate.Version {
 	return predicate.Version(sql.FieldNotNull(FieldDeletedAt))
+}
+
+// ModIDEQ applies the EQ predicate on the "mod_id" field.
+func ModIDEQ(v string) predicate.Version {
+	return predicate.Version(sql.FieldEQ(FieldModID, v))
+}
+
+// ModIDNEQ applies the NEQ predicate on the "mod_id" field.
+func ModIDNEQ(v string) predicate.Version {
+	return predicate.Version(sql.FieldNEQ(FieldModID, v))
+}
+
+// ModIDIn applies the In predicate on the "mod_id" field.
+func ModIDIn(vs ...string) predicate.Version {
+	return predicate.Version(sql.FieldIn(FieldModID, vs...))
+}
+
+// ModIDNotIn applies the NotIn predicate on the "mod_id" field.
+func ModIDNotIn(vs ...string) predicate.Version {
+	return predicate.Version(sql.FieldNotIn(FieldModID, vs...))
+}
+
+// ModIDGT applies the GT predicate on the "mod_id" field.
+func ModIDGT(v string) predicate.Version {
+	return predicate.Version(sql.FieldGT(FieldModID, v))
+}
+
+// ModIDGTE applies the GTE predicate on the "mod_id" field.
+func ModIDGTE(v string) predicate.Version {
+	return predicate.Version(sql.FieldGTE(FieldModID, v))
+}
+
+// ModIDLT applies the LT predicate on the "mod_id" field.
+func ModIDLT(v string) predicate.Version {
+	return predicate.Version(sql.FieldLT(FieldModID, v))
+}
+
+// ModIDLTE applies the LTE predicate on the "mod_id" field.
+func ModIDLTE(v string) predicate.Version {
+	return predicate.Version(sql.FieldLTE(FieldModID, v))
+}
+
+// ModIDContains applies the Contains predicate on the "mod_id" field.
+func ModIDContains(v string) predicate.Version {
+	return predicate.Version(sql.FieldContains(FieldModID, v))
+}
+
+// ModIDHasPrefix applies the HasPrefix predicate on the "mod_id" field.
+func ModIDHasPrefix(v string) predicate.Version {
+	return predicate.Version(sql.FieldHasPrefix(FieldModID, v))
+}
+
+// ModIDHasSuffix applies the HasSuffix predicate on the "mod_id" field.
+func ModIDHasSuffix(v string) predicate.Version {
+	return predicate.Version(sql.FieldHasSuffix(FieldModID, v))
+}
+
+// ModIDEqualFold applies the EqualFold predicate on the "mod_id" field.
+func ModIDEqualFold(v string) predicate.Version {
+	return predicate.Version(sql.FieldEqualFold(FieldModID, v))
+}
+
+// ModIDContainsFold applies the ContainsFold predicate on the "mod_id" field.
+func ModIDContainsFold(v string) predicate.Version {
+	return predicate.Version(sql.FieldContainsFold(FieldModID, v))
 }
 
 // VersionEQ applies the EQ predicate on the "version" field.
@@ -1058,6 +1128,29 @@ func HasDependencies() predicate.Version {
 func HasDependenciesWith(preds ...predicate.Mod) predicate.Version {
 	return predicate.Version(func(s *sql.Selector) {
 		step := newDependenciesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTargets applies the HasEdge predicate on the "targets" edge.
+func HasTargets() predicate.Version {
+	return predicate.Version(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TargetsTable, TargetsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTargetsWith applies the HasEdge predicate on the "targets" edge with a given conditions (other predicates).
+func HasTargetsWith(preds ...predicate.VersionTarget) predicate.Version {
+	return predicate.Version(func(s *sql.Selector) {
+		step := newTargetsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

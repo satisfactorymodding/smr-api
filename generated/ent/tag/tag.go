@@ -74,7 +74,7 @@ var (
 	ModsPrimaryKey = []string{"mod_id", "tag_id"}
 	// GuidesPrimaryKey and GuidesColumn2 are the table columns denoting the
 	// primary key for the guides relation (M2M).
-	GuidesPrimaryKey = []string{"guide_tag", "tag_id"}
+	GuidesPrimaryKey = []string{"guide_id", "tag_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

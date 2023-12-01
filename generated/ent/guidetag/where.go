@@ -8,9 +8,9 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 )
 
-// GuideTag applies equality check predicate on the "guide_tag" field. It's identical to GuideTagEQ.
-func GuideTag(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldEQ(FieldGuideTag, v))
+// GuideID applies equality check predicate on the "guide_id" field. It's identical to GuideIDEQ.
+func GuideID(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldEQ(FieldGuideID, v))
 }
 
 // TagID applies equality check predicate on the "tag_id" field. It's identical to TagIDEQ.
@@ -18,69 +18,69 @@ func TagID(v string) predicate.GuideTag {
 	return predicate.GuideTag(sql.FieldEQ(FieldTagID, v))
 }
 
-// GuideTagEQ applies the EQ predicate on the "guide_tag" field.
-func GuideTagEQ(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldEQ(FieldGuideTag, v))
+// GuideIDEQ applies the EQ predicate on the "guide_id" field.
+func GuideIDEQ(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldEQ(FieldGuideID, v))
 }
 
-// GuideTagNEQ applies the NEQ predicate on the "guide_tag" field.
-func GuideTagNEQ(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldNEQ(FieldGuideTag, v))
+// GuideIDNEQ applies the NEQ predicate on the "guide_id" field.
+func GuideIDNEQ(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldNEQ(FieldGuideID, v))
 }
 
-// GuideTagIn applies the In predicate on the "guide_tag" field.
-func GuideTagIn(vs ...string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldIn(FieldGuideTag, vs...))
+// GuideIDIn applies the In predicate on the "guide_id" field.
+func GuideIDIn(vs ...string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldIn(FieldGuideID, vs...))
 }
 
-// GuideTagNotIn applies the NotIn predicate on the "guide_tag" field.
-func GuideTagNotIn(vs ...string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldNotIn(FieldGuideTag, vs...))
+// GuideIDNotIn applies the NotIn predicate on the "guide_id" field.
+func GuideIDNotIn(vs ...string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldNotIn(FieldGuideID, vs...))
 }
 
-// GuideTagGT applies the GT predicate on the "guide_tag" field.
-func GuideTagGT(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldGT(FieldGuideTag, v))
+// GuideIDGT applies the GT predicate on the "guide_id" field.
+func GuideIDGT(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldGT(FieldGuideID, v))
 }
 
-// GuideTagGTE applies the GTE predicate on the "guide_tag" field.
-func GuideTagGTE(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldGTE(FieldGuideTag, v))
+// GuideIDGTE applies the GTE predicate on the "guide_id" field.
+func GuideIDGTE(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldGTE(FieldGuideID, v))
 }
 
-// GuideTagLT applies the LT predicate on the "guide_tag" field.
-func GuideTagLT(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldLT(FieldGuideTag, v))
+// GuideIDLT applies the LT predicate on the "guide_id" field.
+func GuideIDLT(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldLT(FieldGuideID, v))
 }
 
-// GuideTagLTE applies the LTE predicate on the "guide_tag" field.
-func GuideTagLTE(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldLTE(FieldGuideTag, v))
+// GuideIDLTE applies the LTE predicate on the "guide_id" field.
+func GuideIDLTE(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldLTE(FieldGuideID, v))
 }
 
-// GuideTagContains applies the Contains predicate on the "guide_tag" field.
-func GuideTagContains(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldContains(FieldGuideTag, v))
+// GuideIDContains applies the Contains predicate on the "guide_id" field.
+func GuideIDContains(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldContains(FieldGuideID, v))
 }
 
-// GuideTagHasPrefix applies the HasPrefix predicate on the "guide_tag" field.
-func GuideTagHasPrefix(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldHasPrefix(FieldGuideTag, v))
+// GuideIDHasPrefix applies the HasPrefix predicate on the "guide_id" field.
+func GuideIDHasPrefix(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldHasPrefix(FieldGuideID, v))
 }
 
-// GuideTagHasSuffix applies the HasSuffix predicate on the "guide_tag" field.
-func GuideTagHasSuffix(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldHasSuffix(FieldGuideTag, v))
+// GuideIDHasSuffix applies the HasSuffix predicate on the "guide_id" field.
+func GuideIDHasSuffix(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldHasSuffix(FieldGuideID, v))
 }
 
-// GuideTagEqualFold applies the EqualFold predicate on the "guide_tag" field.
-func GuideTagEqualFold(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldEqualFold(FieldGuideTag, v))
+// GuideIDEqualFold applies the EqualFold predicate on the "guide_id" field.
+func GuideIDEqualFold(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldEqualFold(FieldGuideID, v))
 }
 
-// GuideTagContainsFold applies the ContainsFold predicate on the "guide_tag" field.
-func GuideTagContainsFold(v string) predicate.GuideTag {
-	return predicate.GuideTag(sql.FieldContainsFold(FieldGuideTag, v))
+// GuideIDContainsFold applies the ContainsFold predicate on the "guide_id" field.
+func GuideIDContainsFold(v string) predicate.GuideTag {
+	return predicate.GuideTag(sql.FieldContainsFold(FieldGuideID, v))
 }
 
 // TagIDEQ applies the EQ predicate on the "tag_id" field.

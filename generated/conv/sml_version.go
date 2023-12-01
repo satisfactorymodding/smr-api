@@ -59,27 +59,3 @@ func (c *SMLVersionImpl) pEntSmlVersionTargetToPGeneratedSMLVersionTarget(source
 	}
 	return pGeneratedSMLVersionTarget
 }
-
-type UserImpl struct{}
-
-func (c *UserImpl) Convert(source *ent.User) *generated.User {
-	var pGeneratedUser *generated.User
-	if source != nil {
-		var generatedUser generated.User
-		generatedUser.ID = (*source).ID
-		pString := (*source).Email
-		generatedUser.Email = &pString
-		generatedUser.Username = (*source).Username
-		pString2 := (*source).Avatar
-		generatedUser.Avatar = &pString2
-		generatedUser.CreatedAt = conversion.TimeToString((*source).CreatedAt)
-		pString3 := (*source).GithubID
-		generatedUser.GithubID = &pString3
-		pString4 := (*source).GoogleID
-		generatedUser.GoogleID = &pString4
-		pString5 := (*source).FacebookID
-		generatedUser.FacebookID = &pString5
-		pGeneratedUser = &generatedUser
-	}
-	return pGeneratedUser
-}

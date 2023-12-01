@@ -7,28 +7,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated"
 )
 
-func DBUserToGenerated(user *postgres.User) *generated.User {
-	if user == nil {
-		return nil
-	}
-
-	Email := user.Email
-	Avatar := user.Avatar
-
-	result := &generated.User{
-		ID:         user.ID,
-		Username:   user.Username,
-		Email:      &Email,
-		Avatar:     &Avatar,
-		CreatedAt:  user.CreatedAt.Format(time.RFC3339Nano),
-		GithubID:   user.GithubID,
-		GoogleID:   user.GoogleID,
-		FacebookID: user.FacebookID,
-	}
-
-	return result
-}
-
 func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 	if mod == nil {
 		return nil
@@ -104,45 +82,6 @@ func DBVersionsToGeneratedSlice(versions []postgres.Version) []*generated.Versio
 	return converted
 }
 
-func DBGuideToGenerated(guide *postgres.Guide) *generated.Guide {
-	if guide == nil {
-		return nil
-	}
-
-	return &generated.Guide{
-		ID:               guide.ID,
-		Name:             guide.Name,
-		ShortDescription: guide.ShortDescription,
-		Guide:            guide.Guide,
-		UserID:           guide.UserID,
-		Views:            int(guide.Views),
-		UpdatedAt:        guide.UpdatedAt.Format(time.RFC3339Nano),
-		CreatedAt:        guide.CreatedAt.Format(time.RFC3339Nano),
-		Tags:             DBTagsToGeneratedSlice(guide.Tags),
-	}
-}
-
-func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) *generated.SMLVersion {
-	if smlVersion == nil {
-		return nil
-	}
-
-	return &generated.SMLVersion{
-		ID:                  smlVersion.ID,
-		Version:             smlVersion.Version,
-		SatisfactoryVersion: smlVersion.SatisfactoryVersion,
-		BootstrapVersion:    smlVersion.BootstrapVersion,
-		Stability:           generated.VersionStabilities(smlVersion.Stability),
-		Link:                smlVersion.Link,
-		Targets:             DBSMLVersionTargetToGeneratedSlice(smlVersion.Targets),
-		Changelog:           smlVersion.Changelog,
-		Date:                smlVersion.Date.Format(time.RFC3339Nano),
-		UpdatedAt:           smlVersion.UpdatedAt.Format(time.RFC3339Nano),
-		CreatedAt:           smlVersion.CreatedAt.Format(time.RFC3339Nano),
-		EngineVersion:       smlVersion.EngineVersion,
-	}
-}
-
 func DBVersionDependencyToGenerated(versionDependency *postgres.VersionDependency) *generated.VersionDependency {
 	if versionDependency == nil {
 		return nil
@@ -199,33 +138,13 @@ func DBVersionTargetsToGeneratedSlice(versionTargets []postgres.VersionTarget) [
 	return converted
 }
 
-func DBSMLVersionTargetToGenerated(smlVersionTarget *postgres.SMLVersionTarget) *generated.SMLVersionTarget {
-	if smlVersionTarget == nil {
-		return nil
-	}
-
-	return &generated.SMLVersionTarget{
-		VersionID:  smlVersionTarget.VersionID,
-		TargetName: generated.TargetName(smlVersionTarget.TargetName),
-		Link:       smlVersionTarget.Link,
-	}
-}
-
-func DBSMLVersionTargetToGeneratedSlice(smlVersionTargets []postgres.SMLVersionTarget) []*generated.SMLVersionTarget {
-	converted := make([]*generated.SMLVersionTarget, len(smlVersionTargets))
-	for i, smlVersionTarget := range smlVersionTargets {
-		converted[i] = DBSMLVersionTargetToGenerated(&smlVersionTarget)
-	}
-	return converted
-}
-
 func GenCompInfoToDBCompInfo(gen *generated.CompatibilityInfoInput) *postgres.CompatibilityInfo {
 	if gen == nil {
 		return nil
 	}
 	return &postgres.CompatibilityInfo{
-		EA:  GenCompToDBComp(gen.Ea),
-		EXP: GenCompToDBComp(gen.Exp),
+		Ea:  GenCompToDBComp(gen.Ea),
+		Exp: GenCompToDBComp(gen.Exp),
 	}
 }
 
@@ -242,8 +161,8 @@ func DBCompInfoToGenCompInfo(gen *postgres.CompatibilityInfo) *generated.Compati
 		return nil
 	}
 	return &generated.CompatibilityInfo{
-		Ea:  DBCompToGenComp(gen.EA),
-		Exp: DBCompToGenComp(gen.EXP),
+		Ea:  DBCompToGenComp(gen.Ea),
+		Exp: DBCompToGenComp(gen.Exp),
 	}
 }
 

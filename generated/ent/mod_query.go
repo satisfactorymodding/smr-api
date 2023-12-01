@@ -681,7 +681,9 @@ func (mq *ModQuery) loadVersions(ctx context.Context, query *VersionQuery, nodes
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(version.FieldModID)
+	}
 	query.Where(predicate.Version(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(mod.VersionsColumn), fks...))
 	}))
@@ -690,13 +692,10 @@ func (mq *ModQuery) loadVersions(ctx context.Context, query *VersionQuery, nodes
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.mod_id
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "mod_id" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.ModID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "mod_id" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "mod_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

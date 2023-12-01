@@ -35,25 +35,6 @@ func GetVersionsByID(ctx context.Context, versionIds []string) []Version {
 	return versions
 }
 
-func GetModLatestVersions(ctx context.Context, modID string, unapproved bool) *[]Version {
-	cacheKey := "GetModLatestVersions_" + modID + "_" + fmt.Sprint(unapproved)
-	if versions, ok := dbCache.Get(cacheKey); ok {
-		return versions.(*[]Version)
-	}
-
-	var versions []Version
-
-	DBCtx(ctx).Preload("Targets").Select("distinct on (mod_id, stability) *").
-		Where("mod_id = ?", modID).
-		Where("approved = ? AND denied = ?", !unapproved, false).
-		Order("mod_id, stability, created_at desc").
-		Find(&versions)
-
-	dbCache.Set(cacheKey, &versions, cache.DefaultExpiration)
-
-	return &versions
-}
-
 func GetModsLatestVersions(ctx context.Context, modIds []string, unapproved bool) *[]Version {
 	cacheKey := "GetModsLatestVersions_" + strings.Join(modIds, ":") + "_" + fmt.Sprint(unapproved)
 	if versions, ok := dbCache.Get(cacheKey); ok {
@@ -295,12 +276,6 @@ func GetVersionTarget(ctx context.Context, versionID string, target string) *Ver
 	dbCache.Set(cacheKey, &versionTarget, cache.DefaultExpiration)
 
 	return &versionTarget
-}
-
-func GetVersionDependencies(ctx context.Context, versionID string) []VersionDependency {
-	var versionDependencies []VersionDependency
-	DBCtx(ctx).Where("version_id = ?", versionID).Find(&versionDependencies)
-	return versionDependencies
 }
 
 func GetModVersionsConstraint(ctx context.Context, modID string, constraint string) []Version {

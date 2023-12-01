@@ -3,33 +3,35 @@ package gql
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"math"
+	"strings"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/pkg/errors"
+	"github.com/Vilsol/slox"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
+	"github.com/satisfactorymodding/smr-api/generated/ent/guidetag"
+	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func (r *mutationResolver) CreateGuide(ctx context.Context, guide generated.NewGuide) (*generated.Guide, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "createGuide")
+func (r *mutationResolver) CreateGuide(ctx context.Context, g generated.NewGuide) (*generated.Guide, error) {
+	wrapper, ctx := WrapMutationTrace(ctx, "createGuide")
 	defer wrapper.end()
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
-	if err := val.Struct(&guide); err != nil {
+	if err := val.Struct(&g); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
-	}
-
-	dbGuide := &postgres.Guide{
-		Name:             guide.Name,
-		ShortDescription: guide.ShortDescription,
-		Guide:            guide.Guide,
 	}
 
 	user, err := db.UserFromGQLContext(ctx)
@@ -37,80 +39,118 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, guide generated.NewG
 		return nil, err
 	}
 
-	dbGuide.UserID = user.ID
-
-	resultGuide, err := postgres.CreateGuide(newCtx, dbGuide)
+	// Allow only 8 new guides per 24h
+	guides, err := db.From(ctx).Guide.Query().Where(
+		guide.UserID(user.ID),
+		guide.CreatedAtGT(time.Now().Add(time.Hour*24*-1)),
+	).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = postgres.SetGuideTags(newCtx, resultGuide.ID, guide.TagIDs)
+	currentAvailable := float64(8)
+	lastGuideTime := time.Now()
+	for _, existingGuide := range guides {
+		currentAvailable--
+		if existingGuide.CreatedAt.After(lastGuideTime) {
+			diff := existingGuide.CreatedAt.Sub(lastGuideTime)
+			currentAvailable = math.Min(8, currentAvailable+diff.Hours()/3)
+		}
+		lastGuideTime = existingGuide.CreatedAt
+	}
 
+	if currentAvailable < 1 {
+		timeToWait := time.Until(lastGuideTime.Add(time.Hour * 6)).Minutes()
+		return nil, fmt.Errorf("please wait %.0f minutes to post another guide", timeToWait)
+	}
+
+	result, err := db.From(ctx).Guide.
+		Create().
+		SetName(g.Name).
+		SetShortDescription(g.ShortDescription).
+		SetGuide(g.Guide).
+		SetUser(user).
+		AddTagIDs(g.TagIDs...).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// Need to get the guide again to populate tags
-	return DBGuideToGenerated(postgres.GetGuideByIDNoCache(newCtx, resultGuide.ID)), nil
+	return (*conv.GuideImpl)(nil).Convert(result), nil
 }
 
-func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, guide generated.UpdateGuide) (*generated.Guide, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "updateGuide")
+func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, g generated.UpdateGuide) (*generated.Guide, error) {
+	wrapper, ctx := WrapMutationTrace(ctx, "updateGuide")
 	defer wrapper.end()
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
-	if err := val.Struct(&guide); err != nil {
+	if err := val.Struct(&g); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	err := postgres.ResetGuideTags(newCtx, guideID, guide.TagIDs)
+	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+		update := tx.Guide.UpdateOneID(guideID)
+
+		SetINNOEF(g.Name, update.SetName)
+		SetINNOEF(g.ShortDescription, update.SetShortDescription)
+		SetINNOEF(g.Guide, update.SetGuide)
+
+		if err := update.Exec(ctx); err != nil {
+			return err
+		}
+
+		if _, err := tx.GuideTag.Delete().Where(
+			guidetag.GuideID(guideID),
+			guidetag.TagIDNotIn(g.TagIDs...),
+		).Exec(ctx); err != nil {
+			return err
+		}
+
+		return tx.GuideTag.MapCreateBulk(g.TagIDs, func(create *ent.GuideTagCreate, i int) {
+			create.SetGuideID(guideID).SetTagID(g.TagIDs[i])
+		}).Exec(ctx)
+	}, nil); err != nil {
+		return nil, err
+	}
+
+	result, err := db.From(ctx).Guide.Query().WithTags().Where(guide.ID(guideID)).First(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	dbGuide := postgres.GetGuideByIDNoCache(newCtx, guideID)
-
-	if dbGuide == nil {
-		return nil, errors.New("guide not found")
-	}
-
-	SetStringINNOE(guide.Name, &dbGuide.Name)
-	SetStringINNOE(guide.ShortDescription, &dbGuide.ShortDescription)
-	SetStringINNOE(guide.Guide, &dbGuide.Guide)
-
-	postgres.Save(newCtx, &dbGuide)
-
-	return DBGuideToGenerated(dbGuide), nil
+	return (*conv.GuideImpl)(nil).Convert(result), nil
 }
 
 func (r *mutationResolver) DeleteGuide(ctx context.Context, guideID string) (bool, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "deleteGuide")
+	wrapper, ctx := WrapMutationTrace(ctx, "deleteGuide")
 	defer wrapper.end()
 
-	dbGuide := postgres.GetGuideByID(newCtx, guideID)
-
-	if dbGuide == nil {
-		return false, errors.New("guide not found")
+	if err := db.From(ctx).Guide.DeleteOneID(guideID).Exec(ctx); err != nil {
+		return false, err
 	}
-
-	postgres.Delete(newCtx, &dbGuide)
 
 	return true, nil
 }
 
 func (r *queryResolver) GetGuide(ctx context.Context, guideID string) (*generated.Guide, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getGuide")
+	wrapper, ctx := WrapQueryTrace(ctx, "getGuide")
 	defer wrapper.end()
 
-	guide := postgres.GetGuideByID(newCtx, guideID)
+	result, err := db.From(ctx).Guide.Get(ctx, guideID)
+	if err != nil {
+		return nil, err
+	}
 
-	if guide != nil {
+	if result != nil {
 		if redis.CanIncrement(RealIP(ctx), "view", "guide:"+guideID, time.Hour*4) {
-			postgres.IncrementGuideViews(newCtx, guide)
+			err := result.Update().AddViews(1).Exec(ctx)
+			if err != nil {
+				slox.Error(ctx, "failed incrementing views", slog.Any("err", err))
+			}
 		}
 	}
 
-	return DBGuideToGenerated(guide), nil
+	return (*conv.GuideImpl)(nil).Convert(result), nil
 }
 
 func (r *queryResolver) GetGuides(ctx context.Context, _ map[string]interface{}) (*generated.GetGuides, error) {
@@ -122,7 +162,7 @@ func (r *queryResolver) GetGuides(ctx context.Context, _ map[string]interface{})
 type getGuidesResolver struct{ *Resolver }
 
 func (r *getGuidesResolver) Guides(ctx context.Context, _ *generated.GetGuides) ([]*generated.Guide, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "GetGuides.guides")
+	wrapper, ctx := WrapQueryTrace(ctx, "GetGuides.guides")
 	defer wrapper.end()
 
 	resolverContext := graphql.GetFieldContext(ctx)
@@ -131,28 +171,19 @@ func (r *getGuidesResolver) Guides(ctx context.Context, _ *generated.GetGuides) 
 		return nil, err
 	}
 
-	var guides []postgres.Guide
+	query := db.From(ctx).Guide.Query().WithTags()
+	query = convertGuideFilter(query, guideFilter)
 
-	if guideFilter.Ids == nil || len(guideFilter.Ids) == 0 {
-		guides = postgres.GetGuides(newCtx, guideFilter)
-	} else {
-		guides = postgres.GetGuidesByID(newCtx, guideFilter.Ids)
+	result, err := query.All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	if guides == nil {
-		return nil, errors.New("guides not found")
-	}
-
-	converted := make([]*generated.Guide, len(guides))
-	for k, v := range guides {
-		converted[k] = DBGuideToGenerated(&v)
-	}
-
-	return converted, nil
+	return (*conv.GuideImpl)(nil).ConvertSlice(result), nil
 }
 
 func (r *getGuidesResolver) Count(ctx context.Context, _ *generated.GetGuides) (int, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "GetGuides.count")
+	wrapper, ctx := WrapQueryTrace(ctx, "GetGuides.count")
 	defer wrapper.end()
 
 	resolverContext := graphql.GetFieldContext(ctx)
@@ -161,24 +192,52 @@ func (r *getGuidesResolver) Count(ctx context.Context, _ *generated.GetGuides) (
 		return 0, err
 	}
 
-	if guideFilter.Ids != nil && len(guideFilter.Ids) != 0 {
-		return len(guideFilter.Ids), nil
+	query := db.From(ctx).Guide.Query().WithTags()
+	query = convertGuideFilter(query, guideFilter)
+
+	result, err := query.Count(ctx)
+	if err != nil {
+		return 0, err
 	}
 
-	return int(postgres.GetGuideCount(newCtx, guideFilter)), nil
+	return result, nil
 }
 
 type guideResolver struct{ *Resolver }
 
 func (r *guideResolver) User(ctx context.Context, obj *generated.Guide) (*generated.User, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "Guide.user")
+	wrapper, ctx := WrapQueryTrace(ctx, "Guide.user")
 	defer wrapper.end()
 
-	user := postgres.GetUserByID(newCtx, obj.UserID)
-
-	if user == nil {
-		return nil, errors.New("user not found")
+	result, err := db.From(ctx).User.Get(ctx, obj.UserID)
+	if err != nil {
+		return nil, err
 	}
 
-	return DBUserToGenerated(user), nil
+	return (*conv.UserImpl)(nil).Convert(result), nil
+}
+
+func convertGuideFilter(query *ent.GuideQuery, filter *models.GuideFilter) *ent.GuideQuery {
+	if len(filter.Ids) > 0 {
+		query = query.Where(guide.IDIn(filter.Ids...))
+	} else if filter != nil {
+		query = query.
+			Limit(*filter.Limit).
+			Offset(*filter.Offset).
+			Order(sql.OrderByField(
+				filter.OrderBy.String(),
+				db.OrderToOrder(filter.Order.String()),
+			).ToFunc())
+
+		if filter.Search != nil && *filter.Search != "" {
+			query = query.Modify(func(s *sql.Selector) {
+				s.Where(sql.ExprP("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & ")))
+			}).Clone()
+		}
+
+		if filter.TagIDs != nil && len(filter.TagIDs) > 0 {
+			query = query.Where(guide.HasTagsWith(tag.IDIn(filter.TagIDs...)))
+		}
+	}
+	return query
 }

@@ -261,12 +261,12 @@ func (gtq *GuideTagQuery) WithTag(opts ...func(*TagQuery)) *GuideTagQuery {
 // Example:
 //
 //	var v []struct {
-//		GuideTag string `json:"guide_tag,omitempty"`
+//		GuideID string `json:"guide_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.GuideTag.Query().
-//		GroupBy(guidetag.FieldGuideTag).
+//		GroupBy(guidetag.FieldGuideID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (gtq *GuideTagQuery) GroupBy(field string, fields ...string) *GuideTagGroupBy {
@@ -284,11 +284,11 @@ func (gtq *GuideTagQuery) GroupBy(field string, fields ...string) *GuideTagGroup
 // Example:
 //
 //	var v []struct {
-//		GuideTag string `json:"guide_tag,omitempty"`
+//		GuideID string `json:"guide_id,omitempty"`
 //	}
 //
 //	client.GuideTag.Query().
-//		Select(guidetag.FieldGuideTag).
+//		Select(guidetag.FieldGuideID).
 //		Scan(ctx, &v)
 func (gtq *GuideTagQuery) Select(fields ...string) *GuideTagSelect {
 	gtq.ctx.Fields = append(gtq.ctx.Fields, fields...)
@@ -378,7 +378,7 @@ func (gtq *GuideTagQuery) loadGuide(ctx context.Context, query *GuideQuery, node
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*GuideTag)
 	for i := range nodes {
-		fk := nodes[i].GuideTag
+		fk := nodes[i].GuideID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -395,7 +395,7 @@ func (gtq *GuideTagQuery) loadGuide(ctx context.Context, query *GuideQuery, node
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "guide_tag" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "guide_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -457,7 +457,7 @@ func (gtq *GuideTagQuery) querySpec() *sqlgraph.QuerySpec {
 			_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 		}
 		if gtq.withGuide != nil {
-			_spec.Node.AddColumnOnce(guidetag.FieldGuideTag)
+			_spec.Node.AddColumnOnce(guidetag.FieldGuideID)
 		}
 		if gtq.withTag != nil {
 			_spec.Node.AddColumnOnce(guidetag.FieldTagID)

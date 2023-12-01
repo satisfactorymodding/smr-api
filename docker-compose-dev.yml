@@ -2,7 +2,7 @@ version: '2'
 
 services:
   redis:
-    image: redis:alpine
+    image: redis:7.0.14-alpine
     ports:
       - 6379:6379
 
@@ -31,3 +31,4 @@ services:
     image: ghcr.io/vilsol/ficsit-pak-parser:v0.0.3
     ports:
       - 50051:50051
+    restart: always

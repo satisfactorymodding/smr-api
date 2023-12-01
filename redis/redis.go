@@ -56,7 +56,10 @@ func StoreNonce(nonce string, redirectURI string) {
 
 func GetNonce(nonce string) (string, error) {
 	result, err := client.Get("nonce:" + nonce).Result()
-	return result, fmt.Errorf("failed to get nonce: %w", err)
+	if err != nil {
+		return "", fmt.Errorf("failed to get nonce: %w", err)
+	}
+	return result, nil
 }
 
 func GetAllKeys() []string {

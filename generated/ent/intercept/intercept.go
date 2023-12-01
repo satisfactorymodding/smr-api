@@ -23,6 +23,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 )
 
 // The Query interface represents an operation that queries a graph.
@@ -459,6 +460,33 @@ func (f TraverseVersionDependency) Traverse(ctx context.Context, q ent.Query) er
 	return fmt.Errorf("unexpected query type %T. expect *ent.VersionDependencyQuery", q)
 }
 
+// The VersionTargetFunc type is an adapter to allow the use of ordinary function as a Querier.
+type VersionTargetFunc func(context.Context, *ent.VersionTargetQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f VersionTargetFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.VersionTargetQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.VersionTargetQuery", q)
+}
+
+// The TraverseVersionTarget type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseVersionTarget func(context.Context, *ent.VersionTargetQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseVersionTarget) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseVersionTarget) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.VersionTargetQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.VersionTargetQuery", q)
+}
+
 // NewQuery returns the generic Query interface for the given typed query.
 func NewQuery(q ent.Query) (Query, error) {
 	switch q := q.(type) {
@@ -490,6 +518,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.VersionQuery, predicate.Version, version.OrderOption]{typ: ent.TypeVersion, tq: q}, nil
 	case *ent.VersionDependencyQuery:
 		return &query[*ent.VersionDependencyQuery, predicate.VersionDependency, versiondependency.OrderOption]{typ: ent.TypeVersionDependency, tq: q}, nil
+	case *ent.VersionTargetQuery:
+		return &query[*ent.VersionTargetQuery, predicate.VersionTarget, versiontarget.OrderOption]{typ: ent.TypeVersionTarget, tq: q}, nil
 	default:
 		return nil, fmt.Errorf("unknown query type %T", q)
 	}

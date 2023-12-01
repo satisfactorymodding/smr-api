@@ -17,6 +17,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -70,13 +71,17 @@ func init() {
 	// guide.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	guide.UpdateDefaultUpdatedAt = guideDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// guideDescName is the schema descriptor for name field.
-	guideDescName := guideFields[0].Descriptor()
+	guideDescName := guideFields[1].Descriptor()
 	// guide.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	guide.NameValidator = guideDescName.Validators[0].(func(string) error)
 	// guideDescShortDescription is the schema descriptor for short_description field.
-	guideDescShortDescription := guideFields[1].Descriptor()
+	guideDescShortDescription := guideFields[2].Descriptor()
 	// guide.ShortDescriptionValidator is a validator for the "short_description" field. It is called by the builders before save.
 	guide.ShortDescriptionValidator = guideDescShortDescription.Validators[0].(func(string) error)
+	// guideDescViews is the schema descriptor for views field.
+	guideDescViews := guideFields[4].Descriptor()
+	// guide.DefaultViews holds the default value on creation for the views field.
+	guide.DefaultViews = guideDescViews.Default.(int)
 	// guideDescID is the schema descriptor for id field.
 	guideDescID := guideMixinFields0[0].Descriptor()
 	// guide.DefaultID holds the default value on creation for the id field.
@@ -340,27 +345,27 @@ func init() {
 	// version.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	version.UpdateDefaultUpdatedAt = versionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// versionDescVersion is the schema descriptor for version field.
-	versionDescVersion := versionFields[0].Descriptor()
+	versionDescVersion := versionFields[1].Descriptor()
 	// version.VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	version.VersionValidator = versionDescVersion.Validators[0].(func(string) error)
 	// versionDescSmlVersion is the schema descriptor for sml_version field.
-	versionDescSmlVersion := versionFields[1].Descriptor()
+	versionDescSmlVersion := versionFields[2].Descriptor()
 	// version.SmlVersionValidator is a validator for the "sml_version" field. It is called by the builders before save.
 	version.SmlVersionValidator = versionDescSmlVersion.Validators[0].(func(string) error)
 	// versionDescApproved is the schema descriptor for approved field.
-	versionDescApproved := versionFields[6].Descriptor()
+	versionDescApproved := versionFields[7].Descriptor()
 	// version.DefaultApproved holds the default value on creation for the approved field.
 	version.DefaultApproved = versionDescApproved.Default.(bool)
 	// versionDescDenied is the schema descriptor for denied field.
-	versionDescDenied := versionFields[8].Descriptor()
+	versionDescDenied := versionFields[9].Descriptor()
 	// version.DefaultDenied holds the default value on creation for the denied field.
 	version.DefaultDenied = versionDescDenied.Default.(bool)
 	// versionDescModReference is the schema descriptor for mod_reference field.
-	versionDescModReference := versionFields[10].Descriptor()
+	versionDescModReference := versionFields[11].Descriptor()
 	// version.ModReferenceValidator is a validator for the "mod_reference" field. It is called by the builders before save.
 	version.ModReferenceValidator = versionDescModReference.Validators[0].(func(string) error)
 	// versionDescHash is the schema descriptor for hash field.
-	versionDescHash := versionFields[15].Descriptor()
+	versionDescHash := versionFields[16].Descriptor()
 	// version.HashValidator is a validator for the "hash" field. It is called by the builders before save.
 	version.HashValidator = func() func(string) error {
 		validators := versionDescHash.Validators
@@ -404,6 +409,15 @@ func init() {
 	versiondependencyDescCondition := versiondependencyFields[2].Descriptor()
 	// versiondependency.ConditionValidator is a validator for the "condition" field. It is called by the builders before save.
 	versiondependency.ConditionValidator = versiondependencyDescCondition.Validators[0].(func(string) error)
+	versiontargetMixin := schema.VersionTarget{}.Mixin()
+	versiontargetMixinFields0 := versiontargetMixin[0].Fields()
+	_ = versiontargetMixinFields0
+	versiontargetFields := schema.VersionTarget{}.Fields()
+	_ = versiontargetFields
+	// versiontargetDescID is the schema descriptor for id field.
+	versiontargetDescID := versiontargetMixinFields0[0].Descriptor()
+	// versiontarget.DefaultID holds the default value on creation for the id field.
+	versiontarget.DefaultID = versiontargetDescID.Default.(func() string)
 }
 
 const (

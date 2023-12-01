@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"io"
 	"log/slog"
 	"path"
@@ -65,15 +66,17 @@ var (
 	uPluginJSONSchema gojsonschema.JSONLoader
 )
 
+var StaticPath = "static/"
+
 func InitializeValidator() {
-	absPath, err := filepath.Abs("static/data-json-schema.json")
+	absPath, err := filepath.Abs(filepath.Join(StaticPath, "data-json-schema.json"))
 	if err != nil {
 		panic(err)
 	}
 
 	dataJSONSchema = gojsonschema.NewReferenceLoader("file://" + strings.ReplaceAll(absPath, "\\", "/"))
 
-	absPath, err = filepath.Abs("static/uplugin-json-schema.json")
+	absPath, err = filepath.Abs(filepath.Join(StaticPath, "uplugin-json-schema.json"))
 
 	if err != nil {
 		panic(err)
@@ -166,6 +169,8 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			}
 		}
 
+		slox.Info(ctx, "decided engine version", slog.String("version", engineVersion))
+
 		parserClient := parser.NewParserClient(conn)
 		stream, err := parserClient.Parse(ctx, &parser.ParseRequest{
 			ZipData:       body,
@@ -193,6 +198,8 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 				if errors.Is(err, io.EOF) || err == io.EOF {
 					break
 				}
+				spew.Config.DisablePointerMethods = false
+				spew.Dump(err)
 				return nil, fmt.Errorf("failed reading parser stream: %w", err)
 			}
 

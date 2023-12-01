@@ -30,6 +30,7 @@ func generateEnt() {
 			gen.FeatureIntercept,
 			gen.FeatureSnapshot,
 			gen.FeatureExecQuery,
+			gen.FeatureUpsert,
 		},
 		IDType: &field.TypeInfo{
 			Type: field.TypeString,

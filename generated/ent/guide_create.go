@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
@@ -20,6 +22,7 @@ type GuideCreate struct {
 	config
 	mutation *GuideMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -64,6 +67,20 @@ func (gc *GuideCreate) SetNillableDeletedAt(t *time.Time) *GuideCreate {
 	return gc
 }
 
+// SetUserID sets the "user_id" field.
+func (gc *GuideCreate) SetUserID(s string) *GuideCreate {
+	gc.mutation.SetUserID(s)
+	return gc
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (gc *GuideCreate) SetNillableUserID(s *string) *GuideCreate {
+	if s != nil {
+		gc.SetUserID(*s)
+	}
+	return gc
+}
+
 // SetName sets the "name" field.
 func (gc *GuideCreate) SetName(s string) *GuideCreate {
 	gc.mutation.SetName(s)
@@ -88,6 +105,14 @@ func (gc *GuideCreate) SetViews(i int) *GuideCreate {
 	return gc
 }
 
+// SetNillableViews sets the "views" field if the given value is not nil.
+func (gc *GuideCreate) SetNillableViews(i *int) *GuideCreate {
+	if i != nil {
+		gc.SetViews(*i)
+	}
+	return gc
+}
+
 // SetID sets the "id" field.
 func (gc *GuideCreate) SetID(s string) *GuideCreate {
 	gc.mutation.SetID(s)
@@ -99,12 +124,6 @@ func (gc *GuideCreate) SetNillableID(s *string) *GuideCreate {
 	if s != nil {
 		gc.SetID(*s)
 	}
-	return gc
-}
-
-// SetUserID sets the "user" edge to the User entity by ID.
-func (gc *GuideCreate) SetUserID(id string) *GuideCreate {
-	gc.mutation.SetUserID(id)
 	return gc
 }
 
@@ -179,6 +198,10 @@ func (gc *GuideCreate) defaults() error {
 		v := guide.DefaultUpdatedAt()
 		gc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := gc.mutation.Views(); !ok {
+		v := guide.DefaultViews
+		gc.mutation.SetViews(v)
+	}
 	if _, ok := gc.mutation.ID(); !ok {
 		if guide.DefaultID == nil {
 			return fmt.Errorf("ent: uninitialized guide.DefaultID (forgotten import ent/runtime?)")
@@ -219,9 +242,6 @@ func (gc *GuideCreate) check() error {
 	if _, ok := gc.mutation.Views(); !ok {
 		return &ValidationError{Name: "views", err: errors.New(`ent: missing required field "Guide.views"`)}
 	}
-	if _, ok := gc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Guide.user"`)}
-	}
 	return nil
 }
 
@@ -253,6 +273,7 @@ func (gc *GuideCreate) createSpec() (*Guide, *sqlgraph.CreateSpec) {
 		_node = &Guide{config: gc.config}
 		_spec = sqlgraph.NewCreateSpec(guide.Table, sqlgraph.NewFieldSpec(guide.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = gc.conflict
 	if id, ok := gc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -299,7 +320,7 @@ func (gc *GuideCreate) createSpec() (*Guide, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_id = &nodes[0]
+		_node.UserID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := gc.mutation.TagsIDs(); len(nodes) > 0 {
@@ -321,11 +342,371 @@ func (gc *GuideCreate) createSpec() (*Guide, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Guide.Create().
+//		SetCreatedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.GuideUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (gc *GuideCreate) OnConflict(opts ...sql.ConflictOption) *GuideUpsertOne {
+	gc.conflict = opts
+	return &GuideUpsertOne{
+		create: gc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Guide.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (gc *GuideCreate) OnConflictColumns(columns ...string) *GuideUpsertOne {
+	gc.conflict = append(gc.conflict, sql.ConflictColumns(columns...))
+	return &GuideUpsertOne{
+		create: gc,
+	}
+}
+
+type (
+	// GuideUpsertOne is the builder for "upsert"-ing
+	//  one Guide node.
+	GuideUpsertOne struct {
+		create *GuideCreate
+	}
+
+	// GuideUpsert is the "OnConflict" setter.
+	GuideUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *GuideUpsert) SetUpdatedAt(v time.Time) *GuideUpsert {
+	u.Set(guide.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *GuideUpsert) UpdateUpdatedAt() *GuideUpsert {
+	u.SetExcluded(guide.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *GuideUpsert) SetDeletedAt(v time.Time) *GuideUpsert {
+	u.Set(guide.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *GuideUpsert) UpdateDeletedAt() *GuideUpsert {
+	u.SetExcluded(guide.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *GuideUpsert) ClearDeletedAt() *GuideUpsert {
+	u.SetNull(guide.FieldDeletedAt)
+	return u
+}
+
+// SetUserID sets the "user_id" field.
+func (u *GuideUpsert) SetUserID(v string) *GuideUpsert {
+	u.Set(guide.FieldUserID, v)
+	return u
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *GuideUpsert) UpdateUserID() *GuideUpsert {
+	u.SetExcluded(guide.FieldUserID)
+	return u
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (u *GuideUpsert) ClearUserID() *GuideUpsert {
+	u.SetNull(guide.FieldUserID)
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *GuideUpsert) SetName(v string) *GuideUpsert {
+	u.Set(guide.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *GuideUpsert) UpdateName() *GuideUpsert {
+	u.SetExcluded(guide.FieldName)
+	return u
+}
+
+// SetShortDescription sets the "short_description" field.
+func (u *GuideUpsert) SetShortDescription(v string) *GuideUpsert {
+	u.Set(guide.FieldShortDescription, v)
+	return u
+}
+
+// UpdateShortDescription sets the "short_description" field to the value that was provided on create.
+func (u *GuideUpsert) UpdateShortDescription() *GuideUpsert {
+	u.SetExcluded(guide.FieldShortDescription)
+	return u
+}
+
+// SetGuide sets the "guide" field.
+func (u *GuideUpsert) SetGuide(v string) *GuideUpsert {
+	u.Set(guide.FieldGuide, v)
+	return u
+}
+
+// UpdateGuide sets the "guide" field to the value that was provided on create.
+func (u *GuideUpsert) UpdateGuide() *GuideUpsert {
+	u.SetExcluded(guide.FieldGuide)
+	return u
+}
+
+// SetViews sets the "views" field.
+func (u *GuideUpsert) SetViews(v int) *GuideUpsert {
+	u.Set(guide.FieldViews, v)
+	return u
+}
+
+// UpdateViews sets the "views" field to the value that was provided on create.
+func (u *GuideUpsert) UpdateViews() *GuideUpsert {
+	u.SetExcluded(guide.FieldViews)
+	return u
+}
+
+// AddViews adds v to the "views" field.
+func (u *GuideUpsert) AddViews(v int) *GuideUpsert {
+	u.Add(guide.FieldViews, v)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Guide.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(guide.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *GuideUpsertOne) UpdateNewValues() *GuideUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(guide.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(guide.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Guide.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *GuideUpsertOne) Ignore() *GuideUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *GuideUpsertOne) DoNothing() *GuideUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the GuideCreate.OnConflict
+// documentation for more info.
+func (u *GuideUpsertOne) Update(set func(*GuideUpsert)) *GuideUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&GuideUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *GuideUpsertOne) SetUpdatedAt(v time.Time) *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *GuideUpsertOne) UpdateUpdatedAt() *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *GuideUpsertOne) SetDeletedAt(v time.Time) *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *GuideUpsertOne) UpdateDeletedAt() *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *GuideUpsertOne) ClearDeletedAt() *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *GuideUpsertOne) SetUserID(v string) *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *GuideUpsertOne) UpdateUserID() *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (u *GuideUpsertOne) ClearUserID() *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.ClearUserID()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *GuideUpsertOne) SetName(v string) *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *GuideUpsertOne) UpdateName() *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetShortDescription sets the "short_description" field.
+func (u *GuideUpsertOne) SetShortDescription(v string) *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetShortDescription(v)
+	})
+}
+
+// UpdateShortDescription sets the "short_description" field to the value that was provided on create.
+func (u *GuideUpsertOne) UpdateShortDescription() *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateShortDescription()
+	})
+}
+
+// SetGuide sets the "guide" field.
+func (u *GuideUpsertOne) SetGuide(v string) *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetGuide(v)
+	})
+}
+
+// UpdateGuide sets the "guide" field to the value that was provided on create.
+func (u *GuideUpsertOne) UpdateGuide() *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateGuide()
+	})
+}
+
+// SetViews sets the "views" field.
+func (u *GuideUpsertOne) SetViews(v int) *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetViews(v)
+	})
+}
+
+// AddViews adds v to the "views" field.
+func (u *GuideUpsertOne) AddViews(v int) *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.AddViews(v)
+	})
+}
+
+// UpdateViews sets the "views" field to the value that was provided on create.
+func (u *GuideUpsertOne) UpdateViews() *GuideUpsertOne {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateViews()
+	})
+}
+
+// Exec executes the query.
+func (u *GuideUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for GuideCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *GuideUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *GuideUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: GuideUpsertOne.ID is not supported by MySQL driver. Use GuideUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *GuideUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // GuideCreateBulk is the builder for creating many Guide entities in bulk.
 type GuideCreateBulk struct {
 	config
 	err      error
 	builders []*GuideCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Guide entities in the database.
@@ -355,6 +736,7 @@ func (gcb *GuideCreateBulk) Save(ctx context.Context) ([]*Guide, error) {
 					_, err = mutators[i+1].Mutate(root, gcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = gcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, gcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -401,6 +783,242 @@ func (gcb *GuideCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (gcb *GuideCreateBulk) ExecX(ctx context.Context) {
 	if err := gcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Guide.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.GuideUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (gcb *GuideCreateBulk) OnConflict(opts ...sql.ConflictOption) *GuideUpsertBulk {
+	gcb.conflict = opts
+	return &GuideUpsertBulk{
+		create: gcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Guide.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (gcb *GuideCreateBulk) OnConflictColumns(columns ...string) *GuideUpsertBulk {
+	gcb.conflict = append(gcb.conflict, sql.ConflictColumns(columns...))
+	return &GuideUpsertBulk{
+		create: gcb,
+	}
+}
+
+// GuideUpsertBulk is the builder for "upsert"-ing
+// a bulk of Guide nodes.
+type GuideUpsertBulk struct {
+	create *GuideCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Guide.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(guide.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *GuideUpsertBulk) UpdateNewValues() *GuideUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(guide.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(guide.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Guide.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *GuideUpsertBulk) Ignore() *GuideUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *GuideUpsertBulk) DoNothing() *GuideUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the GuideCreateBulk.OnConflict
+// documentation for more info.
+func (u *GuideUpsertBulk) Update(set func(*GuideUpsert)) *GuideUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&GuideUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *GuideUpsertBulk) SetUpdatedAt(v time.Time) *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *GuideUpsertBulk) UpdateUpdatedAt() *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *GuideUpsertBulk) SetDeletedAt(v time.Time) *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *GuideUpsertBulk) UpdateDeletedAt() *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *GuideUpsertBulk) ClearDeletedAt() *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *GuideUpsertBulk) SetUserID(v string) *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *GuideUpsertBulk) UpdateUserID() *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (u *GuideUpsertBulk) ClearUserID() *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.ClearUserID()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *GuideUpsertBulk) SetName(v string) *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *GuideUpsertBulk) UpdateName() *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetShortDescription sets the "short_description" field.
+func (u *GuideUpsertBulk) SetShortDescription(v string) *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetShortDescription(v)
+	})
+}
+
+// UpdateShortDescription sets the "short_description" field to the value that was provided on create.
+func (u *GuideUpsertBulk) UpdateShortDescription() *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateShortDescription()
+	})
+}
+
+// SetGuide sets the "guide" field.
+func (u *GuideUpsertBulk) SetGuide(v string) *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetGuide(v)
+	})
+}
+
+// UpdateGuide sets the "guide" field to the value that was provided on create.
+func (u *GuideUpsertBulk) UpdateGuide() *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateGuide()
+	})
+}
+
+// SetViews sets the "views" field.
+func (u *GuideUpsertBulk) SetViews(v int) *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.SetViews(v)
+	})
+}
+
+// AddViews adds v to the "views" field.
+func (u *GuideUpsertBulk) AddViews(v int) *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.AddViews(v)
+	})
+}
+
+// UpdateViews sets the "views" field to the value that was provided on create.
+func (u *GuideUpsertBulk) UpdateViews() *GuideUpsertBulk {
+	return u.Update(func(s *GuideUpsert) {
+		s.UpdateViews()
+	})
+}
+
+// Exec executes the query.
+func (u *GuideUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the GuideCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for GuideCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *GuideUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

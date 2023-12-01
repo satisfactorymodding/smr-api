@@ -57,6 +57,26 @@ func (gu *GuideUpdate) ClearDeletedAt() *GuideUpdate {
 	return gu
 }
 
+// SetUserID sets the "user_id" field.
+func (gu *GuideUpdate) SetUserID(s string) *GuideUpdate {
+	gu.mutation.SetUserID(s)
+	return gu
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (gu *GuideUpdate) SetNillableUserID(s *string) *GuideUpdate {
+	if s != nil {
+		gu.SetUserID(*s)
+	}
+	return gu
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (gu *GuideUpdate) ClearUserID() *GuideUpdate {
+	gu.mutation.ClearUserID()
+	return gu
+}
+
 // SetName sets the "name" field.
 func (gu *GuideUpdate) SetName(s string) *GuideUpdate {
 	gu.mutation.SetName(s)
@@ -82,15 +102,17 @@ func (gu *GuideUpdate) SetViews(i int) *GuideUpdate {
 	return gu
 }
 
-// AddViews adds i to the "views" field.
-func (gu *GuideUpdate) AddViews(i int) *GuideUpdate {
-	gu.mutation.AddViews(i)
+// SetNillableViews sets the "views" field if the given value is not nil.
+func (gu *GuideUpdate) SetNillableViews(i *int) *GuideUpdate {
+	if i != nil {
+		gu.SetViews(*i)
+	}
 	return gu
 }
 
-// SetUserID sets the "user" edge to the User entity by ID.
-func (gu *GuideUpdate) SetUserID(id string) *GuideUpdate {
-	gu.mutation.SetUserID(id)
+// AddViews adds i to the "views" field.
+func (gu *GuideUpdate) AddViews(i int) *GuideUpdate {
+	gu.mutation.AddViews(i)
 	return gu
 }
 
@@ -199,9 +221,6 @@ func (gu *GuideUpdate) check() error {
 		if err := guide.ShortDescriptionValidator(v); err != nil {
 			return &ValidationError{Name: "short_description", err: fmt.Errorf(`ent: validator failed for field "Guide.short_description": %w`, err)}
 		}
-	}
-	if _, ok := gu.mutation.UserID(); gu.mutation.UserCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Guide.user"`)
 	}
 	return nil
 }
@@ -370,6 +389,26 @@ func (guo *GuideUpdateOne) ClearDeletedAt() *GuideUpdateOne {
 	return guo
 }
 
+// SetUserID sets the "user_id" field.
+func (guo *GuideUpdateOne) SetUserID(s string) *GuideUpdateOne {
+	guo.mutation.SetUserID(s)
+	return guo
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (guo *GuideUpdateOne) SetNillableUserID(s *string) *GuideUpdateOne {
+	if s != nil {
+		guo.SetUserID(*s)
+	}
+	return guo
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (guo *GuideUpdateOne) ClearUserID() *GuideUpdateOne {
+	guo.mutation.ClearUserID()
+	return guo
+}
+
 // SetName sets the "name" field.
 func (guo *GuideUpdateOne) SetName(s string) *GuideUpdateOne {
 	guo.mutation.SetName(s)
@@ -395,15 +434,17 @@ func (guo *GuideUpdateOne) SetViews(i int) *GuideUpdateOne {
 	return guo
 }
 
-// AddViews adds i to the "views" field.
-func (guo *GuideUpdateOne) AddViews(i int) *GuideUpdateOne {
-	guo.mutation.AddViews(i)
+// SetNillableViews sets the "views" field if the given value is not nil.
+func (guo *GuideUpdateOne) SetNillableViews(i *int) *GuideUpdateOne {
+	if i != nil {
+		guo.SetViews(*i)
+	}
 	return guo
 }
 
-// SetUserID sets the "user" edge to the User entity by ID.
-func (guo *GuideUpdateOne) SetUserID(id string) *GuideUpdateOne {
-	guo.mutation.SetUserID(id)
+// AddViews adds i to the "views" field.
+func (guo *GuideUpdateOne) AddViews(i int) *GuideUpdateOne {
+	guo.mutation.AddViews(i)
 	return guo
 }
 
@@ -525,9 +566,6 @@ func (guo *GuideUpdateOne) check() error {
 		if err := guide.ShortDescriptionValidator(v); err != nil {
 			return &ValidationError{Name: "short_description", err: fmt.Errorf(`ent: validator failed for field "Guide.short_description": %w`, err)}
 		}
-	}
-	if _, ok := guo.mutation.UserID(); guo.mutation.UserCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Guide.user"`)
 	}
 	return nil
 }

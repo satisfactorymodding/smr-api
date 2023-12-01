@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
@@ -19,6 +21,7 @@ type SmlVersionCreate struct {
 	config
 	mutation *SmlVersionMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -301,6 +304,7 @@ func (svc *SmlVersionCreate) createSpec() (*SmlVersion, *sqlgraph.CreateSpec) {
 		_node = &SmlVersion{config: svc.config}
 		_spec = sqlgraph.NewCreateSpec(smlversion.Table, sqlgraph.NewFieldSpec(smlversion.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = svc.conflict
 	if id, ok := svc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -368,11 +372,449 @@ func (svc *SmlVersionCreate) createSpec() (*SmlVersion, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.SmlVersion.Create().
+//		SetCreatedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SmlVersionUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (svc *SmlVersionCreate) OnConflict(opts ...sql.ConflictOption) *SmlVersionUpsertOne {
+	svc.conflict = opts
+	return &SmlVersionUpsertOne{
+		create: svc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.SmlVersion.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (svc *SmlVersionCreate) OnConflictColumns(columns ...string) *SmlVersionUpsertOne {
+	svc.conflict = append(svc.conflict, sql.ConflictColumns(columns...))
+	return &SmlVersionUpsertOne{
+		create: svc,
+	}
+}
+
+type (
+	// SmlVersionUpsertOne is the builder for "upsert"-ing
+	//  one SmlVersion node.
+	SmlVersionUpsertOne struct {
+		create *SmlVersionCreate
+	}
+
+	// SmlVersionUpsert is the "OnConflict" setter.
+	SmlVersionUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *SmlVersionUpsert) SetUpdatedAt(v time.Time) *SmlVersionUpsert {
+	u.Set(smlversion.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateUpdatedAt() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *SmlVersionUpsert) SetDeletedAt(v time.Time) *SmlVersionUpsert {
+	u.Set(smlversion.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateDeletedAt() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *SmlVersionUpsert) ClearDeletedAt() *SmlVersionUpsert {
+	u.SetNull(smlversion.FieldDeletedAt)
+	return u
+}
+
+// SetVersion sets the "version" field.
+func (u *SmlVersionUpsert) SetVersion(v string) *SmlVersionUpsert {
+	u.Set(smlversion.FieldVersion, v)
+	return u
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateVersion() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldVersion)
+	return u
+}
+
+// SetSatisfactoryVersion sets the "satisfactory_version" field.
+func (u *SmlVersionUpsert) SetSatisfactoryVersion(v int) *SmlVersionUpsert {
+	u.Set(smlversion.FieldSatisfactoryVersion, v)
+	return u
+}
+
+// UpdateSatisfactoryVersion sets the "satisfactory_version" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateSatisfactoryVersion() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldSatisfactoryVersion)
+	return u
+}
+
+// AddSatisfactoryVersion adds v to the "satisfactory_version" field.
+func (u *SmlVersionUpsert) AddSatisfactoryVersion(v int) *SmlVersionUpsert {
+	u.Add(smlversion.FieldSatisfactoryVersion, v)
+	return u
+}
+
+// SetStability sets the "stability" field.
+func (u *SmlVersionUpsert) SetStability(v smlversion.Stability) *SmlVersionUpsert {
+	u.Set(smlversion.FieldStability, v)
+	return u
+}
+
+// UpdateStability sets the "stability" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateStability() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldStability)
+	return u
+}
+
+// SetDate sets the "date" field.
+func (u *SmlVersionUpsert) SetDate(v time.Time) *SmlVersionUpsert {
+	u.Set(smlversion.FieldDate, v)
+	return u
+}
+
+// UpdateDate sets the "date" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateDate() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldDate)
+	return u
+}
+
+// SetLink sets the "link" field.
+func (u *SmlVersionUpsert) SetLink(v string) *SmlVersionUpsert {
+	u.Set(smlversion.FieldLink, v)
+	return u
+}
+
+// UpdateLink sets the "link" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateLink() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldLink)
+	return u
+}
+
+// SetChangelog sets the "changelog" field.
+func (u *SmlVersionUpsert) SetChangelog(v string) *SmlVersionUpsert {
+	u.Set(smlversion.FieldChangelog, v)
+	return u
+}
+
+// UpdateChangelog sets the "changelog" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateChangelog() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldChangelog)
+	return u
+}
+
+// SetBootstrapVersion sets the "bootstrap_version" field.
+func (u *SmlVersionUpsert) SetBootstrapVersion(v string) *SmlVersionUpsert {
+	u.Set(smlversion.FieldBootstrapVersion, v)
+	return u
+}
+
+// UpdateBootstrapVersion sets the "bootstrap_version" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateBootstrapVersion() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldBootstrapVersion)
+	return u
+}
+
+// ClearBootstrapVersion clears the value of the "bootstrap_version" field.
+func (u *SmlVersionUpsert) ClearBootstrapVersion() *SmlVersionUpsert {
+	u.SetNull(smlversion.FieldBootstrapVersion)
+	return u
+}
+
+// SetEngineVersion sets the "engine_version" field.
+func (u *SmlVersionUpsert) SetEngineVersion(v string) *SmlVersionUpsert {
+	u.Set(smlversion.FieldEngineVersion, v)
+	return u
+}
+
+// UpdateEngineVersion sets the "engine_version" field to the value that was provided on create.
+func (u *SmlVersionUpsert) UpdateEngineVersion() *SmlVersionUpsert {
+	u.SetExcluded(smlversion.FieldEngineVersion)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.SmlVersion.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(smlversion.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *SmlVersionUpsertOne) UpdateNewValues() *SmlVersionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(smlversion.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(smlversion.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.SmlVersion.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *SmlVersionUpsertOne) Ignore() *SmlVersionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SmlVersionUpsertOne) DoNothing() *SmlVersionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SmlVersionCreate.OnConflict
+// documentation for more info.
+func (u *SmlVersionUpsertOne) Update(set func(*SmlVersionUpsert)) *SmlVersionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SmlVersionUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *SmlVersionUpsertOne) SetUpdatedAt(v time.Time) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateUpdatedAt() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *SmlVersionUpsertOne) SetDeletedAt(v time.Time) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateDeletedAt() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *SmlVersionUpsertOne) ClearDeletedAt() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *SmlVersionUpsertOne) SetVersion(v string) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateVersion() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// SetSatisfactoryVersion sets the "satisfactory_version" field.
+func (u *SmlVersionUpsertOne) SetSatisfactoryVersion(v int) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetSatisfactoryVersion(v)
+	})
+}
+
+// AddSatisfactoryVersion adds v to the "satisfactory_version" field.
+func (u *SmlVersionUpsertOne) AddSatisfactoryVersion(v int) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.AddSatisfactoryVersion(v)
+	})
+}
+
+// UpdateSatisfactoryVersion sets the "satisfactory_version" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateSatisfactoryVersion() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateSatisfactoryVersion()
+	})
+}
+
+// SetStability sets the "stability" field.
+func (u *SmlVersionUpsertOne) SetStability(v smlversion.Stability) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetStability(v)
+	})
+}
+
+// UpdateStability sets the "stability" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateStability() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateStability()
+	})
+}
+
+// SetDate sets the "date" field.
+func (u *SmlVersionUpsertOne) SetDate(v time.Time) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetDate(v)
+	})
+}
+
+// UpdateDate sets the "date" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateDate() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateDate()
+	})
+}
+
+// SetLink sets the "link" field.
+func (u *SmlVersionUpsertOne) SetLink(v string) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetLink(v)
+	})
+}
+
+// UpdateLink sets the "link" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateLink() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateLink()
+	})
+}
+
+// SetChangelog sets the "changelog" field.
+func (u *SmlVersionUpsertOne) SetChangelog(v string) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetChangelog(v)
+	})
+}
+
+// UpdateChangelog sets the "changelog" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateChangelog() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateChangelog()
+	})
+}
+
+// SetBootstrapVersion sets the "bootstrap_version" field.
+func (u *SmlVersionUpsertOne) SetBootstrapVersion(v string) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetBootstrapVersion(v)
+	})
+}
+
+// UpdateBootstrapVersion sets the "bootstrap_version" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateBootstrapVersion() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateBootstrapVersion()
+	})
+}
+
+// ClearBootstrapVersion clears the value of the "bootstrap_version" field.
+func (u *SmlVersionUpsertOne) ClearBootstrapVersion() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.ClearBootstrapVersion()
+	})
+}
+
+// SetEngineVersion sets the "engine_version" field.
+func (u *SmlVersionUpsertOne) SetEngineVersion(v string) *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetEngineVersion(v)
+	})
+}
+
+// UpdateEngineVersion sets the "engine_version" field to the value that was provided on create.
+func (u *SmlVersionUpsertOne) UpdateEngineVersion() *SmlVersionUpsertOne {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateEngineVersion()
+	})
+}
+
+// Exec executes the query.
+func (u *SmlVersionUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SmlVersionCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SmlVersionUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *SmlVersionUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: SmlVersionUpsertOne.ID is not supported by MySQL driver. Use SmlVersionUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *SmlVersionUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // SmlVersionCreateBulk is the builder for creating many SmlVersion entities in bulk.
 type SmlVersionCreateBulk struct {
 	config
 	err      error
 	builders []*SmlVersionCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the SmlVersion entities in the database.
@@ -402,6 +844,7 @@ func (svcb *SmlVersionCreateBulk) Save(ctx context.Context) ([]*SmlVersion, erro
 					_, err = mutators[i+1].Mutate(root, svcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = svcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, svcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -448,6 +891,284 @@ func (svcb *SmlVersionCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (svcb *SmlVersionCreateBulk) ExecX(ctx context.Context) {
 	if err := svcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.SmlVersion.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SmlVersionUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (svcb *SmlVersionCreateBulk) OnConflict(opts ...sql.ConflictOption) *SmlVersionUpsertBulk {
+	svcb.conflict = opts
+	return &SmlVersionUpsertBulk{
+		create: svcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.SmlVersion.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (svcb *SmlVersionCreateBulk) OnConflictColumns(columns ...string) *SmlVersionUpsertBulk {
+	svcb.conflict = append(svcb.conflict, sql.ConflictColumns(columns...))
+	return &SmlVersionUpsertBulk{
+		create: svcb,
+	}
+}
+
+// SmlVersionUpsertBulk is the builder for "upsert"-ing
+// a bulk of SmlVersion nodes.
+type SmlVersionUpsertBulk struct {
+	create *SmlVersionCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.SmlVersion.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(smlversion.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *SmlVersionUpsertBulk) UpdateNewValues() *SmlVersionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(smlversion.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(smlversion.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.SmlVersion.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *SmlVersionUpsertBulk) Ignore() *SmlVersionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SmlVersionUpsertBulk) DoNothing() *SmlVersionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SmlVersionCreateBulk.OnConflict
+// documentation for more info.
+func (u *SmlVersionUpsertBulk) Update(set func(*SmlVersionUpsert)) *SmlVersionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SmlVersionUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *SmlVersionUpsertBulk) SetUpdatedAt(v time.Time) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateUpdatedAt() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *SmlVersionUpsertBulk) SetDeletedAt(v time.Time) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateDeletedAt() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *SmlVersionUpsertBulk) ClearDeletedAt() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *SmlVersionUpsertBulk) SetVersion(v string) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateVersion() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// SetSatisfactoryVersion sets the "satisfactory_version" field.
+func (u *SmlVersionUpsertBulk) SetSatisfactoryVersion(v int) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetSatisfactoryVersion(v)
+	})
+}
+
+// AddSatisfactoryVersion adds v to the "satisfactory_version" field.
+func (u *SmlVersionUpsertBulk) AddSatisfactoryVersion(v int) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.AddSatisfactoryVersion(v)
+	})
+}
+
+// UpdateSatisfactoryVersion sets the "satisfactory_version" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateSatisfactoryVersion() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateSatisfactoryVersion()
+	})
+}
+
+// SetStability sets the "stability" field.
+func (u *SmlVersionUpsertBulk) SetStability(v smlversion.Stability) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetStability(v)
+	})
+}
+
+// UpdateStability sets the "stability" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateStability() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateStability()
+	})
+}
+
+// SetDate sets the "date" field.
+func (u *SmlVersionUpsertBulk) SetDate(v time.Time) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetDate(v)
+	})
+}
+
+// UpdateDate sets the "date" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateDate() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateDate()
+	})
+}
+
+// SetLink sets the "link" field.
+func (u *SmlVersionUpsertBulk) SetLink(v string) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetLink(v)
+	})
+}
+
+// UpdateLink sets the "link" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateLink() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateLink()
+	})
+}
+
+// SetChangelog sets the "changelog" field.
+func (u *SmlVersionUpsertBulk) SetChangelog(v string) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetChangelog(v)
+	})
+}
+
+// UpdateChangelog sets the "changelog" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateChangelog() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateChangelog()
+	})
+}
+
+// SetBootstrapVersion sets the "bootstrap_version" field.
+func (u *SmlVersionUpsertBulk) SetBootstrapVersion(v string) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetBootstrapVersion(v)
+	})
+}
+
+// UpdateBootstrapVersion sets the "bootstrap_version" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateBootstrapVersion() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateBootstrapVersion()
+	})
+}
+
+// ClearBootstrapVersion clears the value of the "bootstrap_version" field.
+func (u *SmlVersionUpsertBulk) ClearBootstrapVersion() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.ClearBootstrapVersion()
+	})
+}
+
+// SetEngineVersion sets the "engine_version" field.
+func (u *SmlVersionUpsertBulk) SetEngineVersion(v string) *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.SetEngineVersion(v)
+	})
+}
+
+// UpdateEngineVersion sets the "engine_version" field to the value that was provided on create.
+func (u *SmlVersionUpsertBulk) UpdateEngineVersion() *SmlVersionUpsertBulk {
+	return u.Update(func(s *SmlVersionUpsert) {
+		s.UpdateEngineVersion()
+	})
+}
+
+// Exec executes the query.
+func (u *SmlVersionUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the SmlVersionCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SmlVersionCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SmlVersionUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

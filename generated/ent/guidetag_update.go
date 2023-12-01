@@ -30,21 +30,15 @@ func (gtu *GuideTagUpdate) Where(ps ...predicate.GuideTag) *GuideTagUpdate {
 	return gtu
 }
 
-// SetGuideTag sets the "guide_tag" field.
-func (gtu *GuideTagUpdate) SetGuideTag(s string) *GuideTagUpdate {
-	gtu.mutation.SetGuideTag(s)
+// SetGuideID sets the "guide_id" field.
+func (gtu *GuideTagUpdate) SetGuideID(s string) *GuideTagUpdate {
+	gtu.mutation.SetGuideID(s)
 	return gtu
 }
 
 // SetTagID sets the "tag_id" field.
 func (gtu *GuideTagUpdate) SetTagID(s string) *GuideTagUpdate {
 	gtu.mutation.SetTagID(s)
-	return gtu
-}
-
-// SetGuideID sets the "guide" edge to the Guide entity by ID.
-func (gtu *GuideTagUpdate) SetGuideID(id string) *GuideTagUpdate {
-	gtu.mutation.SetGuideID(id)
 	return gtu
 }
 
@@ -123,7 +117,7 @@ func (gtu *GuideTagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := gtu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(guidetag.Table, guidetag.Columns, sqlgraph.NewFieldSpec(guidetag.FieldGuideTag, field.TypeString), sqlgraph.NewFieldSpec(guidetag.FieldTagID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(guidetag.Table, guidetag.Columns, sqlgraph.NewFieldSpec(guidetag.FieldGuideID, field.TypeString), sqlgraph.NewFieldSpec(guidetag.FieldTagID, field.TypeString))
 	if ps := gtu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -211,21 +205,15 @@ type GuideTagUpdateOne struct {
 	modifiers []func(*sql.UpdateBuilder)
 }
 
-// SetGuideTag sets the "guide_tag" field.
-func (gtuo *GuideTagUpdateOne) SetGuideTag(s string) *GuideTagUpdateOne {
-	gtuo.mutation.SetGuideTag(s)
+// SetGuideID sets the "guide_id" field.
+func (gtuo *GuideTagUpdateOne) SetGuideID(s string) *GuideTagUpdateOne {
+	gtuo.mutation.SetGuideID(s)
 	return gtuo
 }
 
 // SetTagID sets the "tag_id" field.
 func (gtuo *GuideTagUpdateOne) SetTagID(s string) *GuideTagUpdateOne {
 	gtuo.mutation.SetTagID(s)
-	return gtuo
-}
-
-// SetGuideID sets the "guide" edge to the Guide entity by ID.
-func (gtuo *GuideTagUpdateOne) SetGuideID(id string) *GuideTagUpdateOne {
-	gtuo.mutation.SetGuideID(id)
 	return gtuo
 }
 
@@ -317,9 +305,9 @@ func (gtuo *GuideTagUpdateOne) sqlSave(ctx context.Context) (_node *GuideTag, er
 	if err := gtuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(guidetag.Table, guidetag.Columns, sqlgraph.NewFieldSpec(guidetag.FieldGuideTag, field.TypeString), sqlgraph.NewFieldSpec(guidetag.FieldTagID, field.TypeString))
-	if id, ok := gtuo.mutation.GuideTag(); !ok {
-		return nil, &ValidationError{Name: "guide_tag", err: errors.New(`ent: missing "GuideTag.guide_tag" for update`)}
+	_spec := sqlgraph.NewUpdateSpec(guidetag.Table, guidetag.Columns, sqlgraph.NewFieldSpec(guidetag.FieldGuideID, field.TypeString), sqlgraph.NewFieldSpec(guidetag.FieldTagID, field.TypeString))
+	if id, ok := gtuo.mutation.GuideID(); !ok {
+		return nil, &ValidationError{Name: "guide_id", err: errors.New(`ent: missing "GuideTag.guide_id" for update`)}
 	} else {
 		_spec.Node.CompositeID[0].Value = id
 	}

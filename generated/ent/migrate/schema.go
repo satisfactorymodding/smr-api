@@ -44,8 +44,8 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 32},
 		{Name: "short_description", Type: field.TypeString, Size: 128},
 		{Name: "guide", Type: field.TypeString},
-		{Name: "views", Type: field.TypeInt},
-		{Name: "user_id", Type: field.TypeString},
+		{Name: "views", Type: field.TypeInt, Default: 0},
+		{Name: "user_id", Type: field.TypeString, Nullable: true},
 	}
 	// GuidesTable holds the schema information for the "guides" table.
 	GuidesTable = &schema.Table{
@@ -57,7 +57,7 @@ var (
 				Symbol:     "guides_users_guides",
 				Columns:    []*schema.Column{GuidesColumns[8]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
@@ -75,7 +75,7 @@ var (
 	}
 	// GuideTagsColumns holds the columns for the "guide_tags" table.
 	GuideTagsColumns = []*schema.Column{
-		{Name: "guide_tag", Type: field.TypeString},
+		{Name: "guide_id", Type: field.TypeString},
 		{Name: "tag_id", Type: field.TypeString},
 	}
 	// GuideTagsTable holds the schema information for the "guide_tags" table.
@@ -504,6 +504,41 @@ var (
 			},
 		},
 	}
+	// VersionTargetsColumns holds the columns for the "version_targets" table.
+	VersionTargetsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "target_name", Type: field.TypeString},
+		{Name: "key", Type: field.TypeString},
+		{Name: "hash", Type: field.TypeString},
+		{Name: "size", Type: field.TypeInt64},
+		{Name: "version_id", Type: field.TypeString},
+	}
+	// VersionTargetsTable holds the schema information for the "version_targets" table.
+	VersionTargetsTable = &schema.Table{
+		Name:       "version_targets",
+		Columns:    VersionTargetsColumns,
+		PrimaryKey: []*schema.Column{VersionTargetsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "version_targets_versions_targets",
+				Columns:    []*schema.Column{VersionTargetsColumns[5]},
+				RefColumns: []*schema.Column{VersionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "versiontarget_id",
+				Unique:  false,
+				Columns: []*schema.Column{VersionTargetsColumns[0]},
+			},
+			{
+				Name:    "versiontarget_version_id_target_name",
+				Unique:  true,
+				Columns: []*schema.Column{VersionTargetsColumns[5], VersionTargetsColumns[1]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AnnouncementsTable,
@@ -520,6 +555,7 @@ var (
 		UserSessionsTable,
 		VersionsTable,
 		VersionDependenciesTable,
+		VersionTargetsTable,
 	}
 )
 
@@ -537,4 +573,5 @@ func init() {
 	VersionsTable.ForeignKeys[0].RefTable = ModsTable
 	VersionDependenciesTable.ForeignKeys[0].RefTable = VersionsTable
 	VersionDependenciesTable.ForeignKeys[1].RefTable = ModsTable
+	VersionTargetsTable.ForeignKeys[0].RefTable = VersionsTable
 }

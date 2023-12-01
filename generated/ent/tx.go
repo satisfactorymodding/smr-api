@@ -42,6 +42,8 @@ type Tx struct {
 	Version *VersionClient
 	// VersionDependency is the client for interacting with the VersionDependency builders.
 	VersionDependency *VersionDependencyClient
+	// VersionTarget is the client for interacting with the VersionTarget builders.
+	VersionTarget *VersionTargetClient
 
 	// lazily loaded.
 	client     *Client
@@ -187,6 +189,7 @@ func (tx *Tx) init() {
 	tx.UserSession = NewUserSessionClient(tx.config)
 	tx.Version = NewVersionClient(tx.config)
 	tx.VersionDependency = NewVersionDependencyClient(tx.config)
+	tx.VersionTarget = NewVersionTargetClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

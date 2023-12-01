@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
@@ -20,6 +21,7 @@ type VersionDependencyCreate struct {
 	config
 	mutation *VersionDependencyMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -205,6 +207,7 @@ func (vdc *VersionDependencyCreate) createSpec() (*VersionDependency, *sqlgraph.
 		_node = &VersionDependency{config: vdc.config}
 		_spec = sqlgraph.NewCreateSpec(versiondependency.Table, nil)
 	)
+	_spec.OnConflict = vdc.conflict
 	if value, ok := vdc.mutation.CreatedAt(); ok {
 		_spec.SetField(versiondependency.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -262,11 +265,290 @@ func (vdc *VersionDependencyCreate) createSpec() (*VersionDependency, *sqlgraph.
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.VersionDependency.Create().
+//		SetCreatedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.VersionDependencyUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (vdc *VersionDependencyCreate) OnConflict(opts ...sql.ConflictOption) *VersionDependencyUpsertOne {
+	vdc.conflict = opts
+	return &VersionDependencyUpsertOne{
+		create: vdc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.VersionDependency.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (vdc *VersionDependencyCreate) OnConflictColumns(columns ...string) *VersionDependencyUpsertOne {
+	vdc.conflict = append(vdc.conflict, sql.ConflictColumns(columns...))
+	return &VersionDependencyUpsertOne{
+		create: vdc,
+	}
+}
+
+type (
+	// VersionDependencyUpsertOne is the builder for "upsert"-ing
+	//  one VersionDependency node.
+	VersionDependencyUpsertOne struct {
+		create *VersionDependencyCreate
+	}
+
+	// VersionDependencyUpsert is the "OnConflict" setter.
+	VersionDependencyUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *VersionDependencyUpsert) SetUpdatedAt(v time.Time) *VersionDependencyUpsert {
+	u.Set(versiondependency.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *VersionDependencyUpsert) UpdateUpdatedAt() *VersionDependencyUpsert {
+	u.SetExcluded(versiondependency.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *VersionDependencyUpsert) SetDeletedAt(v time.Time) *VersionDependencyUpsert {
+	u.Set(versiondependency.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *VersionDependencyUpsert) UpdateDeletedAt() *VersionDependencyUpsert {
+	u.SetExcluded(versiondependency.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *VersionDependencyUpsert) ClearDeletedAt() *VersionDependencyUpsert {
+	u.SetNull(versiondependency.FieldDeletedAt)
+	return u
+}
+
+// SetVersionID sets the "version_id" field.
+func (u *VersionDependencyUpsert) SetVersionID(v string) *VersionDependencyUpsert {
+	u.Set(versiondependency.FieldVersionID, v)
+	return u
+}
+
+// UpdateVersionID sets the "version_id" field to the value that was provided on create.
+func (u *VersionDependencyUpsert) UpdateVersionID() *VersionDependencyUpsert {
+	u.SetExcluded(versiondependency.FieldVersionID)
+	return u
+}
+
+// SetModID sets the "mod_id" field.
+func (u *VersionDependencyUpsert) SetModID(v string) *VersionDependencyUpsert {
+	u.Set(versiondependency.FieldModID, v)
+	return u
+}
+
+// UpdateModID sets the "mod_id" field to the value that was provided on create.
+func (u *VersionDependencyUpsert) UpdateModID() *VersionDependencyUpsert {
+	u.SetExcluded(versiondependency.FieldModID)
+	return u
+}
+
+// SetCondition sets the "condition" field.
+func (u *VersionDependencyUpsert) SetCondition(v string) *VersionDependencyUpsert {
+	u.Set(versiondependency.FieldCondition, v)
+	return u
+}
+
+// UpdateCondition sets the "condition" field to the value that was provided on create.
+func (u *VersionDependencyUpsert) UpdateCondition() *VersionDependencyUpsert {
+	u.SetExcluded(versiondependency.FieldCondition)
+	return u
+}
+
+// SetOptional sets the "optional" field.
+func (u *VersionDependencyUpsert) SetOptional(v bool) *VersionDependencyUpsert {
+	u.Set(versiondependency.FieldOptional, v)
+	return u
+}
+
+// UpdateOptional sets the "optional" field to the value that was provided on create.
+func (u *VersionDependencyUpsert) UpdateOptional() *VersionDependencyUpsert {
+	u.SetExcluded(versiondependency.FieldOptional)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.VersionDependency.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *VersionDependencyUpsertOne) UpdateNewValues() *VersionDependencyUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(versiondependency.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.VersionDependency.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *VersionDependencyUpsertOne) Ignore() *VersionDependencyUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *VersionDependencyUpsertOne) DoNothing() *VersionDependencyUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the VersionDependencyCreate.OnConflict
+// documentation for more info.
+func (u *VersionDependencyUpsertOne) Update(set func(*VersionDependencyUpsert)) *VersionDependencyUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&VersionDependencyUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *VersionDependencyUpsertOne) SetUpdatedAt(v time.Time) *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *VersionDependencyUpsertOne) UpdateUpdatedAt() *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *VersionDependencyUpsertOne) SetDeletedAt(v time.Time) *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *VersionDependencyUpsertOne) UpdateDeletedAt() *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *VersionDependencyUpsertOne) ClearDeletedAt() *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetVersionID sets the "version_id" field.
+func (u *VersionDependencyUpsertOne) SetVersionID(v string) *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetVersionID(v)
+	})
+}
+
+// UpdateVersionID sets the "version_id" field to the value that was provided on create.
+func (u *VersionDependencyUpsertOne) UpdateVersionID() *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateVersionID()
+	})
+}
+
+// SetModID sets the "mod_id" field.
+func (u *VersionDependencyUpsertOne) SetModID(v string) *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetModID(v)
+	})
+}
+
+// UpdateModID sets the "mod_id" field to the value that was provided on create.
+func (u *VersionDependencyUpsertOne) UpdateModID() *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateModID()
+	})
+}
+
+// SetCondition sets the "condition" field.
+func (u *VersionDependencyUpsertOne) SetCondition(v string) *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetCondition(v)
+	})
+}
+
+// UpdateCondition sets the "condition" field to the value that was provided on create.
+func (u *VersionDependencyUpsertOne) UpdateCondition() *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateCondition()
+	})
+}
+
+// SetOptional sets the "optional" field.
+func (u *VersionDependencyUpsertOne) SetOptional(v bool) *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetOptional(v)
+	})
+}
+
+// UpdateOptional sets the "optional" field to the value that was provided on create.
+func (u *VersionDependencyUpsertOne) UpdateOptional() *VersionDependencyUpsertOne {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateOptional()
+	})
+}
+
+// Exec executes the query.
+func (u *VersionDependencyUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for VersionDependencyCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *VersionDependencyUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
 // VersionDependencyCreateBulk is the builder for creating many VersionDependency entities in bulk.
 type VersionDependencyCreateBulk struct {
 	config
 	err      error
 	builders []*VersionDependencyCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the VersionDependency entities in the database.
@@ -296,6 +578,7 @@ func (vdcb *VersionDependencyCreateBulk) Save(ctx context.Context) ([]*VersionDe
 					_, err = mutators[i+1].Mutate(root, vdcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = vdcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, vdcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -341,6 +624,208 @@ func (vdcb *VersionDependencyCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (vdcb *VersionDependencyCreateBulk) ExecX(ctx context.Context) {
 	if err := vdcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.VersionDependency.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.VersionDependencyUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (vdcb *VersionDependencyCreateBulk) OnConflict(opts ...sql.ConflictOption) *VersionDependencyUpsertBulk {
+	vdcb.conflict = opts
+	return &VersionDependencyUpsertBulk{
+		create: vdcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.VersionDependency.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (vdcb *VersionDependencyCreateBulk) OnConflictColumns(columns ...string) *VersionDependencyUpsertBulk {
+	vdcb.conflict = append(vdcb.conflict, sql.ConflictColumns(columns...))
+	return &VersionDependencyUpsertBulk{
+		create: vdcb,
+	}
+}
+
+// VersionDependencyUpsertBulk is the builder for "upsert"-ing
+// a bulk of VersionDependency nodes.
+type VersionDependencyUpsertBulk struct {
+	create *VersionDependencyCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.VersionDependency.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *VersionDependencyUpsertBulk) UpdateNewValues() *VersionDependencyUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(versiondependency.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.VersionDependency.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *VersionDependencyUpsertBulk) Ignore() *VersionDependencyUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *VersionDependencyUpsertBulk) DoNothing() *VersionDependencyUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the VersionDependencyCreateBulk.OnConflict
+// documentation for more info.
+func (u *VersionDependencyUpsertBulk) Update(set func(*VersionDependencyUpsert)) *VersionDependencyUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&VersionDependencyUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *VersionDependencyUpsertBulk) SetUpdatedAt(v time.Time) *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *VersionDependencyUpsertBulk) UpdateUpdatedAt() *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *VersionDependencyUpsertBulk) SetDeletedAt(v time.Time) *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *VersionDependencyUpsertBulk) UpdateDeletedAt() *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *VersionDependencyUpsertBulk) ClearDeletedAt() *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetVersionID sets the "version_id" field.
+func (u *VersionDependencyUpsertBulk) SetVersionID(v string) *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetVersionID(v)
+	})
+}
+
+// UpdateVersionID sets the "version_id" field to the value that was provided on create.
+func (u *VersionDependencyUpsertBulk) UpdateVersionID() *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateVersionID()
+	})
+}
+
+// SetModID sets the "mod_id" field.
+func (u *VersionDependencyUpsertBulk) SetModID(v string) *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetModID(v)
+	})
+}
+
+// UpdateModID sets the "mod_id" field to the value that was provided on create.
+func (u *VersionDependencyUpsertBulk) UpdateModID() *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateModID()
+	})
+}
+
+// SetCondition sets the "condition" field.
+func (u *VersionDependencyUpsertBulk) SetCondition(v string) *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetCondition(v)
+	})
+}
+
+// UpdateCondition sets the "condition" field to the value that was provided on create.
+func (u *VersionDependencyUpsertBulk) UpdateCondition() *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateCondition()
+	})
+}
+
+// SetOptional sets the "optional" field.
+func (u *VersionDependencyUpsertBulk) SetOptional(v bool) *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.SetOptional(v)
+	})
+}
+
+// UpdateOptional sets the "optional" field to the value that was provided on create.
+func (u *VersionDependencyUpsertBulk) UpdateOptional() *VersionDependencyUpsertBulk {
+	return u.Update(func(s *VersionDependencyUpsert) {
+		s.UpdateOptional()
+	})
+}
+
+// Exec executes the query.
+func (u *VersionDependencyUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the VersionDependencyCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for VersionDependencyCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *VersionDependencyUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -73,14 +73,6 @@ func SetStabilityINN(value *generated.VersionStabilities, target *string) {
 	*target = string(*value)
 }
 
-func SetDateINN(value *string, target *time.Time) {
-	if value == nil {
-		return
-	}
-
-	*target, _ = time.Parse(time.RFC3339Nano, *value)
-}
-
 func SetCompatibilityINN(value *generated.CompatibilityInfoInput, target **postgres.CompatibilityInfo) {
 	if value == nil {
 		return

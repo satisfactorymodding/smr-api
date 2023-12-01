@@ -24,6 +24,8 @@ type Guide struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
+	// UserID holds the value of the "user_id" field.
+	UserID string `json:"user_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// ShortDescription holds the value of the "short_description" field.
@@ -35,7 +37,6 @@ type Guide struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the GuideQuery when eager-loading is set.
 	Edges        GuideEdges `json:"edges"`
-	user_id      *string
 	selectValues sql.SelectValues
 }
 
@@ -90,12 +91,10 @@ func (*Guide) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case guide.FieldViews:
 			values[i] = new(sql.NullInt64)
-		case guide.FieldID, guide.FieldName, guide.FieldShortDescription, guide.FieldGuide:
+		case guide.FieldID, guide.FieldUserID, guide.FieldName, guide.FieldShortDescription, guide.FieldGuide:
 			values[i] = new(sql.NullString)
 		case guide.FieldCreatedAt, guide.FieldUpdatedAt, guide.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
-		case guide.ForeignKeys[0]: // user_id
-			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -135,6 +134,12 @@ func (gu *Guide) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				gu.DeletedAt = value.Time
 			}
+		case guide.FieldUserID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+			} else if value.Valid {
+				gu.UserID = value.String
+			}
 		case guide.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -158,13 +163,6 @@ func (gu *Guide) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field views", values[i])
 			} else if value.Valid {
 				gu.Views = int(value.Int64)
-			}
-		case guide.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field user_id", values[i])
-			} else if value.Valid {
-				gu.user_id = new(string)
-				*gu.user_id = value.String
 			}
 		default:
 			gu.selectValues.Set(columns[i], values[i])
@@ -225,6 +223,9 @@ func (gu *Guide) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("deleted_at=")
 	builder.WriteString(gu.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("user_id=")
+	builder.WriteString(gu.UserID)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(gu.Name)

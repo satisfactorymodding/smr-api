@@ -20,6 +20,9 @@ func init() {
 	db.EnableDebug()
 }
 
+// TODO Add guide tag test
+// TODO Add rate limit test
+
 func TestGuides(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()

@@ -47,3 +47,6 @@ type Version func(*sql.Selector)
 
 // VersionDependency is the predicate function for versiondependency builders.
 type VersionDependency func(*sql.Selector)
+
+// VersionTarget is the predicate function for versiontarget builders.
+type VersionTarget func(*sql.Selector)

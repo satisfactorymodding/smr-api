@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -22,6 +24,7 @@ type ModCreate struct {
 	config
 	mutation *ModMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -423,6 +426,7 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 		_node = &Mod{config: mc.config}
 		_spec = sqlgraph.NewCreateSpec(mod.Table, sqlgraph.NewFieldSpec(mod.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = mc.conflict
 	if id, ok := mc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -574,11 +578,683 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Mod.Create().
+//		SetCreatedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ModUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (mc *ModCreate) OnConflict(opts ...sql.ConflictOption) *ModUpsertOne {
+	mc.conflict = opts
+	return &ModUpsertOne{
+		create: mc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Mod.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (mc *ModCreate) OnConflictColumns(columns ...string) *ModUpsertOne {
+	mc.conflict = append(mc.conflict, sql.ConflictColumns(columns...))
+	return &ModUpsertOne{
+		create: mc,
+	}
+}
+
+type (
+	// ModUpsertOne is the builder for "upsert"-ing
+	//  one Mod node.
+	ModUpsertOne struct {
+		create *ModCreate
+	}
+
+	// ModUpsert is the "OnConflict" setter.
+	ModUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *ModUpsert) SetUpdatedAt(v time.Time) *ModUpsert {
+	u.Set(mod.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *ModUpsert) UpdateUpdatedAt() *ModUpsert {
+	u.SetExcluded(mod.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ModUpsert) SetDeletedAt(v time.Time) *ModUpsert {
+	u.Set(mod.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ModUpsert) UpdateDeletedAt() *ModUpsert {
+	u.SetExcluded(mod.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ModUpsert) ClearDeletedAt() *ModUpsert {
+	u.SetNull(mod.FieldDeletedAt)
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *ModUpsert) SetName(v string) *ModUpsert {
+	u.Set(mod.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ModUpsert) UpdateName() *ModUpsert {
+	u.SetExcluded(mod.FieldName)
+	return u
+}
+
+// SetShortDescription sets the "short_description" field.
+func (u *ModUpsert) SetShortDescription(v string) *ModUpsert {
+	u.Set(mod.FieldShortDescription, v)
+	return u
+}
+
+// UpdateShortDescription sets the "short_description" field to the value that was provided on create.
+func (u *ModUpsert) UpdateShortDescription() *ModUpsert {
+	u.SetExcluded(mod.FieldShortDescription)
+	return u
+}
+
+// SetFullDescription sets the "full_description" field.
+func (u *ModUpsert) SetFullDescription(v string) *ModUpsert {
+	u.Set(mod.FieldFullDescription, v)
+	return u
+}
+
+// UpdateFullDescription sets the "full_description" field to the value that was provided on create.
+func (u *ModUpsert) UpdateFullDescription() *ModUpsert {
+	u.SetExcluded(mod.FieldFullDescription)
+	return u
+}
+
+// SetLogo sets the "logo" field.
+func (u *ModUpsert) SetLogo(v string) *ModUpsert {
+	u.Set(mod.FieldLogo, v)
+	return u
+}
+
+// UpdateLogo sets the "logo" field to the value that was provided on create.
+func (u *ModUpsert) UpdateLogo() *ModUpsert {
+	u.SetExcluded(mod.FieldLogo)
+	return u
+}
+
+// SetSourceURL sets the "source_url" field.
+func (u *ModUpsert) SetSourceURL(v string) *ModUpsert {
+	u.Set(mod.FieldSourceURL, v)
+	return u
+}
+
+// UpdateSourceURL sets the "source_url" field to the value that was provided on create.
+func (u *ModUpsert) UpdateSourceURL() *ModUpsert {
+	u.SetExcluded(mod.FieldSourceURL)
+	return u
+}
+
+// SetCreatorID sets the "creator_id" field.
+func (u *ModUpsert) SetCreatorID(v string) *ModUpsert {
+	u.Set(mod.FieldCreatorID, v)
+	return u
+}
+
+// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
+func (u *ModUpsert) UpdateCreatorID() *ModUpsert {
+	u.SetExcluded(mod.FieldCreatorID)
+	return u
+}
+
+// SetApproved sets the "approved" field.
+func (u *ModUpsert) SetApproved(v bool) *ModUpsert {
+	u.Set(mod.FieldApproved, v)
+	return u
+}
+
+// UpdateApproved sets the "approved" field to the value that was provided on create.
+func (u *ModUpsert) UpdateApproved() *ModUpsert {
+	u.SetExcluded(mod.FieldApproved)
+	return u
+}
+
+// SetViews sets the "views" field.
+func (u *ModUpsert) SetViews(v uint) *ModUpsert {
+	u.Set(mod.FieldViews, v)
+	return u
+}
+
+// UpdateViews sets the "views" field to the value that was provided on create.
+func (u *ModUpsert) UpdateViews() *ModUpsert {
+	u.SetExcluded(mod.FieldViews)
+	return u
+}
+
+// AddViews adds v to the "views" field.
+func (u *ModUpsert) AddViews(v uint) *ModUpsert {
+	u.Add(mod.FieldViews, v)
+	return u
+}
+
+// SetHotness sets the "hotness" field.
+func (u *ModUpsert) SetHotness(v uint) *ModUpsert {
+	u.Set(mod.FieldHotness, v)
+	return u
+}
+
+// UpdateHotness sets the "hotness" field to the value that was provided on create.
+func (u *ModUpsert) UpdateHotness() *ModUpsert {
+	u.SetExcluded(mod.FieldHotness)
+	return u
+}
+
+// AddHotness adds v to the "hotness" field.
+func (u *ModUpsert) AddHotness(v uint) *ModUpsert {
+	u.Add(mod.FieldHotness, v)
+	return u
+}
+
+// SetPopularity sets the "popularity" field.
+func (u *ModUpsert) SetPopularity(v uint) *ModUpsert {
+	u.Set(mod.FieldPopularity, v)
+	return u
+}
+
+// UpdatePopularity sets the "popularity" field to the value that was provided on create.
+func (u *ModUpsert) UpdatePopularity() *ModUpsert {
+	u.SetExcluded(mod.FieldPopularity)
+	return u
+}
+
+// AddPopularity adds v to the "popularity" field.
+func (u *ModUpsert) AddPopularity(v uint) *ModUpsert {
+	u.Add(mod.FieldPopularity, v)
+	return u
+}
+
+// SetDownloads sets the "downloads" field.
+func (u *ModUpsert) SetDownloads(v uint) *ModUpsert {
+	u.Set(mod.FieldDownloads, v)
+	return u
+}
+
+// UpdateDownloads sets the "downloads" field to the value that was provided on create.
+func (u *ModUpsert) UpdateDownloads() *ModUpsert {
+	u.SetExcluded(mod.FieldDownloads)
+	return u
+}
+
+// AddDownloads adds v to the "downloads" field.
+func (u *ModUpsert) AddDownloads(v uint) *ModUpsert {
+	u.Add(mod.FieldDownloads, v)
+	return u
+}
+
+// SetDenied sets the "denied" field.
+func (u *ModUpsert) SetDenied(v bool) *ModUpsert {
+	u.Set(mod.FieldDenied, v)
+	return u
+}
+
+// UpdateDenied sets the "denied" field to the value that was provided on create.
+func (u *ModUpsert) UpdateDenied() *ModUpsert {
+	u.SetExcluded(mod.FieldDenied)
+	return u
+}
+
+// SetLastVersionDate sets the "last_version_date" field.
+func (u *ModUpsert) SetLastVersionDate(v time.Time) *ModUpsert {
+	u.Set(mod.FieldLastVersionDate, v)
+	return u
+}
+
+// UpdateLastVersionDate sets the "last_version_date" field to the value that was provided on create.
+func (u *ModUpsert) UpdateLastVersionDate() *ModUpsert {
+	u.SetExcluded(mod.FieldLastVersionDate)
+	return u
+}
+
+// SetModReference sets the "mod_reference" field.
+func (u *ModUpsert) SetModReference(v string) *ModUpsert {
+	u.Set(mod.FieldModReference, v)
+	return u
+}
+
+// UpdateModReference sets the "mod_reference" field to the value that was provided on create.
+func (u *ModUpsert) UpdateModReference() *ModUpsert {
+	u.SetExcluded(mod.FieldModReference)
+	return u
+}
+
+// SetHidden sets the "hidden" field.
+func (u *ModUpsert) SetHidden(v bool) *ModUpsert {
+	u.Set(mod.FieldHidden, v)
+	return u
+}
+
+// UpdateHidden sets the "hidden" field to the value that was provided on create.
+func (u *ModUpsert) UpdateHidden() *ModUpsert {
+	u.SetExcluded(mod.FieldHidden)
+	return u
+}
+
+// SetCompatibility sets the "compatibility" field.
+func (u *ModUpsert) SetCompatibility(v *postgres.CompatibilityInfo) *ModUpsert {
+	u.Set(mod.FieldCompatibility, v)
+	return u
+}
+
+// UpdateCompatibility sets the "compatibility" field to the value that was provided on create.
+func (u *ModUpsert) UpdateCompatibility() *ModUpsert {
+	u.SetExcluded(mod.FieldCompatibility)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Mod.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(mod.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *ModUpsertOne) UpdateNewValues() *ModUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(mod.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(mod.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Mod.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *ModUpsertOne) Ignore() *ModUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ModUpsertOne) DoNothing() *ModUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ModCreate.OnConflict
+// documentation for more info.
+func (u *ModUpsertOne) Update(set func(*ModUpsert)) *ModUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ModUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *ModUpsertOne) SetUpdatedAt(v time.Time) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateUpdatedAt() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ModUpsertOne) SetDeletedAt(v time.Time) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateDeletedAt() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ModUpsertOne) ClearDeletedAt() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *ModUpsertOne) SetName(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateName() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetShortDescription sets the "short_description" field.
+func (u *ModUpsertOne) SetShortDescription(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetShortDescription(v)
+	})
+}
+
+// UpdateShortDescription sets the "short_description" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateShortDescription() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateShortDescription()
+	})
+}
+
+// SetFullDescription sets the "full_description" field.
+func (u *ModUpsertOne) SetFullDescription(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetFullDescription(v)
+	})
+}
+
+// UpdateFullDescription sets the "full_description" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateFullDescription() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateFullDescription()
+	})
+}
+
+// SetLogo sets the "logo" field.
+func (u *ModUpsertOne) SetLogo(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetLogo(v)
+	})
+}
+
+// UpdateLogo sets the "logo" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateLogo() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateLogo()
+	})
+}
+
+// SetSourceURL sets the "source_url" field.
+func (u *ModUpsertOne) SetSourceURL(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetSourceURL(v)
+	})
+}
+
+// UpdateSourceURL sets the "source_url" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateSourceURL() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateSourceURL()
+	})
+}
+
+// SetCreatorID sets the "creator_id" field.
+func (u *ModUpsertOne) SetCreatorID(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetCreatorID(v)
+	})
+}
+
+// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateCreatorID() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateCreatorID()
+	})
+}
+
+// SetApproved sets the "approved" field.
+func (u *ModUpsertOne) SetApproved(v bool) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetApproved(v)
+	})
+}
+
+// UpdateApproved sets the "approved" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateApproved() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateApproved()
+	})
+}
+
+// SetViews sets the "views" field.
+func (u *ModUpsertOne) SetViews(v uint) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetViews(v)
+	})
+}
+
+// AddViews adds v to the "views" field.
+func (u *ModUpsertOne) AddViews(v uint) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.AddViews(v)
+	})
+}
+
+// UpdateViews sets the "views" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateViews() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateViews()
+	})
+}
+
+// SetHotness sets the "hotness" field.
+func (u *ModUpsertOne) SetHotness(v uint) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetHotness(v)
+	})
+}
+
+// AddHotness adds v to the "hotness" field.
+func (u *ModUpsertOne) AddHotness(v uint) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.AddHotness(v)
+	})
+}
+
+// UpdateHotness sets the "hotness" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateHotness() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateHotness()
+	})
+}
+
+// SetPopularity sets the "popularity" field.
+func (u *ModUpsertOne) SetPopularity(v uint) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetPopularity(v)
+	})
+}
+
+// AddPopularity adds v to the "popularity" field.
+func (u *ModUpsertOne) AddPopularity(v uint) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.AddPopularity(v)
+	})
+}
+
+// UpdatePopularity sets the "popularity" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdatePopularity() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdatePopularity()
+	})
+}
+
+// SetDownloads sets the "downloads" field.
+func (u *ModUpsertOne) SetDownloads(v uint) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetDownloads(v)
+	})
+}
+
+// AddDownloads adds v to the "downloads" field.
+func (u *ModUpsertOne) AddDownloads(v uint) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.AddDownloads(v)
+	})
+}
+
+// UpdateDownloads sets the "downloads" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateDownloads() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateDownloads()
+	})
+}
+
+// SetDenied sets the "denied" field.
+func (u *ModUpsertOne) SetDenied(v bool) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetDenied(v)
+	})
+}
+
+// UpdateDenied sets the "denied" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateDenied() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateDenied()
+	})
+}
+
+// SetLastVersionDate sets the "last_version_date" field.
+func (u *ModUpsertOne) SetLastVersionDate(v time.Time) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetLastVersionDate(v)
+	})
+}
+
+// UpdateLastVersionDate sets the "last_version_date" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateLastVersionDate() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateLastVersionDate()
+	})
+}
+
+// SetModReference sets the "mod_reference" field.
+func (u *ModUpsertOne) SetModReference(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetModReference(v)
+	})
+}
+
+// UpdateModReference sets the "mod_reference" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateModReference() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateModReference()
+	})
+}
+
+// SetHidden sets the "hidden" field.
+func (u *ModUpsertOne) SetHidden(v bool) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetHidden(v)
+	})
+}
+
+// UpdateHidden sets the "hidden" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateHidden() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateHidden()
+	})
+}
+
+// SetCompatibility sets the "compatibility" field.
+func (u *ModUpsertOne) SetCompatibility(v *postgres.CompatibilityInfo) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetCompatibility(v)
+	})
+}
+
+// UpdateCompatibility sets the "compatibility" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateCompatibility() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateCompatibility()
+	})
+}
+
+// Exec executes the query.
+func (u *ModUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ModCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ModUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *ModUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: ModUpsertOne.ID is not supported by MySQL driver. Use ModUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *ModUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // ModCreateBulk is the builder for creating many Mod entities in bulk.
 type ModCreateBulk struct {
 	config
 	err      error
 	builders []*ModCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Mod entities in the database.
@@ -608,6 +1284,7 @@ func (mcb *ModCreateBulk) Save(ctx context.Context) ([]*Mod, error) {
 					_, err = mutators[i+1].Mutate(root, mcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = mcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, mcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -654,6 +1331,410 @@ func (mcb *ModCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (mcb *ModCreateBulk) ExecX(ctx context.Context) {
 	if err := mcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Mod.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ModUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (mcb *ModCreateBulk) OnConflict(opts ...sql.ConflictOption) *ModUpsertBulk {
+	mcb.conflict = opts
+	return &ModUpsertBulk{
+		create: mcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Mod.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (mcb *ModCreateBulk) OnConflictColumns(columns ...string) *ModUpsertBulk {
+	mcb.conflict = append(mcb.conflict, sql.ConflictColumns(columns...))
+	return &ModUpsertBulk{
+		create: mcb,
+	}
+}
+
+// ModUpsertBulk is the builder for "upsert"-ing
+// a bulk of Mod nodes.
+type ModUpsertBulk struct {
+	create *ModCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Mod.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(mod.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *ModUpsertBulk) UpdateNewValues() *ModUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(mod.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(mod.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Mod.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *ModUpsertBulk) Ignore() *ModUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ModUpsertBulk) DoNothing() *ModUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ModCreateBulk.OnConflict
+// documentation for more info.
+func (u *ModUpsertBulk) Update(set func(*ModUpsert)) *ModUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ModUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *ModUpsertBulk) SetUpdatedAt(v time.Time) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateUpdatedAt() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ModUpsertBulk) SetDeletedAt(v time.Time) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateDeletedAt() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ModUpsertBulk) ClearDeletedAt() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *ModUpsertBulk) SetName(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateName() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetShortDescription sets the "short_description" field.
+func (u *ModUpsertBulk) SetShortDescription(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetShortDescription(v)
+	})
+}
+
+// UpdateShortDescription sets the "short_description" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateShortDescription() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateShortDescription()
+	})
+}
+
+// SetFullDescription sets the "full_description" field.
+func (u *ModUpsertBulk) SetFullDescription(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetFullDescription(v)
+	})
+}
+
+// UpdateFullDescription sets the "full_description" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateFullDescription() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateFullDescription()
+	})
+}
+
+// SetLogo sets the "logo" field.
+func (u *ModUpsertBulk) SetLogo(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetLogo(v)
+	})
+}
+
+// UpdateLogo sets the "logo" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateLogo() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateLogo()
+	})
+}
+
+// SetSourceURL sets the "source_url" field.
+func (u *ModUpsertBulk) SetSourceURL(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetSourceURL(v)
+	})
+}
+
+// UpdateSourceURL sets the "source_url" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateSourceURL() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateSourceURL()
+	})
+}
+
+// SetCreatorID sets the "creator_id" field.
+func (u *ModUpsertBulk) SetCreatorID(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetCreatorID(v)
+	})
+}
+
+// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateCreatorID() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateCreatorID()
+	})
+}
+
+// SetApproved sets the "approved" field.
+func (u *ModUpsertBulk) SetApproved(v bool) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetApproved(v)
+	})
+}
+
+// UpdateApproved sets the "approved" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateApproved() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateApproved()
+	})
+}
+
+// SetViews sets the "views" field.
+func (u *ModUpsertBulk) SetViews(v uint) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetViews(v)
+	})
+}
+
+// AddViews adds v to the "views" field.
+func (u *ModUpsertBulk) AddViews(v uint) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.AddViews(v)
+	})
+}
+
+// UpdateViews sets the "views" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateViews() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateViews()
+	})
+}
+
+// SetHotness sets the "hotness" field.
+func (u *ModUpsertBulk) SetHotness(v uint) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetHotness(v)
+	})
+}
+
+// AddHotness adds v to the "hotness" field.
+func (u *ModUpsertBulk) AddHotness(v uint) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.AddHotness(v)
+	})
+}
+
+// UpdateHotness sets the "hotness" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateHotness() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateHotness()
+	})
+}
+
+// SetPopularity sets the "popularity" field.
+func (u *ModUpsertBulk) SetPopularity(v uint) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetPopularity(v)
+	})
+}
+
+// AddPopularity adds v to the "popularity" field.
+func (u *ModUpsertBulk) AddPopularity(v uint) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.AddPopularity(v)
+	})
+}
+
+// UpdatePopularity sets the "popularity" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdatePopularity() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdatePopularity()
+	})
+}
+
+// SetDownloads sets the "downloads" field.
+func (u *ModUpsertBulk) SetDownloads(v uint) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetDownloads(v)
+	})
+}
+
+// AddDownloads adds v to the "downloads" field.
+func (u *ModUpsertBulk) AddDownloads(v uint) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.AddDownloads(v)
+	})
+}
+
+// UpdateDownloads sets the "downloads" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateDownloads() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateDownloads()
+	})
+}
+
+// SetDenied sets the "denied" field.
+func (u *ModUpsertBulk) SetDenied(v bool) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetDenied(v)
+	})
+}
+
+// UpdateDenied sets the "denied" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateDenied() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateDenied()
+	})
+}
+
+// SetLastVersionDate sets the "last_version_date" field.
+func (u *ModUpsertBulk) SetLastVersionDate(v time.Time) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetLastVersionDate(v)
+	})
+}
+
+// UpdateLastVersionDate sets the "last_version_date" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateLastVersionDate() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateLastVersionDate()
+	})
+}
+
+// SetModReference sets the "mod_reference" field.
+func (u *ModUpsertBulk) SetModReference(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetModReference(v)
+	})
+}
+
+// UpdateModReference sets the "mod_reference" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateModReference() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateModReference()
+	})
+}
+
+// SetHidden sets the "hidden" field.
+func (u *ModUpsertBulk) SetHidden(v bool) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetHidden(v)
+	})
+}
+
+// UpdateHidden sets the "hidden" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateHidden() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateHidden()
+	})
+}
+
+// SetCompatibility sets the "compatibility" field.
+func (u *ModUpsertBulk) SetCompatibility(v *postgres.CompatibilityInfo) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetCompatibility(v)
+	})
+}
+
+// UpdateCompatibility sets the "compatibility" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateCompatibility() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateCompatibility()
+	})
+}
+
+// Exec executes the query.
+func (u *ModUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ModCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ModCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ModUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

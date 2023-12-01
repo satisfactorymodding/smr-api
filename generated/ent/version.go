@@ -24,6 +24,8 @@ type Version struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
+	// ModID holds the value of the "mod_id" field.
+	ModID string `json:"mod_id,omitempty"`
 	// Version holds the value of the "version" field.
 	Version string `json:"version,omitempty"`
 	// SmlVersion holds the value of the "sml_version" field.
@@ -59,7 +61,6 @@ type Version struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the VersionQuery when eager-loading is set.
 	Edges        VersionEdges `json:"edges"`
-	mod_id       *string
 	selectValues sql.SelectValues
 }
 
@@ -69,11 +70,13 @@ type VersionEdges struct {
 	Mod *Mod `json:"mod,omitempty"`
 	// Dependencies holds the value of the dependencies edge.
 	Dependencies []*Mod `json:"dependencies,omitempty"`
+	// Targets holds the value of the targets edge.
+	Targets []*VersionTarget `json:"targets,omitempty"`
 	// VersionDependencies holds the value of the version_dependencies edge.
 	VersionDependencies []*VersionDependency `json:"version_dependencies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // ModOrErr returns the Mod value or an error if the edge
@@ -98,10 +101,19 @@ func (e VersionEdges) DependenciesOrErr() ([]*Mod, error) {
 	return nil, &NotLoadedError{edge: "dependencies"}
 }
 
+// TargetsOrErr returns the Targets value or an error if the edge
+// was not loaded in eager-loading.
+func (e VersionEdges) TargetsOrErr() ([]*VersionTarget, error) {
+	if e.loadedTypes[2] {
+		return e.Targets, nil
+	}
+	return nil, &NotLoadedError{edge: "targets"}
+}
+
 // VersionDependenciesOrErr returns the VersionDependencies value or an error if the edge
 // was not loaded in eager-loading.
 func (e VersionEdges) VersionDependenciesOrErr() ([]*VersionDependency, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.VersionDependencies, nil
 	}
 	return nil, &NotLoadedError{edge: "version_dependencies"}
@@ -116,12 +128,10 @@ func (*Version) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case version.FieldDownloads, version.FieldHotness, version.FieldVersionMajor, version.FieldVersionMinor, version.FieldVersionPatch, version.FieldSize:
 			values[i] = new(sql.NullInt64)
-		case version.FieldID, version.FieldVersion, version.FieldSmlVersion, version.FieldChangelog, version.FieldKey, version.FieldStability, version.FieldMetadata, version.FieldModReference, version.FieldHash:
+		case version.FieldID, version.FieldModID, version.FieldVersion, version.FieldSmlVersion, version.FieldChangelog, version.FieldKey, version.FieldStability, version.FieldMetadata, version.FieldModReference, version.FieldHash:
 			values[i] = new(sql.NullString)
 		case version.FieldCreatedAt, version.FieldUpdatedAt, version.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
-		case version.ForeignKeys[0]: // mod_id
-			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -160,6 +170,12 @@ func (v *Version) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
 			} else if value.Valid {
 				v.DeletedAt = value.Time
+			}
+		case version.FieldModID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field mod_id", values[i])
+			} else if value.Valid {
+				v.ModID = value.String
 			}
 		case version.FieldVersion:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -257,13 +273,6 @@ func (v *Version) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				v.Hash = value.String
 			}
-		case version.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field mod_id", values[i])
-			} else if value.Valid {
-				v.mod_id = new(string)
-				*v.mod_id = value.String
-			}
 		default:
 			v.selectValues.Set(columns[i], values[i])
 		}
@@ -285,6 +294,11 @@ func (v *Version) QueryMod() *ModQuery {
 // QueryDependencies queries the "dependencies" edge of the Version entity.
 func (v *Version) QueryDependencies() *ModQuery {
 	return NewVersionClient(v.config).QueryDependencies(v)
+}
+
+// QueryTargets queries the "targets" edge of the Version entity.
+func (v *Version) QueryTargets() *VersionTargetQuery {
+	return NewVersionClient(v.config).QueryTargets(v)
 }
 
 // QueryVersionDependencies queries the "version_dependencies" edge of the Version entity.
@@ -323,6 +337,9 @@ func (v *Version) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("deleted_at=")
 	builder.WriteString(v.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("mod_id=")
+	builder.WriteString(v.ModID)
 	builder.WriteString(", ")
 	builder.WriteString("version=")
 	builder.WriteString(v.Version)

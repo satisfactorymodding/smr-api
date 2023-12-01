@@ -50,8 +50,7 @@ func (Mod) Indexes() []ent.Index {
 
 func (Mod) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("versions", Version.Type).
-			StorageKey(edge.Column("mod_id")),
+		edge.To("versions", Version.Type),
 		edge.From("authors", User.Type).
 			Ref("mods").
 			Through("user_mods", UserMod.Type),

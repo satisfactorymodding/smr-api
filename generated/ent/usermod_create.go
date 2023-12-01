@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
@@ -19,6 +20,7 @@ type UserModCreate struct {
 	config
 	mutation *UserModMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetUserID sets the "user_id" field.
@@ -120,6 +122,7 @@ func (umc *UserModCreate) createSpec() (*UserMod, *sqlgraph.CreateSpec) {
 		_node = &UserMod{config: umc.config}
 		_spec = sqlgraph.NewCreateSpec(usermod.Table, nil)
 	)
+	_spec.OnConflict = umc.conflict
 	if value, ok := umc.mutation.Role(); ok {
 		_spec.SetField(usermod.FieldRole, field.TypeString, value)
 		_node.Role = value
@@ -161,11 +164,194 @@ func (umc *UserModCreate) createSpec() (*UserMod, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.UserMod.Create().
+//		SetUserID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.UserModUpsert) {
+//			SetUserID(v+v).
+//		}).
+//		Exec(ctx)
+func (umc *UserModCreate) OnConflict(opts ...sql.ConflictOption) *UserModUpsertOne {
+	umc.conflict = opts
+	return &UserModUpsertOne{
+		create: umc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.UserMod.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (umc *UserModCreate) OnConflictColumns(columns ...string) *UserModUpsertOne {
+	umc.conflict = append(umc.conflict, sql.ConflictColumns(columns...))
+	return &UserModUpsertOne{
+		create: umc,
+	}
+}
+
+type (
+	// UserModUpsertOne is the builder for "upsert"-ing
+	//  one UserMod node.
+	UserModUpsertOne struct {
+		create *UserModCreate
+	}
+
+	// UserModUpsert is the "OnConflict" setter.
+	UserModUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUserID sets the "user_id" field.
+func (u *UserModUpsert) SetUserID(v string) *UserModUpsert {
+	u.Set(usermod.FieldUserID, v)
+	return u
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *UserModUpsert) UpdateUserID() *UserModUpsert {
+	u.SetExcluded(usermod.FieldUserID)
+	return u
+}
+
+// SetModID sets the "mod_id" field.
+func (u *UserModUpsert) SetModID(v string) *UserModUpsert {
+	u.Set(usermod.FieldModID, v)
+	return u
+}
+
+// UpdateModID sets the "mod_id" field to the value that was provided on create.
+func (u *UserModUpsert) UpdateModID() *UserModUpsert {
+	u.SetExcluded(usermod.FieldModID)
+	return u
+}
+
+// SetRole sets the "role" field.
+func (u *UserModUpsert) SetRole(v string) *UserModUpsert {
+	u.Set(usermod.FieldRole, v)
+	return u
+}
+
+// UpdateRole sets the "role" field to the value that was provided on create.
+func (u *UserModUpsert) UpdateRole() *UserModUpsert {
+	u.SetExcluded(usermod.FieldRole)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.UserMod.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *UserModUpsertOne) UpdateNewValues() *UserModUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.UserMod.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *UserModUpsertOne) Ignore() *UserModUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *UserModUpsertOne) DoNothing() *UserModUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the UserModCreate.OnConflict
+// documentation for more info.
+func (u *UserModUpsertOne) Update(set func(*UserModUpsert)) *UserModUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&UserModUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUserID sets the "user_id" field.
+func (u *UserModUpsertOne) SetUserID(v string) *UserModUpsertOne {
+	return u.Update(func(s *UserModUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *UserModUpsertOne) UpdateUserID() *UserModUpsertOne {
+	return u.Update(func(s *UserModUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetModID sets the "mod_id" field.
+func (u *UserModUpsertOne) SetModID(v string) *UserModUpsertOne {
+	return u.Update(func(s *UserModUpsert) {
+		s.SetModID(v)
+	})
+}
+
+// UpdateModID sets the "mod_id" field to the value that was provided on create.
+func (u *UserModUpsertOne) UpdateModID() *UserModUpsertOne {
+	return u.Update(func(s *UserModUpsert) {
+		s.UpdateModID()
+	})
+}
+
+// SetRole sets the "role" field.
+func (u *UserModUpsertOne) SetRole(v string) *UserModUpsertOne {
+	return u.Update(func(s *UserModUpsert) {
+		s.SetRole(v)
+	})
+}
+
+// UpdateRole sets the "role" field to the value that was provided on create.
+func (u *UserModUpsertOne) UpdateRole() *UserModUpsertOne {
+	return u.Update(func(s *UserModUpsert) {
+		s.UpdateRole()
+	})
+}
+
+// Exec executes the query.
+func (u *UserModUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for UserModCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *UserModUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
 // UserModCreateBulk is the builder for creating many UserMod entities in bulk.
 type UserModCreateBulk struct {
 	config
 	err      error
 	builders []*UserModCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the UserMod entities in the database.
@@ -194,6 +380,7 @@ func (umcb *UserModCreateBulk) Save(ctx context.Context) ([]*UserMod, error) {
 					_, err = mutators[i+1].Mutate(root, umcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = umcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, umcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -239,6 +426,152 @@ func (umcb *UserModCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (umcb *UserModCreateBulk) ExecX(ctx context.Context) {
 	if err := umcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.UserMod.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.UserModUpsert) {
+//			SetUserID(v+v).
+//		}).
+//		Exec(ctx)
+func (umcb *UserModCreateBulk) OnConflict(opts ...sql.ConflictOption) *UserModUpsertBulk {
+	umcb.conflict = opts
+	return &UserModUpsertBulk{
+		create: umcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.UserMod.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (umcb *UserModCreateBulk) OnConflictColumns(columns ...string) *UserModUpsertBulk {
+	umcb.conflict = append(umcb.conflict, sql.ConflictColumns(columns...))
+	return &UserModUpsertBulk{
+		create: umcb,
+	}
+}
+
+// UserModUpsertBulk is the builder for "upsert"-ing
+// a bulk of UserMod nodes.
+type UserModUpsertBulk struct {
+	create *UserModCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.UserMod.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *UserModUpsertBulk) UpdateNewValues() *UserModUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.UserMod.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *UserModUpsertBulk) Ignore() *UserModUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *UserModUpsertBulk) DoNothing() *UserModUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the UserModCreateBulk.OnConflict
+// documentation for more info.
+func (u *UserModUpsertBulk) Update(set func(*UserModUpsert)) *UserModUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&UserModUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUserID sets the "user_id" field.
+func (u *UserModUpsertBulk) SetUserID(v string) *UserModUpsertBulk {
+	return u.Update(func(s *UserModUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *UserModUpsertBulk) UpdateUserID() *UserModUpsertBulk {
+	return u.Update(func(s *UserModUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetModID sets the "mod_id" field.
+func (u *UserModUpsertBulk) SetModID(v string) *UserModUpsertBulk {
+	return u.Update(func(s *UserModUpsert) {
+		s.SetModID(v)
+	})
+}
+
+// UpdateModID sets the "mod_id" field to the value that was provided on create.
+func (u *UserModUpsertBulk) UpdateModID() *UserModUpsertBulk {
+	return u.Update(func(s *UserModUpsert) {
+		s.UpdateModID()
+	})
+}
+
+// SetRole sets the "role" field.
+func (u *UserModUpsertBulk) SetRole(v string) *UserModUpsertBulk {
+	return u.Update(func(s *UserModUpsert) {
+		s.SetRole(v)
+	})
+}
+
+// UpdateRole sets the "role" field to the value that was provided on create.
+func (u *UserModUpsertBulk) UpdateRole() *UserModUpsertBulk {
+	return u.Update(func(s *UserModUpsert) {
+		s.UpdateRole()
+	})
+}
+
+// Exec executes the query.
+func (u *UserModUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the UserModCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for UserModCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *UserModUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

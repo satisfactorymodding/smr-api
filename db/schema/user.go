@@ -44,8 +44,7 @@ func (User) Indexes() []ent.Index {
 
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("guides", Guide.Type).
-			StorageKey(edge.Column("user_id")),
+		edge.To("guides", Guide.Type),
 		edge.To("sessions", UserSession.Type).
 			StorageKey(edge.Column("user_id")),
 		edge.To("mods", Mod.Type).

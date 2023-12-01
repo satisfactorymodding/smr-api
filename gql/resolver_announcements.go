@@ -70,10 +70,10 @@ func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementI
 }
 
 func (r *queryResolver) GetAnnouncement(ctx context.Context, announcementID string) (*generated.Announcement, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncement")
+	wrapper, ctx := WrapQueryTrace(ctx, "getAnnouncement")
 	defer wrapper.end()
 
-	result, err := db.From(newCtx).Announcement.Get(newCtx, announcementID)
+	result, err := db.From(ctx).Announcement.Get(ctx, announcementID)
 	if err != nil {
 		return nil, err
 	}
@@ -82,10 +82,10 @@ func (r *queryResolver) GetAnnouncement(ctx context.Context, announcementID stri
 }
 
 func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]*generated.Announcement, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncements")
+	wrapper, ctx := WrapQueryTrace(ctx, "getAnnouncements")
 	defer wrapper.end()
 
-	result, err := db.From(newCtx).Debug().Announcement.Query().All(newCtx)
+	result, err := db.From(ctx).Debug().Announcement.Query().All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,13 +94,13 @@ func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]*generated.Anno
 }
 
 func (r *queryResolver) GetAnnouncementsByImportance(ctx context.Context, importance generated.AnnouncementImportance) ([]*generated.Announcement, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getAnnouncementsByImportance")
+	wrapper, ctx := WrapQueryTrace(ctx, "getAnnouncementsByImportance")
 	defer wrapper.end()
 
-	result, err := db.From(newCtx).Announcement.
+	result, err := db.From(ctx).Announcement.
 		Query().
 		Where(announcement.ImportanceEQ(string(importance))).
-		All(newCtx)
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}

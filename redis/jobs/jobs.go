@@ -94,3 +94,10 @@ func SubmitJobScanModOnVirusTotalTask(ctx context.Context, modID string, version
 		slox.Error(ctx, "error adding task", slog.Any("err", err))
 	}
 }
+
+func Purge() {
+	err := queue.Purge()
+	if err != nil {
+		slog.Error("failed purging queue", slog.Any("err", err))
+	}
+}

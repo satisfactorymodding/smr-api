@@ -20,10 +20,11 @@ func (Guide) Mixin() []ent.Mixin {
 
 func (Guide) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("user_id").Optional(),
 		field.String("name").MaxLen(32),
 		field.String("short_description").MaxLen(128),
 		field.String("guide"),
-		field.Int("views"),
+		field.Int("views").Default(0),
 	}
 }
 
@@ -31,8 +32,8 @@ func (Guide) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).
 			Ref("guides").
-			Unique().
-			Required(),
+			Field("user_id").
+			Unique(),
 		edge.To("tags", Tag.Type).
 			Through("guide_tags", GuideTag.Type),
 	}

@@ -16,8 +16,8 @@ import (
 // GuideTag is the model entity for the GuideTag schema.
 type GuideTag struct {
 	config `json:"-"`
-	// GuideTag holds the value of the "guide_tag" field.
-	GuideTag string `json:"guide_tag,omitempty"`
+	// GuideID holds the value of the "guide_id" field.
+	GuideID string `json:"guide_id,omitempty"`
 	// TagID holds the value of the "tag_id" field.
 	TagID string `json:"tag_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -68,7 +68,7 @@ func (*GuideTag) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case guidetag.FieldGuideTag, guidetag.FieldTagID:
+		case guidetag.FieldGuideID, guidetag.FieldTagID:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -85,11 +85,11 @@ func (gt *GuideTag) assignValues(columns []string, values []any) error {
 	}
 	for i := range columns {
 		switch columns[i] {
-		case guidetag.FieldGuideTag:
+		case guidetag.FieldGuideID:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field guide_tag", values[i])
+				return fmt.Errorf("unexpected type %T for field guide_id", values[i])
 			} else if value.Valid {
-				gt.GuideTag = value.String
+				gt.GuideID = value.String
 			}
 		case guidetag.FieldTagID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -142,8 +142,8 @@ func (gt *GuideTag) Unwrap() *GuideTag {
 func (gt *GuideTag) String() string {
 	var builder strings.Builder
 	builder.WriteString("GuideTag(")
-	builder.WriteString("guide_tag=")
-	builder.WriteString(gt.GuideTag)
+	builder.WriteString("guide_id=")
+	builder.WriteString(gt.GuideID)
 	builder.WriteString(", ")
 	builder.WriteString("tag_id=")
 	builder.WriteString(gt.TagID)

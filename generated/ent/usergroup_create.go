@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
@@ -19,6 +21,7 @@ type UserGroupCreate struct {
 	config
 	mutation *UserGroupMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -213,6 +216,7 @@ func (ugc *UserGroupCreate) createSpec() (*UserGroup, *sqlgraph.CreateSpec) {
 		_node = &UserGroup{config: ugc.config}
 		_spec = sqlgraph.NewCreateSpec(usergroup.Table, sqlgraph.NewFieldSpec(usergroup.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = ugc.conflict
 	if id, ok := ugc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -253,11 +257,267 @@ func (ugc *UserGroupCreate) createSpec() (*UserGroup, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.UserGroup.Create().
+//		SetCreatedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.UserGroupUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (ugc *UserGroupCreate) OnConflict(opts ...sql.ConflictOption) *UserGroupUpsertOne {
+	ugc.conflict = opts
+	return &UserGroupUpsertOne{
+		create: ugc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.UserGroup.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (ugc *UserGroupCreate) OnConflictColumns(columns ...string) *UserGroupUpsertOne {
+	ugc.conflict = append(ugc.conflict, sql.ConflictColumns(columns...))
+	return &UserGroupUpsertOne{
+		create: ugc,
+	}
+}
+
+type (
+	// UserGroupUpsertOne is the builder for "upsert"-ing
+	//  one UserGroup node.
+	UserGroupUpsertOne struct {
+		create *UserGroupCreate
+	}
+
+	// UserGroupUpsert is the "OnConflict" setter.
+	UserGroupUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *UserGroupUpsert) SetUpdatedAt(v time.Time) *UserGroupUpsert {
+	u.Set(usergroup.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *UserGroupUpsert) UpdateUpdatedAt() *UserGroupUpsert {
+	u.SetExcluded(usergroup.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *UserGroupUpsert) SetDeletedAt(v time.Time) *UserGroupUpsert {
+	u.Set(usergroup.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *UserGroupUpsert) UpdateDeletedAt() *UserGroupUpsert {
+	u.SetExcluded(usergroup.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *UserGroupUpsert) ClearDeletedAt() *UserGroupUpsert {
+	u.SetNull(usergroup.FieldDeletedAt)
+	return u
+}
+
+// SetUserID sets the "user_id" field.
+func (u *UserGroupUpsert) SetUserID(v string) *UserGroupUpsert {
+	u.Set(usergroup.FieldUserID, v)
+	return u
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *UserGroupUpsert) UpdateUserID() *UserGroupUpsert {
+	u.SetExcluded(usergroup.FieldUserID)
+	return u
+}
+
+// SetGroupID sets the "group_id" field.
+func (u *UserGroupUpsert) SetGroupID(v string) *UserGroupUpsert {
+	u.Set(usergroup.FieldGroupID, v)
+	return u
+}
+
+// UpdateGroupID sets the "group_id" field to the value that was provided on create.
+func (u *UserGroupUpsert) UpdateGroupID() *UserGroupUpsert {
+	u.SetExcluded(usergroup.FieldGroupID)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.UserGroup.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(usergroup.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *UserGroupUpsertOne) UpdateNewValues() *UserGroupUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(usergroup.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(usergroup.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.UserGroup.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *UserGroupUpsertOne) Ignore() *UserGroupUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *UserGroupUpsertOne) DoNothing() *UserGroupUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the UserGroupCreate.OnConflict
+// documentation for more info.
+func (u *UserGroupUpsertOne) Update(set func(*UserGroupUpsert)) *UserGroupUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&UserGroupUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *UserGroupUpsertOne) SetUpdatedAt(v time.Time) *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *UserGroupUpsertOne) UpdateUpdatedAt() *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *UserGroupUpsertOne) SetDeletedAt(v time.Time) *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *UserGroupUpsertOne) UpdateDeletedAt() *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *UserGroupUpsertOne) ClearDeletedAt() *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *UserGroupUpsertOne) SetUserID(v string) *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *UserGroupUpsertOne) UpdateUserID() *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetGroupID sets the "group_id" field.
+func (u *UserGroupUpsertOne) SetGroupID(v string) *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.SetGroupID(v)
+	})
+}
+
+// UpdateGroupID sets the "group_id" field to the value that was provided on create.
+func (u *UserGroupUpsertOne) UpdateGroupID() *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.UpdateGroupID()
+	})
+}
+
+// Exec executes the query.
+func (u *UserGroupUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for UserGroupCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *UserGroupUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *UserGroupUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: UserGroupUpsertOne.ID is not supported by MySQL driver. Use UserGroupUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *UserGroupUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // UserGroupCreateBulk is the builder for creating many UserGroup entities in bulk.
 type UserGroupCreateBulk struct {
 	config
 	err      error
 	builders []*UserGroupCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the UserGroup entities in the database.
@@ -287,6 +547,7 @@ func (ugcb *UserGroupCreateBulk) Save(ctx context.Context) ([]*UserGroup, error)
 					_, err = mutators[i+1].Mutate(root, ugcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = ugcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, ugcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -333,6 +594,186 @@ func (ugcb *UserGroupCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (ugcb *UserGroupCreateBulk) ExecX(ctx context.Context) {
 	if err := ugcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.UserGroup.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.UserGroupUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (ugcb *UserGroupCreateBulk) OnConflict(opts ...sql.ConflictOption) *UserGroupUpsertBulk {
+	ugcb.conflict = opts
+	return &UserGroupUpsertBulk{
+		create: ugcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.UserGroup.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (ugcb *UserGroupCreateBulk) OnConflictColumns(columns ...string) *UserGroupUpsertBulk {
+	ugcb.conflict = append(ugcb.conflict, sql.ConflictColumns(columns...))
+	return &UserGroupUpsertBulk{
+		create: ugcb,
+	}
+}
+
+// UserGroupUpsertBulk is the builder for "upsert"-ing
+// a bulk of UserGroup nodes.
+type UserGroupUpsertBulk struct {
+	create *UserGroupCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.UserGroup.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(usergroup.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *UserGroupUpsertBulk) UpdateNewValues() *UserGroupUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(usergroup.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(usergroup.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.UserGroup.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *UserGroupUpsertBulk) Ignore() *UserGroupUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *UserGroupUpsertBulk) DoNothing() *UserGroupUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the UserGroupCreateBulk.OnConflict
+// documentation for more info.
+func (u *UserGroupUpsertBulk) Update(set func(*UserGroupUpsert)) *UserGroupUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&UserGroupUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *UserGroupUpsertBulk) SetUpdatedAt(v time.Time) *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *UserGroupUpsertBulk) UpdateUpdatedAt() *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *UserGroupUpsertBulk) SetDeletedAt(v time.Time) *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *UserGroupUpsertBulk) UpdateDeletedAt() *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *UserGroupUpsertBulk) ClearDeletedAt() *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *UserGroupUpsertBulk) SetUserID(v string) *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *UserGroupUpsertBulk) UpdateUserID() *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetGroupID sets the "group_id" field.
+func (u *UserGroupUpsertBulk) SetGroupID(v string) *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.SetGroupID(v)
+	})
+}
+
+// UpdateGroupID sets the "group_id" field to the value that was provided on create.
+func (u *UserGroupUpsertBulk) UpdateGroupID() *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.UpdateGroupID()
+	})
+}
+
+// Exec executes the query.
+func (u *UserGroupUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the UserGroupCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for UserGroupCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *UserGroupUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

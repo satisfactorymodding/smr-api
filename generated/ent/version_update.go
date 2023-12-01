@@ -14,6 +14,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 )
 
 // VersionUpdate is the builder for updating Version entities.
@@ -53,6 +54,12 @@ func (vu *VersionUpdate) SetNillableDeletedAt(t *time.Time) *VersionUpdate {
 // ClearDeletedAt clears the value of the "deleted_at" field.
 func (vu *VersionUpdate) ClearDeletedAt() *VersionUpdate {
 	vu.mutation.ClearDeletedAt()
+	return vu
+}
+
+// SetModID sets the "mod_id" field.
+func (vu *VersionUpdate) SetModID(s string) *VersionUpdate {
+	vu.mutation.SetModID(s)
 	return vu
 }
 
@@ -210,12 +217,6 @@ func (vu *VersionUpdate) SetHash(s string) *VersionUpdate {
 	return vu
 }
 
-// SetModID sets the "mod" edge to the Mod entity by ID.
-func (vu *VersionUpdate) SetModID(id string) *VersionUpdate {
-	vu.mutation.SetModID(id)
-	return vu
-}
-
 // SetMod sets the "mod" edge to the Mod entity.
 func (vu *VersionUpdate) SetMod(m *Mod) *VersionUpdate {
 	return vu.SetModID(m.ID)
@@ -234,6 +235,21 @@ func (vu *VersionUpdate) AddDependencies(m ...*Mod) *VersionUpdate {
 		ids[i] = m[i].ID
 	}
 	return vu.AddDependencyIDs(ids...)
+}
+
+// AddTargetIDs adds the "targets" edge to the VersionTarget entity by IDs.
+func (vu *VersionUpdate) AddTargetIDs(ids ...string) *VersionUpdate {
+	vu.mutation.AddTargetIDs(ids...)
+	return vu
+}
+
+// AddTargets adds the "targets" edges to the VersionTarget entity.
+func (vu *VersionUpdate) AddTargets(v ...*VersionTarget) *VersionUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vu.AddTargetIDs(ids...)
 }
 
 // Mutation returns the VersionMutation object of the builder.
@@ -266,6 +282,27 @@ func (vu *VersionUpdate) RemoveDependencies(m ...*Mod) *VersionUpdate {
 		ids[i] = m[i].ID
 	}
 	return vu.RemoveDependencyIDs(ids...)
+}
+
+// ClearTargets clears all "targets" edges to the VersionTarget entity.
+func (vu *VersionUpdate) ClearTargets() *VersionUpdate {
+	vu.mutation.ClearTargets()
+	return vu
+}
+
+// RemoveTargetIDs removes the "targets" edge to VersionTarget entities by IDs.
+func (vu *VersionUpdate) RemoveTargetIDs(ids ...string) *VersionUpdate {
+	vu.mutation.RemoveTargetIDs(ids...)
+	return vu
+}
+
+// RemoveTargets removes "targets" edges to VersionTarget entities.
+func (vu *VersionUpdate) RemoveTargets(v ...*VersionTarget) *VersionUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vu.RemoveTargetIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -522,6 +559,51 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge.Target.Fields = specE.Fields
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if vu.mutation.TargetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.TargetsTable,
+			Columns: []string{version.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.RemovedTargetsIDs(); len(nodes) > 0 && !vu.mutation.TargetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.TargetsTable,
+			Columns: []string{version.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.TargetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.TargetsTable,
+			Columns: []string{version.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(vu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, vu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -567,6 +649,12 @@ func (vuo *VersionUpdateOne) SetNillableDeletedAt(t *time.Time) *VersionUpdateOn
 // ClearDeletedAt clears the value of the "deleted_at" field.
 func (vuo *VersionUpdateOne) ClearDeletedAt() *VersionUpdateOne {
 	vuo.mutation.ClearDeletedAt()
+	return vuo
+}
+
+// SetModID sets the "mod_id" field.
+func (vuo *VersionUpdateOne) SetModID(s string) *VersionUpdateOne {
+	vuo.mutation.SetModID(s)
 	return vuo
 }
 
@@ -724,12 +812,6 @@ func (vuo *VersionUpdateOne) SetHash(s string) *VersionUpdateOne {
 	return vuo
 }
 
-// SetModID sets the "mod" edge to the Mod entity by ID.
-func (vuo *VersionUpdateOne) SetModID(id string) *VersionUpdateOne {
-	vuo.mutation.SetModID(id)
-	return vuo
-}
-
 // SetMod sets the "mod" edge to the Mod entity.
 func (vuo *VersionUpdateOne) SetMod(m *Mod) *VersionUpdateOne {
 	return vuo.SetModID(m.ID)
@@ -748,6 +830,21 @@ func (vuo *VersionUpdateOne) AddDependencies(m ...*Mod) *VersionUpdateOne {
 		ids[i] = m[i].ID
 	}
 	return vuo.AddDependencyIDs(ids...)
+}
+
+// AddTargetIDs adds the "targets" edge to the VersionTarget entity by IDs.
+func (vuo *VersionUpdateOne) AddTargetIDs(ids ...string) *VersionUpdateOne {
+	vuo.mutation.AddTargetIDs(ids...)
+	return vuo
+}
+
+// AddTargets adds the "targets" edges to the VersionTarget entity.
+func (vuo *VersionUpdateOne) AddTargets(v ...*VersionTarget) *VersionUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vuo.AddTargetIDs(ids...)
 }
 
 // Mutation returns the VersionMutation object of the builder.
@@ -780,6 +877,27 @@ func (vuo *VersionUpdateOne) RemoveDependencies(m ...*Mod) *VersionUpdateOne {
 		ids[i] = m[i].ID
 	}
 	return vuo.RemoveDependencyIDs(ids...)
+}
+
+// ClearTargets clears all "targets" edges to the VersionTarget entity.
+func (vuo *VersionUpdateOne) ClearTargets() *VersionUpdateOne {
+	vuo.mutation.ClearTargets()
+	return vuo
+}
+
+// RemoveTargetIDs removes the "targets" edge to VersionTarget entities by IDs.
+func (vuo *VersionUpdateOne) RemoveTargetIDs(ids ...string) *VersionUpdateOne {
+	vuo.mutation.RemoveTargetIDs(ids...)
+	return vuo
+}
+
+// RemoveTargets removes "targets" edges to VersionTarget entities.
+func (vuo *VersionUpdateOne) RemoveTargets(v ...*VersionTarget) *VersionUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vuo.RemoveTargetIDs(ids...)
 }
 
 // Where appends a list predicates to the VersionUpdate builder.
@@ -1064,6 +1182,51 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 		_ = createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if vuo.mutation.TargetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.TargetsTable,
+			Columns: []string{version.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.RemovedTargetsIDs(); len(nodes) > 0 && !vuo.mutation.TargetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.TargetsTable,
+			Columns: []string{version.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.TargetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.TargetsTable,
+			Columns: []string{version.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(vuo.modifiers...)

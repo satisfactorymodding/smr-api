@@ -211,7 +211,7 @@ func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, _ *generated.G
 	}
 
 	query := db.From(ctx).SmlVersion.Query().WithTargets()
-	query = convertFilter(query, smlVersionFilter)
+	query = convertSMLVersionFilter(query, smlVersionFilter)
 
 	result, err := query.All(ctx)
 	if err != nil {
@@ -232,7 +232,7 @@ func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLV
 	}
 
 	query := db.From(ctx).SmlVersion.Query().WithTargets()
-	query = convertFilter(query, smlVersionFilter)
+	query = convertSMLVersionFilter(query, smlVersionFilter)
 
 	result, err := query.Count(ctx)
 	if err != nil {
@@ -242,7 +242,7 @@ func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLV
 	return result, nil
 }
 
-func convertFilter(query *ent.SmlVersionQuery, filter *models.SMLVersionFilter) *ent.SmlVersionQuery {
+func convertSMLVersionFilter(query *ent.SmlVersionQuery, filter *models.SMLVersionFilter) *ent.SmlVersionQuery {
 	if len(filter.Ids) > 0 {
 		query = query.Where(smlversion.IDIn(filter.Ids...))
 	} else if filter != nil {
@@ -253,6 +253,7 @@ func convertFilter(query *ent.SmlVersionQuery, filter *models.SMLVersionFilter) 
 				filter.OrderBy.String(),
 				db.OrderToOrder(filter.Order.String()),
 			).ToFunc())
+
 		if filter.Search != nil && *filter.Search != "" {
 			query = query.Modify(func(s *sql.Selector) {
 				s.Where(sql.ExprP("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & ")))

@@ -15,6 +15,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 )
 
 // VersionQuery is the builder for querying Version entities.
@@ -26,8 +27,8 @@ type VersionQuery struct {
 	predicates              []predicate.Version
 	withMod                 *ModQuery
 	withDependencies        *ModQuery
+	withTargets             *VersionTargetQuery
 	withVersionDependencies *VersionDependencyQuery
-	withFKs                 bool
 	modifiers               []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -102,6 +103,28 @@ func (vq *VersionQuery) QueryDependencies() *ModQuery {
 			sqlgraph.From(version.Table, version.FieldID, selector),
 			sqlgraph.To(mod.Table, mod.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, version.DependenciesTable, version.DependenciesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTargets chains the current query on the "targets" edge.
+func (vq *VersionQuery) QueryTargets() *VersionTargetQuery {
+	query := (&VersionTargetClient{config: vq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := vq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := vq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(version.Table, version.FieldID, selector),
+			sqlgraph.To(versiontarget.Table, versiontarget.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, version.TargetsTable, version.TargetsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
 		return fromU, nil
@@ -325,6 +348,7 @@ func (vq *VersionQuery) Clone() *VersionQuery {
 		predicates:              append([]predicate.Version{}, vq.predicates...),
 		withMod:                 vq.withMod.Clone(),
 		withDependencies:        vq.withDependencies.Clone(),
+		withTargets:             vq.withTargets.Clone(),
 		withVersionDependencies: vq.withVersionDependencies.Clone(),
 		// clone intermediate query.
 		sql:  vq.sql.Clone(),
@@ -351,6 +375,17 @@ func (vq *VersionQuery) WithDependencies(opts ...func(*ModQuery)) *VersionQuery 
 		opt(query)
 	}
 	vq.withDependencies = query
+	return vq
+}
+
+// WithTargets tells the query-builder to eager-load the nodes that are connected to
+// the "targets" edge. The optional arguments are used to configure the query builder of the edge.
+func (vq *VersionQuery) WithTargets(opts ...func(*VersionTargetQuery)) *VersionQuery {
+	query := (&VersionTargetClient{config: vq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	vq.withTargets = query
 	return vq
 }
 
@@ -442,20 +477,14 @@ func (vq *VersionQuery) prepareQuery(ctx context.Context) error {
 func (vq *VersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Version, error) {
 	var (
 		nodes       = []*Version{}
-		withFKs     = vq.withFKs
 		_spec       = vq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			vq.withMod != nil,
 			vq.withDependencies != nil,
+			vq.withTargets != nil,
 			vq.withVersionDependencies != nil,
 		}
 	)
-	if vq.withMod != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, version.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Version).scanValues(nil, columns)
 	}
@@ -490,6 +519,13 @@ func (vq *VersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vers
 			return nil, err
 		}
 	}
+	if query := vq.withTargets; query != nil {
+		if err := vq.loadTargets(ctx, query, nodes,
+			func(n *Version) { n.Edges.Targets = []*VersionTarget{} },
+			func(n *Version, e *VersionTarget) { n.Edges.Targets = append(n.Edges.Targets, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := vq.withVersionDependencies; query != nil {
 		if err := vq.loadVersionDependencies(ctx, query, nodes,
 			func(n *Version) { n.Edges.VersionDependencies = []*VersionDependency{} },
@@ -506,10 +542,7 @@ func (vq *VersionQuery) loadMod(ctx context.Context, query *ModQuery, nodes []*V
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*Version)
 	for i := range nodes {
-		if nodes[i].mod_id == nil {
-			continue
-		}
-		fk := *nodes[i].mod_id
+		fk := nodes[i].ModID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -595,6 +628,36 @@ func (vq *VersionQuery) loadDependencies(ctx context.Context, query *ModQuery, n
 	}
 	return nil
 }
+func (vq *VersionQuery) loadTargets(ctx context.Context, query *VersionTargetQuery, nodes []*Version, init func(*Version), assign func(*Version, *VersionTarget)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*Version)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(versiontarget.FieldVersionID)
+	}
+	query.Where(predicate.VersionTarget(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(version.TargetsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.VersionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "version_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (vq *VersionQuery) loadVersionDependencies(ctx context.Context, query *VersionDependencyQuery, nodes []*Version, init func(*Version), assign func(*Version, *VersionDependency)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[string]*Version)
@@ -653,6 +716,9 @@ func (vq *VersionQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != version.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if vq.withMod != nil {
+			_spec.Node.AddColumnOnce(version.FieldModID)
 		}
 	}
 	if ps := vq.predicates; len(ps) > 0 {

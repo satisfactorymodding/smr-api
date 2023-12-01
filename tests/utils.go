@@ -2,11 +2,11 @@ package tests
 
 import (
 	"context"
-	"log/slog"
-	"sync"
-
 	"github.com/Vilsol/slox"
 	"github.com/machinebox/graphql"
+	"github.com/satisfactorymodding/smr-api/validation"
+	"log/slog"
+	"sync"
 
 	smr "github.com/satisfactorymodding/smr-api/api"
 	"github.com/satisfactorymodding/smr-api/auth"
@@ -17,6 +17,8 @@ import (
 )
 
 func setup() (context.Context, *graphql.Client, func()) {
+	validation.StaticPath = "../static"
+
 	client := graphql.NewClient("http://localhost:5020/v2/query")
 
 	ctx := smr.Initialize(context.Background())

@@ -10,10 +10,6 @@ type (
 	ContextDB struct{}
 )
 
-func ContextWithDB(ctx context.Context, db *gorm.DB) context.Context {
-	return context.WithValue(ctx, ContextDB{}, db)
-}
-
 func DBFromContext(ctx context.Context) *gorm.DB {
 	value := ctx.Value(ContextDB{})
 

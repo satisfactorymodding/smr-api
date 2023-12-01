@@ -10,8 +10,8 @@ import (
 const (
 	// Label holds the string label denoting the guidetag type in the database.
 	Label = "guide_tag"
-	// FieldGuideTag holds the string denoting the guide_tag field in the database.
-	FieldGuideTag = "guide_tag"
+	// FieldGuideID holds the string denoting the guide_id field in the database.
+	FieldGuideID = "guide_id"
 	// FieldTagID holds the string denoting the tag_id field in the database.
 	FieldTagID = "tag_id"
 	// EdgeGuide holds the string denoting the guide edge name in mutations.
@@ -30,7 +30,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "guide" package.
 	GuideInverseTable = "guides"
 	// GuideColumn is the table column denoting the guide relation/edge.
-	GuideColumn = "guide_tag"
+	GuideColumn = "guide_id"
 	// TagTable is the table that holds the tag relation/edge.
 	TagTable = "guide_tags"
 	// TagInverseTable is the table name for the Tag entity.
@@ -42,7 +42,7 @@ const (
 
 // Columns holds all SQL columns for guidetag fields.
 var Columns = []string{
-	FieldGuideTag,
+	FieldGuideID,
 	FieldTagID,
 }
 
@@ -59,9 +59,9 @@ func ValidColumn(column string) bool {
 // OrderOption defines the ordering options for the GuideTag queries.
 type OrderOption func(*sql.Selector)
 
-// ByGuideTag orders the results by the guide_tag field.
-func ByGuideTag(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldGuideTag, opts...).ToFunc()
+// ByGuideID orders the results by the guide_id field.
+func ByGuideID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGuideID, opts...).ToFunc()
 }
 
 // ByTagID orders the results by the tag_id field.

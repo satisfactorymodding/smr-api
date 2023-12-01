@@ -21,6 +21,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldShortDescription holds the string denoting the short_description field in the database.
@@ -55,7 +57,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "guidetag" package.
 	GuideTagsInverseTable = "guide_tags"
 	// GuideTagsColumn is the table column denoting the guide_tags relation/edge.
-	GuideTagsColumn = "guide_tag"
+	GuideTagsColumn = "guide_id"
 )
 
 // Columns holds all SQL columns for guide fields.
@@ -64,33 +66,23 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
+	FieldUserID,
 	FieldName,
 	FieldShortDescription,
 	FieldGuide,
 	FieldViews,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "guides"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_id",
-}
-
 var (
 	// TagsPrimaryKey and TagsColumn2 are the table columns denoting the
 	// primary key for the tags relation (M2M).
-	TagsPrimaryKey = []string{"guide_tag", "tag_id"}
+	TagsPrimaryKey = []string{"guide_id", "tag_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -115,6 +107,8 @@ var (
 	NameValidator func(string) error
 	// ShortDescriptionValidator is a validator for the "short_description" field. It is called by the builders before save.
 	ShortDescriptionValidator func(string) error
+	// DefaultViews holds the default value on creation for the "views" field.
+	DefaultViews int
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() string
 )
@@ -140,6 +134,11 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByDeletedAt orders the results by the deleted_at field.
 func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
+// ByUserID orders the results by the user_id field.
+func ByUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserID, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.

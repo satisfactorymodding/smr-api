@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"log/slog"
 	"time"
@@ -24,16 +25,18 @@ import (
 func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
 	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
 
-	slox.Info(ctx, "Creating multipart upload")
+	slox.Info(ctx, "Completing multipart upload")
 	success, _ := storage.CompleteUploadMultipartMod(ctx, mod.ID, mod.Name, versionID)
 
 	if !success {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		slox.Error(ctx, "failed uploading mod")
 		return nil, errors.New("failed uploading mod")
 	}
 
 	modFile, err := storage.GetMod(mod.ID, mod.Name, versionID)
 	if err != nil {
+		slox.Error(ctx, "failed getting mod", slog.Any("err", err))
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 		return nil, err
 	}
@@ -42,27 +45,32 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	fileData, err := io.ReadAll(modFile)
 	if err != nil {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		slox.Error(ctx, "failed reading mod file", slog.Any("err", err))
 		return nil, fmt.Errorf("failed reading mod file: %w", err)
 	}
 
 	modInfo, err := validation.ExtractModInfo(ctx, fileData, true, true, mod.ModReference)
 	if err != nil {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		slox.Error(ctx, "failed extracting mod info", slog.Any("err", err))
 		return nil, fmt.Errorf("failed extracting mod info: %w", err)
 	}
 
 	if modInfo.ModReference != mod.ModReference {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		slox.Error(ctx, "data.json mod_reference does not match mod reference", slog.Any("err", err))
 		return nil, errors.New("data.json mod_reference does not match mod reference")
 	}
 
 	if modInfo.Type == validation.DataJSON {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		slox.Error(ctx, "data.json mods are obsolete and not allowed", slog.Any("err", err))
 		return nil, errors.New("data.json mods are obsolete and not allowed")
 	}
 
 	if modInfo.Type == validation.MultiTargetUEPlugin && !util.FlagEnabled(util.FeatureFlagAllowMultiTargetUpload) {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		slox.Error(ctx, "multi-target mods are not allowed", slog.Any("err", err))
 		return nil, errors.New("multi-target mods are not allowed")
 	}
 
@@ -91,6 +99,8 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 			break
 		}
 	}
+
+	autoApproved = autoApproved || viper.GetBool("skip-virus-check")
 
 	dbVersion.Approved = autoApproved
 
@@ -166,6 +176,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		if !separateSuccess {
 			removeMod(ctx, modInfo, mod, dbVersion)
 
+			slox.Error(ctx, "failed to separate mod")
 			return nil, errors.New("failed to separate mod")
 		}
 	}
@@ -175,6 +186,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	if !success {
 		removeMod(ctx, modInfo, mod, dbVersion)
 
+		slox.Error(ctx, "failed to upload mod")
 		return nil, errors.New("failed to upload mod")
 	}
 

@@ -2,7 +2,6 @@ package gql
 
 import (
 	"context"
-	"net/http"
 	"reflect"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -10,9 +9,7 @@ import (
 
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func MakeDirective() generated.DirectiveRoot {
@@ -44,13 +41,7 @@ func canEditMod(ctx context.Context, _ interface{}, next graphql.Resolver, field
 		return nil, err
 	}
 
-	dbMod := postgres.GetModByID(ctx, getArgument(ctx, field).(string))
-
-	if dbMod == nil {
-		return nil, errors.New("mod not found")
-	}
-
-	if db.UserCanUploadModVersions(ctx, user, dbMod.ID) {
+	if db.UserCanUploadModVersions(ctx, user, getArgument(ctx, field).(string)) {
 		return next(ctx)
 	}
 
@@ -75,13 +66,7 @@ func canEditModCompatibility(ctx context.Context, _ interface{}, next graphql.Re
 		return nil, errors.New("user not authorized to perform this action")
 	}
 
-	dbMod := postgres.GetModByID(ctx, getArgument(ctx, *field).(string))
-
-	if dbMod == nil {
-		return nil, errors.New("mod not found")
-	}
-
-	if db.UserCanUploadModVersions(ctx, user, dbMod.ID) {
+	if db.UserCanUploadModVersions(ctx, user, getArgument(ctx, *field).(string)) {
 		return next(ctx)
 	}
 
@@ -94,13 +79,7 @@ func canEditVersion(ctx context.Context, _ interface{}, next graphql.Resolver, f
 		return nil, err
 	}
 
-	dbVersion := postgres.GetVersion(ctx, getArgument(ctx, field).(string))
-
-	if dbVersion == nil {
-		return nil, errors.New("version not found")
-	}
-
-	if db.UserCanUploadModVersions(ctx, user, dbVersion.ModID) {
+	if db.UserCanUploadModVersions(ctx, user, getArgument(ctx, field).(string)) {
 		return next(ctx)
 	}
 
@@ -124,13 +103,7 @@ func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, fi
 		userID = getArgument(ctx, field).(string)
 	}
 
-	dbUser := postgres.GetUserByID(ctx, userID)
-
-	if dbUser == nil {
-		return nil, errors.New("user not found")
-	}
-
-	if dbUser.ID == user.ID {
+	if userID == user.ID {
 		return next(ctx)
 	}
 
@@ -147,13 +120,12 @@ func canEditGuide(ctx context.Context, _ interface{}, next graphql.Resolver, fie
 		return nil, err
 	}
 
-	dbGuide := postgres.GetGuideByID(ctx, getArgument(ctx, field).(string))
-
-	if dbGuide == nil {
-		return nil, errors.New("guide not found")
+	g, err := db.From(ctx).Guide.Get(ctx, getArgument(ctx, field).(string))
+	if err != nil {
+		return nil, err
 	}
 
-	if dbGuide.UserID == user.ID {
+	if g.UserID == user.ID {
 		return next(ctx)
 	}
 
@@ -178,15 +150,13 @@ func isLoggedIn(ctx context.Context, _ interface{}, next graphql.Resolver) (inte
 }
 
 func isNotLoggedIn(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	header := ctx.Value(util.ContextHeader{}).(http.Header)
-	authorization := header.Get("Authorization")
+	user, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if authorization != "" {
-		user := postgres.GetUserByToken(ctx, authorization)
-
-		if user != nil {
-			return nil, errors.New("user is logged in")
-		}
+	if user != nil {
+		return nil, errors.New("user is logged in")
 	}
 
 	return next(ctx)

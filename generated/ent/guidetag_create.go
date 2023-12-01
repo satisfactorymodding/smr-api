@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
@@ -19,23 +20,18 @@ type GuideTagCreate struct {
 	config
 	mutation *GuideTagMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
-// SetGuideTag sets the "guide_tag" field.
-func (gtc *GuideTagCreate) SetGuideTag(s string) *GuideTagCreate {
-	gtc.mutation.SetGuideTag(s)
+// SetGuideID sets the "guide_id" field.
+func (gtc *GuideTagCreate) SetGuideID(s string) *GuideTagCreate {
+	gtc.mutation.SetGuideID(s)
 	return gtc
 }
 
 // SetTagID sets the "tag_id" field.
 func (gtc *GuideTagCreate) SetTagID(s string) *GuideTagCreate {
 	gtc.mutation.SetTagID(s)
-	return gtc
-}
-
-// SetGuideID sets the "guide" edge to the Guide entity by ID.
-func (gtc *GuideTagCreate) SetGuideID(id string) *GuideTagCreate {
-	gtc.mutation.SetGuideID(id)
 	return gtc
 }
 
@@ -83,8 +79,8 @@ func (gtc *GuideTagCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (gtc *GuideTagCreate) check() error {
-	if _, ok := gtc.mutation.GuideTag(); !ok {
-		return &ValidationError{Name: "guide_tag", err: errors.New(`ent: missing required field "GuideTag.guide_tag"`)}
+	if _, ok := gtc.mutation.GuideID(); !ok {
+		return &ValidationError{Name: "guide_id", err: errors.New(`ent: missing required field "GuideTag.guide_id"`)}
 	}
 	if _, ok := gtc.mutation.TagID(); !ok {
 		return &ValidationError{Name: "tag_id", err: errors.New(`ent: missing required field "GuideTag.tag_id"`)}
@@ -117,6 +113,7 @@ func (gtc *GuideTagCreate) createSpec() (*GuideTag, *sqlgraph.CreateSpec) {
 		_node = &GuideTag{config: gtc.config}
 		_spec = sqlgraph.NewCreateSpec(guidetag.Table, nil)
 	)
+	_spec.OnConflict = gtc.conflict
 	if nodes := gtc.mutation.GuideIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -131,7 +128,7 @@ func (gtc *GuideTagCreate) createSpec() (*GuideTag, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.GuideTag = nodes[0]
+		_node.GuideID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := gtc.mutation.TagIDs(); len(nodes) > 0 {
@@ -154,11 +151,168 @@ func (gtc *GuideTagCreate) createSpec() (*GuideTag, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.GuideTag.Create().
+//		SetGuideID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.GuideTagUpsert) {
+//			SetGuideID(v+v).
+//		}).
+//		Exec(ctx)
+func (gtc *GuideTagCreate) OnConflict(opts ...sql.ConflictOption) *GuideTagUpsertOne {
+	gtc.conflict = opts
+	return &GuideTagUpsertOne{
+		create: gtc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.GuideTag.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (gtc *GuideTagCreate) OnConflictColumns(columns ...string) *GuideTagUpsertOne {
+	gtc.conflict = append(gtc.conflict, sql.ConflictColumns(columns...))
+	return &GuideTagUpsertOne{
+		create: gtc,
+	}
+}
+
+type (
+	// GuideTagUpsertOne is the builder for "upsert"-ing
+	//  one GuideTag node.
+	GuideTagUpsertOne struct {
+		create *GuideTagCreate
+	}
+
+	// GuideTagUpsert is the "OnConflict" setter.
+	GuideTagUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetGuideID sets the "guide_id" field.
+func (u *GuideTagUpsert) SetGuideID(v string) *GuideTagUpsert {
+	u.Set(guidetag.FieldGuideID, v)
+	return u
+}
+
+// UpdateGuideID sets the "guide_id" field to the value that was provided on create.
+func (u *GuideTagUpsert) UpdateGuideID() *GuideTagUpsert {
+	u.SetExcluded(guidetag.FieldGuideID)
+	return u
+}
+
+// SetTagID sets the "tag_id" field.
+func (u *GuideTagUpsert) SetTagID(v string) *GuideTagUpsert {
+	u.Set(guidetag.FieldTagID, v)
+	return u
+}
+
+// UpdateTagID sets the "tag_id" field to the value that was provided on create.
+func (u *GuideTagUpsert) UpdateTagID() *GuideTagUpsert {
+	u.SetExcluded(guidetag.FieldTagID)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.GuideTag.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *GuideTagUpsertOne) UpdateNewValues() *GuideTagUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.GuideTag.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *GuideTagUpsertOne) Ignore() *GuideTagUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *GuideTagUpsertOne) DoNothing() *GuideTagUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the GuideTagCreate.OnConflict
+// documentation for more info.
+func (u *GuideTagUpsertOne) Update(set func(*GuideTagUpsert)) *GuideTagUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&GuideTagUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetGuideID sets the "guide_id" field.
+func (u *GuideTagUpsertOne) SetGuideID(v string) *GuideTagUpsertOne {
+	return u.Update(func(s *GuideTagUpsert) {
+		s.SetGuideID(v)
+	})
+}
+
+// UpdateGuideID sets the "guide_id" field to the value that was provided on create.
+func (u *GuideTagUpsertOne) UpdateGuideID() *GuideTagUpsertOne {
+	return u.Update(func(s *GuideTagUpsert) {
+		s.UpdateGuideID()
+	})
+}
+
+// SetTagID sets the "tag_id" field.
+func (u *GuideTagUpsertOne) SetTagID(v string) *GuideTagUpsertOne {
+	return u.Update(func(s *GuideTagUpsert) {
+		s.SetTagID(v)
+	})
+}
+
+// UpdateTagID sets the "tag_id" field to the value that was provided on create.
+func (u *GuideTagUpsertOne) UpdateTagID() *GuideTagUpsertOne {
+	return u.Update(func(s *GuideTagUpsert) {
+		s.UpdateTagID()
+	})
+}
+
+// Exec executes the query.
+func (u *GuideTagUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for GuideTagCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *GuideTagUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
 // GuideTagCreateBulk is the builder for creating many GuideTag entities in bulk.
 type GuideTagCreateBulk struct {
 	config
 	err      error
 	builders []*GuideTagCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the GuideTag entities in the database.
@@ -187,6 +341,7 @@ func (gtcb *GuideTagCreateBulk) Save(ctx context.Context) ([]*GuideTag, error) {
 					_, err = mutators[i+1].Mutate(root, gtcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = gtcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, gtcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -232,6 +387,138 @@ func (gtcb *GuideTagCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (gtcb *GuideTagCreateBulk) ExecX(ctx context.Context) {
 	if err := gtcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.GuideTag.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.GuideTagUpsert) {
+//			SetGuideID(v+v).
+//		}).
+//		Exec(ctx)
+func (gtcb *GuideTagCreateBulk) OnConflict(opts ...sql.ConflictOption) *GuideTagUpsertBulk {
+	gtcb.conflict = opts
+	return &GuideTagUpsertBulk{
+		create: gtcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.GuideTag.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (gtcb *GuideTagCreateBulk) OnConflictColumns(columns ...string) *GuideTagUpsertBulk {
+	gtcb.conflict = append(gtcb.conflict, sql.ConflictColumns(columns...))
+	return &GuideTagUpsertBulk{
+		create: gtcb,
+	}
+}
+
+// GuideTagUpsertBulk is the builder for "upsert"-ing
+// a bulk of GuideTag nodes.
+type GuideTagUpsertBulk struct {
+	create *GuideTagCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.GuideTag.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *GuideTagUpsertBulk) UpdateNewValues() *GuideTagUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.GuideTag.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *GuideTagUpsertBulk) Ignore() *GuideTagUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *GuideTagUpsertBulk) DoNothing() *GuideTagUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the GuideTagCreateBulk.OnConflict
+// documentation for more info.
+func (u *GuideTagUpsertBulk) Update(set func(*GuideTagUpsert)) *GuideTagUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&GuideTagUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetGuideID sets the "guide_id" field.
+func (u *GuideTagUpsertBulk) SetGuideID(v string) *GuideTagUpsertBulk {
+	return u.Update(func(s *GuideTagUpsert) {
+		s.SetGuideID(v)
+	})
+}
+
+// UpdateGuideID sets the "guide_id" field to the value that was provided on create.
+func (u *GuideTagUpsertBulk) UpdateGuideID() *GuideTagUpsertBulk {
+	return u.Update(func(s *GuideTagUpsert) {
+		s.UpdateGuideID()
+	})
+}
+
+// SetTagID sets the "tag_id" field.
+func (u *GuideTagUpsertBulk) SetTagID(v string) *GuideTagUpsertBulk {
+	return u.Update(func(s *GuideTagUpsert) {
+		s.SetTagID(v)
+	})
+}
+
+// UpdateTagID sets the "tag_id" field to the value that was provided on create.
+func (u *GuideTagUpsertBulk) UpdateTagID() *GuideTagUpsertBulk {
+	return u.Update(func(s *GuideTagUpsert) {
+		s.UpdateTagID()
+	})
+}
+
+// Exec executes the query.
+func (u *GuideTagUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the GuideTagCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for GuideTagCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *GuideTagUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

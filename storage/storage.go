@@ -247,7 +247,11 @@ func Get(key string) (io.ReadCloser, error) {
 	}
 
 	get, err := storage.Get(key)
-	return get, fmt.Errorf("failed to get object: %w", err)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object: %w", err)
+	}
+
+	return get, nil
 }
 
 func GetMod(modID string, name string, versionID string) (io.ReadCloser, error) {

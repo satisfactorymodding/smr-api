@@ -22,6 +22,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
+	// FieldModID holds the string denoting the mod_id field in the database.
+	FieldModID = "mod_id"
 	// FieldVersion holds the string denoting the version field in the database.
 	FieldVersion = "version"
 	// FieldSmlVersion holds the string denoting the sml_version field in the database.
@@ -58,6 +60,8 @@ const (
 	EdgeMod = "mod"
 	// EdgeDependencies holds the string denoting the dependencies edge name in mutations.
 	EdgeDependencies = "dependencies"
+	// EdgeTargets holds the string denoting the targets edge name in mutations.
+	EdgeTargets = "targets"
 	// EdgeVersionDependencies holds the string denoting the version_dependencies edge name in mutations.
 	EdgeVersionDependencies = "version_dependencies"
 	// Table holds the table name of the version in the database.
@@ -74,6 +78,13 @@ const (
 	// DependenciesInverseTable is the table name for the Mod entity.
 	// It exists in this package in order to avoid circular dependency with the "mod" package.
 	DependenciesInverseTable = "mods"
+	// TargetsTable is the table that holds the targets relation/edge.
+	TargetsTable = "version_targets"
+	// TargetsInverseTable is the table name for the VersionTarget entity.
+	// It exists in this package in order to avoid circular dependency with the "versiontarget" package.
+	TargetsInverseTable = "version_targets"
+	// TargetsColumn is the table column denoting the targets relation/edge.
+	TargetsColumn = "version_id"
 	// VersionDependenciesTable is the table that holds the version_dependencies relation/edge.
 	VersionDependenciesTable = "version_dependencies"
 	// VersionDependenciesInverseTable is the table name for the VersionDependency entity.
@@ -89,6 +100,7 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
+	FieldModID,
 	FieldVersion,
 	FieldSmlVersion,
 	FieldChangelog,
@@ -107,12 +119,6 @@ var Columns = []string{
 	FieldHash,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "versions"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"mod_id",
-}
-
 var (
 	// DependenciesPrimaryKey and DependenciesColumn2 are the table columns denoting the
 	// primary key for the dependencies relation (M2M).
@@ -123,11 +129,6 @@ var (
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -209,6 +210,11 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByDeletedAt orders the results by the deleted_at field.
 func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
+// ByModID orders the results by the mod_id field.
+func ByModID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModID, opts...).ToFunc()
 }
 
 // ByVersion orders the results by the version field.
@@ -312,6 +318,20 @@ func ByDependencies(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByTargetsCount orders the results by targets count.
+func ByTargetsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTargetsStep(), opts...)
+	}
+}
+
+// ByTargets orders the results by targets terms.
+func ByTargets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTargetsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByVersionDependenciesCount orders the results by version_dependencies count.
 func ByVersionDependenciesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -337,6 +357,13 @@ func newDependenciesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DependenciesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, DependenciesTable, DependenciesPrimaryKey...),
+	)
+}
+func newTargetsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TargetsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TargetsTable, TargetsColumn),
 	)
 }
 func newVersionDependenciesStep() *sqlgraph.Step {

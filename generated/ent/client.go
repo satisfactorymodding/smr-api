@@ -29,6 +29,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 
 	stdsql "database/sql"
 )
@@ -66,6 +67,8 @@ type Client struct {
 	Version *VersionClient
 	// VersionDependency is the client for interacting with the VersionDependency builders.
 	VersionDependency *VersionDependencyClient
+	// VersionTarget is the client for interacting with the VersionTarget builders.
+	VersionTarget *VersionTargetClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -93,6 +96,7 @@ func (c *Client) init() {
 	c.UserSession = NewUserSessionClient(c.config)
 	c.Version = NewVersionClient(c.config)
 	c.VersionDependency = NewVersionDependencyClient(c.config)
+	c.VersionTarget = NewVersionTargetClient(c.config)
 }
 
 type (
@@ -192,6 +196,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		UserSession:       NewUserSessionClient(cfg),
 		Version:           NewVersionClient(cfg),
 		VersionDependency: NewVersionDependencyClient(cfg),
+		VersionTarget:     NewVersionTargetClient(cfg),
 	}, nil
 }
 
@@ -225,6 +230,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		UserSession:       NewUserSessionClient(cfg),
 		Version:           NewVersionClient(cfg),
 		VersionDependency: NewVersionDependencyClient(cfg),
+		VersionTarget:     NewVersionTargetClient(cfg),
 	}, nil
 }
 
@@ -256,7 +262,7 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.SmlVersion,
 		c.SmlVersionTarget, c.Tag, c.User, c.UserGroup, c.UserMod, c.UserSession,
-		c.Version, c.VersionDependency,
+		c.Version, c.VersionDependency, c.VersionTarget,
 	} {
 		n.Use(hooks...)
 	}
@@ -268,7 +274,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.SmlVersion,
 		c.SmlVersionTarget, c.Tag, c.User, c.UserGroup, c.UserMod, c.UserSession,
-		c.Version, c.VersionDependency,
+		c.Version, c.VersionDependency, c.VersionTarget,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -305,6 +311,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Version.mutate(ctx, m)
 	case *VersionDependencyMutation:
 		return c.VersionDependency.mutate(ctx, m)
+	case *VersionTargetMutation:
+		return c.VersionTarget.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -685,7 +693,7 @@ func (c *GuideTagClient) Update() *GuideTagUpdate {
 // UpdateOne returns an update builder for the given entity.
 func (c *GuideTagClient) UpdateOne(gt *GuideTag) *GuideTagUpdateOne {
 	mutation := newGuideTagMutation(c.config, OpUpdateOne)
-	mutation.guide = &gt.GuideTag
+	mutation.guide = &gt.GuideID
 	mutation.tag = &gt.TagID
 	return &GuideTagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -708,14 +716,14 @@ func (c *GuideTagClient) Query() *GuideTagQuery {
 // QueryGuide queries the guide edge of a GuideTag.
 func (c *GuideTagClient) QueryGuide(gt *GuideTag) *GuideQuery {
 	return c.Query().
-		Where(guidetag.GuideTag(gt.GuideTag), guidetag.TagID(gt.TagID)).
+		Where(guidetag.GuideID(gt.GuideID), guidetag.TagID(gt.TagID)).
 		QueryGuide()
 }
 
 // QueryTag queries the tag edge of a GuideTag.
 func (c *GuideTagClient) QueryTag(gt *GuideTag) *TagQuery {
 	return c.Query().
-		Where(guidetag.GuideTag(gt.GuideTag), guidetag.TagID(gt.TagID)).
+		Where(guidetag.GuideID(gt.GuideID), guidetag.TagID(gt.TagID)).
 		QueryTag()
 }
 
@@ -2379,6 +2387,22 @@ func (c *VersionClient) QueryDependencies(v *Version) *ModQuery {
 	return query
 }
 
+// QueryTargets queries the targets edge of a Version.
+func (c *VersionClient) QueryTargets(v *Version) *VersionTargetQuery {
+	query := (&VersionTargetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(version.Table, version.FieldID, id),
+			sqlgraph.To(versiontarget.Table, versiontarget.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, version.TargetsTable, version.TargetsColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryVersionDependencies queries the version_dependencies edge of a Version.
 func (c *VersionClient) QueryVersionDependencies(v *Version) *VersionDependencyQuery {
 	query := (&VersionDependencyClient{config: c.config}).Query()
@@ -2540,16 +2564,166 @@ func (c *VersionDependencyClient) mutate(ctx context.Context, m *VersionDependen
 	}
 }
 
+// VersionTargetClient is a client for the VersionTarget schema.
+type VersionTargetClient struct {
+	config
+}
+
+// NewVersionTargetClient returns a client for the VersionTarget from the given config.
+func NewVersionTargetClient(c config) *VersionTargetClient {
+	return &VersionTargetClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `versiontarget.Hooks(f(g(h())))`.
+func (c *VersionTargetClient) Use(hooks ...Hook) {
+	c.hooks.VersionTarget = append(c.hooks.VersionTarget, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `versiontarget.Intercept(f(g(h())))`.
+func (c *VersionTargetClient) Intercept(interceptors ...Interceptor) {
+	c.inters.VersionTarget = append(c.inters.VersionTarget, interceptors...)
+}
+
+// Create returns a builder for creating a VersionTarget entity.
+func (c *VersionTargetClient) Create() *VersionTargetCreate {
+	mutation := newVersionTargetMutation(c.config, OpCreate)
+	return &VersionTargetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of VersionTarget entities.
+func (c *VersionTargetClient) CreateBulk(builders ...*VersionTargetCreate) *VersionTargetCreateBulk {
+	return &VersionTargetCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *VersionTargetClient) MapCreateBulk(slice any, setFunc func(*VersionTargetCreate, int)) *VersionTargetCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &VersionTargetCreateBulk{err: fmt.Errorf("calling to VersionTargetClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*VersionTargetCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &VersionTargetCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for VersionTarget.
+func (c *VersionTargetClient) Update() *VersionTargetUpdate {
+	mutation := newVersionTargetMutation(c.config, OpUpdate)
+	return &VersionTargetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VersionTargetClient) UpdateOne(vt *VersionTarget) *VersionTargetUpdateOne {
+	mutation := newVersionTargetMutation(c.config, OpUpdateOne, withVersionTarget(vt))
+	return &VersionTargetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VersionTargetClient) UpdateOneID(id string) *VersionTargetUpdateOne {
+	mutation := newVersionTargetMutation(c.config, OpUpdateOne, withVersionTargetID(id))
+	return &VersionTargetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for VersionTarget.
+func (c *VersionTargetClient) Delete() *VersionTargetDelete {
+	mutation := newVersionTargetMutation(c.config, OpDelete)
+	return &VersionTargetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *VersionTargetClient) DeleteOne(vt *VersionTarget) *VersionTargetDeleteOne {
+	return c.DeleteOneID(vt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *VersionTargetClient) DeleteOneID(id string) *VersionTargetDeleteOne {
+	builder := c.Delete().Where(versiontarget.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VersionTargetDeleteOne{builder}
+}
+
+// Query returns a query builder for VersionTarget.
+func (c *VersionTargetClient) Query() *VersionTargetQuery {
+	return &VersionTargetQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeVersionTarget},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a VersionTarget entity by its id.
+func (c *VersionTargetClient) Get(ctx context.Context, id string) (*VersionTarget, error) {
+	return c.Query().Where(versiontarget.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VersionTargetClient) GetX(ctx context.Context, id string) *VersionTarget {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySmlVersion queries the sml_version edge of a VersionTarget.
+func (c *VersionTargetClient) QuerySmlVersion(vt *VersionTarget) *VersionQuery {
+	query := (&VersionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := vt.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(versiontarget.Table, versiontarget.FieldID, id),
+			sqlgraph.To(version.Table, version.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, versiontarget.SmlVersionTable, versiontarget.SmlVersionColumn),
+		)
+		fromV = sqlgraph.Neighbors(vt.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *VersionTargetClient) Hooks() []Hook {
+	return c.hooks.VersionTarget
+}
+
+// Interceptors returns the client interceptors.
+func (c *VersionTargetClient) Interceptors() []Interceptor {
+	return c.inters.VersionTarget
+}
+
+func (c *VersionTargetClient) mutate(ctx context.Context, m *VersionTargetMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VersionTargetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VersionTargetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VersionTargetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VersionTargetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown VersionTarget mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
 		Announcement, Guide, GuideTag, Mod, ModTag, SmlVersion, SmlVersionTarget, Tag,
-		User, UserGroup, UserMod, UserSession, Version, VersionDependency []ent.Hook
+		User, UserGroup, UserMod, UserSession, Version, VersionDependency,
+		VersionTarget []ent.Hook
 	}
 	inters struct {
 		Announcement, Guide, GuideTag, Mod, ModTag, SmlVersion, SmlVersionTarget, Tag,
-		User, UserGroup, UserMod, UserSession, Version,
-		VersionDependency []ent.Interceptor
+		User, UserGroup, UserMod, UserSession, Version, VersionDependency,
+		VersionTarget []ent.Interceptor
 	}
 )
 

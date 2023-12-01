@@ -169,8 +169,8 @@ type GuideTag struct {
 }
 
 type CompatibilityInfo struct {
-	EA  Compatibility `gorm:"type:compatibility"`
-	EXP Compatibility `gorm:"type:compatibility"`
+	Ea  Compatibility `gorm:"type:compatibility" json:"EA"`
+	Exp Compatibility `gorm:"type:compatibility" json:"EXP"`
 }
 
 type Compatibility struct {

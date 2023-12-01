@@ -21,6 +21,7 @@ require (
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-migrate/migrate/v4 v4.16.2
+	github.com/graph-gophers/dataloader/v7 v7.1.0
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/lab259/go-migration v1.3.1
 	github.com/labstack/echo-contrib v0.15.0

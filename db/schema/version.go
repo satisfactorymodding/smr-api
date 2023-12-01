@@ -20,6 +20,7 @@ func (Version) Mixin() []ent.Mixin {
 
 func (Version) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("mod_id"),
 		field.String("version").MaxLen(16),
 		field.String("sml_version").MaxLen(16),
 		field.String("changelog"),
@@ -43,9 +44,11 @@ func (Version) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("mod", Mod.Type).
 			Ref("versions").
+			Field("mod_id").
 			Unique().
 			Required(),
 		edge.To("dependencies", Mod.Type).
 			Through("version_dependencies", VersionDependency.Type),
+		edge.To("targets", VersionTarget.Type),
 	}
 }

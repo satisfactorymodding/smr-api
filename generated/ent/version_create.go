@@ -8,10 +8,13 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 )
 
 // VersionCreate is the builder for creating a Version entity.
@@ -19,6 +22,7 @@ type VersionCreate struct {
 	config
 	mutation *VersionMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -60,6 +64,12 @@ func (vc *VersionCreate) SetNillableDeletedAt(t *time.Time) *VersionCreate {
 	if t != nil {
 		vc.SetDeletedAt(*t)
 	}
+	return vc
+}
+
+// SetModID sets the "mod_id" field.
+func (vc *VersionCreate) SetModID(s string) *VersionCreate {
+	vc.mutation.SetModID(s)
 	return vc
 }
 
@@ -189,12 +199,6 @@ func (vc *VersionCreate) SetNillableID(s *string) *VersionCreate {
 	return vc
 }
 
-// SetModID sets the "mod" edge to the Mod entity by ID.
-func (vc *VersionCreate) SetModID(id string) *VersionCreate {
-	vc.mutation.SetModID(id)
-	return vc
-}
-
 // SetMod sets the "mod" edge to the Mod entity.
 func (vc *VersionCreate) SetMod(m *Mod) *VersionCreate {
 	return vc.SetModID(m.ID)
@@ -213,6 +217,21 @@ func (vc *VersionCreate) AddDependencies(m ...*Mod) *VersionCreate {
 		ids[i] = m[i].ID
 	}
 	return vc.AddDependencyIDs(ids...)
+}
+
+// AddTargetIDs adds the "targets" edge to the VersionTarget entity by IDs.
+func (vc *VersionCreate) AddTargetIDs(ids ...string) *VersionCreate {
+	vc.mutation.AddTargetIDs(ids...)
+	return vc
+}
+
+// AddTargets adds the "targets" edges to the VersionTarget entity.
+func (vc *VersionCreate) AddTargets(v ...*VersionTarget) *VersionCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vc.AddTargetIDs(ids...)
 }
 
 // Mutation returns the VersionMutation object of the builder.
@@ -291,6 +310,9 @@ func (vc *VersionCreate) check() error {
 	}
 	if _, ok := vc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Version.updated_at"`)}
+	}
+	if _, ok := vc.mutation.ModID(); !ok {
+		return &ValidationError{Name: "mod_id", err: errors.New(`ent: missing required field "Version.mod_id"`)}
 	}
 	if _, ok := vc.mutation.Version(); !ok {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "Version.version"`)}
@@ -399,6 +421,7 @@ func (vc *VersionCreate) createSpec() (*Version, *sqlgraph.CreateSpec) {
 		_node = &Version{config: vc.config}
 		_spec = sqlgraph.NewCreateSpec(version.Table, sqlgraph.NewFieldSpec(version.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = vc.conflict
 	if id, ok := vc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -493,7 +516,7 @@ func (vc *VersionCreate) createSpec() (*Version, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.mod_id = &nodes[0]
+		_node.ModID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := vc.mutation.DependenciesIDs(); len(nodes) > 0 {
@@ -516,7 +539,746 @@ func (vc *VersionCreate) createSpec() (*Version, *sqlgraph.CreateSpec) {
 		edge.Target.Fields = specE.Fields
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := vc.mutation.TargetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.TargetsTable,
+			Columns: []string{version.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Version.Create().
+//		SetCreatedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.VersionUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (vc *VersionCreate) OnConflict(opts ...sql.ConflictOption) *VersionUpsertOne {
+	vc.conflict = opts
+	return &VersionUpsertOne{
+		create: vc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Version.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (vc *VersionCreate) OnConflictColumns(columns ...string) *VersionUpsertOne {
+	vc.conflict = append(vc.conflict, sql.ConflictColumns(columns...))
+	return &VersionUpsertOne{
+		create: vc,
+	}
+}
+
+type (
+	// VersionUpsertOne is the builder for "upsert"-ing
+	//  one Version node.
+	VersionUpsertOne struct {
+		create *VersionCreate
+	}
+
+	// VersionUpsert is the "OnConflict" setter.
+	VersionUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *VersionUpsert) SetUpdatedAt(v time.Time) *VersionUpsert {
+	u.Set(version.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateUpdatedAt() *VersionUpsert {
+	u.SetExcluded(version.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *VersionUpsert) SetDeletedAt(v time.Time) *VersionUpsert {
+	u.Set(version.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateDeletedAt() *VersionUpsert {
+	u.SetExcluded(version.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *VersionUpsert) ClearDeletedAt() *VersionUpsert {
+	u.SetNull(version.FieldDeletedAt)
+	return u
+}
+
+// SetModID sets the "mod_id" field.
+func (u *VersionUpsert) SetModID(v string) *VersionUpsert {
+	u.Set(version.FieldModID, v)
+	return u
+}
+
+// UpdateModID sets the "mod_id" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateModID() *VersionUpsert {
+	u.SetExcluded(version.FieldModID)
+	return u
+}
+
+// SetVersion sets the "version" field.
+func (u *VersionUpsert) SetVersion(v string) *VersionUpsert {
+	u.Set(version.FieldVersion, v)
+	return u
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateVersion() *VersionUpsert {
+	u.SetExcluded(version.FieldVersion)
+	return u
+}
+
+// SetSmlVersion sets the "sml_version" field.
+func (u *VersionUpsert) SetSmlVersion(v string) *VersionUpsert {
+	u.Set(version.FieldSmlVersion, v)
+	return u
+}
+
+// UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateSmlVersion() *VersionUpsert {
+	u.SetExcluded(version.FieldSmlVersion)
+	return u
+}
+
+// SetChangelog sets the "changelog" field.
+func (u *VersionUpsert) SetChangelog(v string) *VersionUpsert {
+	u.Set(version.FieldChangelog, v)
+	return u
+}
+
+// UpdateChangelog sets the "changelog" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateChangelog() *VersionUpsert {
+	u.SetExcluded(version.FieldChangelog)
+	return u
+}
+
+// SetDownloads sets the "downloads" field.
+func (u *VersionUpsert) SetDownloads(v uint) *VersionUpsert {
+	u.Set(version.FieldDownloads, v)
+	return u
+}
+
+// UpdateDownloads sets the "downloads" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateDownloads() *VersionUpsert {
+	u.SetExcluded(version.FieldDownloads)
+	return u
+}
+
+// AddDownloads adds v to the "downloads" field.
+func (u *VersionUpsert) AddDownloads(v uint) *VersionUpsert {
+	u.Add(version.FieldDownloads, v)
+	return u
+}
+
+// SetKey sets the "key" field.
+func (u *VersionUpsert) SetKey(v string) *VersionUpsert {
+	u.Set(version.FieldKey, v)
+	return u
+}
+
+// UpdateKey sets the "key" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateKey() *VersionUpsert {
+	u.SetExcluded(version.FieldKey)
+	return u
+}
+
+// SetStability sets the "stability" field.
+func (u *VersionUpsert) SetStability(v version.Stability) *VersionUpsert {
+	u.Set(version.FieldStability, v)
+	return u
+}
+
+// UpdateStability sets the "stability" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateStability() *VersionUpsert {
+	u.SetExcluded(version.FieldStability)
+	return u
+}
+
+// SetApproved sets the "approved" field.
+func (u *VersionUpsert) SetApproved(v bool) *VersionUpsert {
+	u.Set(version.FieldApproved, v)
+	return u
+}
+
+// UpdateApproved sets the "approved" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateApproved() *VersionUpsert {
+	u.SetExcluded(version.FieldApproved)
+	return u
+}
+
+// SetHotness sets the "hotness" field.
+func (u *VersionUpsert) SetHotness(v uint) *VersionUpsert {
+	u.Set(version.FieldHotness, v)
+	return u
+}
+
+// UpdateHotness sets the "hotness" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateHotness() *VersionUpsert {
+	u.SetExcluded(version.FieldHotness)
+	return u
+}
+
+// AddHotness adds v to the "hotness" field.
+func (u *VersionUpsert) AddHotness(v uint) *VersionUpsert {
+	u.Add(version.FieldHotness, v)
+	return u
+}
+
+// SetDenied sets the "denied" field.
+func (u *VersionUpsert) SetDenied(v bool) *VersionUpsert {
+	u.Set(version.FieldDenied, v)
+	return u
+}
+
+// UpdateDenied sets the "denied" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateDenied() *VersionUpsert {
+	u.SetExcluded(version.FieldDenied)
+	return u
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *VersionUpsert) SetMetadata(v string) *VersionUpsert {
+	u.Set(version.FieldMetadata, v)
+	return u
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateMetadata() *VersionUpsert {
+	u.SetExcluded(version.FieldMetadata)
+	return u
+}
+
+// SetModReference sets the "mod_reference" field.
+func (u *VersionUpsert) SetModReference(v string) *VersionUpsert {
+	u.Set(version.FieldModReference, v)
+	return u
+}
+
+// UpdateModReference sets the "mod_reference" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateModReference() *VersionUpsert {
+	u.SetExcluded(version.FieldModReference)
+	return u
+}
+
+// SetVersionMajor sets the "version_major" field.
+func (u *VersionUpsert) SetVersionMajor(v int) *VersionUpsert {
+	u.Set(version.FieldVersionMajor, v)
+	return u
+}
+
+// UpdateVersionMajor sets the "version_major" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateVersionMajor() *VersionUpsert {
+	u.SetExcluded(version.FieldVersionMajor)
+	return u
+}
+
+// AddVersionMajor adds v to the "version_major" field.
+func (u *VersionUpsert) AddVersionMajor(v int) *VersionUpsert {
+	u.Add(version.FieldVersionMajor, v)
+	return u
+}
+
+// SetVersionMinor sets the "version_minor" field.
+func (u *VersionUpsert) SetVersionMinor(v int) *VersionUpsert {
+	u.Set(version.FieldVersionMinor, v)
+	return u
+}
+
+// UpdateVersionMinor sets the "version_minor" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateVersionMinor() *VersionUpsert {
+	u.SetExcluded(version.FieldVersionMinor)
+	return u
+}
+
+// AddVersionMinor adds v to the "version_minor" field.
+func (u *VersionUpsert) AddVersionMinor(v int) *VersionUpsert {
+	u.Add(version.FieldVersionMinor, v)
+	return u
+}
+
+// SetVersionPatch sets the "version_patch" field.
+func (u *VersionUpsert) SetVersionPatch(v int) *VersionUpsert {
+	u.Set(version.FieldVersionPatch, v)
+	return u
+}
+
+// UpdateVersionPatch sets the "version_patch" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateVersionPatch() *VersionUpsert {
+	u.SetExcluded(version.FieldVersionPatch)
+	return u
+}
+
+// AddVersionPatch adds v to the "version_patch" field.
+func (u *VersionUpsert) AddVersionPatch(v int) *VersionUpsert {
+	u.Add(version.FieldVersionPatch, v)
+	return u
+}
+
+// SetSize sets the "size" field.
+func (u *VersionUpsert) SetSize(v int64) *VersionUpsert {
+	u.Set(version.FieldSize, v)
+	return u
+}
+
+// UpdateSize sets the "size" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateSize() *VersionUpsert {
+	u.SetExcluded(version.FieldSize)
+	return u
+}
+
+// AddSize adds v to the "size" field.
+func (u *VersionUpsert) AddSize(v int64) *VersionUpsert {
+	u.Add(version.FieldSize, v)
+	return u
+}
+
+// SetHash sets the "hash" field.
+func (u *VersionUpsert) SetHash(v string) *VersionUpsert {
+	u.Set(version.FieldHash, v)
+	return u
+}
+
+// UpdateHash sets the "hash" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateHash() *VersionUpsert {
+	u.SetExcluded(version.FieldHash)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Version.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(version.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *VersionUpsertOne) UpdateNewValues() *VersionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(version.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(version.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Version.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *VersionUpsertOne) Ignore() *VersionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *VersionUpsertOne) DoNothing() *VersionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the VersionCreate.OnConflict
+// documentation for more info.
+func (u *VersionUpsertOne) Update(set func(*VersionUpsert)) *VersionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&VersionUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *VersionUpsertOne) SetUpdatedAt(v time.Time) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateUpdatedAt() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *VersionUpsertOne) SetDeletedAt(v time.Time) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateDeletedAt() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *VersionUpsertOne) ClearDeletedAt() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetModID sets the "mod_id" field.
+func (u *VersionUpsertOne) SetModID(v string) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetModID(v)
+	})
+}
+
+// UpdateModID sets the "mod_id" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateModID() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateModID()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *VersionUpsertOne) SetVersion(v string) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateVersion() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// SetSmlVersion sets the "sml_version" field.
+func (u *VersionUpsertOne) SetSmlVersion(v string) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetSmlVersion(v)
+	})
+}
+
+// UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateSmlVersion() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateSmlVersion()
+	})
+}
+
+// SetChangelog sets the "changelog" field.
+func (u *VersionUpsertOne) SetChangelog(v string) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetChangelog(v)
+	})
+}
+
+// UpdateChangelog sets the "changelog" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateChangelog() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateChangelog()
+	})
+}
+
+// SetDownloads sets the "downloads" field.
+func (u *VersionUpsertOne) SetDownloads(v uint) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetDownloads(v)
+	})
+}
+
+// AddDownloads adds v to the "downloads" field.
+func (u *VersionUpsertOne) AddDownloads(v uint) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddDownloads(v)
+	})
+}
+
+// UpdateDownloads sets the "downloads" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateDownloads() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateDownloads()
+	})
+}
+
+// SetKey sets the "key" field.
+func (u *VersionUpsertOne) SetKey(v string) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetKey(v)
+	})
+}
+
+// UpdateKey sets the "key" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateKey() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateKey()
+	})
+}
+
+// SetStability sets the "stability" field.
+func (u *VersionUpsertOne) SetStability(v version.Stability) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetStability(v)
+	})
+}
+
+// UpdateStability sets the "stability" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateStability() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateStability()
+	})
+}
+
+// SetApproved sets the "approved" field.
+func (u *VersionUpsertOne) SetApproved(v bool) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetApproved(v)
+	})
+}
+
+// UpdateApproved sets the "approved" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateApproved() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateApproved()
+	})
+}
+
+// SetHotness sets the "hotness" field.
+func (u *VersionUpsertOne) SetHotness(v uint) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetHotness(v)
+	})
+}
+
+// AddHotness adds v to the "hotness" field.
+func (u *VersionUpsertOne) AddHotness(v uint) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddHotness(v)
+	})
+}
+
+// UpdateHotness sets the "hotness" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateHotness() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateHotness()
+	})
+}
+
+// SetDenied sets the "denied" field.
+func (u *VersionUpsertOne) SetDenied(v bool) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetDenied(v)
+	})
+}
+
+// UpdateDenied sets the "denied" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateDenied() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateDenied()
+	})
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *VersionUpsertOne) SetMetadata(v string) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateMetadata() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// SetModReference sets the "mod_reference" field.
+func (u *VersionUpsertOne) SetModReference(v string) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetModReference(v)
+	})
+}
+
+// UpdateModReference sets the "mod_reference" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateModReference() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateModReference()
+	})
+}
+
+// SetVersionMajor sets the "version_major" field.
+func (u *VersionUpsertOne) SetVersionMajor(v int) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetVersionMajor(v)
+	})
+}
+
+// AddVersionMajor adds v to the "version_major" field.
+func (u *VersionUpsertOne) AddVersionMajor(v int) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddVersionMajor(v)
+	})
+}
+
+// UpdateVersionMajor sets the "version_major" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateVersionMajor() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateVersionMajor()
+	})
+}
+
+// SetVersionMinor sets the "version_minor" field.
+func (u *VersionUpsertOne) SetVersionMinor(v int) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetVersionMinor(v)
+	})
+}
+
+// AddVersionMinor adds v to the "version_minor" field.
+func (u *VersionUpsertOne) AddVersionMinor(v int) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddVersionMinor(v)
+	})
+}
+
+// UpdateVersionMinor sets the "version_minor" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateVersionMinor() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateVersionMinor()
+	})
+}
+
+// SetVersionPatch sets the "version_patch" field.
+func (u *VersionUpsertOne) SetVersionPatch(v int) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetVersionPatch(v)
+	})
+}
+
+// AddVersionPatch adds v to the "version_patch" field.
+func (u *VersionUpsertOne) AddVersionPatch(v int) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddVersionPatch(v)
+	})
+}
+
+// UpdateVersionPatch sets the "version_patch" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateVersionPatch() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateVersionPatch()
+	})
+}
+
+// SetSize sets the "size" field.
+func (u *VersionUpsertOne) SetSize(v int64) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetSize(v)
+	})
+}
+
+// AddSize adds v to the "size" field.
+func (u *VersionUpsertOne) AddSize(v int64) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddSize(v)
+	})
+}
+
+// UpdateSize sets the "size" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateSize() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateSize()
+	})
+}
+
+// SetHash sets the "hash" field.
+func (u *VersionUpsertOne) SetHash(v string) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetHash(v)
+	})
+}
+
+// UpdateHash sets the "hash" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateHash() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateHash()
+	})
+}
+
+// Exec executes the query.
+func (u *VersionUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for VersionCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *VersionUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *VersionUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: VersionUpsertOne.ID is not supported by MySQL driver. Use VersionUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *VersionUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
 
 // VersionCreateBulk is the builder for creating many Version entities in bulk.
@@ -524,6 +1286,7 @@ type VersionCreateBulk struct {
 	config
 	err      error
 	builders []*VersionCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Version entities in the database.
@@ -553,6 +1316,7 @@ func (vcb *VersionCreateBulk) Save(ctx context.Context) ([]*Version, error) {
 					_, err = mutators[i+1].Mutate(root, vcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = vcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, vcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -599,6 +1363,438 @@ func (vcb *VersionCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (vcb *VersionCreateBulk) ExecX(ctx context.Context) {
 	if err := vcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Version.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.VersionUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (vcb *VersionCreateBulk) OnConflict(opts ...sql.ConflictOption) *VersionUpsertBulk {
+	vcb.conflict = opts
+	return &VersionUpsertBulk{
+		create: vcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Version.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (vcb *VersionCreateBulk) OnConflictColumns(columns ...string) *VersionUpsertBulk {
+	vcb.conflict = append(vcb.conflict, sql.ConflictColumns(columns...))
+	return &VersionUpsertBulk{
+		create: vcb,
+	}
+}
+
+// VersionUpsertBulk is the builder for "upsert"-ing
+// a bulk of Version nodes.
+type VersionUpsertBulk struct {
+	create *VersionCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Version.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(version.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *VersionUpsertBulk) UpdateNewValues() *VersionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(version.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(version.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Version.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *VersionUpsertBulk) Ignore() *VersionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *VersionUpsertBulk) DoNothing() *VersionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the VersionCreateBulk.OnConflict
+// documentation for more info.
+func (u *VersionUpsertBulk) Update(set func(*VersionUpsert)) *VersionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&VersionUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *VersionUpsertBulk) SetUpdatedAt(v time.Time) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateUpdatedAt() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *VersionUpsertBulk) SetDeletedAt(v time.Time) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateDeletedAt() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *VersionUpsertBulk) ClearDeletedAt() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// SetModID sets the "mod_id" field.
+func (u *VersionUpsertBulk) SetModID(v string) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetModID(v)
+	})
+}
+
+// UpdateModID sets the "mod_id" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateModID() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateModID()
+	})
+}
+
+// SetVersion sets the "version" field.
+func (u *VersionUpsertBulk) SetVersion(v string) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetVersion(v)
+	})
+}
+
+// UpdateVersion sets the "version" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateVersion() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateVersion()
+	})
+}
+
+// SetSmlVersion sets the "sml_version" field.
+func (u *VersionUpsertBulk) SetSmlVersion(v string) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetSmlVersion(v)
+	})
+}
+
+// UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateSmlVersion() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateSmlVersion()
+	})
+}
+
+// SetChangelog sets the "changelog" field.
+func (u *VersionUpsertBulk) SetChangelog(v string) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetChangelog(v)
+	})
+}
+
+// UpdateChangelog sets the "changelog" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateChangelog() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateChangelog()
+	})
+}
+
+// SetDownloads sets the "downloads" field.
+func (u *VersionUpsertBulk) SetDownloads(v uint) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetDownloads(v)
+	})
+}
+
+// AddDownloads adds v to the "downloads" field.
+func (u *VersionUpsertBulk) AddDownloads(v uint) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddDownloads(v)
+	})
+}
+
+// UpdateDownloads sets the "downloads" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateDownloads() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateDownloads()
+	})
+}
+
+// SetKey sets the "key" field.
+func (u *VersionUpsertBulk) SetKey(v string) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetKey(v)
+	})
+}
+
+// UpdateKey sets the "key" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateKey() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateKey()
+	})
+}
+
+// SetStability sets the "stability" field.
+func (u *VersionUpsertBulk) SetStability(v version.Stability) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetStability(v)
+	})
+}
+
+// UpdateStability sets the "stability" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateStability() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateStability()
+	})
+}
+
+// SetApproved sets the "approved" field.
+func (u *VersionUpsertBulk) SetApproved(v bool) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetApproved(v)
+	})
+}
+
+// UpdateApproved sets the "approved" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateApproved() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateApproved()
+	})
+}
+
+// SetHotness sets the "hotness" field.
+func (u *VersionUpsertBulk) SetHotness(v uint) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetHotness(v)
+	})
+}
+
+// AddHotness adds v to the "hotness" field.
+func (u *VersionUpsertBulk) AddHotness(v uint) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddHotness(v)
+	})
+}
+
+// UpdateHotness sets the "hotness" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateHotness() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateHotness()
+	})
+}
+
+// SetDenied sets the "denied" field.
+func (u *VersionUpsertBulk) SetDenied(v bool) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetDenied(v)
+	})
+}
+
+// UpdateDenied sets the "denied" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateDenied() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateDenied()
+	})
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *VersionUpsertBulk) SetMetadata(v string) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateMetadata() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// SetModReference sets the "mod_reference" field.
+func (u *VersionUpsertBulk) SetModReference(v string) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetModReference(v)
+	})
+}
+
+// UpdateModReference sets the "mod_reference" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateModReference() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateModReference()
+	})
+}
+
+// SetVersionMajor sets the "version_major" field.
+func (u *VersionUpsertBulk) SetVersionMajor(v int) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetVersionMajor(v)
+	})
+}
+
+// AddVersionMajor adds v to the "version_major" field.
+func (u *VersionUpsertBulk) AddVersionMajor(v int) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddVersionMajor(v)
+	})
+}
+
+// UpdateVersionMajor sets the "version_major" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateVersionMajor() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateVersionMajor()
+	})
+}
+
+// SetVersionMinor sets the "version_minor" field.
+func (u *VersionUpsertBulk) SetVersionMinor(v int) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetVersionMinor(v)
+	})
+}
+
+// AddVersionMinor adds v to the "version_minor" field.
+func (u *VersionUpsertBulk) AddVersionMinor(v int) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddVersionMinor(v)
+	})
+}
+
+// UpdateVersionMinor sets the "version_minor" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateVersionMinor() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateVersionMinor()
+	})
+}
+
+// SetVersionPatch sets the "version_patch" field.
+func (u *VersionUpsertBulk) SetVersionPatch(v int) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetVersionPatch(v)
+	})
+}
+
+// AddVersionPatch adds v to the "version_patch" field.
+func (u *VersionUpsertBulk) AddVersionPatch(v int) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddVersionPatch(v)
+	})
+}
+
+// UpdateVersionPatch sets the "version_patch" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateVersionPatch() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateVersionPatch()
+	})
+}
+
+// SetSize sets the "size" field.
+func (u *VersionUpsertBulk) SetSize(v int64) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetSize(v)
+	})
+}
+
+// AddSize adds v to the "size" field.
+func (u *VersionUpsertBulk) AddSize(v int64) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.AddSize(v)
+	})
+}
+
+// UpdateSize sets the "size" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateSize() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateSize()
+	})
+}
+
+// SetHash sets the "hash" field.
+func (u *VersionUpsertBulk) SetHash(v string) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetHash(v)
+	})
+}
+
+// UpdateHash sets the "hash" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateHash() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateHash()
+	})
+}
+
+// Exec executes the query.
+func (u *VersionUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the VersionCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for VersionCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *VersionUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
