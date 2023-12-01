@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"sync"
+
 	"github.com/Vilsol/slox"
 	"github.com/machinebox/graphql"
 
