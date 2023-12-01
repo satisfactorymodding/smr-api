@@ -82,6 +82,13 @@ jobs:
       - name: Start stack
         run: docker-compose -f docker-compose-dev.yml up -d
 
+      - name: Setup Minio
+        run: |
+          go install github.com/minio/mc@latest
+          mc alias set local http://localhost:9000 minio minio123
+          mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET
+          mc anonymous set public local/smr
+
       - name: Test
         run: go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... ./...
         env:
