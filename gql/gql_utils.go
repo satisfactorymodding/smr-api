@@ -12,9 +12,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -49,15 +47,6 @@ func (wrapper TraceWrapper) end() {
 	}
 }
 
-// SetStringINNOE sets target if value not nil or empty
-func SetStringINNOE(value *string, target *string) {
-	if value == nil || *value == "" {
-		return
-	}
-
-	*target = *value
-}
-
 // SetINN sets target if value not nil
 func SetINN[T any](v *T, target *T) {
 	if v != nil {
@@ -65,37 +54,30 @@ func SetINN[T any](v *T, target *T) {
 	}
 }
 
-func SetStabilityINN(value *generated.VersionStabilities, target *string) {
+func SetCompatibilityINNF[B any](value *generated.CompatibilityInfoInput, target func(*util.CompatibilityInfo) B) {
 	if value == nil {
 		return
 	}
-
-	*target = string(*value)
+	target(GenCompInfoToDBCompInfo(value))
 }
 
-func SetCompatibilityINN(value *generated.CompatibilityInfoInput, target **postgres.CompatibilityInfo) {
-	if value == nil {
-		return
-	}
-	toDB := GenCompInfoToDBCompInfo(value)
-	*target = toDB
-}
-
+// SetINNF - Set if not null function
 func SetINNF[T any, B any](value *T, target func(T) B) {
 	if value != nil {
 		target(*value)
 	}
 }
 
+// SetINNOEF - Set if not null or empty function
 func SetINNOEF[T comparable, B any](value *T, target func(T) B) {
 	if value != nil && *value != *(new(T)) {
 		target(*value)
 	}
 }
 
-func SetStabilityINNF[B any](value *generated.VersionStabilities, target func(smlversion.Stability) B) {
+func SetStabilityINNF[B any](value *generated.VersionStabilities, target func(util.Stability) B) {
 	if value != nil {
-		target(smlversion.Stability(*value))
+		target(util.Stability(*value))
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 const (
@@ -103,24 +104,10 @@ var (
 	DefaultID func() string
 )
 
-// Stability defines the type for the "stability" enum field.
-type Stability string
-
-// Stability values.
-const (
-	StabilityAlpha   Stability = "alpha"
-	StabilityBeta    Stability = "beta"
-	StabilityRelease Stability = "release"
-)
-
-func (s Stability) String() string {
-	return string(s)
-}
-
 // StabilityValidator is a validator for the "stability" field enum values. It is called by the builders before save.
-func StabilityValidator(s Stability) error {
+func StabilityValidator(s util.Stability) error {
 	switch s {
-	case StabilityAlpha, StabilityBeta, StabilityRelease:
+	case "release", "beta", "alpha":
 		return nil
 	default:
 		return fmt.Errorf("smlversion: invalid enum value for stability field: %q", s)

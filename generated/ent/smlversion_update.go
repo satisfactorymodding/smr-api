@@ -14,6 +14,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
 	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // SmlVersionUpdate is the builder for updating SmlVersion entities.
@@ -76,8 +77,8 @@ func (svu *SmlVersionUpdate) AddSatisfactoryVersion(i int) *SmlVersionUpdate {
 }
 
 // SetStability sets the "stability" field.
-func (svu *SmlVersionUpdate) SetStability(s smlversion.Stability) *SmlVersionUpdate {
-	svu.mutation.SetStability(s)
+func (svu *SmlVersionUpdate) SetStability(u util.Stability) *SmlVersionUpdate {
+	svu.mutation.SetStability(u)
 	return svu
 }
 
@@ -411,8 +412,8 @@ func (svuo *SmlVersionUpdateOne) AddSatisfactoryVersion(i int) *SmlVersionUpdate
 }
 
 // SetStability sets the "stability" field.
-func (svuo *SmlVersionUpdateOne) SetStability(s smlversion.Stability) *SmlVersionUpdateOne {
-	svuo.mutation.SetStability(s)
+func (svuo *SmlVersionUpdateOne) SetStability(u util.Stability) *SmlVersionUpdateOne {
+	svuo.mutation.SetStability(u)
 	return svuo
 }
 

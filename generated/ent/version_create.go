@@ -15,6 +15,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // VersionCreate is the builder for creating a Version entity.
@@ -91,9 +92,25 @@ func (vc *VersionCreate) SetChangelog(s string) *VersionCreate {
 	return vc
 }
 
+// SetNillableChangelog sets the "changelog" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableChangelog(s *string) *VersionCreate {
+	if s != nil {
+		vc.SetChangelog(*s)
+	}
+	return vc
+}
+
 // SetDownloads sets the "downloads" field.
 func (vc *VersionCreate) SetDownloads(u uint) *VersionCreate {
 	vc.mutation.SetDownloads(u)
+	return vc
+}
+
+// SetNillableDownloads sets the "downloads" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableDownloads(u *uint) *VersionCreate {
+	if u != nil {
+		vc.SetDownloads(*u)
+	}
 	return vc
 }
 
@@ -103,9 +120,17 @@ func (vc *VersionCreate) SetKey(s string) *VersionCreate {
 	return vc
 }
 
+// SetNillableKey sets the "key" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableKey(s *string) *VersionCreate {
+	if s != nil {
+		vc.SetKey(*s)
+	}
+	return vc
+}
+
 // SetStability sets the "stability" field.
-func (vc *VersionCreate) SetStability(v version.Stability) *VersionCreate {
-	vc.mutation.SetStability(v)
+func (vc *VersionCreate) SetStability(u util.Stability) *VersionCreate {
+	vc.mutation.SetStability(u)
 	return vc
 }
 
@@ -129,6 +154,14 @@ func (vc *VersionCreate) SetHotness(u uint) *VersionCreate {
 	return vc
 }
 
+// SetNillableHotness sets the "hotness" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableHotness(u *uint) *VersionCreate {
+	if u != nil {
+		vc.SetHotness(*u)
+	}
+	return vc
+}
+
 // SetDenied sets the "denied" field.
 func (vc *VersionCreate) SetDenied(b bool) *VersionCreate {
 	vc.mutation.SetDenied(b)
@@ -149,6 +182,14 @@ func (vc *VersionCreate) SetMetadata(s string) *VersionCreate {
 	return vc
 }
 
+// SetNillableMetadata sets the "metadata" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableMetadata(s *string) *VersionCreate {
+	if s != nil {
+		vc.SetMetadata(*s)
+	}
+	return vc
+}
+
 // SetModReference sets the "mod_reference" field.
 func (vc *VersionCreate) SetModReference(s string) *VersionCreate {
 	vc.mutation.SetModReference(s)
@@ -161,9 +202,25 @@ func (vc *VersionCreate) SetVersionMajor(i int) *VersionCreate {
 	return vc
 }
 
+// SetNillableVersionMajor sets the "version_major" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableVersionMajor(i *int) *VersionCreate {
+	if i != nil {
+		vc.SetVersionMajor(*i)
+	}
+	return vc
+}
+
 // SetVersionMinor sets the "version_minor" field.
 func (vc *VersionCreate) SetVersionMinor(i int) *VersionCreate {
 	vc.mutation.SetVersionMinor(i)
+	return vc
+}
+
+// SetNillableVersionMinor sets the "version_minor" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableVersionMinor(i *int) *VersionCreate {
+	if i != nil {
+		vc.SetVersionMinor(*i)
+	}
 	return vc
 }
 
@@ -173,15 +230,39 @@ func (vc *VersionCreate) SetVersionPatch(i int) *VersionCreate {
 	return vc
 }
 
+// SetNillableVersionPatch sets the "version_patch" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableVersionPatch(i *int) *VersionCreate {
+	if i != nil {
+		vc.SetVersionPatch(*i)
+	}
+	return vc
+}
+
 // SetSize sets the "size" field.
 func (vc *VersionCreate) SetSize(i int64) *VersionCreate {
 	vc.mutation.SetSize(i)
 	return vc
 }
 
+// SetNillableSize sets the "size" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableSize(i *int64) *VersionCreate {
+	if i != nil {
+		vc.SetSize(*i)
+	}
+	return vc
+}
+
 // SetHash sets the "hash" field.
 func (vc *VersionCreate) SetHash(s string) *VersionCreate {
 	vc.mutation.SetHash(s)
+	return vc
+}
+
+// SetNillableHash sets the "hash" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableHash(s *string) *VersionCreate {
+	if s != nil {
+		vc.SetHash(*s)
+	}
 	return vc
 }
 
@@ -285,9 +366,17 @@ func (vc *VersionCreate) defaults() error {
 		v := version.DefaultUpdatedAt()
 		vc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := vc.mutation.Downloads(); !ok {
+		v := version.DefaultDownloads
+		vc.mutation.SetDownloads(v)
+	}
 	if _, ok := vc.mutation.Approved(); !ok {
 		v := version.DefaultApproved
 		vc.mutation.SetApproved(v)
+	}
+	if _, ok := vc.mutation.Hotness(); !ok {
+		v := version.DefaultHotness
+		vc.mutation.SetHotness(v)
 	}
 	if _, ok := vc.mutation.Denied(); !ok {
 		v := version.DefaultDenied
@@ -330,14 +419,8 @@ func (vc *VersionCreate) check() error {
 			return &ValidationError{Name: "sml_version", err: fmt.Errorf(`ent: validator failed for field "Version.sml_version": %w`, err)}
 		}
 	}
-	if _, ok := vc.mutation.Changelog(); !ok {
-		return &ValidationError{Name: "changelog", err: errors.New(`ent: missing required field "Version.changelog"`)}
-	}
 	if _, ok := vc.mutation.Downloads(); !ok {
 		return &ValidationError{Name: "downloads", err: errors.New(`ent: missing required field "Version.downloads"`)}
-	}
-	if _, ok := vc.mutation.Key(); !ok {
-		return &ValidationError{Name: "key", err: errors.New(`ent: missing required field "Version.key"`)}
 	}
 	if _, ok := vc.mutation.Stability(); !ok {
 		return &ValidationError{Name: "stability", err: errors.New(`ent: missing required field "Version.stability"`)}
@@ -356,9 +439,6 @@ func (vc *VersionCreate) check() error {
 	if _, ok := vc.mutation.Denied(); !ok {
 		return &ValidationError{Name: "denied", err: errors.New(`ent: missing required field "Version.denied"`)}
 	}
-	if _, ok := vc.mutation.Metadata(); !ok {
-		return &ValidationError{Name: "metadata", err: errors.New(`ent: missing required field "Version.metadata"`)}
-	}
 	if _, ok := vc.mutation.ModReference(); !ok {
 		return &ValidationError{Name: "mod_reference", err: errors.New(`ent: missing required field "Version.mod_reference"`)}
 	}
@@ -366,21 +446,6 @@ func (vc *VersionCreate) check() error {
 		if err := version.ModReferenceValidator(v); err != nil {
 			return &ValidationError{Name: "mod_reference", err: fmt.Errorf(`ent: validator failed for field "Version.mod_reference": %w`, err)}
 		}
-	}
-	if _, ok := vc.mutation.VersionMajor(); !ok {
-		return &ValidationError{Name: "version_major", err: errors.New(`ent: missing required field "Version.version_major"`)}
-	}
-	if _, ok := vc.mutation.VersionMinor(); !ok {
-		return &ValidationError{Name: "version_minor", err: errors.New(`ent: missing required field "Version.version_minor"`)}
-	}
-	if _, ok := vc.mutation.VersionPatch(); !ok {
-		return &ValidationError{Name: "version_patch", err: errors.New(`ent: missing required field "Version.version_patch"`)}
-	}
-	if _, ok := vc.mutation.Size(); !ok {
-		return &ValidationError{Name: "size", err: errors.New(`ent: missing required field "Version.size"`)}
-	}
-	if _, ok := vc.mutation.Hash(); !ok {
-		return &ValidationError{Name: "hash", err: errors.New(`ent: missing required field "Version.hash"`)}
 	}
 	if v, ok := vc.mutation.Hash(); ok {
 		if err := version.HashValidator(v); err != nil {
@@ -685,6 +750,12 @@ func (u *VersionUpsert) UpdateChangelog() *VersionUpsert {
 	return u
 }
 
+// ClearChangelog clears the value of the "changelog" field.
+func (u *VersionUpsert) ClearChangelog() *VersionUpsert {
+	u.SetNull(version.FieldChangelog)
+	return u
+}
+
 // SetDownloads sets the "downloads" field.
 func (u *VersionUpsert) SetDownloads(v uint) *VersionUpsert {
 	u.Set(version.FieldDownloads, v)
@@ -715,8 +786,14 @@ func (u *VersionUpsert) UpdateKey() *VersionUpsert {
 	return u
 }
 
+// ClearKey clears the value of the "key" field.
+func (u *VersionUpsert) ClearKey() *VersionUpsert {
+	u.SetNull(version.FieldKey)
+	return u
+}
+
 // SetStability sets the "stability" field.
-func (u *VersionUpsert) SetStability(v version.Stability) *VersionUpsert {
+func (u *VersionUpsert) SetStability(v util.Stability) *VersionUpsert {
 	u.Set(version.FieldStability, v)
 	return u
 }
@@ -781,6 +858,12 @@ func (u *VersionUpsert) UpdateMetadata() *VersionUpsert {
 	return u
 }
 
+// ClearMetadata clears the value of the "metadata" field.
+func (u *VersionUpsert) ClearMetadata() *VersionUpsert {
+	u.SetNull(version.FieldMetadata)
+	return u
+}
+
 // SetModReference sets the "mod_reference" field.
 func (u *VersionUpsert) SetModReference(v string) *VersionUpsert {
 	u.Set(version.FieldModReference, v)
@@ -811,6 +894,12 @@ func (u *VersionUpsert) AddVersionMajor(v int) *VersionUpsert {
 	return u
 }
 
+// ClearVersionMajor clears the value of the "version_major" field.
+func (u *VersionUpsert) ClearVersionMajor() *VersionUpsert {
+	u.SetNull(version.FieldVersionMajor)
+	return u
+}
+
 // SetVersionMinor sets the "version_minor" field.
 func (u *VersionUpsert) SetVersionMinor(v int) *VersionUpsert {
 	u.Set(version.FieldVersionMinor, v)
@@ -826,6 +915,12 @@ func (u *VersionUpsert) UpdateVersionMinor() *VersionUpsert {
 // AddVersionMinor adds v to the "version_minor" field.
 func (u *VersionUpsert) AddVersionMinor(v int) *VersionUpsert {
 	u.Add(version.FieldVersionMinor, v)
+	return u
+}
+
+// ClearVersionMinor clears the value of the "version_minor" field.
+func (u *VersionUpsert) ClearVersionMinor() *VersionUpsert {
+	u.SetNull(version.FieldVersionMinor)
 	return u
 }
 
@@ -847,6 +942,12 @@ func (u *VersionUpsert) AddVersionPatch(v int) *VersionUpsert {
 	return u
 }
 
+// ClearVersionPatch clears the value of the "version_patch" field.
+func (u *VersionUpsert) ClearVersionPatch() *VersionUpsert {
+	u.SetNull(version.FieldVersionPatch)
+	return u
+}
+
 // SetSize sets the "size" field.
 func (u *VersionUpsert) SetSize(v int64) *VersionUpsert {
 	u.Set(version.FieldSize, v)
@@ -865,6 +966,12 @@ func (u *VersionUpsert) AddSize(v int64) *VersionUpsert {
 	return u
 }
 
+// ClearSize clears the value of the "size" field.
+func (u *VersionUpsert) ClearSize() *VersionUpsert {
+	u.SetNull(version.FieldSize)
+	return u
+}
+
 // SetHash sets the "hash" field.
 func (u *VersionUpsert) SetHash(v string) *VersionUpsert {
 	u.Set(version.FieldHash, v)
@@ -874,6 +981,12 @@ func (u *VersionUpsert) SetHash(v string) *VersionUpsert {
 // UpdateHash sets the "hash" field to the value that was provided on create.
 func (u *VersionUpsert) UpdateHash() *VersionUpsert {
 	u.SetExcluded(version.FieldHash)
+	return u
+}
+
+// ClearHash clears the value of the "hash" field.
+func (u *VersionUpsert) ClearHash() *VersionUpsert {
+	u.SetNull(version.FieldHash)
 	return u
 }
 
@@ -1019,6 +1132,13 @@ func (u *VersionUpsertOne) UpdateChangelog() *VersionUpsertOne {
 	})
 }
 
+// ClearChangelog clears the value of the "changelog" field.
+func (u *VersionUpsertOne) ClearChangelog() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearChangelog()
+	})
+}
+
 // SetDownloads sets the "downloads" field.
 func (u *VersionUpsertOne) SetDownloads(v uint) *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
@@ -1054,8 +1174,15 @@ func (u *VersionUpsertOne) UpdateKey() *VersionUpsertOne {
 	})
 }
 
+// ClearKey clears the value of the "key" field.
+func (u *VersionUpsertOne) ClearKey() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearKey()
+	})
+}
+
 // SetStability sets the "stability" field.
-func (u *VersionUpsertOne) SetStability(v version.Stability) *VersionUpsertOne {
+func (u *VersionUpsertOne) SetStability(v util.Stability) *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.SetStability(v)
 	})
@@ -1131,6 +1258,13 @@ func (u *VersionUpsertOne) UpdateMetadata() *VersionUpsertOne {
 	})
 }
 
+// ClearMetadata clears the value of the "metadata" field.
+func (u *VersionUpsertOne) ClearMetadata() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearMetadata()
+	})
+}
+
 // SetModReference sets the "mod_reference" field.
 func (u *VersionUpsertOne) SetModReference(v string) *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
@@ -1166,6 +1300,13 @@ func (u *VersionUpsertOne) UpdateVersionMajor() *VersionUpsertOne {
 	})
 }
 
+// ClearVersionMajor clears the value of the "version_major" field.
+func (u *VersionUpsertOne) ClearVersionMajor() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearVersionMajor()
+	})
+}
+
 // SetVersionMinor sets the "version_minor" field.
 func (u *VersionUpsertOne) SetVersionMinor(v int) *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
@@ -1184,6 +1325,13 @@ func (u *VersionUpsertOne) AddVersionMinor(v int) *VersionUpsertOne {
 func (u *VersionUpsertOne) UpdateVersionMinor() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateVersionMinor()
+	})
+}
+
+// ClearVersionMinor clears the value of the "version_minor" field.
+func (u *VersionUpsertOne) ClearVersionMinor() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearVersionMinor()
 	})
 }
 
@@ -1208,6 +1356,13 @@ func (u *VersionUpsertOne) UpdateVersionPatch() *VersionUpsertOne {
 	})
 }
 
+// ClearVersionPatch clears the value of the "version_patch" field.
+func (u *VersionUpsertOne) ClearVersionPatch() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearVersionPatch()
+	})
+}
+
 // SetSize sets the "size" field.
 func (u *VersionUpsertOne) SetSize(v int64) *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
@@ -1229,6 +1384,13 @@ func (u *VersionUpsertOne) UpdateSize() *VersionUpsertOne {
 	})
 }
 
+// ClearSize clears the value of the "size" field.
+func (u *VersionUpsertOne) ClearSize() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearSize()
+	})
+}
+
 // SetHash sets the "hash" field.
 func (u *VersionUpsertOne) SetHash(v string) *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
@@ -1240,6 +1402,13 @@ func (u *VersionUpsertOne) SetHash(v string) *VersionUpsertOne {
 func (u *VersionUpsertOne) UpdateHash() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateHash()
+	})
+}
+
+// ClearHash clears the value of the "hash" field.
+func (u *VersionUpsertOne) ClearHash() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearHash()
 	})
 }
 
@@ -1552,6 +1721,13 @@ func (u *VersionUpsertBulk) UpdateChangelog() *VersionUpsertBulk {
 	})
 }
 
+// ClearChangelog clears the value of the "changelog" field.
+func (u *VersionUpsertBulk) ClearChangelog() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearChangelog()
+	})
+}
+
 // SetDownloads sets the "downloads" field.
 func (u *VersionUpsertBulk) SetDownloads(v uint) *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
@@ -1587,8 +1763,15 @@ func (u *VersionUpsertBulk) UpdateKey() *VersionUpsertBulk {
 	})
 }
 
+// ClearKey clears the value of the "key" field.
+func (u *VersionUpsertBulk) ClearKey() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearKey()
+	})
+}
+
 // SetStability sets the "stability" field.
-func (u *VersionUpsertBulk) SetStability(v version.Stability) *VersionUpsertBulk {
+func (u *VersionUpsertBulk) SetStability(v util.Stability) *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.SetStability(v)
 	})
@@ -1664,6 +1847,13 @@ func (u *VersionUpsertBulk) UpdateMetadata() *VersionUpsertBulk {
 	})
 }
 
+// ClearMetadata clears the value of the "metadata" field.
+func (u *VersionUpsertBulk) ClearMetadata() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearMetadata()
+	})
+}
+
 // SetModReference sets the "mod_reference" field.
 func (u *VersionUpsertBulk) SetModReference(v string) *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
@@ -1699,6 +1889,13 @@ func (u *VersionUpsertBulk) UpdateVersionMajor() *VersionUpsertBulk {
 	})
 }
 
+// ClearVersionMajor clears the value of the "version_major" field.
+func (u *VersionUpsertBulk) ClearVersionMajor() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearVersionMajor()
+	})
+}
+
 // SetVersionMinor sets the "version_minor" field.
 func (u *VersionUpsertBulk) SetVersionMinor(v int) *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
@@ -1717,6 +1914,13 @@ func (u *VersionUpsertBulk) AddVersionMinor(v int) *VersionUpsertBulk {
 func (u *VersionUpsertBulk) UpdateVersionMinor() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateVersionMinor()
+	})
+}
+
+// ClearVersionMinor clears the value of the "version_minor" field.
+func (u *VersionUpsertBulk) ClearVersionMinor() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearVersionMinor()
 	})
 }
 
@@ -1741,6 +1945,13 @@ func (u *VersionUpsertBulk) UpdateVersionPatch() *VersionUpsertBulk {
 	})
 }
 
+// ClearVersionPatch clears the value of the "version_patch" field.
+func (u *VersionUpsertBulk) ClearVersionPatch() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearVersionPatch()
+	})
+}
+
 // SetSize sets the "size" field.
 func (u *VersionUpsertBulk) SetSize(v int64) *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
@@ -1762,6 +1973,13 @@ func (u *VersionUpsertBulk) UpdateSize() *VersionUpsertBulk {
 	})
 }
 
+// ClearSize clears the value of the "size" field.
+func (u *VersionUpsertBulk) ClearSize() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearSize()
+	})
+}
+
 // SetHash sets the "hash" field.
 func (u *VersionUpsertBulk) SetHash(v string) *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
@@ -1773,6 +1991,13 @@ func (u *VersionUpsertBulk) SetHash(v string) *VersionUpsertBulk {
 func (u *VersionUpsertBulk) UpdateHash() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateHash()
+	})
+}
+
+// ClearHash clears the value of the "hash" field.
+func (u *VersionUpsertBulk) ClearHash() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearHash()
 	})
 }
 

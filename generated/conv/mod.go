@@ -4,9 +4,9 @@ package conv
 
 import (
 	conversion "github.com/satisfactorymodding/smr-api/conversion"
-	postgres "github.com/satisfactorymodding/smr-api/db/postgres"
 	generated "github.com/satisfactorymodding/smr-api/generated"
 	ent "github.com/satisfactorymodding/smr-api/generated/ent"
+	util "github.com/satisfactorymodding/smr-api/util"
 	"time"
 )
 
@@ -44,7 +44,7 @@ func (c *ModImpl) Convert(source *ent.Mod) *generated.Mod {
 			}
 		}
 		generatedMod.Tags = pGeneratedTagList
-		generatedMod.Compatibility = c.pPostgresCompatibilityInfoToPGeneratedCompatibilityInfo((*source).Compatibility)
+		generatedMod.Compatibility = c.pUtilCompatibilityInfoToPGeneratedCompatibilityInfo((*source).Compatibility)
 		pGeneratedMod = &generatedMod
 	}
 	return pGeneratedMod
@@ -69,28 +69,28 @@ func (c *ModImpl) pEntTagToPGeneratedTag(source *ent.Tag) *generated.Tag {
 	}
 	return pGeneratedTag
 }
-func (c *ModImpl) pPostgresCompatibilityInfoToPGeneratedCompatibilityInfo(source *postgres.CompatibilityInfo) *generated.CompatibilityInfo {
+func (c *ModImpl) pUtilCompatibilityInfoToPGeneratedCompatibilityInfo(source *util.CompatibilityInfo) *generated.CompatibilityInfo {
 	var pGeneratedCompatibilityInfo *generated.CompatibilityInfo
 	if source != nil {
 		var generatedCompatibilityInfo generated.CompatibilityInfo
-		generatedCompatibilityInfo.Ea = c.postgresCompatibilityToPGeneratedCompatibility((*source).Ea)
-		generatedCompatibilityInfo.Exp = c.postgresCompatibilityToPGeneratedCompatibility((*source).Exp)
+		generatedCompatibilityInfo.Ea = c.utilCompatibilityToPGeneratedCompatibility((*source).Ea)
+		generatedCompatibilityInfo.Exp = c.utilCompatibilityToPGeneratedCompatibility((*source).Exp)
 		pGeneratedCompatibilityInfo = &generatedCompatibilityInfo
 	}
 	return pGeneratedCompatibilityInfo
 }
-func (c *ModImpl) postgresCompatibilityToGeneratedCompatibility(source postgres.Compatibility) generated.Compatibility {
+func (c *ModImpl) timeTimeToPString(source time.Time) *string {
+	xstring := conversion.TimeToString(source)
+	return &xstring
+}
+func (c *ModImpl) utilCompatibilityToGeneratedCompatibility(source util.Compatibility) generated.Compatibility {
 	var generatedCompatibility generated.Compatibility
 	generatedCompatibility.State = generated.CompatibilityState(source.State)
 	pString := source.Note
 	generatedCompatibility.Note = &pString
 	return generatedCompatibility
 }
-func (c *ModImpl) postgresCompatibilityToPGeneratedCompatibility(source postgres.Compatibility) *generated.Compatibility {
-	generatedCompatibility := c.postgresCompatibilityToGeneratedCompatibility(source)
+func (c *ModImpl) utilCompatibilityToPGeneratedCompatibility(source util.Compatibility) *generated.Compatibility {
+	generatedCompatibility := c.utilCompatibilityToGeneratedCompatibility(source)
 	return &generatedCompatibility
-}
-func (c *ModImpl) timeTimeToPString(source time.Time) *string {
-	xstring := conversion.TimeToString(source)
-	return &xstring
 }

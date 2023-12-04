@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // ID filters vertices based on their ID field.
@@ -540,6 +541,16 @@ func ChangelogHasSuffix(v string) predicate.Version {
 	return predicate.Version(sql.FieldHasSuffix(FieldChangelog, v))
 }
 
+// ChangelogIsNil applies the IsNil predicate on the "changelog" field.
+func ChangelogIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldChangelog))
+}
+
+// ChangelogNotNil applies the NotNil predicate on the "changelog" field.
+func ChangelogNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldChangelog))
+}
+
 // ChangelogEqualFold applies the EqualFold predicate on the "changelog" field.
 func ChangelogEqualFold(v string) predicate.Version {
 	return predicate.Version(sql.FieldEqualFold(FieldChangelog, v))
@@ -645,6 +656,16 @@ func KeyHasSuffix(v string) predicate.Version {
 	return predicate.Version(sql.FieldHasSuffix(FieldKey, v))
 }
 
+// KeyIsNil applies the IsNil predicate on the "key" field.
+func KeyIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldKey))
+}
+
+// KeyNotNil applies the NotNil predicate on the "key" field.
+func KeyNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldKey))
+}
+
 // KeyEqualFold applies the EqualFold predicate on the "key" field.
 func KeyEqualFold(v string) predicate.Version {
 	return predicate.Version(sql.FieldEqualFold(FieldKey, v))
@@ -656,23 +677,33 @@ func KeyContainsFold(v string) predicate.Version {
 }
 
 // StabilityEQ applies the EQ predicate on the "stability" field.
-func StabilityEQ(v Stability) predicate.Version {
-	return predicate.Version(sql.FieldEQ(FieldStability, v))
+func StabilityEQ(v util.Stability) predicate.Version {
+	vc := v
+	return predicate.Version(sql.FieldEQ(FieldStability, vc))
 }
 
 // StabilityNEQ applies the NEQ predicate on the "stability" field.
-func StabilityNEQ(v Stability) predicate.Version {
-	return predicate.Version(sql.FieldNEQ(FieldStability, v))
+func StabilityNEQ(v util.Stability) predicate.Version {
+	vc := v
+	return predicate.Version(sql.FieldNEQ(FieldStability, vc))
 }
 
 // StabilityIn applies the In predicate on the "stability" field.
-func StabilityIn(vs ...Stability) predicate.Version {
-	return predicate.Version(sql.FieldIn(FieldStability, vs...))
+func StabilityIn(vs ...util.Stability) predicate.Version {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Version(sql.FieldIn(FieldStability, v...))
 }
 
 // StabilityNotIn applies the NotIn predicate on the "stability" field.
-func StabilityNotIn(vs ...Stability) predicate.Version {
-	return predicate.Version(sql.FieldNotIn(FieldStability, vs...))
+func StabilityNotIn(vs ...util.Stability) predicate.Version {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Version(sql.FieldNotIn(FieldStability, v...))
 }
 
 // ApprovedEQ applies the EQ predicate on the "approved" field.
@@ -790,6 +821,16 @@ func MetadataHasSuffix(v string) predicate.Version {
 	return predicate.Version(sql.FieldHasSuffix(FieldMetadata, v))
 }
 
+// MetadataIsNil applies the IsNil predicate on the "metadata" field.
+func MetadataIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldMetadata))
+}
+
+// MetadataNotNil applies the NotNil predicate on the "metadata" field.
+func MetadataNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldMetadata))
+}
+
 // MetadataEqualFold applies the EqualFold predicate on the "metadata" field.
 func MetadataEqualFold(v string) predicate.Version {
 	return predicate.Version(sql.FieldEqualFold(FieldMetadata, v))
@@ -905,6 +946,16 @@ func VersionMajorLTE(v int) predicate.Version {
 	return predicate.Version(sql.FieldLTE(FieldVersionMajor, v))
 }
 
+// VersionMajorIsNil applies the IsNil predicate on the "version_major" field.
+func VersionMajorIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldVersionMajor))
+}
+
+// VersionMajorNotNil applies the NotNil predicate on the "version_major" field.
+func VersionMajorNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldVersionMajor))
+}
+
 // VersionMinorEQ applies the EQ predicate on the "version_minor" field.
 func VersionMinorEQ(v int) predicate.Version {
 	return predicate.Version(sql.FieldEQ(FieldVersionMinor, v))
@@ -943,6 +994,16 @@ func VersionMinorLT(v int) predicate.Version {
 // VersionMinorLTE applies the LTE predicate on the "version_minor" field.
 func VersionMinorLTE(v int) predicate.Version {
 	return predicate.Version(sql.FieldLTE(FieldVersionMinor, v))
+}
+
+// VersionMinorIsNil applies the IsNil predicate on the "version_minor" field.
+func VersionMinorIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldVersionMinor))
+}
+
+// VersionMinorNotNil applies the NotNil predicate on the "version_minor" field.
+func VersionMinorNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldVersionMinor))
 }
 
 // VersionPatchEQ applies the EQ predicate on the "version_patch" field.
@@ -985,6 +1046,16 @@ func VersionPatchLTE(v int) predicate.Version {
 	return predicate.Version(sql.FieldLTE(FieldVersionPatch, v))
 }
 
+// VersionPatchIsNil applies the IsNil predicate on the "version_patch" field.
+func VersionPatchIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldVersionPatch))
+}
+
+// VersionPatchNotNil applies the NotNil predicate on the "version_patch" field.
+func VersionPatchNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldVersionPatch))
+}
+
 // SizeEQ applies the EQ predicate on the "size" field.
 func SizeEQ(v int64) predicate.Version {
 	return predicate.Version(sql.FieldEQ(FieldSize, v))
@@ -1023,6 +1094,16 @@ func SizeLT(v int64) predicate.Version {
 // SizeLTE applies the LTE predicate on the "size" field.
 func SizeLTE(v int64) predicate.Version {
 	return predicate.Version(sql.FieldLTE(FieldSize, v))
+}
+
+// SizeIsNil applies the IsNil predicate on the "size" field.
+func SizeIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldSize))
+}
+
+// SizeNotNil applies the NotNil predicate on the "size" field.
+func SizeNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldSize))
 }
 
 // HashEQ applies the EQ predicate on the "hash" field.
@@ -1078,6 +1159,16 @@ func HashHasPrefix(v string) predicate.Version {
 // HashHasSuffix applies the HasSuffix predicate on the "hash" field.
 func HashHasSuffix(v string) predicate.Version {
 	return predicate.Version(sql.FieldHasSuffix(FieldHash, v))
+}
+
+// HashIsNil applies the IsNil predicate on the "hash" field.
+func HashIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldHash))
+}
+
+// HashNotNil applies the NotNil predicate on the "hash" field.
+func HashNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldHash))
 }
 
 // HashEqualFold applies the EqualFold predicate on the "hash" field.

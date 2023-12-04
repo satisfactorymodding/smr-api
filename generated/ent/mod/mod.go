@@ -180,10 +180,20 @@ var (
 	ShortDescriptionValidator func(string) error
 	// DefaultApproved holds the default value on creation for the "approved" field.
 	DefaultApproved bool
+	// DefaultViews holds the default value on creation for the "views" field.
+	DefaultViews uint
+	// DefaultHotness holds the default value on creation for the "hotness" field.
+	DefaultHotness uint
+	// DefaultPopularity holds the default value on creation for the "popularity" field.
+	DefaultPopularity uint
+	// DefaultDownloads holds the default value on creation for the "downloads" field.
+	DefaultDownloads uint
 	// DefaultDenied holds the default value on creation for the "denied" field.
 	DefaultDenied bool
 	// ModReferenceValidator is a validator for the "mod_reference" field. It is called by the builders before save.
 	ModReferenceValidator func(string) error
+	// DefaultHidden holds the default value on creation for the "hidden" field.
+	DefaultHidden bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() string
 )

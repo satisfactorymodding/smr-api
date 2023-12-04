@@ -16,7 +16,6 @@ import (
 	"github.com/vmihailenco/taskq/v3"
 
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
 	"github.com/satisfactorymodding/smr-api/storage"
@@ -38,13 +37,10 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 	slox.Info(ctx, "starting virus scan of mod", slog.String("mod", task.ModID), slog.String("version", task.VersionID))
 
-	version := postgres.GetVersion(ctx, task.VersionID)
-	// Version got deleted?
-	if version == nil {
-		log.Error().Msgf("mod %s version %s does not exist to be scanned", task.ModID, task.VersionID)
-		return nil
+	version, err := db.From(ctx).Version.Get(ctx, task.VersionID)
+	if err != nil {
+		return err
 	}
-
 	link := storage.GenerateDownloadLink(version.Key)
 
 	response, _ := http.Get(link)
@@ -85,13 +81,14 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 	if task.ApproveAfter {
 		slox.Info(ctx, "approving mod after successful virus scan", slog.String("mod", task.ModID), slog.String("version", task.VersionID))
-		version.Approved = true
-		postgres.Save(ctx, &version)
 
-		mod := postgres.GetModByID(ctx, task.ModID)
-		now := time.Now()
-		mod.LastVersionDate = &now
-		postgres.Save(ctx, &mod)
+		if err := version.Update().SetApproved(true).Exec(ctx); err != nil {
+			return err
+		}
+
+		if err := db.From(ctx).Mod.UpdateOneID(task.ModID).SetLastVersionDate(time.Now()).Exec(ctx); err != nil {
+			return err
+		}
 
 		go integrations.NewVersion(db.ReWrapCtx(ctx), version)
 	}

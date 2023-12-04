@@ -273,6 +273,16 @@ func KeyHasSuffix(v string) predicate.VersionTarget {
 	return predicate.VersionTarget(sql.FieldHasSuffix(FieldKey, v))
 }
 
+// KeyIsNil applies the IsNil predicate on the "key" field.
+func KeyIsNil() predicate.VersionTarget {
+	return predicate.VersionTarget(sql.FieldIsNull(FieldKey))
+}
+
+// KeyNotNil applies the NotNil predicate on the "key" field.
+func KeyNotNil() predicate.VersionTarget {
+	return predicate.VersionTarget(sql.FieldNotNull(FieldKey))
+}
+
 // KeyEqualFold applies the EqualFold predicate on the "key" field.
 func KeyEqualFold(v string) predicate.VersionTarget {
 	return predicate.VersionTarget(sql.FieldEqualFold(FieldKey, v))
@@ -338,6 +348,16 @@ func HashHasSuffix(v string) predicate.VersionTarget {
 	return predicate.VersionTarget(sql.FieldHasSuffix(FieldHash, v))
 }
 
+// HashIsNil applies the IsNil predicate on the "hash" field.
+func HashIsNil() predicate.VersionTarget {
+	return predicate.VersionTarget(sql.FieldIsNull(FieldHash))
+}
+
+// HashNotNil applies the NotNil predicate on the "hash" field.
+func HashNotNil() predicate.VersionTarget {
+	return predicate.VersionTarget(sql.FieldNotNull(FieldHash))
+}
+
 // HashEqualFold applies the EqualFold predicate on the "hash" field.
 func HashEqualFold(v string) predicate.VersionTarget {
 	return predicate.VersionTarget(sql.FieldEqualFold(FieldHash, v))
@@ -386,6 +406,16 @@ func SizeLT(v int64) predicate.VersionTarget {
 // SizeLTE applies the LTE predicate on the "size" field.
 func SizeLTE(v int64) predicate.VersionTarget {
 	return predicate.VersionTarget(sql.FieldLTE(FieldSize, v))
+}
+
+// SizeIsNil applies the IsNil predicate on the "size" field.
+func SizeIsNil() predicate.VersionTarget {
+	return predicate.VersionTarget(sql.FieldIsNull(FieldSize))
+}
+
+// SizeNotNil applies the NotNil predicate on the "size" field.
+func SizeNotNil() predicate.VersionTarget {
+	return predicate.VersionTarget(sql.FieldNotNull(FieldSize))
 }
 
 // HasSmlVersion applies the HasEdge predicate on the "sml_version" edge.

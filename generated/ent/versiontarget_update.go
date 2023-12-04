@@ -47,9 +47,37 @@ func (vtu *VersionTargetUpdate) SetKey(s string) *VersionTargetUpdate {
 	return vtu
 }
 
+// SetNillableKey sets the "key" field if the given value is not nil.
+func (vtu *VersionTargetUpdate) SetNillableKey(s *string) *VersionTargetUpdate {
+	if s != nil {
+		vtu.SetKey(*s)
+	}
+	return vtu
+}
+
+// ClearKey clears the value of the "key" field.
+func (vtu *VersionTargetUpdate) ClearKey() *VersionTargetUpdate {
+	vtu.mutation.ClearKey()
+	return vtu
+}
+
 // SetHash sets the "hash" field.
 func (vtu *VersionTargetUpdate) SetHash(s string) *VersionTargetUpdate {
 	vtu.mutation.SetHash(s)
+	return vtu
+}
+
+// SetNillableHash sets the "hash" field if the given value is not nil.
+func (vtu *VersionTargetUpdate) SetNillableHash(s *string) *VersionTargetUpdate {
+	if s != nil {
+		vtu.SetHash(*s)
+	}
+	return vtu
+}
+
+// ClearHash clears the value of the "hash" field.
+func (vtu *VersionTargetUpdate) ClearHash() *VersionTargetUpdate {
+	vtu.mutation.ClearHash()
 	return vtu
 }
 
@@ -60,9 +88,23 @@ func (vtu *VersionTargetUpdate) SetSize(i int64) *VersionTargetUpdate {
 	return vtu
 }
 
+// SetNillableSize sets the "size" field if the given value is not nil.
+func (vtu *VersionTargetUpdate) SetNillableSize(i *int64) *VersionTargetUpdate {
+	if i != nil {
+		vtu.SetSize(*i)
+	}
+	return vtu
+}
+
 // AddSize adds i to the "size" field.
 func (vtu *VersionTargetUpdate) AddSize(i int64) *VersionTargetUpdate {
 	vtu.mutation.AddSize(i)
+	return vtu
+}
+
+// ClearSize clears the value of the "size" field.
+func (vtu *VersionTargetUpdate) ClearSize() *VersionTargetUpdate {
+	vtu.mutation.ClearSize()
 	return vtu
 }
 
@@ -147,14 +189,23 @@ func (vtu *VersionTargetUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if value, ok := vtu.mutation.Key(); ok {
 		_spec.SetField(versiontarget.FieldKey, field.TypeString, value)
 	}
+	if vtu.mutation.KeyCleared() {
+		_spec.ClearField(versiontarget.FieldKey, field.TypeString)
+	}
 	if value, ok := vtu.mutation.Hash(); ok {
 		_spec.SetField(versiontarget.FieldHash, field.TypeString, value)
+	}
+	if vtu.mutation.HashCleared() {
+		_spec.ClearField(versiontarget.FieldHash, field.TypeString)
 	}
 	if value, ok := vtu.mutation.Size(); ok {
 		_spec.SetField(versiontarget.FieldSize, field.TypeInt64, value)
 	}
 	if value, ok := vtu.mutation.AddedSize(); ok {
 		_spec.AddField(versiontarget.FieldSize, field.TypeInt64, value)
+	}
+	if vtu.mutation.SizeCleared() {
+		_spec.ClearField(versiontarget.FieldSize, field.TypeInt64)
 	}
 	if vtu.mutation.SmlVersionCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -225,9 +276,37 @@ func (vtuo *VersionTargetUpdateOne) SetKey(s string) *VersionTargetUpdateOne {
 	return vtuo
 }
 
+// SetNillableKey sets the "key" field if the given value is not nil.
+func (vtuo *VersionTargetUpdateOne) SetNillableKey(s *string) *VersionTargetUpdateOne {
+	if s != nil {
+		vtuo.SetKey(*s)
+	}
+	return vtuo
+}
+
+// ClearKey clears the value of the "key" field.
+func (vtuo *VersionTargetUpdateOne) ClearKey() *VersionTargetUpdateOne {
+	vtuo.mutation.ClearKey()
+	return vtuo
+}
+
 // SetHash sets the "hash" field.
 func (vtuo *VersionTargetUpdateOne) SetHash(s string) *VersionTargetUpdateOne {
 	vtuo.mutation.SetHash(s)
+	return vtuo
+}
+
+// SetNillableHash sets the "hash" field if the given value is not nil.
+func (vtuo *VersionTargetUpdateOne) SetNillableHash(s *string) *VersionTargetUpdateOne {
+	if s != nil {
+		vtuo.SetHash(*s)
+	}
+	return vtuo
+}
+
+// ClearHash clears the value of the "hash" field.
+func (vtuo *VersionTargetUpdateOne) ClearHash() *VersionTargetUpdateOne {
+	vtuo.mutation.ClearHash()
 	return vtuo
 }
 
@@ -238,9 +317,23 @@ func (vtuo *VersionTargetUpdateOne) SetSize(i int64) *VersionTargetUpdateOne {
 	return vtuo
 }
 
+// SetNillableSize sets the "size" field if the given value is not nil.
+func (vtuo *VersionTargetUpdateOne) SetNillableSize(i *int64) *VersionTargetUpdateOne {
+	if i != nil {
+		vtuo.SetSize(*i)
+	}
+	return vtuo
+}
+
 // AddSize adds i to the "size" field.
 func (vtuo *VersionTargetUpdateOne) AddSize(i int64) *VersionTargetUpdateOne {
 	vtuo.mutation.AddSize(i)
+	return vtuo
+}
+
+// ClearSize clears the value of the "size" field.
+func (vtuo *VersionTargetUpdateOne) ClearSize() *VersionTargetUpdateOne {
+	vtuo.mutation.ClearSize()
 	return vtuo
 }
 
@@ -355,14 +448,23 @@ func (vtuo *VersionTargetUpdateOne) sqlSave(ctx context.Context) (_node *Version
 	if value, ok := vtuo.mutation.Key(); ok {
 		_spec.SetField(versiontarget.FieldKey, field.TypeString, value)
 	}
+	if vtuo.mutation.KeyCleared() {
+		_spec.ClearField(versiontarget.FieldKey, field.TypeString)
+	}
 	if value, ok := vtuo.mutation.Hash(); ok {
 		_spec.SetField(versiontarget.FieldHash, field.TypeString, value)
+	}
+	if vtuo.mutation.HashCleared() {
+		_spec.ClearField(versiontarget.FieldHash, field.TypeString)
 	}
 	if value, ok := vtuo.mutation.Size(); ok {
 		_spec.SetField(versiontarget.FieldSize, field.TypeInt64, value)
 	}
 	if value, ok := vtuo.mutation.AddedSize(); ok {
 		_spec.AddField(versiontarget.FieldSize, field.TypeInt64, value)
+	}
+	if vtuo.mutation.SizeCleared() {
+		_spec.ClearField(versiontarget.FieldSize, field.TypeInt64)
 	}
 	if vtuo.mutation.SmlVersionCleared() {
 		edge := &sqlgraph.EdgeSpec{

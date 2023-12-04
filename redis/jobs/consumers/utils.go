@@ -11,7 +11,7 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
@@ -20,7 +20,11 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	// perform task
 	slox.Info(ctx, "Updating DB for mod version with metadata", slog.String("mod", modID), slog.String("version", versionID), slog.Bool("metadata", metadata))
 
-	version := postgres.GetVersion(ctx, versionID)
+	version, err := db.From(ctx).Version.Get(ctx, versionID)
+	if err != nil {
+		return err
+	}
+
 	link := storage.GenerateDownloadLink(version.Key)
 
 	response, _ := http.Get(link)
@@ -30,7 +34,10 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	mod := postgres.GetModByID(ctx, modID)
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return err
+	}
 
 	if mod == nil {
 		return errors.New("mod not found")
@@ -44,25 +51,29 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	}
 
 	for depModID, condition := range info.Dependencies {
-		dependency := postgres.VersionDependency{
-			VersionID: version.ID,
-			ModID:     depModID,
-			Condition: condition,
-			Optional:  false,
+		if err := db.From(ctx).VersionDependency.Create().
+			SetVersionID(version.ID).
+			SetModID(depModID).
+			SetCondition(condition).
+			SetOptional(false).
+			OnConflict().
+			DoNothing().
+			Exec(ctx); err != nil {
+			return err
 		}
-
-		postgres.Save(ctx, &dependency)
 	}
 
 	for depModID, condition := range info.OptionalDependencies {
-		dependency := postgres.VersionDependency{
-			VersionID: version.ID,
-			ModID:     depModID,
-			Condition: condition,
-			Optional:  true,
+		if err := db.From(ctx).VersionDependency.Create().
+			SetVersionID(version.ID).
+			SetModID(depModID).
+			SetCondition(condition).
+			SetOptional(true).
+			OnConflict().
+			DoNothing().
+			Exec(ctx); err != nil {
+			return err
 		}
-
-		postgres.Save(ctx, &dependency)
 	}
 
 	if metadata {
@@ -70,8 +81,9 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 		if err != nil {
 			slox.Error(ctx, "failed serializing", slog.Any("err", err), slog.String("version", versionID))
 		} else {
-			metadata := string(jsonData)
-			version.Metadata = &metadata
+			if err := version.Update().SetMetadata(string(jsonData)).Exec(ctx); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -79,15 +91,13 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	versionMinor := int(info.Semver.Minor())
 	versionPatch := int(info.Semver.Patch())
 
-	version.Size = &info.Size
-	version.Hash = &info.Hash
-	version.VersionMajor = &versionMajor
-	version.VersionMinor = &versionMinor
-	version.VersionPatch = &versionPatch
-
-	version.ModReference = &info.ModReference
-	version.SMLVersion = info.SMLVersion
-	postgres.Save(ctx, &version)
-
-	return nil
+	return version.Update().
+		SetSize(info.Size).
+		SetHash(info.Hash).
+		SetVersionMajor(versionMajor).
+		SetVersionMinor(versionMinor).
+		SetVersionPatch(versionPatch).
+		SetModReference(info.ModReference).
+		SetSmlVersion(info.SMLVersion).
+		Exec(ctx)
 }

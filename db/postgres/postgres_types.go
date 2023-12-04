@@ -108,24 +108,6 @@ func (TinyVersion) TableName() string {
 	return "versions"
 }
 
-type Guide struct {
-	SMRModel
-	Name             string `gorm:"type:varchar(50)"`
-	ShortDescription string `gorm:"type:varchar(128)"`
-	Guide            string
-	UserID           string
-	Tags             []Tag `gorm:"many2many:guide_tags"`
-	User             User
-	Views            uint
-}
-
-type UserGroup struct {
-	SMRDates
-
-	UserID  string `gorm:"primary_key"`
-	GroupID string `gorm:"primary_key"`
-}
-
 type SMLVersion struct {
 	Date             time.Time
 	BootstrapVersion *string
@@ -156,16 +138,6 @@ type Tag struct {
 	Description string `gorm:"type:varchar(512)"`
 
 	Mods []Mod `gorm:"many2many:mod_tags"`
-}
-
-type ModTag struct {
-	TagID string `gorm:"primary_key;type:varchar(24)"`
-	ModID string `gorm:"primary_key;type:varchar(16)"`
-}
-
-type GuideTag struct {
-	TagID   string `gorm:"primary_key;type:varchar(24)"`
-	GuideID string `gorm:"primary_key;type:varchar(16)"`
 }
 
 type CompatibilityInfo struct {

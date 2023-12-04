@@ -28,7 +28,7 @@ services:
       MINIO_SECRET_KEY: REPLACE_ME_SECRET
 
   pak_parser:
-    image: ghcr.io/vilsol/ficsit-pak-parser:v0.0.3
+    image: ghcr.io/vilsol/ficsit-pak-parser:v0.0.5
     ports:
       - 50051:50051
     restart: always

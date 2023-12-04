@@ -4,6 +4,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 type SmlVersion struct {
@@ -22,7 +24,7 @@ func (SmlVersion) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("version").MaxLen(32).Unique(),
 		field.Int("satisfactory_version"),
-		field.Enum("stability").Values("alpha", "beta", "release"),
+		field.Enum("stability").GoType(util.Stability("")),
 		field.Time("date"),
 		field.String("link"),
 		field.String("changelog"),

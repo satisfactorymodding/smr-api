@@ -12,11 +12,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // ModCreate is the builder for creating a Mod entity.
@@ -99,6 +99,14 @@ func (mc *ModCreate) SetSourceURL(s string) *ModCreate {
 	return mc
 }
 
+// SetNillableSourceURL sets the "source_url" field if the given value is not nil.
+func (mc *ModCreate) SetNillableSourceURL(s *string) *ModCreate {
+	if s != nil {
+		mc.SetSourceURL(*s)
+	}
+	return mc
+}
+
 // SetCreatorID sets the "creator_id" field.
 func (mc *ModCreate) SetCreatorID(s string) *ModCreate {
 	mc.mutation.SetCreatorID(s)
@@ -125,9 +133,25 @@ func (mc *ModCreate) SetViews(u uint) *ModCreate {
 	return mc
 }
 
+// SetNillableViews sets the "views" field if the given value is not nil.
+func (mc *ModCreate) SetNillableViews(u *uint) *ModCreate {
+	if u != nil {
+		mc.SetViews(*u)
+	}
+	return mc
+}
+
 // SetHotness sets the "hotness" field.
 func (mc *ModCreate) SetHotness(u uint) *ModCreate {
 	mc.mutation.SetHotness(u)
+	return mc
+}
+
+// SetNillableHotness sets the "hotness" field if the given value is not nil.
+func (mc *ModCreate) SetNillableHotness(u *uint) *ModCreate {
+	if u != nil {
+		mc.SetHotness(*u)
+	}
 	return mc
 }
 
@@ -137,9 +161,25 @@ func (mc *ModCreate) SetPopularity(u uint) *ModCreate {
 	return mc
 }
 
+// SetNillablePopularity sets the "popularity" field if the given value is not nil.
+func (mc *ModCreate) SetNillablePopularity(u *uint) *ModCreate {
+	if u != nil {
+		mc.SetPopularity(*u)
+	}
+	return mc
+}
+
 // SetDownloads sets the "downloads" field.
 func (mc *ModCreate) SetDownloads(u uint) *ModCreate {
 	mc.mutation.SetDownloads(u)
+	return mc
+}
+
+// SetNillableDownloads sets the "downloads" field if the given value is not nil.
+func (mc *ModCreate) SetNillableDownloads(u *uint) *ModCreate {
+	if u != nil {
+		mc.SetDownloads(*u)
+	}
 	return mc
 }
 
@@ -163,6 +203,14 @@ func (mc *ModCreate) SetLastVersionDate(t time.Time) *ModCreate {
 	return mc
 }
 
+// SetNillableLastVersionDate sets the "last_version_date" field if the given value is not nil.
+func (mc *ModCreate) SetNillableLastVersionDate(t *time.Time) *ModCreate {
+	if t != nil {
+		mc.SetLastVersionDate(*t)
+	}
+	return mc
+}
+
 // SetModReference sets the "mod_reference" field.
 func (mc *ModCreate) SetModReference(s string) *ModCreate {
 	mc.mutation.SetModReference(s)
@@ -175,9 +223,17 @@ func (mc *ModCreate) SetHidden(b bool) *ModCreate {
 	return mc
 }
 
+// SetNillableHidden sets the "hidden" field if the given value is not nil.
+func (mc *ModCreate) SetNillableHidden(b *bool) *ModCreate {
+	if b != nil {
+		mc.SetHidden(*b)
+	}
+	return mc
+}
+
 // SetCompatibility sets the "compatibility" field.
-func (mc *ModCreate) SetCompatibility(pi *postgres.CompatibilityInfo) *ModCreate {
-	mc.mutation.SetCompatibility(pi)
+func (mc *ModCreate) SetCompatibility(ui *util.CompatibilityInfo) *ModCreate {
+	mc.mutation.SetCompatibility(ui)
 	return mc
 }
 
@@ -310,9 +366,29 @@ func (mc *ModCreate) defaults() error {
 		v := mod.DefaultApproved
 		mc.mutation.SetApproved(v)
 	}
+	if _, ok := mc.mutation.Views(); !ok {
+		v := mod.DefaultViews
+		mc.mutation.SetViews(v)
+	}
+	if _, ok := mc.mutation.Hotness(); !ok {
+		v := mod.DefaultHotness
+		mc.mutation.SetHotness(v)
+	}
+	if _, ok := mc.mutation.Popularity(); !ok {
+		v := mod.DefaultPopularity
+		mc.mutation.SetPopularity(v)
+	}
+	if _, ok := mc.mutation.Downloads(); !ok {
+		v := mod.DefaultDownloads
+		mc.mutation.SetDownloads(v)
+	}
 	if _, ok := mc.mutation.Denied(); !ok {
 		v := mod.DefaultDenied
 		mc.mutation.SetDenied(v)
+	}
+	if _, ok := mc.mutation.Hidden(); !ok {
+		v := mod.DefaultHidden
+		mc.mutation.SetHidden(v)
 	}
 	if _, ok := mc.mutation.ID(); !ok {
 		if mod.DefaultID == nil {
@@ -354,9 +430,6 @@ func (mc *ModCreate) check() error {
 	if _, ok := mc.mutation.Logo(); !ok {
 		return &ValidationError{Name: "logo", err: errors.New(`ent: missing required field "Mod.logo"`)}
 	}
-	if _, ok := mc.mutation.SourceURL(); !ok {
-		return &ValidationError{Name: "source_url", err: errors.New(`ent: missing required field "Mod.source_url"`)}
-	}
 	if _, ok := mc.mutation.CreatorID(); !ok {
 		return &ValidationError{Name: "creator_id", err: errors.New(`ent: missing required field "Mod.creator_id"`)}
 	}
@@ -378,9 +451,6 @@ func (mc *ModCreate) check() error {
 	if _, ok := mc.mutation.Denied(); !ok {
 		return &ValidationError{Name: "denied", err: errors.New(`ent: missing required field "Mod.denied"`)}
 	}
-	if _, ok := mc.mutation.LastVersionDate(); !ok {
-		return &ValidationError{Name: "last_version_date", err: errors.New(`ent: missing required field "Mod.last_version_date"`)}
-	}
 	if _, ok := mc.mutation.ModReference(); !ok {
 		return &ValidationError{Name: "mod_reference", err: errors.New(`ent: missing required field "Mod.mod_reference"`)}
 	}
@@ -391,9 +461,6 @@ func (mc *ModCreate) check() error {
 	}
 	if _, ok := mc.mutation.Hidden(); !ok {
 		return &ValidationError{Name: "hidden", err: errors.New(`ent: missing required field "Mod.hidden"`)}
-	}
-	if _, ok := mc.mutation.Compatibility(); !ok {
-		return &ValidationError{Name: "compatibility", err: errors.New(`ent: missing required field "Mod.compatibility"`)}
 	}
 	return nil
 }
@@ -717,6 +784,12 @@ func (u *ModUpsert) UpdateSourceURL() *ModUpsert {
 	return u
 }
 
+// ClearSourceURL clears the value of the "source_url" field.
+func (u *ModUpsert) ClearSourceURL() *ModUpsert {
+	u.SetNull(mod.FieldSourceURL)
+	return u
+}
+
 // SetCreatorID sets the "creator_id" field.
 func (u *ModUpsert) SetCreatorID(v string) *ModUpsert {
 	u.Set(mod.FieldCreatorID, v)
@@ -837,6 +910,12 @@ func (u *ModUpsert) UpdateLastVersionDate() *ModUpsert {
 	return u
 }
 
+// ClearLastVersionDate clears the value of the "last_version_date" field.
+func (u *ModUpsert) ClearLastVersionDate() *ModUpsert {
+	u.SetNull(mod.FieldLastVersionDate)
+	return u
+}
+
 // SetModReference sets the "mod_reference" field.
 func (u *ModUpsert) SetModReference(v string) *ModUpsert {
 	u.Set(mod.FieldModReference, v)
@@ -862,7 +941,7 @@ func (u *ModUpsert) UpdateHidden() *ModUpsert {
 }
 
 // SetCompatibility sets the "compatibility" field.
-func (u *ModUpsert) SetCompatibility(v *postgres.CompatibilityInfo) *ModUpsert {
+func (u *ModUpsert) SetCompatibility(v *util.CompatibilityInfo) *ModUpsert {
 	u.Set(mod.FieldCompatibility, v)
 	return u
 }
@@ -870,6 +949,12 @@ func (u *ModUpsert) SetCompatibility(v *postgres.CompatibilityInfo) *ModUpsert {
 // UpdateCompatibility sets the "compatibility" field to the value that was provided on create.
 func (u *ModUpsert) UpdateCompatibility() *ModUpsert {
 	u.SetExcluded(mod.FieldCompatibility)
+	return u
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (u *ModUpsert) ClearCompatibility() *ModUpsert {
+	u.SetNull(mod.FieldCompatibility)
 	return u
 }
 
@@ -1029,6 +1114,13 @@ func (u *ModUpsertOne) UpdateSourceURL() *ModUpsertOne {
 	})
 }
 
+// ClearSourceURL clears the value of the "source_url" field.
+func (u *ModUpsertOne) ClearSourceURL() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearSourceURL()
+	})
+}
+
 // SetCreatorID sets the "creator_id" field.
 func (u *ModUpsertOne) SetCreatorID(v string) *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
@@ -1169,6 +1261,13 @@ func (u *ModUpsertOne) UpdateLastVersionDate() *ModUpsertOne {
 	})
 }
 
+// ClearLastVersionDate clears the value of the "last_version_date" field.
+func (u *ModUpsertOne) ClearLastVersionDate() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearLastVersionDate()
+	})
+}
+
 // SetModReference sets the "mod_reference" field.
 func (u *ModUpsertOne) SetModReference(v string) *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
@@ -1198,7 +1297,7 @@ func (u *ModUpsertOne) UpdateHidden() *ModUpsertOne {
 }
 
 // SetCompatibility sets the "compatibility" field.
-func (u *ModUpsertOne) SetCompatibility(v *postgres.CompatibilityInfo) *ModUpsertOne {
+func (u *ModUpsertOne) SetCompatibility(v *util.CompatibilityInfo) *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.SetCompatibility(v)
 	})
@@ -1208,6 +1307,13 @@ func (u *ModUpsertOne) SetCompatibility(v *postgres.CompatibilityInfo) *ModUpser
 func (u *ModUpsertOne) UpdateCompatibility() *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateCompatibility()
+	})
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (u *ModUpsertOne) ClearCompatibility() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearCompatibility()
 	})
 }
 
@@ -1534,6 +1640,13 @@ func (u *ModUpsertBulk) UpdateSourceURL() *ModUpsertBulk {
 	})
 }
 
+// ClearSourceURL clears the value of the "source_url" field.
+func (u *ModUpsertBulk) ClearSourceURL() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearSourceURL()
+	})
+}
+
 // SetCreatorID sets the "creator_id" field.
 func (u *ModUpsertBulk) SetCreatorID(v string) *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
@@ -1674,6 +1787,13 @@ func (u *ModUpsertBulk) UpdateLastVersionDate() *ModUpsertBulk {
 	})
 }
 
+// ClearLastVersionDate clears the value of the "last_version_date" field.
+func (u *ModUpsertBulk) ClearLastVersionDate() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearLastVersionDate()
+	})
+}
+
 // SetModReference sets the "mod_reference" field.
 func (u *ModUpsertBulk) SetModReference(v string) *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
@@ -1703,7 +1823,7 @@ func (u *ModUpsertBulk) UpdateHidden() *ModUpsertBulk {
 }
 
 // SetCompatibility sets the "compatibility" field.
-func (u *ModUpsertBulk) SetCompatibility(v *postgres.CompatibilityInfo) *ModUpsertBulk {
+func (u *ModUpsertBulk) SetCompatibility(v *util.CompatibilityInfo) *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.SetCompatibility(v)
 	})
@@ -1713,6 +1833,13 @@ func (u *ModUpsertBulk) SetCompatibility(v *postgres.CompatibilityInfo) *ModUpse
 func (u *ModUpsertBulk) UpdateCompatibility() *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateCompatibility()
+	})
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (u *ModUpsertBulk) ClearCompatibility() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearCompatibility()
 	})
 }
 

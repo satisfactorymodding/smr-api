@@ -41,15 +41,39 @@ func (vtc *VersionTargetCreate) SetKey(s string) *VersionTargetCreate {
 	return vtc
 }
 
+// SetNillableKey sets the "key" field if the given value is not nil.
+func (vtc *VersionTargetCreate) SetNillableKey(s *string) *VersionTargetCreate {
+	if s != nil {
+		vtc.SetKey(*s)
+	}
+	return vtc
+}
+
 // SetHash sets the "hash" field.
 func (vtc *VersionTargetCreate) SetHash(s string) *VersionTargetCreate {
 	vtc.mutation.SetHash(s)
 	return vtc
 }
 
+// SetNillableHash sets the "hash" field if the given value is not nil.
+func (vtc *VersionTargetCreate) SetNillableHash(s *string) *VersionTargetCreate {
+	if s != nil {
+		vtc.SetHash(*s)
+	}
+	return vtc
+}
+
 // SetSize sets the "size" field.
 func (vtc *VersionTargetCreate) SetSize(i int64) *VersionTargetCreate {
 	vtc.mutation.SetSize(i)
+	return vtc
+}
+
+// SetNillableSize sets the "size" field if the given value is not nil.
+func (vtc *VersionTargetCreate) SetNillableSize(i *int64) *VersionTargetCreate {
+	if i != nil {
+		vtc.SetSize(*i)
+	}
 	return vtc
 }
 
@@ -126,15 +150,6 @@ func (vtc *VersionTargetCreate) check() error {
 	}
 	if _, ok := vtc.mutation.TargetName(); !ok {
 		return &ValidationError{Name: "target_name", err: errors.New(`ent: missing required field "VersionTarget.target_name"`)}
-	}
-	if _, ok := vtc.mutation.Key(); !ok {
-		return &ValidationError{Name: "key", err: errors.New(`ent: missing required field "VersionTarget.key"`)}
-	}
-	if _, ok := vtc.mutation.Hash(); !ok {
-		return &ValidationError{Name: "hash", err: errors.New(`ent: missing required field "VersionTarget.hash"`)}
-	}
-	if _, ok := vtc.mutation.Size(); !ok {
-		return &ValidationError{Name: "size", err: errors.New(`ent: missing required field "VersionTarget.size"`)}
 	}
 	if _, ok := vtc.mutation.SmlVersionID(); !ok {
 		return &ValidationError{Name: "sml_version", err: errors.New(`ent: missing required edge "VersionTarget.sml_version"`)}
@@ -296,6 +311,12 @@ func (u *VersionTargetUpsert) UpdateKey() *VersionTargetUpsert {
 	return u
 }
 
+// ClearKey clears the value of the "key" field.
+func (u *VersionTargetUpsert) ClearKey() *VersionTargetUpsert {
+	u.SetNull(versiontarget.FieldKey)
+	return u
+}
+
 // SetHash sets the "hash" field.
 func (u *VersionTargetUpsert) SetHash(v string) *VersionTargetUpsert {
 	u.Set(versiontarget.FieldHash, v)
@@ -305,6 +326,12 @@ func (u *VersionTargetUpsert) SetHash(v string) *VersionTargetUpsert {
 // UpdateHash sets the "hash" field to the value that was provided on create.
 func (u *VersionTargetUpsert) UpdateHash() *VersionTargetUpsert {
 	u.SetExcluded(versiontarget.FieldHash)
+	return u
+}
+
+// ClearHash clears the value of the "hash" field.
+func (u *VersionTargetUpsert) ClearHash() *VersionTargetUpsert {
+	u.SetNull(versiontarget.FieldHash)
 	return u
 }
 
@@ -323,6 +350,12 @@ func (u *VersionTargetUpsert) UpdateSize() *VersionTargetUpsert {
 // AddSize adds v to the "size" field.
 func (u *VersionTargetUpsert) AddSize(v int64) *VersionTargetUpsert {
 	u.Add(versiontarget.FieldSize, v)
+	return u
+}
+
+// ClearSize clears the value of the "size" field.
+func (u *VersionTargetUpsert) ClearSize() *VersionTargetUpsert {
+	u.SetNull(versiontarget.FieldSize)
 	return u
 }
 
@@ -416,6 +449,13 @@ func (u *VersionTargetUpsertOne) UpdateKey() *VersionTargetUpsertOne {
 	})
 }
 
+// ClearKey clears the value of the "key" field.
+func (u *VersionTargetUpsertOne) ClearKey() *VersionTargetUpsertOne {
+	return u.Update(func(s *VersionTargetUpsert) {
+		s.ClearKey()
+	})
+}
+
 // SetHash sets the "hash" field.
 func (u *VersionTargetUpsertOne) SetHash(v string) *VersionTargetUpsertOne {
 	return u.Update(func(s *VersionTargetUpsert) {
@@ -427,6 +467,13 @@ func (u *VersionTargetUpsertOne) SetHash(v string) *VersionTargetUpsertOne {
 func (u *VersionTargetUpsertOne) UpdateHash() *VersionTargetUpsertOne {
 	return u.Update(func(s *VersionTargetUpsert) {
 		s.UpdateHash()
+	})
+}
+
+// ClearHash clears the value of the "hash" field.
+func (u *VersionTargetUpsertOne) ClearHash() *VersionTargetUpsertOne {
+	return u.Update(func(s *VersionTargetUpsert) {
+		s.ClearHash()
 	})
 }
 
@@ -448,6 +495,13 @@ func (u *VersionTargetUpsertOne) AddSize(v int64) *VersionTargetUpsertOne {
 func (u *VersionTargetUpsertOne) UpdateSize() *VersionTargetUpsertOne {
 	return u.Update(func(s *VersionTargetUpsert) {
 		s.UpdateSize()
+	})
+}
+
+// ClearSize clears the value of the "size" field.
+func (u *VersionTargetUpsertOne) ClearSize() *VersionTargetUpsertOne {
+	return u.Update(func(s *VersionTargetUpsert) {
+		s.ClearSize()
 	})
 }
 
@@ -708,6 +762,13 @@ func (u *VersionTargetUpsertBulk) UpdateKey() *VersionTargetUpsertBulk {
 	})
 }
 
+// ClearKey clears the value of the "key" field.
+func (u *VersionTargetUpsertBulk) ClearKey() *VersionTargetUpsertBulk {
+	return u.Update(func(s *VersionTargetUpsert) {
+		s.ClearKey()
+	})
+}
+
 // SetHash sets the "hash" field.
 func (u *VersionTargetUpsertBulk) SetHash(v string) *VersionTargetUpsertBulk {
 	return u.Update(func(s *VersionTargetUpsert) {
@@ -719,6 +780,13 @@ func (u *VersionTargetUpsertBulk) SetHash(v string) *VersionTargetUpsertBulk {
 func (u *VersionTargetUpsertBulk) UpdateHash() *VersionTargetUpsertBulk {
 	return u.Update(func(s *VersionTargetUpsert) {
 		s.UpdateHash()
+	})
+}
+
+// ClearHash clears the value of the "hash" field.
+func (u *VersionTargetUpsertBulk) ClearHash() *VersionTargetUpsertBulk {
+	return u.Update(func(s *VersionTargetUpsert) {
+		s.ClearHash()
 	})
 }
 
@@ -740,6 +808,13 @@ func (u *VersionTargetUpsertBulk) AddSize(v int64) *VersionTargetUpsertBulk {
 func (u *VersionTargetUpsertBulk) UpdateSize() *VersionTargetUpsertBulk {
 	return u.Update(func(s *VersionTargetUpsert) {
 		s.UpdateSize()
+	})
+}
+
+// ClearSize clears the value of the "size" field.
+func (u *VersionTargetUpsertBulk) ClearSize() *VersionTargetUpsertBulk {
+	return u.Update(func(s *VersionTargetUpsert) {
+		s.ClearSize()
 	})
 }
 

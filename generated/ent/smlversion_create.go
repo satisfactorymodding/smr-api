@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
 	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // SmlVersionCreate is the builder for creating a SmlVersion entity.
@@ -79,8 +80,8 @@ func (svc *SmlVersionCreate) SetSatisfactoryVersion(i int) *SmlVersionCreate {
 }
 
 // SetStability sets the "stability" field.
-func (svc *SmlVersionCreate) SetStability(s smlversion.Stability) *SmlVersionCreate {
-	svc.mutation.SetStability(s)
+func (svc *SmlVersionCreate) SetStability(u util.Stability) *SmlVersionCreate {
+	svc.mutation.SetStability(u)
 	return svc
 }
 
@@ -482,7 +483,7 @@ func (u *SmlVersionUpsert) AddSatisfactoryVersion(v int) *SmlVersionUpsert {
 }
 
 // SetStability sets the "stability" field.
-func (u *SmlVersionUpsert) SetStability(v smlversion.Stability) *SmlVersionUpsert {
+func (u *SmlVersionUpsert) SetStability(v util.Stability) *SmlVersionUpsert {
 	u.Set(smlversion.FieldStability, v)
 	return u
 }
@@ -681,7 +682,7 @@ func (u *SmlVersionUpsertOne) UpdateSatisfactoryVersion() *SmlVersionUpsertOne {
 }
 
 // SetStability sets the "stability" field.
-func (u *SmlVersionUpsertOne) SetStability(v smlversion.Stability) *SmlVersionUpsertOne {
+func (u *SmlVersionUpsertOne) SetStability(v util.Stability) *SmlVersionUpsertOne {
 	return u.Update(func(s *SmlVersionUpsert) {
 		s.SetStability(v)
 	})
@@ -1060,7 +1061,7 @@ func (u *SmlVersionUpsertBulk) UpdateSatisfactoryVersion() *SmlVersionUpsertBulk
 }
 
 // SetStability sets the "stability" field.
-func (u *SmlVersionUpsertBulk) SetStability(v smlversion.Stability) *SmlVersionUpsertBulk {
+func (u *SmlVersionUpsertBulk) SetStability(v util.Stability) *SmlVersionUpsertBulk {
 	return u.Update(func(s *SmlVersionUpsert) {
 		s.SetStability(v)
 	})

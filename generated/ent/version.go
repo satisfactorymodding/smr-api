@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // Version is the model entity for the Version schema.
@@ -37,7 +38,7 @@ type Version struct {
 	// Key holds the value of the "key" field.
 	Key string `json:"key,omitempty"`
 	// Stability holds the value of the "stability" field.
-	Stability version.Stability `json:"stability,omitempty"`
+	Stability util.Stability `json:"stability,omitempty"`
 	// Approved holds the value of the "approved" field.
 	Approved bool `json:"approved,omitempty"`
 	// Hotness holds the value of the "hotness" field.
@@ -211,7 +212,7 @@ func (v *Version) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field stability", values[i])
 			} else if value.Valid {
-				v.Stability = version.Stability(value.String)
+				v.Stability = util.Stability(value.String)
 			}
 		case version.FieldApproved:
 			if value, ok := values[i].(*sql.NullBool); !ok {

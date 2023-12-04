@@ -41,7 +41,7 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 			SetVersion(smlVersion.Version).
 			SetSatisfactoryVersion(smlVersion.SatisfactoryVersion).
 			SetNillableBootstrapVersion(smlVersion.BootstrapVersion).
-			SetStability(smlversion.Stability(smlVersion.Stability)).
+			SetStability(util.Stability(smlVersion.Stability)).
 			SetLink(smlVersion.Link).
 			SetChangelog(smlVersion.Changelog).
 			SetDate(date).

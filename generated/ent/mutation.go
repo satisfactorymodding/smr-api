@@ -11,7 +11,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated/ent/announcement"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guidetag"
@@ -28,6 +27,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 const (
@@ -1959,7 +1959,7 @@ type ModMutation struct {
 	last_version_date *time.Time
 	mod_reference     *string
 	hidden            *bool
-	compatibility     **postgres.CompatibilityInfo
+	compatibility     **util.CompatibilityInfo
 	clearedFields     map[string]struct{}
 	versions          map[string]struct{}
 	removedversions   map[string]struct{}
@@ -2378,9 +2378,22 @@ func (m *ModMutation) OldSourceURL(ctx context.Context) (v string, err error) {
 	return oldValue.SourceURL, nil
 }
 
+// ClearSourceURL clears the value of the "source_url" field.
+func (m *ModMutation) ClearSourceURL() {
+	m.source_url = nil
+	m.clearedFields[mod.FieldSourceURL] = struct{}{}
+}
+
+// SourceURLCleared returns if the "source_url" field was cleared in this mutation.
+func (m *ModMutation) SourceURLCleared() bool {
+	_, ok := m.clearedFields[mod.FieldSourceURL]
+	return ok
+}
+
 // ResetSourceURL resets all changes to the "source_url" field.
 func (m *ModMutation) ResetSourceURL() {
 	m.source_url = nil
+	delete(m.clearedFields, mod.FieldSourceURL)
 }
 
 // SetCreatorID sets the "creator_id" field.
@@ -2746,9 +2759,22 @@ func (m *ModMutation) OldLastVersionDate(ctx context.Context) (v time.Time, err 
 	return oldValue.LastVersionDate, nil
 }
 
+// ClearLastVersionDate clears the value of the "last_version_date" field.
+func (m *ModMutation) ClearLastVersionDate() {
+	m.last_version_date = nil
+	m.clearedFields[mod.FieldLastVersionDate] = struct{}{}
+}
+
+// LastVersionDateCleared returns if the "last_version_date" field was cleared in this mutation.
+func (m *ModMutation) LastVersionDateCleared() bool {
+	_, ok := m.clearedFields[mod.FieldLastVersionDate]
+	return ok
+}
+
 // ResetLastVersionDate resets all changes to the "last_version_date" field.
 func (m *ModMutation) ResetLastVersionDate() {
 	m.last_version_date = nil
+	delete(m.clearedFields, mod.FieldLastVersionDate)
 }
 
 // SetModReference sets the "mod_reference" field.
@@ -2824,12 +2850,12 @@ func (m *ModMutation) ResetHidden() {
 }
 
 // SetCompatibility sets the "compatibility" field.
-func (m *ModMutation) SetCompatibility(pi *postgres.CompatibilityInfo) {
-	m.compatibility = &pi
+func (m *ModMutation) SetCompatibility(ui *util.CompatibilityInfo) {
+	m.compatibility = &ui
 }
 
 // Compatibility returns the value of the "compatibility" field in the mutation.
-func (m *ModMutation) Compatibility() (r *postgres.CompatibilityInfo, exists bool) {
+func (m *ModMutation) Compatibility() (r *util.CompatibilityInfo, exists bool) {
 	v := m.compatibility
 	if v == nil {
 		return
@@ -2840,7 +2866,7 @@ func (m *ModMutation) Compatibility() (r *postgres.CompatibilityInfo, exists boo
 // OldCompatibility returns the old "compatibility" field's value of the Mod entity.
 // If the Mod object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ModMutation) OldCompatibility(ctx context.Context) (v *postgres.CompatibilityInfo, err error) {
+func (m *ModMutation) OldCompatibility(ctx context.Context) (v *util.CompatibilityInfo, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldCompatibility is only allowed on UpdateOne operations")
 	}
@@ -2854,9 +2880,22 @@ func (m *ModMutation) OldCompatibility(ctx context.Context) (v *postgres.Compati
 	return oldValue.Compatibility, nil
 }
 
+// ClearCompatibility clears the value of the "compatibility" field.
+func (m *ModMutation) ClearCompatibility() {
+	m.compatibility = nil
+	m.clearedFields[mod.FieldCompatibility] = struct{}{}
+}
+
+// CompatibilityCleared returns if the "compatibility" field was cleared in this mutation.
+func (m *ModMutation) CompatibilityCleared() bool {
+	_, ok := m.clearedFields[mod.FieldCompatibility]
+	return ok
+}
+
 // ResetCompatibility resets all changes to the "compatibility" field.
 func (m *ModMutation) ResetCompatibility() {
 	m.compatibility = nil
+	delete(m.clearedFields, mod.FieldCompatibility)
 }
 
 // AddVersionIDs adds the "versions" edge to the Version entity by ids.
@@ -3396,7 +3435,7 @@ func (m *ModMutation) SetField(name string, value ent.Value) error {
 		m.SetHidden(v)
 		return nil
 	case mod.FieldCompatibility:
-		v, ok := value.(*postgres.CompatibilityInfo)
+		v, ok := value.(*util.CompatibilityInfo)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -3486,6 +3525,15 @@ func (m *ModMutation) ClearedFields() []string {
 	if m.FieldCleared(mod.FieldDeletedAt) {
 		fields = append(fields, mod.FieldDeletedAt)
 	}
+	if m.FieldCleared(mod.FieldSourceURL) {
+		fields = append(fields, mod.FieldSourceURL)
+	}
+	if m.FieldCleared(mod.FieldLastVersionDate) {
+		fields = append(fields, mod.FieldLastVersionDate)
+	}
+	if m.FieldCleared(mod.FieldCompatibility) {
+		fields = append(fields, mod.FieldCompatibility)
+	}
 	return fields
 }
 
@@ -3502,6 +3550,15 @@ func (m *ModMutation) ClearField(name string) error {
 	switch name {
 	case mod.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case mod.FieldSourceURL:
+		m.ClearSourceURL()
+		return nil
+	case mod.FieldLastVersionDate:
+		m.ClearLastVersionDate()
+		return nil
+	case mod.FieldCompatibility:
+		m.ClearCompatibility()
 		return nil
 	}
 	return fmt.Errorf("unknown Mod nullable field %s", name)
@@ -4125,7 +4182,7 @@ type SmlVersionMutation struct {
 	version                 *string
 	satisfactory_version    *int
 	addsatisfactory_version *int
-	stability               *smlversion.Stability
+	stability               *util.Stability
 	date                    *time.Time
 	link                    *string
 	changelog               *string
@@ -4458,12 +4515,12 @@ func (m *SmlVersionMutation) ResetSatisfactoryVersion() {
 }
 
 // SetStability sets the "stability" field.
-func (m *SmlVersionMutation) SetStability(s smlversion.Stability) {
-	m.stability = &s
+func (m *SmlVersionMutation) SetStability(u util.Stability) {
+	m.stability = &u
 }
 
 // Stability returns the value of the "stability" field in the mutation.
-func (m *SmlVersionMutation) Stability() (r smlversion.Stability, exists bool) {
+func (m *SmlVersionMutation) Stability() (r util.Stability, exists bool) {
 	v := m.stability
 	if v == nil {
 		return
@@ -4474,7 +4531,7 @@ func (m *SmlVersionMutation) Stability() (r smlversion.Stability, exists bool) {
 // OldStability returns the old "stability" field's value of the SmlVersion entity.
 // If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldStability(ctx context.Context) (v smlversion.Stability, err error) {
+func (m *SmlVersionMutation) OldStability(ctx context.Context) (v util.Stability, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldStability is only allowed on UpdateOne operations")
 	}
@@ -4914,7 +4971,7 @@ func (m *SmlVersionMutation) SetField(name string, value ent.Value) error {
 		m.SetSatisfactoryVersion(v)
 		return nil
 	case smlversion.FieldStability:
-		v, ok := value.(smlversion.Stability)
+		v, ok := value.(util.Stability)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -9484,7 +9541,7 @@ type VersionMutation struct {
 	downloads           *uint
 	adddownloads        *int
 	key                 *string
-	stability           *version.Stability
+	stability           *util.Stability
 	approved            *bool
 	hotness             *uint
 	addhotness          *int
@@ -9878,9 +9935,22 @@ func (m *VersionMutation) OldChangelog(ctx context.Context) (v string, err error
 	return oldValue.Changelog, nil
 }
 
+// ClearChangelog clears the value of the "changelog" field.
+func (m *VersionMutation) ClearChangelog() {
+	m.changelog = nil
+	m.clearedFields[version.FieldChangelog] = struct{}{}
+}
+
+// ChangelogCleared returns if the "changelog" field was cleared in this mutation.
+func (m *VersionMutation) ChangelogCleared() bool {
+	_, ok := m.clearedFields[version.FieldChangelog]
+	return ok
+}
+
 // ResetChangelog resets all changes to the "changelog" field.
 func (m *VersionMutation) ResetChangelog() {
 	m.changelog = nil
+	delete(m.clearedFields, version.FieldChangelog)
 }
 
 // SetDownloads sets the "downloads" field.
@@ -9970,18 +10040,31 @@ func (m *VersionMutation) OldKey(ctx context.Context) (v string, err error) {
 	return oldValue.Key, nil
 }
 
+// ClearKey clears the value of the "key" field.
+func (m *VersionMutation) ClearKey() {
+	m.key = nil
+	m.clearedFields[version.FieldKey] = struct{}{}
+}
+
+// KeyCleared returns if the "key" field was cleared in this mutation.
+func (m *VersionMutation) KeyCleared() bool {
+	_, ok := m.clearedFields[version.FieldKey]
+	return ok
+}
+
 // ResetKey resets all changes to the "key" field.
 func (m *VersionMutation) ResetKey() {
 	m.key = nil
+	delete(m.clearedFields, version.FieldKey)
 }
 
 // SetStability sets the "stability" field.
-func (m *VersionMutation) SetStability(v version.Stability) {
-	m.stability = &v
+func (m *VersionMutation) SetStability(u util.Stability) {
+	m.stability = &u
 }
 
 // Stability returns the value of the "stability" field in the mutation.
-func (m *VersionMutation) Stability() (r version.Stability, exists bool) {
+func (m *VersionMutation) Stability() (r util.Stability, exists bool) {
 	v := m.stability
 	if v == nil {
 		return
@@ -9992,7 +10075,7 @@ func (m *VersionMutation) Stability() (r version.Stability, exists bool) {
 // OldStability returns the old "stability" field's value of the Version entity.
 // If the Version object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *VersionMutation) OldStability(ctx context.Context) (v version.Stability, err error) {
+func (m *VersionMutation) OldStability(ctx context.Context) (v util.Stability, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldStability is only allowed on UpdateOne operations")
 	}
@@ -10170,9 +10253,22 @@ func (m *VersionMutation) OldMetadata(ctx context.Context) (v string, err error)
 	return oldValue.Metadata, nil
 }
 
+// ClearMetadata clears the value of the "metadata" field.
+func (m *VersionMutation) ClearMetadata() {
+	m.metadata = nil
+	m.clearedFields[version.FieldMetadata] = struct{}{}
+}
+
+// MetadataCleared returns if the "metadata" field was cleared in this mutation.
+func (m *VersionMutation) MetadataCleared() bool {
+	_, ok := m.clearedFields[version.FieldMetadata]
+	return ok
+}
+
 // ResetMetadata resets all changes to the "metadata" field.
 func (m *VersionMutation) ResetMetadata() {
 	m.metadata = nil
+	delete(m.clearedFields, version.FieldMetadata)
 }
 
 // SetModReference sets the "mod_reference" field.
@@ -10261,10 +10357,24 @@ func (m *VersionMutation) AddedVersionMajor() (r int, exists bool) {
 	return *v, true
 }
 
+// ClearVersionMajor clears the value of the "version_major" field.
+func (m *VersionMutation) ClearVersionMajor() {
+	m.version_major = nil
+	m.addversion_major = nil
+	m.clearedFields[version.FieldVersionMajor] = struct{}{}
+}
+
+// VersionMajorCleared returns if the "version_major" field was cleared in this mutation.
+func (m *VersionMutation) VersionMajorCleared() bool {
+	_, ok := m.clearedFields[version.FieldVersionMajor]
+	return ok
+}
+
 // ResetVersionMajor resets all changes to the "version_major" field.
 func (m *VersionMutation) ResetVersionMajor() {
 	m.version_major = nil
 	m.addversion_major = nil
+	delete(m.clearedFields, version.FieldVersionMajor)
 }
 
 // SetVersionMinor sets the "version_minor" field.
@@ -10317,10 +10427,24 @@ func (m *VersionMutation) AddedVersionMinor() (r int, exists bool) {
 	return *v, true
 }
 
+// ClearVersionMinor clears the value of the "version_minor" field.
+func (m *VersionMutation) ClearVersionMinor() {
+	m.version_minor = nil
+	m.addversion_minor = nil
+	m.clearedFields[version.FieldVersionMinor] = struct{}{}
+}
+
+// VersionMinorCleared returns if the "version_minor" field was cleared in this mutation.
+func (m *VersionMutation) VersionMinorCleared() bool {
+	_, ok := m.clearedFields[version.FieldVersionMinor]
+	return ok
+}
+
 // ResetVersionMinor resets all changes to the "version_minor" field.
 func (m *VersionMutation) ResetVersionMinor() {
 	m.version_minor = nil
 	m.addversion_minor = nil
+	delete(m.clearedFields, version.FieldVersionMinor)
 }
 
 // SetVersionPatch sets the "version_patch" field.
@@ -10373,10 +10497,24 @@ func (m *VersionMutation) AddedVersionPatch() (r int, exists bool) {
 	return *v, true
 }
 
+// ClearVersionPatch clears the value of the "version_patch" field.
+func (m *VersionMutation) ClearVersionPatch() {
+	m.version_patch = nil
+	m.addversion_patch = nil
+	m.clearedFields[version.FieldVersionPatch] = struct{}{}
+}
+
+// VersionPatchCleared returns if the "version_patch" field was cleared in this mutation.
+func (m *VersionMutation) VersionPatchCleared() bool {
+	_, ok := m.clearedFields[version.FieldVersionPatch]
+	return ok
+}
+
 // ResetVersionPatch resets all changes to the "version_patch" field.
 func (m *VersionMutation) ResetVersionPatch() {
 	m.version_patch = nil
 	m.addversion_patch = nil
+	delete(m.clearedFields, version.FieldVersionPatch)
 }
 
 // SetSize sets the "size" field.
@@ -10429,10 +10567,24 @@ func (m *VersionMutation) AddedSize() (r int64, exists bool) {
 	return *v, true
 }
 
+// ClearSize clears the value of the "size" field.
+func (m *VersionMutation) ClearSize() {
+	m.size = nil
+	m.addsize = nil
+	m.clearedFields[version.FieldSize] = struct{}{}
+}
+
+// SizeCleared returns if the "size" field was cleared in this mutation.
+func (m *VersionMutation) SizeCleared() bool {
+	_, ok := m.clearedFields[version.FieldSize]
+	return ok
+}
+
 // ResetSize resets all changes to the "size" field.
 func (m *VersionMutation) ResetSize() {
 	m.size = nil
 	m.addsize = nil
+	delete(m.clearedFields, version.FieldSize)
 }
 
 // SetHash sets the "hash" field.
@@ -10466,9 +10618,22 @@ func (m *VersionMutation) OldHash(ctx context.Context) (v string, err error) {
 	return oldValue.Hash, nil
 }
 
+// ClearHash clears the value of the "hash" field.
+func (m *VersionMutation) ClearHash() {
+	m.hash = nil
+	m.clearedFields[version.FieldHash] = struct{}{}
+}
+
+// HashCleared returns if the "hash" field was cleared in this mutation.
+func (m *VersionMutation) HashCleared() bool {
+	_, ok := m.clearedFields[version.FieldHash]
+	return ok
+}
+
 // ResetHash resets all changes to the "hash" field.
 func (m *VersionMutation) ResetHash() {
 	m.hash = nil
+	delete(m.clearedFields, version.FieldHash)
 }
 
 // ClearMod clears the "mod" edge to the Mod entity.
@@ -10871,7 +11036,7 @@ func (m *VersionMutation) SetField(name string, value ent.Value) error {
 		m.SetKey(v)
 		return nil
 	case version.FieldStability:
-		v, ok := value.(version.Stability)
+		v, ok := value.(util.Stability)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -11055,6 +11220,30 @@ func (m *VersionMutation) ClearedFields() []string {
 	if m.FieldCleared(version.FieldDeletedAt) {
 		fields = append(fields, version.FieldDeletedAt)
 	}
+	if m.FieldCleared(version.FieldChangelog) {
+		fields = append(fields, version.FieldChangelog)
+	}
+	if m.FieldCleared(version.FieldKey) {
+		fields = append(fields, version.FieldKey)
+	}
+	if m.FieldCleared(version.FieldMetadata) {
+		fields = append(fields, version.FieldMetadata)
+	}
+	if m.FieldCleared(version.FieldVersionMajor) {
+		fields = append(fields, version.FieldVersionMajor)
+	}
+	if m.FieldCleared(version.FieldVersionMinor) {
+		fields = append(fields, version.FieldVersionMinor)
+	}
+	if m.FieldCleared(version.FieldVersionPatch) {
+		fields = append(fields, version.FieldVersionPatch)
+	}
+	if m.FieldCleared(version.FieldSize) {
+		fields = append(fields, version.FieldSize)
+	}
+	if m.FieldCleared(version.FieldHash) {
+		fields = append(fields, version.FieldHash)
+	}
 	return fields
 }
 
@@ -11071,6 +11260,30 @@ func (m *VersionMutation) ClearField(name string) error {
 	switch name {
 	case version.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case version.FieldChangelog:
+		m.ClearChangelog()
+		return nil
+	case version.FieldKey:
+		m.ClearKey()
+		return nil
+	case version.FieldMetadata:
+		m.ClearMetadata()
+		return nil
+	case version.FieldVersionMajor:
+		m.ClearVersionMajor()
+		return nil
+	case version.FieldVersionMinor:
+		m.ClearVersionMinor()
+		return nil
+	case version.FieldVersionPatch:
+		m.ClearVersionPatch()
+		return nil
+	case version.FieldSize:
+		m.ClearSize()
+		return nil
+	case version.FieldHash:
+		m.ClearHash()
 		return nil
 	}
 	return fmt.Errorf("unknown Version nullable field %s", name)
@@ -12074,9 +12287,22 @@ func (m *VersionTargetMutation) OldKey(ctx context.Context) (v string, err error
 	return oldValue.Key, nil
 }
 
+// ClearKey clears the value of the "key" field.
+func (m *VersionTargetMutation) ClearKey() {
+	m.key = nil
+	m.clearedFields[versiontarget.FieldKey] = struct{}{}
+}
+
+// KeyCleared returns if the "key" field was cleared in this mutation.
+func (m *VersionTargetMutation) KeyCleared() bool {
+	_, ok := m.clearedFields[versiontarget.FieldKey]
+	return ok
+}
+
 // ResetKey resets all changes to the "key" field.
 func (m *VersionTargetMutation) ResetKey() {
 	m.key = nil
+	delete(m.clearedFields, versiontarget.FieldKey)
 }
 
 // SetHash sets the "hash" field.
@@ -12110,9 +12336,22 @@ func (m *VersionTargetMutation) OldHash(ctx context.Context) (v string, err erro
 	return oldValue.Hash, nil
 }
 
+// ClearHash clears the value of the "hash" field.
+func (m *VersionTargetMutation) ClearHash() {
+	m.hash = nil
+	m.clearedFields[versiontarget.FieldHash] = struct{}{}
+}
+
+// HashCleared returns if the "hash" field was cleared in this mutation.
+func (m *VersionTargetMutation) HashCleared() bool {
+	_, ok := m.clearedFields[versiontarget.FieldHash]
+	return ok
+}
+
 // ResetHash resets all changes to the "hash" field.
 func (m *VersionTargetMutation) ResetHash() {
 	m.hash = nil
+	delete(m.clearedFields, versiontarget.FieldHash)
 }
 
 // SetSize sets the "size" field.
@@ -12165,10 +12404,24 @@ func (m *VersionTargetMutation) AddedSize() (r int64, exists bool) {
 	return *v, true
 }
 
+// ClearSize clears the value of the "size" field.
+func (m *VersionTargetMutation) ClearSize() {
+	m.size = nil
+	m.addsize = nil
+	m.clearedFields[versiontarget.FieldSize] = struct{}{}
+}
+
+// SizeCleared returns if the "size" field was cleared in this mutation.
+func (m *VersionTargetMutation) SizeCleared() bool {
+	_, ok := m.clearedFields[versiontarget.FieldSize]
+	return ok
+}
+
 // ResetSize resets all changes to the "size" field.
 func (m *VersionTargetMutation) ResetSize() {
 	m.size = nil
 	m.addsize = nil
+	delete(m.clearedFields, versiontarget.FieldSize)
 }
 
 // SetSmlVersionID sets the "sml_version" edge to the Version entity by id.
@@ -12386,7 +12639,17 @@ func (m *VersionTargetMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *VersionTargetMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(versiontarget.FieldKey) {
+		fields = append(fields, versiontarget.FieldKey)
+	}
+	if m.FieldCleared(versiontarget.FieldHash) {
+		fields = append(fields, versiontarget.FieldHash)
+	}
+	if m.FieldCleared(versiontarget.FieldSize) {
+		fields = append(fields, versiontarget.FieldSize)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -12399,6 +12662,17 @@ func (m *VersionTargetMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *VersionTargetMutation) ClearField(name string) error {
+	switch name {
+	case versiontarget.FieldKey:
+		m.ClearKey()
+		return nil
+	case versiontarget.FieldHash:
+		m.ClearHash()
+		return nil
+	case versiontarget.FieldSize:
+		m.ClearSize()
+		return nil
+	}
 	return fmt.Errorf("unknown VersionTarget nullable field %s", name)
 }
 

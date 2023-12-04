@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // Mod is the model entity for the Mod schema.
@@ -56,7 +56,7 @@ type Mod struct {
 	// Hidden holds the value of the "hidden" field.
 	Hidden bool `json:"hidden,omitempty"`
 	// Compatibility holds the value of the "compatibility" field.
-	Compatibility *postgres.CompatibilityInfo `json:"compatibility,omitempty"`
+	Compatibility *util.CompatibilityInfo `json:"compatibility,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ModQuery when eager-loading is set.
 	Edges        ModEdges `json:"edges"`

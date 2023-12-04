@@ -11,12 +11,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // ModUpdate is the builder for updating Mod entities.
@@ -89,6 +89,20 @@ func (mu *ModUpdate) SetSourceURL(s string) *ModUpdate {
 	return mu
 }
 
+// SetNillableSourceURL sets the "source_url" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableSourceURL(s *string) *ModUpdate {
+	if s != nil {
+		mu.SetSourceURL(*s)
+	}
+	return mu
+}
+
+// ClearSourceURL clears the value of the "source_url" field.
+func (mu *ModUpdate) ClearSourceURL() *ModUpdate {
+	mu.mutation.ClearSourceURL()
+	return mu
+}
+
 // SetCreatorID sets the "creator_id" field.
 func (mu *ModUpdate) SetCreatorID(s string) *ModUpdate {
 	mu.mutation.SetCreatorID(s)
@@ -116,6 +130,14 @@ func (mu *ModUpdate) SetViews(u uint) *ModUpdate {
 	return mu
 }
 
+// SetNillableViews sets the "views" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableViews(u *uint) *ModUpdate {
+	if u != nil {
+		mu.SetViews(*u)
+	}
+	return mu
+}
+
 // AddViews adds u to the "views" field.
 func (mu *ModUpdate) AddViews(u int) *ModUpdate {
 	mu.mutation.AddViews(u)
@@ -126,6 +148,14 @@ func (mu *ModUpdate) AddViews(u int) *ModUpdate {
 func (mu *ModUpdate) SetHotness(u uint) *ModUpdate {
 	mu.mutation.ResetHotness()
 	mu.mutation.SetHotness(u)
+	return mu
+}
+
+// SetNillableHotness sets the "hotness" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableHotness(u *uint) *ModUpdate {
+	if u != nil {
+		mu.SetHotness(*u)
+	}
 	return mu
 }
 
@@ -142,6 +172,14 @@ func (mu *ModUpdate) SetPopularity(u uint) *ModUpdate {
 	return mu
 }
 
+// SetNillablePopularity sets the "popularity" field if the given value is not nil.
+func (mu *ModUpdate) SetNillablePopularity(u *uint) *ModUpdate {
+	if u != nil {
+		mu.SetPopularity(*u)
+	}
+	return mu
+}
+
 // AddPopularity adds u to the "popularity" field.
 func (mu *ModUpdate) AddPopularity(u int) *ModUpdate {
 	mu.mutation.AddPopularity(u)
@@ -152,6 +190,14 @@ func (mu *ModUpdate) AddPopularity(u int) *ModUpdate {
 func (mu *ModUpdate) SetDownloads(u uint) *ModUpdate {
 	mu.mutation.ResetDownloads()
 	mu.mutation.SetDownloads(u)
+	return mu
+}
+
+// SetNillableDownloads sets the "downloads" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableDownloads(u *uint) *ModUpdate {
+	if u != nil {
+		mu.SetDownloads(*u)
+	}
 	return mu
 }
 
@@ -181,6 +227,20 @@ func (mu *ModUpdate) SetLastVersionDate(t time.Time) *ModUpdate {
 	return mu
 }
 
+// SetNillableLastVersionDate sets the "last_version_date" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableLastVersionDate(t *time.Time) *ModUpdate {
+	if t != nil {
+		mu.SetLastVersionDate(*t)
+	}
+	return mu
+}
+
+// ClearLastVersionDate clears the value of the "last_version_date" field.
+func (mu *ModUpdate) ClearLastVersionDate() *ModUpdate {
+	mu.mutation.ClearLastVersionDate()
+	return mu
+}
+
 // SetModReference sets the "mod_reference" field.
 func (mu *ModUpdate) SetModReference(s string) *ModUpdate {
 	mu.mutation.SetModReference(s)
@@ -193,9 +253,23 @@ func (mu *ModUpdate) SetHidden(b bool) *ModUpdate {
 	return mu
 }
 
+// SetNillableHidden sets the "hidden" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableHidden(b *bool) *ModUpdate {
+	if b != nil {
+		mu.SetHidden(*b)
+	}
+	return mu
+}
+
 // SetCompatibility sets the "compatibility" field.
-func (mu *ModUpdate) SetCompatibility(pi *postgres.CompatibilityInfo) *ModUpdate {
-	mu.mutation.SetCompatibility(pi)
+func (mu *ModUpdate) SetCompatibility(ui *util.CompatibilityInfo) *ModUpdate {
+	mu.mutation.SetCompatibility(ui)
+	return mu
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (mu *ModUpdate) ClearCompatibility() *ModUpdate {
+	mu.mutation.ClearCompatibility()
 	return mu
 }
 
@@ -452,6 +526,9 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := mu.mutation.SourceURL(); ok {
 		_spec.SetField(mod.FieldSourceURL, field.TypeString, value)
 	}
+	if mu.mutation.SourceURLCleared() {
+		_spec.ClearField(mod.FieldSourceURL, field.TypeString)
+	}
 	if value, ok := mu.mutation.CreatorID(); ok {
 		_spec.SetField(mod.FieldCreatorID, field.TypeString, value)
 	}
@@ -488,6 +565,9 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := mu.mutation.LastVersionDate(); ok {
 		_spec.SetField(mod.FieldLastVersionDate, field.TypeTime, value)
 	}
+	if mu.mutation.LastVersionDateCleared() {
+		_spec.ClearField(mod.FieldLastVersionDate, field.TypeTime)
+	}
 	if value, ok := mu.mutation.ModReference(); ok {
 		_spec.SetField(mod.FieldModReference, field.TypeString, value)
 	}
@@ -496,6 +576,9 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := mu.mutation.Compatibility(); ok {
 		_spec.SetField(mod.FieldCompatibility, field.TypeJSON, value)
+	}
+	if mu.mutation.CompatibilityCleared() {
+		_spec.ClearField(mod.FieldCompatibility, field.TypeJSON)
 	}
 	if mu.mutation.VersionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -767,6 +850,20 @@ func (muo *ModUpdateOne) SetSourceURL(s string) *ModUpdateOne {
 	return muo
 }
 
+// SetNillableSourceURL sets the "source_url" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableSourceURL(s *string) *ModUpdateOne {
+	if s != nil {
+		muo.SetSourceURL(*s)
+	}
+	return muo
+}
+
+// ClearSourceURL clears the value of the "source_url" field.
+func (muo *ModUpdateOne) ClearSourceURL() *ModUpdateOne {
+	muo.mutation.ClearSourceURL()
+	return muo
+}
+
 // SetCreatorID sets the "creator_id" field.
 func (muo *ModUpdateOne) SetCreatorID(s string) *ModUpdateOne {
 	muo.mutation.SetCreatorID(s)
@@ -794,6 +891,14 @@ func (muo *ModUpdateOne) SetViews(u uint) *ModUpdateOne {
 	return muo
 }
 
+// SetNillableViews sets the "views" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableViews(u *uint) *ModUpdateOne {
+	if u != nil {
+		muo.SetViews(*u)
+	}
+	return muo
+}
+
 // AddViews adds u to the "views" field.
 func (muo *ModUpdateOne) AddViews(u int) *ModUpdateOne {
 	muo.mutation.AddViews(u)
@@ -804,6 +909,14 @@ func (muo *ModUpdateOne) AddViews(u int) *ModUpdateOne {
 func (muo *ModUpdateOne) SetHotness(u uint) *ModUpdateOne {
 	muo.mutation.ResetHotness()
 	muo.mutation.SetHotness(u)
+	return muo
+}
+
+// SetNillableHotness sets the "hotness" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableHotness(u *uint) *ModUpdateOne {
+	if u != nil {
+		muo.SetHotness(*u)
+	}
 	return muo
 }
 
@@ -820,6 +933,14 @@ func (muo *ModUpdateOne) SetPopularity(u uint) *ModUpdateOne {
 	return muo
 }
 
+// SetNillablePopularity sets the "popularity" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillablePopularity(u *uint) *ModUpdateOne {
+	if u != nil {
+		muo.SetPopularity(*u)
+	}
+	return muo
+}
+
 // AddPopularity adds u to the "popularity" field.
 func (muo *ModUpdateOne) AddPopularity(u int) *ModUpdateOne {
 	muo.mutation.AddPopularity(u)
@@ -830,6 +951,14 @@ func (muo *ModUpdateOne) AddPopularity(u int) *ModUpdateOne {
 func (muo *ModUpdateOne) SetDownloads(u uint) *ModUpdateOne {
 	muo.mutation.ResetDownloads()
 	muo.mutation.SetDownloads(u)
+	return muo
+}
+
+// SetNillableDownloads sets the "downloads" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableDownloads(u *uint) *ModUpdateOne {
+	if u != nil {
+		muo.SetDownloads(*u)
+	}
 	return muo
 }
 
@@ -859,6 +988,20 @@ func (muo *ModUpdateOne) SetLastVersionDate(t time.Time) *ModUpdateOne {
 	return muo
 }
 
+// SetNillableLastVersionDate sets the "last_version_date" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableLastVersionDate(t *time.Time) *ModUpdateOne {
+	if t != nil {
+		muo.SetLastVersionDate(*t)
+	}
+	return muo
+}
+
+// ClearLastVersionDate clears the value of the "last_version_date" field.
+func (muo *ModUpdateOne) ClearLastVersionDate() *ModUpdateOne {
+	muo.mutation.ClearLastVersionDate()
+	return muo
+}
+
 // SetModReference sets the "mod_reference" field.
 func (muo *ModUpdateOne) SetModReference(s string) *ModUpdateOne {
 	muo.mutation.SetModReference(s)
@@ -871,9 +1014,23 @@ func (muo *ModUpdateOne) SetHidden(b bool) *ModUpdateOne {
 	return muo
 }
 
+// SetNillableHidden sets the "hidden" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableHidden(b *bool) *ModUpdateOne {
+	if b != nil {
+		muo.SetHidden(*b)
+	}
+	return muo
+}
+
 // SetCompatibility sets the "compatibility" field.
-func (muo *ModUpdateOne) SetCompatibility(pi *postgres.CompatibilityInfo) *ModUpdateOne {
-	muo.mutation.SetCompatibility(pi)
+func (muo *ModUpdateOne) SetCompatibility(ui *util.CompatibilityInfo) *ModUpdateOne {
+	muo.mutation.SetCompatibility(ui)
+	return muo
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (muo *ModUpdateOne) ClearCompatibility() *ModUpdateOne {
+	muo.mutation.ClearCompatibility()
 	return muo
 }
 
@@ -1160,6 +1317,9 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	if value, ok := muo.mutation.SourceURL(); ok {
 		_spec.SetField(mod.FieldSourceURL, field.TypeString, value)
 	}
+	if muo.mutation.SourceURLCleared() {
+		_spec.ClearField(mod.FieldSourceURL, field.TypeString)
+	}
 	if value, ok := muo.mutation.CreatorID(); ok {
 		_spec.SetField(mod.FieldCreatorID, field.TypeString, value)
 	}
@@ -1196,6 +1356,9 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	if value, ok := muo.mutation.LastVersionDate(); ok {
 		_spec.SetField(mod.FieldLastVersionDate, field.TypeTime, value)
 	}
+	if muo.mutation.LastVersionDateCleared() {
+		_spec.ClearField(mod.FieldLastVersionDate, field.TypeTime)
+	}
 	if value, ok := muo.mutation.ModReference(); ok {
 		_spec.SetField(mod.FieldModReference, field.TypeString, value)
 	}
@@ -1204,6 +1367,9 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	}
 	if value, ok := muo.mutation.Compatibility(); ok {
 		_spec.SetField(mod.FieldCompatibility, field.TypeJSON, value)
+	}
+	if muo.mutation.CompatibilityCleared() {
+		_spec.ClearField(mod.FieldCompatibility, field.TypeJSON)
 	}
 	if muo.mutation.VersionsCleared() {
 		edge := &sqlgraph.EdgeSpec{

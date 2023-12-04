@@ -21,9 +21,9 @@ func (VersionTarget) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("version_id"),
 		field.String("target_name"),
-		field.String("key"),
-		field.String("hash"),
-		field.Int64("size"),
+		field.String("key").Optional(),
+		field.String("hash").Optional(),
+		field.Int64("size").Optional(),
 	}
 }
 

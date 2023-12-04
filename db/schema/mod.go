@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 type Mod struct {
@@ -27,18 +27,18 @@ func (Mod) Fields() []ent.Field {
 		field.String("short_description").MaxLen(128),
 		field.String("full_description"),
 		field.String("logo"),
-		field.String("source_url"),
+		field.String("source_url").Optional(),
 		field.String("creator_id"),
 		field.Bool("approved").Default(false),
-		field.Uint("views"),
-		field.Uint("hotness"),
-		field.Uint("popularity"),
-		field.Uint("downloads"),
+		field.Uint("views").Default(0),
+		field.Uint("hotness").Default(0),
+		field.Uint("popularity").Default(0),
+		field.Uint("downloads").Default(0),
 		field.Bool("denied").Default(false),
-		field.Time("last_version_date"),
+		field.Time("last_version_date").Optional(),
 		field.String("mod_reference").MaxLen(32).Unique(),
-		field.Bool("hidden"),
-		field.JSON("compatibility", &postgres.CompatibilityInfo{}),
+		field.Bool("hidden").Default(false),
+		field.JSON("compatibility", &util.CompatibilityInfo{}).Optional(),
 	}
 }
 

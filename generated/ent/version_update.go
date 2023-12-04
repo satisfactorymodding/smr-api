@@ -15,6 +15,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // VersionUpdate is the builder for updating Version entities.
@@ -81,10 +82,32 @@ func (vu *VersionUpdate) SetChangelog(s string) *VersionUpdate {
 	return vu
 }
 
+// SetNillableChangelog sets the "changelog" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableChangelog(s *string) *VersionUpdate {
+	if s != nil {
+		vu.SetChangelog(*s)
+	}
+	return vu
+}
+
+// ClearChangelog clears the value of the "changelog" field.
+func (vu *VersionUpdate) ClearChangelog() *VersionUpdate {
+	vu.mutation.ClearChangelog()
+	return vu
+}
+
 // SetDownloads sets the "downloads" field.
 func (vu *VersionUpdate) SetDownloads(u uint) *VersionUpdate {
 	vu.mutation.ResetDownloads()
 	vu.mutation.SetDownloads(u)
+	return vu
+}
+
+// SetNillableDownloads sets the "downloads" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableDownloads(u *uint) *VersionUpdate {
+	if u != nil {
+		vu.SetDownloads(*u)
+	}
 	return vu
 }
 
@@ -100,9 +123,23 @@ func (vu *VersionUpdate) SetKey(s string) *VersionUpdate {
 	return vu
 }
 
+// SetNillableKey sets the "key" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableKey(s *string) *VersionUpdate {
+	if s != nil {
+		vu.SetKey(*s)
+	}
+	return vu
+}
+
+// ClearKey clears the value of the "key" field.
+func (vu *VersionUpdate) ClearKey() *VersionUpdate {
+	vu.mutation.ClearKey()
+	return vu
+}
+
 // SetStability sets the "stability" field.
-func (vu *VersionUpdate) SetStability(v version.Stability) *VersionUpdate {
-	vu.mutation.SetStability(v)
+func (vu *VersionUpdate) SetStability(u util.Stability) *VersionUpdate {
+	vu.mutation.SetStability(u)
 	return vu
 }
 
@@ -124,6 +161,14 @@ func (vu *VersionUpdate) SetNillableApproved(b *bool) *VersionUpdate {
 func (vu *VersionUpdate) SetHotness(u uint) *VersionUpdate {
 	vu.mutation.ResetHotness()
 	vu.mutation.SetHotness(u)
+	return vu
+}
+
+// SetNillableHotness sets the "hotness" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableHotness(u *uint) *VersionUpdate {
+	if u != nil {
+		vu.SetHotness(*u)
+	}
 	return vu
 }
 
@@ -153,6 +198,20 @@ func (vu *VersionUpdate) SetMetadata(s string) *VersionUpdate {
 	return vu
 }
 
+// SetNillableMetadata sets the "metadata" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableMetadata(s *string) *VersionUpdate {
+	if s != nil {
+		vu.SetMetadata(*s)
+	}
+	return vu
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (vu *VersionUpdate) ClearMetadata() *VersionUpdate {
+	vu.mutation.ClearMetadata()
+	return vu
+}
+
 // SetModReference sets the "mod_reference" field.
 func (vu *VersionUpdate) SetModReference(s string) *VersionUpdate {
 	vu.mutation.SetModReference(s)
@@ -166,9 +225,23 @@ func (vu *VersionUpdate) SetVersionMajor(i int) *VersionUpdate {
 	return vu
 }
 
+// SetNillableVersionMajor sets the "version_major" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableVersionMajor(i *int) *VersionUpdate {
+	if i != nil {
+		vu.SetVersionMajor(*i)
+	}
+	return vu
+}
+
 // AddVersionMajor adds i to the "version_major" field.
 func (vu *VersionUpdate) AddVersionMajor(i int) *VersionUpdate {
 	vu.mutation.AddVersionMajor(i)
+	return vu
+}
+
+// ClearVersionMajor clears the value of the "version_major" field.
+func (vu *VersionUpdate) ClearVersionMajor() *VersionUpdate {
+	vu.mutation.ClearVersionMajor()
 	return vu
 }
 
@@ -179,9 +252,23 @@ func (vu *VersionUpdate) SetVersionMinor(i int) *VersionUpdate {
 	return vu
 }
 
+// SetNillableVersionMinor sets the "version_minor" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableVersionMinor(i *int) *VersionUpdate {
+	if i != nil {
+		vu.SetVersionMinor(*i)
+	}
+	return vu
+}
+
 // AddVersionMinor adds i to the "version_minor" field.
 func (vu *VersionUpdate) AddVersionMinor(i int) *VersionUpdate {
 	vu.mutation.AddVersionMinor(i)
+	return vu
+}
+
+// ClearVersionMinor clears the value of the "version_minor" field.
+func (vu *VersionUpdate) ClearVersionMinor() *VersionUpdate {
+	vu.mutation.ClearVersionMinor()
 	return vu
 }
 
@@ -192,9 +279,23 @@ func (vu *VersionUpdate) SetVersionPatch(i int) *VersionUpdate {
 	return vu
 }
 
+// SetNillableVersionPatch sets the "version_patch" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableVersionPatch(i *int) *VersionUpdate {
+	if i != nil {
+		vu.SetVersionPatch(*i)
+	}
+	return vu
+}
+
 // AddVersionPatch adds i to the "version_patch" field.
 func (vu *VersionUpdate) AddVersionPatch(i int) *VersionUpdate {
 	vu.mutation.AddVersionPatch(i)
+	return vu
+}
+
+// ClearVersionPatch clears the value of the "version_patch" field.
+func (vu *VersionUpdate) ClearVersionPatch() *VersionUpdate {
+	vu.mutation.ClearVersionPatch()
 	return vu
 }
 
@@ -205,15 +306,43 @@ func (vu *VersionUpdate) SetSize(i int64) *VersionUpdate {
 	return vu
 }
 
+// SetNillableSize sets the "size" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableSize(i *int64) *VersionUpdate {
+	if i != nil {
+		vu.SetSize(*i)
+	}
+	return vu
+}
+
 // AddSize adds i to the "size" field.
 func (vu *VersionUpdate) AddSize(i int64) *VersionUpdate {
 	vu.mutation.AddSize(i)
 	return vu
 }
 
+// ClearSize clears the value of the "size" field.
+func (vu *VersionUpdate) ClearSize() *VersionUpdate {
+	vu.mutation.ClearSize()
+	return vu
+}
+
 // SetHash sets the "hash" field.
 func (vu *VersionUpdate) SetHash(s string) *VersionUpdate {
 	vu.mutation.SetHash(s)
+	return vu
+}
+
+// SetNillableHash sets the "hash" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableHash(s *string) *VersionUpdate {
+	if s != nil {
+		vu.SetHash(*s)
+	}
+	return vu
+}
+
+// ClearHash clears the value of the "hash" field.
+func (vu *VersionUpdate) ClearHash() *VersionUpdate {
+	vu.mutation.ClearHash()
 	return vu
 }
 
@@ -416,6 +545,9 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)
 	}
+	if vu.mutation.ChangelogCleared() {
+		_spec.ClearField(version.FieldChangelog, field.TypeString)
+	}
 	if value, ok := vu.mutation.Downloads(); ok {
 		_spec.SetField(version.FieldDownloads, field.TypeUint, value)
 	}
@@ -424,6 +556,9 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := vu.mutation.Key(); ok {
 		_spec.SetField(version.FieldKey, field.TypeString, value)
+	}
+	if vu.mutation.KeyCleared() {
+		_spec.ClearField(version.FieldKey, field.TypeString)
 	}
 	if value, ok := vu.mutation.Stability(); ok {
 		_spec.SetField(version.FieldStability, field.TypeEnum, value)
@@ -443,6 +578,9 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.Metadata(); ok {
 		_spec.SetField(version.FieldMetadata, field.TypeString, value)
 	}
+	if vu.mutation.MetadataCleared() {
+		_spec.ClearField(version.FieldMetadata, field.TypeString)
+	}
 	if value, ok := vu.mutation.ModReference(); ok {
 		_spec.SetField(version.FieldModReference, field.TypeString, value)
 	}
@@ -452,11 +590,17 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.AddedVersionMajor(); ok {
 		_spec.AddField(version.FieldVersionMajor, field.TypeInt, value)
 	}
+	if vu.mutation.VersionMajorCleared() {
+		_spec.ClearField(version.FieldVersionMajor, field.TypeInt)
+	}
 	if value, ok := vu.mutation.VersionMinor(); ok {
 		_spec.SetField(version.FieldVersionMinor, field.TypeInt, value)
 	}
 	if value, ok := vu.mutation.AddedVersionMinor(); ok {
 		_spec.AddField(version.FieldVersionMinor, field.TypeInt, value)
+	}
+	if vu.mutation.VersionMinorCleared() {
+		_spec.ClearField(version.FieldVersionMinor, field.TypeInt)
 	}
 	if value, ok := vu.mutation.VersionPatch(); ok {
 		_spec.SetField(version.FieldVersionPatch, field.TypeInt, value)
@@ -464,14 +608,23 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.AddedVersionPatch(); ok {
 		_spec.AddField(version.FieldVersionPatch, field.TypeInt, value)
 	}
+	if vu.mutation.VersionPatchCleared() {
+		_spec.ClearField(version.FieldVersionPatch, field.TypeInt)
+	}
 	if value, ok := vu.mutation.Size(); ok {
 		_spec.SetField(version.FieldSize, field.TypeInt64, value)
 	}
 	if value, ok := vu.mutation.AddedSize(); ok {
 		_spec.AddField(version.FieldSize, field.TypeInt64, value)
 	}
+	if vu.mutation.SizeCleared() {
+		_spec.ClearField(version.FieldSize, field.TypeInt64)
+	}
 	if value, ok := vu.mutation.Hash(); ok {
 		_spec.SetField(version.FieldHash, field.TypeString, value)
+	}
+	if vu.mutation.HashCleared() {
+		_spec.ClearField(version.FieldHash, field.TypeString)
 	}
 	if vu.mutation.ModCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -676,10 +829,32 @@ func (vuo *VersionUpdateOne) SetChangelog(s string) *VersionUpdateOne {
 	return vuo
 }
 
+// SetNillableChangelog sets the "changelog" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableChangelog(s *string) *VersionUpdateOne {
+	if s != nil {
+		vuo.SetChangelog(*s)
+	}
+	return vuo
+}
+
+// ClearChangelog clears the value of the "changelog" field.
+func (vuo *VersionUpdateOne) ClearChangelog() *VersionUpdateOne {
+	vuo.mutation.ClearChangelog()
+	return vuo
+}
+
 // SetDownloads sets the "downloads" field.
 func (vuo *VersionUpdateOne) SetDownloads(u uint) *VersionUpdateOne {
 	vuo.mutation.ResetDownloads()
 	vuo.mutation.SetDownloads(u)
+	return vuo
+}
+
+// SetNillableDownloads sets the "downloads" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableDownloads(u *uint) *VersionUpdateOne {
+	if u != nil {
+		vuo.SetDownloads(*u)
+	}
 	return vuo
 }
 
@@ -695,9 +870,23 @@ func (vuo *VersionUpdateOne) SetKey(s string) *VersionUpdateOne {
 	return vuo
 }
 
+// SetNillableKey sets the "key" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableKey(s *string) *VersionUpdateOne {
+	if s != nil {
+		vuo.SetKey(*s)
+	}
+	return vuo
+}
+
+// ClearKey clears the value of the "key" field.
+func (vuo *VersionUpdateOne) ClearKey() *VersionUpdateOne {
+	vuo.mutation.ClearKey()
+	return vuo
+}
+
 // SetStability sets the "stability" field.
-func (vuo *VersionUpdateOne) SetStability(v version.Stability) *VersionUpdateOne {
-	vuo.mutation.SetStability(v)
+func (vuo *VersionUpdateOne) SetStability(u util.Stability) *VersionUpdateOne {
+	vuo.mutation.SetStability(u)
 	return vuo
 }
 
@@ -719,6 +908,14 @@ func (vuo *VersionUpdateOne) SetNillableApproved(b *bool) *VersionUpdateOne {
 func (vuo *VersionUpdateOne) SetHotness(u uint) *VersionUpdateOne {
 	vuo.mutation.ResetHotness()
 	vuo.mutation.SetHotness(u)
+	return vuo
+}
+
+// SetNillableHotness sets the "hotness" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableHotness(u *uint) *VersionUpdateOne {
+	if u != nil {
+		vuo.SetHotness(*u)
+	}
 	return vuo
 }
 
@@ -748,6 +945,20 @@ func (vuo *VersionUpdateOne) SetMetadata(s string) *VersionUpdateOne {
 	return vuo
 }
 
+// SetNillableMetadata sets the "metadata" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableMetadata(s *string) *VersionUpdateOne {
+	if s != nil {
+		vuo.SetMetadata(*s)
+	}
+	return vuo
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (vuo *VersionUpdateOne) ClearMetadata() *VersionUpdateOne {
+	vuo.mutation.ClearMetadata()
+	return vuo
+}
+
 // SetModReference sets the "mod_reference" field.
 func (vuo *VersionUpdateOne) SetModReference(s string) *VersionUpdateOne {
 	vuo.mutation.SetModReference(s)
@@ -761,9 +972,23 @@ func (vuo *VersionUpdateOne) SetVersionMajor(i int) *VersionUpdateOne {
 	return vuo
 }
 
+// SetNillableVersionMajor sets the "version_major" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableVersionMajor(i *int) *VersionUpdateOne {
+	if i != nil {
+		vuo.SetVersionMajor(*i)
+	}
+	return vuo
+}
+
 // AddVersionMajor adds i to the "version_major" field.
 func (vuo *VersionUpdateOne) AddVersionMajor(i int) *VersionUpdateOne {
 	vuo.mutation.AddVersionMajor(i)
+	return vuo
+}
+
+// ClearVersionMajor clears the value of the "version_major" field.
+func (vuo *VersionUpdateOne) ClearVersionMajor() *VersionUpdateOne {
+	vuo.mutation.ClearVersionMajor()
 	return vuo
 }
 
@@ -774,9 +999,23 @@ func (vuo *VersionUpdateOne) SetVersionMinor(i int) *VersionUpdateOne {
 	return vuo
 }
 
+// SetNillableVersionMinor sets the "version_minor" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableVersionMinor(i *int) *VersionUpdateOne {
+	if i != nil {
+		vuo.SetVersionMinor(*i)
+	}
+	return vuo
+}
+
 // AddVersionMinor adds i to the "version_minor" field.
 func (vuo *VersionUpdateOne) AddVersionMinor(i int) *VersionUpdateOne {
 	vuo.mutation.AddVersionMinor(i)
+	return vuo
+}
+
+// ClearVersionMinor clears the value of the "version_minor" field.
+func (vuo *VersionUpdateOne) ClearVersionMinor() *VersionUpdateOne {
+	vuo.mutation.ClearVersionMinor()
 	return vuo
 }
 
@@ -787,9 +1026,23 @@ func (vuo *VersionUpdateOne) SetVersionPatch(i int) *VersionUpdateOne {
 	return vuo
 }
 
+// SetNillableVersionPatch sets the "version_patch" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableVersionPatch(i *int) *VersionUpdateOne {
+	if i != nil {
+		vuo.SetVersionPatch(*i)
+	}
+	return vuo
+}
+
 // AddVersionPatch adds i to the "version_patch" field.
 func (vuo *VersionUpdateOne) AddVersionPatch(i int) *VersionUpdateOne {
 	vuo.mutation.AddVersionPatch(i)
+	return vuo
+}
+
+// ClearVersionPatch clears the value of the "version_patch" field.
+func (vuo *VersionUpdateOne) ClearVersionPatch() *VersionUpdateOne {
+	vuo.mutation.ClearVersionPatch()
 	return vuo
 }
 
@@ -800,15 +1053,43 @@ func (vuo *VersionUpdateOne) SetSize(i int64) *VersionUpdateOne {
 	return vuo
 }
 
+// SetNillableSize sets the "size" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableSize(i *int64) *VersionUpdateOne {
+	if i != nil {
+		vuo.SetSize(*i)
+	}
+	return vuo
+}
+
 // AddSize adds i to the "size" field.
 func (vuo *VersionUpdateOne) AddSize(i int64) *VersionUpdateOne {
 	vuo.mutation.AddSize(i)
 	return vuo
 }
 
+// ClearSize clears the value of the "size" field.
+func (vuo *VersionUpdateOne) ClearSize() *VersionUpdateOne {
+	vuo.mutation.ClearSize()
+	return vuo
+}
+
 // SetHash sets the "hash" field.
 func (vuo *VersionUpdateOne) SetHash(s string) *VersionUpdateOne {
 	vuo.mutation.SetHash(s)
+	return vuo
+}
+
+// SetNillableHash sets the "hash" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableHash(s *string) *VersionUpdateOne {
+	if s != nil {
+		vuo.SetHash(*s)
+	}
+	return vuo
+}
+
+// ClearHash clears the value of the "hash" field.
+func (vuo *VersionUpdateOne) ClearHash() *VersionUpdateOne {
+	vuo.mutation.ClearHash()
 	return vuo
 }
 
@@ -1041,6 +1322,9 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	if value, ok := vuo.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)
 	}
+	if vuo.mutation.ChangelogCleared() {
+		_spec.ClearField(version.FieldChangelog, field.TypeString)
+	}
 	if value, ok := vuo.mutation.Downloads(); ok {
 		_spec.SetField(version.FieldDownloads, field.TypeUint, value)
 	}
@@ -1049,6 +1333,9 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	}
 	if value, ok := vuo.mutation.Key(); ok {
 		_spec.SetField(version.FieldKey, field.TypeString, value)
+	}
+	if vuo.mutation.KeyCleared() {
+		_spec.ClearField(version.FieldKey, field.TypeString)
 	}
 	if value, ok := vuo.mutation.Stability(); ok {
 		_spec.SetField(version.FieldStability, field.TypeEnum, value)
@@ -1068,6 +1355,9 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	if value, ok := vuo.mutation.Metadata(); ok {
 		_spec.SetField(version.FieldMetadata, field.TypeString, value)
 	}
+	if vuo.mutation.MetadataCleared() {
+		_spec.ClearField(version.FieldMetadata, field.TypeString)
+	}
 	if value, ok := vuo.mutation.ModReference(); ok {
 		_spec.SetField(version.FieldModReference, field.TypeString, value)
 	}
@@ -1077,11 +1367,17 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	if value, ok := vuo.mutation.AddedVersionMajor(); ok {
 		_spec.AddField(version.FieldVersionMajor, field.TypeInt, value)
 	}
+	if vuo.mutation.VersionMajorCleared() {
+		_spec.ClearField(version.FieldVersionMajor, field.TypeInt)
+	}
 	if value, ok := vuo.mutation.VersionMinor(); ok {
 		_spec.SetField(version.FieldVersionMinor, field.TypeInt, value)
 	}
 	if value, ok := vuo.mutation.AddedVersionMinor(); ok {
 		_spec.AddField(version.FieldVersionMinor, field.TypeInt, value)
+	}
+	if vuo.mutation.VersionMinorCleared() {
+		_spec.ClearField(version.FieldVersionMinor, field.TypeInt)
 	}
 	if value, ok := vuo.mutation.VersionPatch(); ok {
 		_spec.SetField(version.FieldVersionPatch, field.TypeInt, value)
@@ -1089,14 +1385,23 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	if value, ok := vuo.mutation.AddedVersionPatch(); ok {
 		_spec.AddField(version.FieldVersionPatch, field.TypeInt, value)
 	}
+	if vuo.mutation.VersionPatchCleared() {
+		_spec.ClearField(version.FieldVersionPatch, field.TypeInt)
+	}
 	if value, ok := vuo.mutation.Size(); ok {
 		_spec.SetField(version.FieldSize, field.TypeInt64, value)
 	}
 	if value, ok := vuo.mutation.AddedSize(); ok {
 		_spec.AddField(version.FieldSize, field.TypeInt64, value)
 	}
+	if vuo.mutation.SizeCleared() {
+		_spec.ClearField(version.FieldSize, field.TypeInt64)
+	}
 	if value, ok := vuo.mutation.Hash(); ok {
 		_spec.SetField(version.FieldHash, field.TypeString, value)
+	}
+	if vuo.mutation.HashCleared() {
+		_spec.ClearField(version.FieldHash, field.TypeString)
 	}
 	if vuo.mutation.ModCleared() {
 		edge := &sqlgraph.EdgeSpec{

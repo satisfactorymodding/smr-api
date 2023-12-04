@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // SmlVersion is the model entity for the SmlVersion schema.
@@ -28,7 +29,7 @@ type SmlVersion struct {
 	// SatisfactoryVersion holds the value of the "satisfactory_version" field.
 	SatisfactoryVersion int `json:"satisfactory_version,omitempty"`
 	// Stability holds the value of the "stability" field.
-	Stability smlversion.Stability `json:"stability,omitempty"`
+	Stability util.Stability `json:"stability,omitempty"`
 	// Date holds the value of the "date" field.
 	Date time.Time `json:"date,omitempty"`
 	// Link holds the value of the "link" field.
@@ -129,7 +130,7 @@ func (sv *SmlVersion) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field stability", values[i])
 			} else if value.Valid {
-				sv.Stability = smlversion.Stability(value.String)
+				sv.Stability = util.Stability(value.String)
 			}
 		case smlversion.FieldDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {

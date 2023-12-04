@@ -26,7 +26,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/proto/parser"
 	"github.com/satisfactorymodding/smr-api/storage"
 )
@@ -148,8 +148,11 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 		engineVersion := "4.26"
 
 		//nolint
-		if postgres.DBCtx(nil) != nil {
-			smlVersions := postgres.GetSMLVersions(ctx, nil)
+		if db.From(ctx) != nil {
+			smlVersions, err := db.From(ctx).SmlVersion.Query().All(ctx)
+			if err != nil {
+				return nil, err
+			}
 
 			// Sort decrementing by version
 			sort.Slice(smlVersions, func(a, b int) bool {

@@ -16,10 +16,11 @@ import (
 	"github.com/russross/blackfriday"
 	"github.com/spf13/viper"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
 )
 
-func NewMod(ctx context.Context, mod *postgres.Mod) {
+func NewMod(ctx context.Context, mod *ent.Mod) {
 	if mod == nil {
 		return
 	}
@@ -32,7 +33,11 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 		return
 	}
 
-	user := postgres.GetUserByID(ctx, mod.CreatorID)
+	user, err := db.From(ctx).User.Get(ctx, mod.CreatorID)
+	if err != nil {
+		slox.Error(ctx, "failed retrieving user", slog.Any("err", err))
+		return
+	}
 
 	if user == nil {
 		return
@@ -78,7 +83,7 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 	_, _ = io.ReadAll(res.Body)
 }
 
-func NewVersion(ctx context.Context, version *postgres.Version) {
+func NewVersion(ctx context.Context, version *ent.Version) {
 	slox.Info(ctx, "new version discord webhook", slog.String("stack", string(debug.Stack())))
 
 	if version == nil {
@@ -89,9 +94,9 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 		return
 	}
 
-	mod := postgres.GetModByID(ctx, version.ModID)
-
-	if mod == nil {
+	mod, err := db.From(ctx).Mod.Get(ctx, version.ModID)
+	if err != nil {
+		slox.Error(ctx, "failed retrieving mod", slog.Any("err", err))
 		return
 	}
 

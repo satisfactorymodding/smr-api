@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 const (
@@ -153,8 +154,12 @@ var (
 	VersionValidator func(string) error
 	// SmlVersionValidator is a validator for the "sml_version" field. It is called by the builders before save.
 	SmlVersionValidator func(string) error
+	// DefaultDownloads holds the default value on creation for the "downloads" field.
+	DefaultDownloads uint
 	// DefaultApproved holds the default value on creation for the "approved" field.
 	DefaultApproved bool
+	// DefaultHotness holds the default value on creation for the "hotness" field.
+	DefaultHotness uint
 	// DefaultDenied holds the default value on creation for the "denied" field.
 	DefaultDenied bool
 	// ModReferenceValidator is a validator for the "mod_reference" field. It is called by the builders before save.
@@ -165,24 +170,10 @@ var (
 	DefaultID func() string
 )
 
-// Stability defines the type for the "stability" enum field.
-type Stability string
-
-// Stability values.
-const (
-	StabilityAlpha   Stability = "alpha"
-	StabilityBeta    Stability = "beta"
-	StabilityRelease Stability = "release"
-)
-
-func (s Stability) String() string {
-	return string(s)
-}
-
 // StabilityValidator is a validator for the "stability" field enum values. It is called by the builders before save.
-func StabilityValidator(s Stability) error {
+func StabilityValidator(s util.Stability) error {
 	switch s {
-	case StabilityAlpha, StabilityBeta, StabilityRelease:
+	case "release", "beta", "alpha":
 		return nil
 	default:
 		return fmt.Errorf("version: invalid enum value for stability field: %q", s)

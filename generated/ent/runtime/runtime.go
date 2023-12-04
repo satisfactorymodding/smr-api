@@ -119,6 +119,22 @@ func init() {
 	modDescApproved := modFields[6].Descriptor()
 	// mod.DefaultApproved holds the default value on creation for the approved field.
 	mod.DefaultApproved = modDescApproved.Default.(bool)
+	// modDescViews is the schema descriptor for views field.
+	modDescViews := modFields[7].Descriptor()
+	// mod.DefaultViews holds the default value on creation for the views field.
+	mod.DefaultViews = modDescViews.Default.(uint)
+	// modDescHotness is the schema descriptor for hotness field.
+	modDescHotness := modFields[8].Descriptor()
+	// mod.DefaultHotness holds the default value on creation for the hotness field.
+	mod.DefaultHotness = modDescHotness.Default.(uint)
+	// modDescPopularity is the schema descriptor for popularity field.
+	modDescPopularity := modFields[9].Descriptor()
+	// mod.DefaultPopularity holds the default value on creation for the popularity field.
+	mod.DefaultPopularity = modDescPopularity.Default.(uint)
+	// modDescDownloads is the schema descriptor for downloads field.
+	modDescDownloads := modFields[10].Descriptor()
+	// mod.DefaultDownloads holds the default value on creation for the downloads field.
+	mod.DefaultDownloads = modDescDownloads.Default.(uint)
 	// modDescDenied is the schema descriptor for denied field.
 	modDescDenied := modFields[11].Descriptor()
 	// mod.DefaultDenied holds the default value on creation for the denied field.
@@ -127,6 +143,10 @@ func init() {
 	modDescModReference := modFields[13].Descriptor()
 	// mod.ModReferenceValidator is a validator for the "mod_reference" field. It is called by the builders before save.
 	mod.ModReferenceValidator = modDescModReference.Validators[0].(func(string) error)
+	// modDescHidden is the schema descriptor for hidden field.
+	modDescHidden := modFields[14].Descriptor()
+	// mod.DefaultHidden holds the default value on creation for the hidden field.
+	mod.DefaultHidden = modDescHidden.Default.(bool)
 	// modDescID is the schema descriptor for id field.
 	modDescID := modMixinFields0[0].Descriptor()
 	// mod.DefaultID holds the default value on creation for the id field.
@@ -352,10 +372,18 @@ func init() {
 	versionDescSmlVersion := versionFields[2].Descriptor()
 	// version.SmlVersionValidator is a validator for the "sml_version" field. It is called by the builders before save.
 	version.SmlVersionValidator = versionDescSmlVersion.Validators[0].(func(string) error)
+	// versionDescDownloads is the schema descriptor for downloads field.
+	versionDescDownloads := versionFields[4].Descriptor()
+	// version.DefaultDownloads holds the default value on creation for the downloads field.
+	version.DefaultDownloads = versionDescDownloads.Default.(uint)
 	// versionDescApproved is the schema descriptor for approved field.
 	versionDescApproved := versionFields[7].Descriptor()
 	// version.DefaultApproved holds the default value on creation for the approved field.
 	version.DefaultApproved = versionDescApproved.Default.(bool)
+	// versionDescHotness is the schema descriptor for hotness field.
+	versionDescHotness := versionFields[8].Descriptor()
+	// version.DefaultHotness holds the default value on creation for the hotness field.
+	version.DefaultHotness = versionDescHotness.Default.(uint)
 	// versionDescDenied is the schema descriptor for denied field.
 	versionDescDenied := versionFields[9].Descriptor()
 	// version.DefaultDenied holds the default value on creation for the denied field.

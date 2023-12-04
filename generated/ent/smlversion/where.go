@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // ID filters vertices based on their ID field.
@@ -351,23 +352,33 @@ func SatisfactoryVersionLTE(v int) predicate.SmlVersion {
 }
 
 // StabilityEQ applies the EQ predicate on the "stability" field.
-func StabilityEQ(v Stability) predicate.SmlVersion {
-	return predicate.SmlVersion(sql.FieldEQ(FieldStability, v))
+func StabilityEQ(v util.Stability) predicate.SmlVersion {
+	vc := v
+	return predicate.SmlVersion(sql.FieldEQ(FieldStability, vc))
 }
 
 // StabilityNEQ applies the NEQ predicate on the "stability" field.
-func StabilityNEQ(v Stability) predicate.SmlVersion {
-	return predicate.SmlVersion(sql.FieldNEQ(FieldStability, v))
+func StabilityNEQ(v util.Stability) predicate.SmlVersion {
+	vc := v
+	return predicate.SmlVersion(sql.FieldNEQ(FieldStability, vc))
 }
 
 // StabilityIn applies the In predicate on the "stability" field.
-func StabilityIn(vs ...Stability) predicate.SmlVersion {
-	return predicate.SmlVersion(sql.FieldIn(FieldStability, vs...))
+func StabilityIn(vs ...util.Stability) predicate.SmlVersion {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.SmlVersion(sql.FieldIn(FieldStability, v...))
 }
 
 // StabilityNotIn applies the NotIn predicate on the "stability" field.
-func StabilityNotIn(vs ...Stability) predicate.SmlVersion {
-	return predicate.SmlVersion(sql.FieldNotIn(FieldStability, vs...))
+func StabilityNotIn(vs ...util.Stability) predicate.SmlVersion {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.SmlVersion(sql.FieldNotIn(FieldStability, v...))
 }
 
 // DateEQ applies the EQ predicate on the "date" field.

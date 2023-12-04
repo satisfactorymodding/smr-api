@@ -7,8 +7,10 @@ import (
 	"io"
 	"log/slog"
 	"runtime/debug"
+	"strings"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/Vilsol/slox"
 	"github.com/dgraph-io/ristretto"
@@ -16,10 +18,10 @@ import (
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/generated/conv"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/redis"
@@ -31,7 +33,10 @@ func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (str
 	wrapper, ctx := WrapMutationTrace(ctx, "createVersion")
 	defer wrapper.end()
 
-	mod := postgres.GetModByID(ctx, modID)
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return "", err
+	}
 
 	if mod == nil {
 		return "", errors.New("mod not found")
@@ -60,7 +65,10 @@ func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, 
 		return false, errors.New("files can consist of max 41 chunks")
 	}
 
-	mod := postgres.GetModByID(ctx, modID)
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return false, err
+	}
 
 	if mod == nil {
 		return false, errors.New("mod not found")
@@ -89,7 +97,10 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 	wrapper, ctx := WrapMutationTrace(ctx, "finalizeCreateVersion")
 	defer wrapper.end()
 
-	mod := postgres.GetModByID(ctx, modID)
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return false, err
+	}
 
 	if mod == nil {
 		return false, errors.New("mod not found")
@@ -107,7 +118,7 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 
 	slox.Info(ctx, "finalization gql call")
 
-	go func(ctx context.Context, mod *postgres.Mod, versionID string, version generated.NewVersion) {
+	go func(ctx context.Context, mod *ent.Mod, versionID string, version generated.NewVersion) {
 		defer func() {
 			if r := recover(); r != nil {
 				slox.Error(ctx, "recovered from version finalization", slog.Any("recover", r), slog.String("stack", string(debug.Stack())))
@@ -142,31 +153,35 @@ func (r *mutationResolver) UpdateVersion(ctx context.Context, versionID string, 
 	wrapper, ctx := WrapMutationTrace(ctx, "updateVersion")
 	defer wrapper.end()
 
-	dbVersion := postgres.GetVersion(ctx, versionID)
+	dbVersion, get := db.From(ctx).Version.Get(ctx, versionID)
+	if get != nil {
+		return nil, get
+	}
 
 	if dbVersion == nil {
 		return nil, errors.New("version not found")
 	}
 
-	SetStringINNOE(version.Changelog, &dbVersion.Changelog)
-	SetStabilityINN(version.Stability, &dbVersion.Stability)
+	update := dbVersion.Update()
 
-	postgres.Save(ctx, &dbVersion)
+	SetINNOEF(version.Changelog, update.SetChangelog)
+	SetStabilityINNF(version.Stability, update.SetStability)
 
-	return DBVersionToGenerated(dbVersion), nil
+	dbVersion, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.VersionImpl)(nil).Convert(dbVersion), nil
 }
 
 func (r *mutationResolver) DeleteVersion(ctx context.Context, versionID string) (bool, error) {
 	wrapper, ctx := WrapMutationTrace(ctx, "deleteVersion")
 	defer wrapper.end()
 
-	dbVersion := postgres.GetVersion(ctx, versionID)
-
-	if dbVersion == nil {
-		return false, errors.New("version not found")
+	if err := db.From(ctx).Version.DeleteOneID(versionID).Exec(ctx); err != nil {
+		return false, err
 	}
-
-	postgres.Delete(ctx, &dbVersion)
 
 	return true, nil
 }
@@ -175,20 +190,22 @@ func (r *mutationResolver) ApproveVersion(ctx context.Context, versionID string)
 	wrapper, ctx := WrapMutationTrace(ctx, "approveVersion")
 	defer wrapper.end()
 
-	dbVersion := postgres.GetVersion(ctx, versionID)
+	dbVersion, err := db.From(ctx).Version.Get(ctx, versionID)
+	if err != nil {
+		return false, err
+	}
 
 	if dbVersion == nil {
 		return false, errors.New("version not found")
 	}
 
-	dbVersion.Approved = true
+	if err := dbVersion.Update().SetApproved(true).Exec(ctx); err != nil {
+		return false, err
+	}
 
-	postgres.Save(ctx, &dbVersion)
-
-	mod := postgres.GetModByID(ctx, dbVersion.ModID)
-	now := time.Now()
-	mod.LastVersionDate = &now
-	postgres.Save(ctx, &mod)
+	if err := db.From(ctx).Mod.UpdateOneID(dbVersion.ModID).SetLastVersionDate(time.Now()).Exec(ctx); err != nil {
+		return false, err
+	}
 
 	go integrations.NewVersion(db.ReWrapCtx(ctx), dbVersion)
 
@@ -199,19 +216,24 @@ func (r *mutationResolver) DenyVersion(ctx context.Context, versionID string) (b
 	wrapper, ctx := WrapMutationTrace(ctx, "denyVersion")
 	defer wrapper.end()
 
-	dbVersion := postgres.GetVersion(ctx, versionID)
+	dbVersion, err := db.From(ctx).Version.Get(ctx, versionID)
+	if err != nil {
+		return false, err
+	}
 
 	if dbVersion == nil {
 		return false, errors.New("version not found")
 	}
 
-	dbVersion.Denied = true
+	if err := dbVersion.Update().SetDenied(true).Exec(ctx); err != nil {
+		return false, err
+	}
 
-	postgres.Save(ctx, &dbVersion)
-	postgres.Delete(ctx, &dbVersion)
+	if err := db.From(ctx).Mod.UpdateOneID(dbVersion.ModID).SetLastVersionDate(time.Now()).Exec(ctx); err != nil {
+		return false, err
+	}
 
-	mod := postgres.GetModByID(ctx, dbVersion.ModID)
-	postgres.Save(ctx, &mod)
+	db.From(ctx).Version.DeleteOneID(versionID)
 
 	return true, nil
 }
@@ -219,7 +241,13 @@ func (r *mutationResolver) DenyVersion(ctx context.Context, versionID string) (b
 func (r *queryResolver) GetVersion(ctx context.Context, versionID string) (*generated.Version, error) {
 	wrapper, ctx := WrapQueryTrace(ctx, "getVersion")
 	defer wrapper.end()
-	return DBVersionToGenerated(postgres.GetVersion(ctx, versionID)), nil
+
+	result, err := db.From(ctx).Version.Get(ctx, versionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.VersionImpl)(nil).Convert(result), nil
 }
 
 func (r *queryResolver) GetVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
@@ -250,7 +278,10 @@ func (r *queryResolver) CheckVersionUploadState(ctx context.Context, modID strin
 	wrapper, ctx := WrapQueryTrace(ctx, "checkVersionUploadState")
 	defer wrapper.end()
 
-	mod := postgres.GetModByID(ctx, modID)
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return nil, err
+	}
 
 	if mod == nil {
 		return nil, errors.New("mod not found")
@@ -285,24 +316,15 @@ func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVers
 		versionFilter.AddField(field.Name)
 	}
 
-	var versions []postgres.Version
+	query := db.From(ctx).Version.Query().WithTargets()
+	query = convertVersionFilter(query, versionFilter, unapproved)
 
-	if versionFilter.Ids == nil || len(versionFilter.Ids) == 0 {
-		versions = postgres.GetVersionsNew(ctx, versionFilter, unapproved)
-	} else {
-		versions = postgres.GetVersionsByID(ctx, versionFilter.Ids)
+	result, err := query.All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	if versions == nil {
-		return nil, errors.New("versions not found")
-	}
-
-	converted := make([]*generated.Version, len(versions))
-	for k, v := range versions {
-		converted[k] = DBVersionToGenerated(&v)
-	}
-
-	return converted, nil
+	return (*conv.VersionImpl)(nil).ConvertSlice(result), nil
 }
 
 func (r *getVersionsResolver) Count(ctx context.Context, _ *generated.GetVersions) (int, error) {
@@ -317,11 +339,15 @@ func (r *getVersionsResolver) Count(ctx context.Context, _ *generated.GetVersion
 		return 0, err
 	}
 
-	if versionFilter.Ids != nil && len(versionFilter.Ids) != 0 {
-		return len(versionFilter.Ids), nil
+	query := db.From(ctx).Version.Query().WithTargets()
+	query = convertVersionFilter(query, versionFilter, unapproved)
+
+	count, err := query.Count(ctx)
+	if err != nil {
+		return 0, err
 	}
 
-	return int(postgres.GetVersionCountNew(ctx, versionFilter, unapproved)), nil
+	return count, nil
 }
 
 type versionResolver struct{ *Resolver }
@@ -354,7 +380,12 @@ func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*gen
 	wrapper, ctx := WrapQueryTrace(ctx, "Version.mod")
 	defer wrapper.end()
 
-	return DBModToGenerated(postgres.GetModByID(ctx, obj.ModID)), nil
+	mod, err := db.From(ctx).Mod.Get(ctx, obj.ModID)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.ModImpl)(nil).Convert(mod), nil
 }
 
 func (r *versionResolver) Hash(ctx context.Context, obj *generated.Version) (*string, error) {
@@ -457,24 +488,15 @@ func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMy
 		versionFilter.AddField(field.Name)
 	}
 
-	var versions []postgres.Version
+	query := db.From(ctx).Version.Query().WithTargets()
+	query = convertVersionFilter(query, versionFilter, unapproved)
 
-	if versionFilter.Ids == nil || len(versionFilter.Ids) == 0 {
-		versions = postgres.GetVersionsNew(ctx, versionFilter, unapproved)
-	} else {
-		versions = postgres.GetVersionsByID(ctx, versionFilter.Ids)
+	result, err := query.All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	if versions == nil {
-		return nil, errors.New("versions not found")
-	}
-
-	converted := make([]*generated.Version, len(versions))
-	for k, v := range versions {
-		converted[k] = DBVersionToGenerated(&v)
-	}
-
-	return converted, nil
+	return (*conv.VersionImpl)(nil).ConvertSlice(result), nil
 }
 
 func (r *getMyVersionsResolver) Count(ctx context.Context, _ *generated.GetMyVersions) (int, error) {
@@ -489,9 +511,37 @@ func (r *getMyVersionsResolver) Count(ctx context.Context, _ *generated.GetMyVer
 		return 0, err
 	}
 
-	if versionFilter.Ids != nil && len(versionFilter.Ids) != 0 {
-		return len(versionFilter.Ids), nil
+	query := db.From(ctx).Version.Query().WithTargets()
+	query = convertVersionFilter(query, versionFilter, unapproved)
+
+	count, err := query.Count(ctx)
+	if err != nil {
+		return 0, err
 	}
 
-	return int(postgres.GetVersionCountNew(ctx, versionFilter, unapproved)), nil
+	return count, nil
+}
+
+func convertVersionFilter(query *ent.VersionQuery, filter *models.VersionFilter, unapproved bool) *ent.VersionQuery {
+	if len(filter.Ids) > 0 {
+		query = query.Where(version.IDIn(filter.Ids...))
+	} else if filter != nil {
+		query = query.
+			Limit(*filter.Limit).
+			Offset(*filter.Offset).
+			Order(sql.OrderByField(
+				filter.OrderBy.String(),
+				db.OrderToOrder(filter.Order.String()),
+			).ToFunc())
+
+		if filter.Search != nil && *filter.Search != "" {
+			query = query.Modify(func(s *sql.Selector) {
+				s.Where(sql.ExprP("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & ")))
+			}).Clone()
+		}
+	}
+
+	query = query.Where(version.Approved(!unapproved), version.Denied(false))
+
+	return query
 }

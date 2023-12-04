@@ -600,6 +600,16 @@ func SourceURLHasSuffix(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldHasSuffix(FieldSourceURL, v))
 }
 
+// SourceURLIsNil applies the IsNil predicate on the "source_url" field.
+func SourceURLIsNil() predicate.Mod {
+	return predicate.Mod(sql.FieldIsNull(FieldSourceURL))
+}
+
+// SourceURLNotNil applies the NotNil predicate on the "source_url" field.
+func SourceURLNotNil() predicate.Mod {
+	return predicate.Mod(sql.FieldNotNull(FieldSourceURL))
+}
+
 // SourceURLEqualFold applies the EqualFold predicate on the "source_url" field.
 func SourceURLEqualFold(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldEqualFold(FieldSourceURL, v))
@@ -895,6 +905,16 @@ func LastVersionDateLTE(v time.Time) predicate.Mod {
 	return predicate.Mod(sql.FieldLTE(FieldLastVersionDate, v))
 }
 
+// LastVersionDateIsNil applies the IsNil predicate on the "last_version_date" field.
+func LastVersionDateIsNil() predicate.Mod {
+	return predicate.Mod(sql.FieldIsNull(FieldLastVersionDate))
+}
+
+// LastVersionDateNotNil applies the NotNil predicate on the "last_version_date" field.
+func LastVersionDateNotNil() predicate.Mod {
+	return predicate.Mod(sql.FieldNotNull(FieldLastVersionDate))
+}
+
 // ModReferenceEQ applies the EQ predicate on the "mod_reference" field.
 func ModReferenceEQ(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldModReference, v))
@@ -968,6 +988,16 @@ func HiddenEQ(v bool) predicate.Mod {
 // HiddenNEQ applies the NEQ predicate on the "hidden" field.
 func HiddenNEQ(v bool) predicate.Mod {
 	return predicate.Mod(sql.FieldNEQ(FieldHidden, v))
+}
+
+// CompatibilityIsNil applies the IsNil predicate on the "compatibility" field.
+func CompatibilityIsNil() predicate.Mod {
+	return predicate.Mod(sql.FieldIsNull(FieldCompatibility))
+}
+
+// CompatibilityNotNil applies the NotNil predicate on the "compatibility" field.
+func CompatibilityNotNil() predicate.Mod {
+	return predicate.Mod(sql.FieldNotNull(FieldCompatibility))
 }
 
 // HasVersions applies the HasEdge predicate on the "versions" edge.

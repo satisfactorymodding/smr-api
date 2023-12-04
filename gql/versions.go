@@ -8,13 +8,19 @@ import (
 	"log/slog"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db/schema"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
+	version2 "github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/redis/jobs"
 	"github.com/satisfactorymodding/smr-api/storage"
@@ -22,7 +28,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
-func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
+func FinalizeVersionUploadAsync(ctx context.Context, mod *ent.Mod, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
 	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
 
 	slox.Info(ctx, "Completing multipart upload")
@@ -78,20 +84,6 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	versionMinor := int(modInfo.Semver.Minor())
 	versionPatch := int(modInfo.Semver.Patch())
 
-	dbVersion := &postgres.Version{
-		Version:      modInfo.Version,
-		SMLVersion:   modInfo.SMLVersion,
-		Changelog:    version.Changelog,
-		ModID:        mod.ID,
-		Stability:    string(version.Stability),
-		ModReference: &modInfo.ModReference,
-		Size:         &modInfo.Size,
-		Hash:         &modInfo.Hash,
-		VersionMajor: &versionMajor,
-		VersionMinor: &versionMinor,
-		VersionPatch: &versionPatch,
-	}
-
 	autoApproved := true
 	for _, obj := range modInfo.Objects {
 		if obj.Type != "pak" {
@@ -102,35 +94,72 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 	autoApproved = autoApproved || viper.GetBool("skip-virus-check")
 
-	dbVersion.Approved = autoApproved
+	count, err := db.From(ctx).Version.Query().
+		Where(version2.ModID(mod.ID), version2.Version(modInfo.Version)).
+		Count(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	err = postgres.CreateVersion(ctx, dbVersion)
+	if count > 0 {
+		return nil, errors.New("this mod already has a version with this name")
+	}
 
+	// Allow only new 5 versions per 24h
+	versions, err := db.From(ctx).Version.Query().
+		Order(version2.ByCreatedAt(sql.OrderAsc())).
+		Where(version2.ModID(mod.ID), version2.CreatedAt(time.Now().Add(time.Hour*24*-1))).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(versions) >= 5 {
+		timeToWait := time.Until(versions[0].CreatedAt.Add(time.Hour * 24)).Minutes()
+		return nil, fmt.Errorf("please wait %.0f minutes to post another version", timeToWait)
+	}
+
+	dbVersion, err := db.From(ctx).Version.Create().
+		SetVersion(modInfo.Version).
+		SetSmlVersion(modInfo.SMLVersion).
+		SetChangelog(version.Changelog).
+		SetModID(mod.ID).
+		SetStability(util.Stability(version.Stability)).
+		SetModReference(modInfo.ModReference).
+		SetSize(modInfo.Size).
+		SetHash(modInfo.Hash).
+		SetVersionMajor(versionMajor).
+		SetVersionMinor(versionMinor).
+		SetVersionPatch(versionPatch).
+		SetApproved(autoApproved).
+		Save(ctx)
 	if err != nil {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 		return nil, err
 	}
 
 	for modID, condition := range modInfo.Dependencies {
-		dependency := postgres.VersionDependency{
-			VersionID: dbVersion.ID,
-			ModID:     modID,
-			Condition: condition,
-			Optional:  false,
+		_, err = db.From(ctx).VersionDependency.Create().
+			SetVersion(dbVersion).
+			SetModID(modID).
+			SetCondition(condition).
+			SetOptional(false).
+			Save(ctx)
+		if err != nil {
+			return nil, err
 		}
-
-		postgres.Save(ctx, &dependency)
 	}
 
 	for modID, condition := range modInfo.OptionalDependencies {
-		dependency := postgres.VersionDependency{
-			VersionID: dbVersion.ID,
-			ModID:     modID,
-			Condition: condition,
-			Optional:  true,
+		_, err = db.From(ctx).VersionDependency.Create().
+			SetVersion(dbVersion).
+			SetModID(modID).
+			SetCondition(condition).
+			SetOptional(true).
+			Save(ctx)
+		if err != nil {
+			return nil, err
 		}
-
-		postgres.Save(ctx, &dependency)
 	}
 
 	jsonData, err := json.Marshal(modInfo.Metadata)
@@ -138,20 +167,22 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 		slox.Error(ctx, "failed serializing", slog.Any("err", err), slog.String("version_id", dbVersion.ID))
 	} else {
 		metadata := string(jsonData)
-		dbVersion.Metadata = &metadata
-		postgres.Save(ctx, &dbVersion)
+		if _, err := dbVersion.Update().SetMetadata(metadata).Save(ctx); err != nil {
+			return nil, err
+		}
 	}
 
 	if modInfo.Type == validation.MultiTargetUEPlugin {
-		targets := make([]*postgres.VersionTarget, 0)
+		targets := make([]*ent.VersionTarget, 0)
 
 		for _, target := range modInfo.Targets {
-			dbVersionTarget := &postgres.VersionTarget{
-				VersionID:  dbVersion.ID,
-				TargetName: target,
+			dbVersionTarget, err := db.From(ctx).VersionTarget.Create().
+				SetVersionID(dbVersion.ID).
+				SetTargetName(target).
+				Save(ctx)
+			if err != nil {
+				return nil, err
 			}
-
-			postgres.Save(ctx, dbVersionTarget)
 
 			targets = append(targets, dbVersionTarget)
 		}
@@ -166,11 +197,9 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 				break
 			}
 
-			target.Key = key
-			target.Hash = hash
-			target.Size = size
-
-			postgres.Save(ctx, target)
+			if _, err := target.Update().SetKey(key).SetHash(hash).SetSize(size).Save(ctx); err != nil {
+				return nil, err
+			}
 		}
 
 		if !separateSuccess {
@@ -191,26 +220,25 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 	}
 
 	if modInfo.Type == validation.UEPlugin {
-		dbVersionTarget := &postgres.VersionTarget{
-			VersionID:  dbVersion.ID,
-			TargetName: "Windows",
-			Key:        key,
-			Hash:       *dbVersion.Hash,
-			Size:       *dbVersion.Size,
+		if _, err := db.From(ctx).VersionTarget.Create().
+			SetVersionID(dbVersion.ID).
+			SetTargetName("Windows").
+			SetKey(key).
+			SetHash(dbVersion.Hash).
+			SetSize(dbVersion.Size).
+			Save(ctx); err != nil {
+			return nil, err
 		}
-
-		postgres.Save(ctx, dbVersionTarget)
 	}
 
-	dbVersion.Key = key
-	postgres.Save(ctx, &dbVersion)
-	postgres.Save(ctx, &mod)
+	if _, err := dbVersion.Update().SetKey(key).Save(ctx); err != nil {
+		return nil, err
+	}
 
 	if autoApproved {
-		mod := postgres.GetModByID(ctx, dbVersion.ModID)
-		now := time.Now()
-		mod.LastVersionDate = &now
-		postgres.Save(ctx, &mod)
+		if _, err := mod.Update().SetLastVersionDate(time.Now()).Save(ctx); err != nil {
+			return nil, err
+		}
 
 		go integrations.NewVersion(db.ReWrapCtx(ctx), dbVersion)
 	} else {
@@ -220,46 +248,52 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *postgres.Mod, versionI
 
 	return &generated.CreateVersionResponse{
 		AutoApproved: autoApproved,
-		Version:      DBVersionToGenerated(dbVersion),
+		Version:      (*conv.VersionImpl)(nil).Convert(dbVersion),
 	}, nil
 }
 
-func removeMod(ctx context.Context, modInfo *validation.ModInfo, mod *postgres.Mod, dbVersion *postgres.Version) {
+func removeMod(ctx context.Context, modInfo *validation.ModInfo, mod *ent.Mod, dbVersion *ent.Version) {
 	for modID, condition := range modInfo.Dependencies {
-		dependency := postgres.VersionDependency{
-			VersionID: dbVersion.ID,
-			ModID:     modID,
-			Condition: condition,
-			Optional:  false,
+		if _, err := db.From(ctx).VersionDependency.Delete().Where(
+			versiondependency.VersionID(dbVersion.ID),
+			versiondependency.ModID(modID),
+			versiondependency.Condition(condition),
+			versiondependency.Optional(false),
+		).Exec(schema.SkipSoftDelete(ctx)); err != nil {
+			slox.Error(ctx, "failed deleting version dependency", slog.Any("err", err))
+			return
 		}
-
-		postgres.DeleteForced(ctx, &dependency)
 	}
 
 	for modID, condition := range modInfo.OptionalDependencies {
-		dependency := postgres.VersionDependency{
-			VersionID: dbVersion.ID,
-			ModID:     modID,
-			Condition: condition,
-			Optional:  true,
+		if _, err := db.From(ctx).VersionDependency.Delete().Where(
+			versiondependency.VersionID(dbVersion.ID),
+			versiondependency.ModID(modID),
+			versiondependency.Condition(condition),
+			versiondependency.Optional(true),
+		).Exec(schema.SkipSoftDelete(ctx)); err != nil {
+			slox.Error(ctx, "failed deleting version dependency", slog.Any("err", err))
+			return
 		}
-
-		postgres.DeleteForced(ctx, &dependency)
 	}
 
 	for _, target := range modInfo.Targets {
-		dbVersionTarget := postgres.VersionTarget{
-			VersionID:  dbVersion.ID,
-			TargetName: target,
+		if _, err := db.From(ctx).VersionTarget.Delete().Where(
+			versiontarget.VersionID(dbVersion.ID),
+			versiontarget.TargetName(target),
+		).Exec(schema.SkipSoftDelete(ctx)); err != nil {
+			slox.Error(ctx, "failed deleting version target", slog.Any("err", err))
+			return
 		}
-
-		postgres.DeleteForced(ctx, &dbVersionTarget)
 	}
 
 	// For UEPlugin mods, a Windows target is created.
 	// However, that happens after the last possible call to this function, therefore we can ignore it
 
-	postgres.DeleteForced(ctx, &dbVersion)
+	if err := db.From(ctx).Version.DeleteOneID(dbVersion.ID).Exec(schema.SkipSoftDelete(ctx)); err != nil {
+		slox.Error(ctx, "failed deleting version", slog.Any("err", err))
+		return
+	}
 
 	storage.DeleteMod(ctx, mod.ID, mod.Name, dbVersion.ID)
 	for _, target := range modInfo.Targets {
