@@ -66,7 +66,9 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) (bool, er
 				return false, nil
 			}
 
-			if *target.Attributes.Stats.Malicious > 0 || *target.Attributes.Stats.Suspicious > 0 {
+			// Why 1? Well because some company made a shitty AI and it flags random mods.
+			if *target.Attributes.Stats.Malicious > 1 || *target.Attributes.Stats.Suspicious > 1 {
+				log.Error().Msgf("suspicious or malicious file found: %s", name)
 				return false, nil
 			}
 
