@@ -75,7 +75,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 	SetINNF(newMod.FullDescription, dbMod.SetFullDescription)
 	SetINNF(newMod.Hidden, dbMod.SetHidden)
 
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +347,7 @@ func (r *queryResolver) GetMod(ctx context.Context, modID string) (*generated.Mo
 	wrapper, ctx := WrapQueryTrace(ctx, "getMod")
 	defer wrapper.end()
 
-	dbMod, err := db.From(ctx).Mod.Get(ctx, modID)
+	dbMod, err := db.From(ctx).Mod.Query().Where(mod.ID(modID)).WithTags().First(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +367,7 @@ func (r *queryResolver) GetModByReference(ctx context.Context, modReference stri
 	wrapper, ctx := WrapQueryTrace(ctx, "getModByReference")
 	defer wrapper.end()
 
-	dbMod, err := db.From(ctx).Mod.Query().Where(mod.ModReference(modReference)).First(ctx)
+	dbMod, err := db.From(ctx).Mod.Query().Where(mod.ModReference(modReference)).WithTags().First(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -448,7 +448,7 @@ func (r *getModsResolver) Count(ctx context.Context, _ *generated.GetMods) (int,
 		return 0, err
 	}
 
-	query := db.From(ctx).Debug().Mod.Query()
+	query := db.From(ctx).Mod.Query()
 	query = convertModFilter(query, modFilter, false, unapproved)
 
 	result, err := query.Count(ctx)
@@ -477,7 +477,7 @@ func (r *getMyModsResolver) Mods(ctx context.Context, _ *generated.GetMyMods) ([
 		modFilter.AddField(field.Name)
 	}
 
-	query := db.From(ctx).Debug().Mod.Query()
+	query := db.From(ctx).Mod.Query()
 	query = convertModFilter(query, modFilter, false, unapproved)
 
 	result, err := query.All(ctx)
@@ -500,7 +500,7 @@ func (r *getMyModsResolver) Count(ctx context.Context, _ *generated.GetMyMods) (
 		return 0, err
 	}
 
-	query := db.From(ctx).Debug().Mod.Query()
+	query := db.From(ctx).Mod.Query()
 	query = convertModFilter(query, modFilter, false, unapproved)
 
 	result, err := query.Count(ctx)
@@ -677,7 +677,7 @@ func (r *queryResolver) GetModByIDOrReference(ctx context.Context, modIDOrRefere
 	wrapper, ctx := WrapQueryTrace(ctx, "getModByIdOrReference")
 	defer wrapper.end()
 
-	m, err := db.From(ctx).Mod.Query().Where(mod.Or(
+	m, err := db.From(ctx).Mod.Query().WithTags().Where(mod.Or(
 		mod.ID(modIDOrReference),
 		mod.ModReference(modIDOrReference),
 	)).First(ctx)
@@ -757,6 +757,8 @@ func (r *queryResolver) GetModAssetList(ctx context.Context, modReference string
 }
 
 func convertModFilter(query *ent.ModQuery, filter *models.ModFilter, count bool, unapproved bool) *ent.ModQuery {
+	query = query.WithTags()
+
 	if len(filter.Ids) > 0 {
 		query = query.Where(mod.IDIn(filter.Ids...))
 	} else if len(filter.References) > 0 {
@@ -768,10 +770,9 @@ func convertModFilter(query *ent.ModQuery, filter *models.ModFilter, count bool,
 
 		if *filter.OrderBy != generated.ModFieldsSearch {
 			if string(*filter.OrderBy) == "last_version_date" {
-				query = query.Order(sql.OrderByField(
-					"case when last_version_date is null then 1 else 0 end, last_version_date",
-					db.OrderToOrder(filter.Order.String()),
-				).ToFunc())
+				query = query.Modify(func(s *sql.Selector) {
+					s.OrderExpr(sql.ExprP("case when last_version_date is null then 1 else 0 end, last_version_date"))
+				}).Clone()
 			} else {
 				query = query.Order(sql.OrderByField(
 					filter.OrderBy.String(),

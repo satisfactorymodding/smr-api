@@ -167,7 +167,7 @@ func (r *queryResolver) GetMe(ctx context.Context) (*generated.User, error) {
 	wrapper, ctx := WrapQueryTrace(ctx, "getMe")
 	defer wrapper.end()
 
-	result, err := db.UserFromGQLContext(ctx)
+	result, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +233,7 @@ func (r *userResolver) Groups(ctx context.Context, _ *generated.User) ([]*genera
 	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
-	u, err := db.UserFromGQLContext(ctx)
+	u, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (r *userResolver) Roles(ctx context.Context, _ *generated.User) (*generated
 	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
-	u, err := db.UserFromGQLContext(ctx)
+	u, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +357,7 @@ func (r *mutationResolver) DiscourseSso(ctx context.Context, sso string, sig str
 		return nil, fmt.Errorf("failed to decode sso: %w", err)
 	}
 
-	u, err := db.UserFromGQLContext(ctx)
+	u, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}

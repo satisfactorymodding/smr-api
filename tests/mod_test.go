@@ -32,7 +32,7 @@ func TestMods(t *testing.T) {
 
 	// Run Twice to detect any cache issues
 	for i := 0; i < 2; i++ {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
+		t.Run("Loop"+strconv.Itoa(i), func(t *testing.T) {
 			var objID string
 
 			modReference := "hello" + strconv.Itoa(i)

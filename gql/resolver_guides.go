@@ -34,7 +34,7 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, g generated.NewGuide
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}

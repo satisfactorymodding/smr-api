@@ -36,7 +36,7 @@ type Directive struct {
 }
 
 func canEditMod(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func canEditMod(ctx context.Context, _ interface{}, next graphql.Resolver, field
 }
 
 func canEditModCompatibility(ctx context.Context, _ interface{}, next graphql.Resolver, field *string) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func canEditModCompatibility(ctx context.Context, _ interface{}, next graphql.Re
 }
 
 func canEditVersion(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func canEditVersion(ctx context.Context, _ interface{}, next graphql.Resolver, f
 }
 
 func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, field string, object bool) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func canEditUser(ctx context.Context, obj interface{}, next graphql.Resolver, fi
 }
 
 func canEditGuide(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func canEditGuide(ctx context.Context, _ interface{}, next graphql.Resolver, fie
 }
 
 func isLoggedIn(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -150,8 +150,8 @@ func isLoggedIn(ctx context.Context, _ interface{}, next graphql.Resolver) (inte
 }
 
 func isNotLoggedIn(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
-	if err != nil {
+	user, nonFatal, err := db.UserFromGQLContext(ctx)
+	if err != nil && !nonFatal {
 		return nil, err
 	}
 
@@ -167,7 +167,7 @@ func getArgument(ctx context.Context, key string) interface{} {
 }
 
 func canApproveMods(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func canApproveMods(ctx context.Context, _ interface{}, next graphql.Resolver) (
 }
 
 func canApproveVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func canApproveVersions(ctx context.Context, _ interface{}, next graphql.Resolve
 }
 
 func canEditUsers(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func canEditUsers(ctx context.Context, _ interface{}, next graphql.Resolver) (in
 }
 
 func canEditSMLVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func canEditSMLVersions(ctx context.Context, _ interface{}, next graphql.Resolve
 }
 
 func canEditBootstrapVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,7 @@ func canEditBootstrapVersions(ctx context.Context, _ interface{}, next graphql.R
 }
 
 func canEditAnnouncements(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func canEditAnnouncements(ctx context.Context, _ interface{}, next graphql.Resol
 }
 
 func canManageTags(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, err := db.UserFromGQLContext(ctx)
+	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}

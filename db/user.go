@@ -32,24 +32,24 @@ func UserHas(ctx context.Context, role *auth.Role, usr *ent.User) bool {
 	return exist
 }
 
-func UserFromGQLContext(ctx context.Context) (*ent.User, error) {
+func UserFromGQLContext(ctx context.Context) (*ent.User, bool, error) {
 	header := ctx.Value(util.ContextHeader{}).(http.Header)
 	authorization := header.Get("Authorization")
 
 	if authorization == "" {
-		return nil, errors.New("user not logged in")
+		return nil, true, errors.New("user not logged in")
 	}
 
 	user, err := From(ctx).UserSession.Query().Where(usersession.Token(authorization)).QueryUser().First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, errors.New("user not logged in")
+			return nil, true, errors.New("user not logged in")
 		}
 
-		return nil, err
+		return nil, false, err
 	}
 
-	return user, nil
+	return user, false, nil
 }
 
 func UserCanUploadModVersions(ctx context.Context, user *ent.User, modID string) bool {
