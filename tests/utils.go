@@ -2,19 +2,24 @@ package tests
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"log/slog"
 	"sync"
 
 	"github.com/Vilsol/slox"
 	"github.com/machinebox/graphql"
+	"github.com/spf13/viper"
 
 	smr "github.com/satisfactorymodding/smr-api/api"
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
+
+	// Import pgx
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func setup() (context.Context, *graphql.Client, func()) {
@@ -30,14 +35,39 @@ func setup() (context.Context, *graphql.Client, func()) {
 		TableName string
 	}
 
-	// TODO Replace with ENT
-	err := postgres.DBCtx(ctx).Raw(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`).Scan(&out).Error
+	connection, err := sql.Open("pgx", fmt.Sprintf(
+		"sslmode=disable host=%s port=%d user=%s dbname=%s password=%s",
+		viper.GetString("database.postgres.host"),
+		viper.GetInt("database.postgres.port"),
+		viper.GetString("database.postgres.user"),
+		viper.GetString("database.postgres.db"),
+		viper.GetString("database.postgres.pass"),
+	))
 	if err != nil {
 		panic(err)
 	}
 
+	query, err := connection.Query(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`)
+	if err != nil {
+		panic(err)
+	}
+	defer query.Close()
+
+	for query.Next() {
+		row := struct {
+			TableName string
+		}{}
+
+		err = query.Scan(&row.TableName)
+		if err != nil {
+			panic(err)
+		}
+
+		out = append(out, row)
+	}
+
 	for _, name := range out {
-		err := postgres.DBCtx(ctx).Exec(`DROP TABLE IF EXISTS ` + name.TableName + ` CASCADE`).Error
+		_, err = connection.Exec(`DROP TABLE IF EXISTS ` + name.TableName + ` CASCADE`)
 		if err != nil {
 			panic(err)
 		}

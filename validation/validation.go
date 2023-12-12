@@ -170,6 +170,8 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 					break
 				}
 			}
+		} else {
+			slox.Warn(ctx, "no database context provided to validator")
 		}
 
 		slox.Info(ctx, "decided engine version", slog.String("version", engineVersion))

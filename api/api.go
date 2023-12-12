@@ -39,7 +39,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/gql"
 	"github.com/satisfactorymodding/smr-api/migrations"
@@ -79,7 +78,6 @@ func Initialize(baseCtx context.Context) context.Context {
 	}
 
 	redis.InitializeRedis(ctx)
-	postgres.InitializePostgres(ctx)
 
 	ctx, err := db.WithDB(ctx)
 	if err != nil {

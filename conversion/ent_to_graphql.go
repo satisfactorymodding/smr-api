@@ -83,7 +83,7 @@ type Mod interface {
 // goverter:extend TimeToString UIntToInt Int64ToInt
 type Version interface {
 	// goverter:map Edges.Targets Targets
-	// goverter:ignore Link Mod Dependencies Size Hash
+	// goverter:ignore Link Mod Dependencies
 	Convert(source *ent.Version) *generated.Version
 	ConvertSlice(source []*ent.Version) []*generated.Version
 

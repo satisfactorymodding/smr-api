@@ -242,7 +242,7 @@ func (r *queryResolver) GetVersion(ctx context.Context, versionID string) (*gene
 	wrapper, ctx := WrapQueryTrace(ctx, "getVersion")
 	defer wrapper.end()
 
-	result, err := db.From(ctx).Version.Get(ctx, versionID)
+	result, err := db.From(ctx).Version.Query().WithTargets().Where(version.ID(versionID)).First(ctx)
 	if err != nil {
 		return nil, err
 	}

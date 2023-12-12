@@ -34,6 +34,10 @@ func (c *VersionImpl) Convert(source *ent.Version) *generated.Version {
 		generatedVersion.Targets = pGeneratedVersionTargetList
 		pString := (*source).Metadata
 		generatedVersion.Metadata = &pString
+		pInt := conversion.Int64ToInt((*source).Size)
+		generatedVersion.Size = &pInt
+		pString2 := (*source).Hash
+		generatedVersion.Hash = &pString2
 		pGeneratedVersion = &generatedVersion
 	}
 	return pGeneratedVersion

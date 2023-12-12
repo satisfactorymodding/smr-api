@@ -85,7 +85,7 @@ func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]*generated.Anno
 	wrapper, ctx := WrapQueryTrace(ctx, "getAnnouncements")
 	defer wrapper.end()
 
-	result, err := db.From(ctx).Debug().Announcement.Query().All(ctx)
+	result, err := db.From(ctx).Announcement.Query().All(ctx)
 	if err != nil {
 		return nil, err
 	}

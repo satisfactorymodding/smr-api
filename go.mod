@@ -2,6 +2,8 @@ module github.com/satisfactorymodding/smr-api
 
 go 1.21
 
+toolchain go1.21.4
+
 require (
 	ariga.io/entcache v0.1.0
 	entgo.io/ent v0.12.4
@@ -33,7 +35,6 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/o1egl/paseto v1.0.0
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.6.0
 	github.com/sizeofint/gif-to-webp v0.0.0-20210224202734-e9d7ed071591
@@ -44,7 +45,6 @@ require (
 	github.com/vmihailenco/taskq/extra/taskqotel/v3 v3.2.9
 	github.com/vmihailenco/taskq/v3 v3.2.9
 	github.com/xeipuuv/gojsonschema v1.2.0
-	go.opentelemetry.io/contrib v1.20.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.45.0
 	go.opentelemetry.io/otel v1.19.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.19.0
@@ -58,8 +58,6 @@ require (
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
-	gorm.io/driver/postgres v1.5.3
-	gorm.io/gorm v1.25.5
 )
 
 require (
@@ -122,8 +120,6 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.1 // indirect

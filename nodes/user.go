@@ -1,21 +1,34 @@
 package nodes
 
 import (
+	"log/slog"
 	"strings"
 
+	"github.com/Vilsol/slox"
 	"github.com/labstack/echo/v4"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/user"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 )
 
-func userFromContext(c echo.Context) *postgres.User {
+func userFromContext(c echo.Context) *ent.User {
 	authorization := c.Request().Header.Get("Authorization")
 
 	if authorization == "" {
 		return nil
 	}
 
-	user := postgres.GetUserByToken(c.Request().Context(), authorization)
+	user, err := db.From(c.Request().Context()).User.Query().
+		Where(user.HasSessionsWith(usersession.Token(authorization))).
+		First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mods", slog.Any("err", err))
+		return nil
+	}
 
 	if user == nil {
 		return nil
@@ -31,8 +44,14 @@ func userFromContext(c echo.Context) *postgres.User {
 // @Produce  json
 // @Success 200
 // @Router /user/me [get]
-func getMe(user *postgres.User, _ echo.Context) (interface{}, *ErrorResponse) {
-	return UserToPrivateUser(user), nil
+func getMe(user *ent.User, _ echo.Context) (interface{}, *ErrorResponse) {
+	return &User{
+		ID:        user.ID,
+		Email:     user.Email,
+		Username:  user.Username,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
+	}, nil
 }
 
 // @Summary Log Out Current User
@@ -42,8 +61,13 @@ func getMe(user *postgres.User, _ echo.Context) (interface{}, *ErrorResponse) {
 // @Produce  json
 // @Success 200
 // @Router /user/me/logout [get]
-func getLogout(_ *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
-	postgres.LogoutSession(c.Request().Context(), c.Request().Header.Get("Authorization"))
+func getLogout(_ *ent.User, c echo.Context) (interface{}, *ErrorResponse) {
+	if _, err := db.From(c.Request().Context()).UserSession.Delete().
+		Where(usersession.Token(c.Request().Header.Get("Authorization"))).
+		Exec(c.Request().Context()); err != nil {
+		slox.Error(c.Request().Context(), "failed deleting session", slog.Any("err", err))
+		return nil, &ErrorUserNotFound
+	}
 	return nil, nil
 }
 
@@ -54,15 +78,14 @@ func getLogout(_ *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
 // @Produce  json
 // @Success 200
 // @Router /user/me/mods [get]
-func getMyMods(user *postgres.User, c echo.Context) (interface{}, *ErrorResponse) {
-	mods := postgres.GetUserMods(c.Request().Context(), user.ID)
-
-	converted := make([]*UserMod, len(mods))
-	for k, v := range mods {
-		converted[k] = UserModToUserMod(&v)
+func getMyMods(user *ent.User, c echo.Context) (interface{}, *ErrorResponse) {
+	mods, err := db.From(c.Request().Context()).UserMod.Query().Where(usermod.UserID(user.ID)).All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching authors", slog.Any("err", err))
+		return nil, &ErrorUserNotFound
 	}
 
-	return converted, nil
+	return (*conv.UserModImpl)(nil).ConvertSlice(mods), nil
 }
 
 // @Summary Retrieve a list of Users
@@ -80,18 +103,13 @@ func getUsers(c echo.Context) (interface{}, *ErrorResponse) {
 
 	// TODO limit amount of users requestable
 
-	users := postgres.GetUsersByID(c.Request().Context(), userIDSplit)
-
-	if users == nil {
-		return nil, &ErrorUserNotFound
+	users, err := db.From(c.Request().Context()).User.Query().Where(user.IDIn(userIDSplit...)).All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching users", slog.Any("err", err))
+		return nil, nil
 	}
 
-	converted := make([]*PublicUser, len(*users))
-	for k, v := range *users {
-		converted[k] = UserToPublicUser(&v)
-	}
-
-	return converted, nil
+	return (*conv.UserImpl)(nil).ConvertSlice(users), nil
 }
 
 // @Summary Retrieve a Users Mods
@@ -105,20 +123,23 @@ func getUsers(c echo.Context) (interface{}, *ErrorResponse) {
 func getUserMods(c echo.Context) (interface{}, *ErrorResponse) {
 	userID := c.Param("userId")
 
-	user := postgres.GetUserByID(c.Request().Context(), userID)
+	user, err := db.From(c.Request().Context()).User.Get(c.Request().Context(), userID)
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mods", slog.Any("err", err))
+		return nil, &ErrorUserNotFound
+	}
 
 	if user == nil {
 		return nil, &ErrorUserNotFound
 	}
 
-	mods := postgres.GetUserMods(c.Request().Context(), user.ID)
-
-	converted := make([]*UserMod, len(mods))
-	for k, v := range mods {
-		converted[k] = UserModToUserMod(&v)
+	mods, err := db.From(c.Request().Context()).UserMod.Query().Where(usermod.UserID(user.ID)).All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mods", slog.Any("err", err))
+		return nil, &ErrorModNotFound
 	}
 
-	return converted, nil
+	return (*conv.UserModImpl)(nil).ConvertSlice(mods), nil
 }
 
 // @Summary Retrieve a User
@@ -132,11 +153,20 @@ func getUserMods(c echo.Context) (interface{}, *ErrorResponse) {
 func getUser(c echo.Context) (interface{}, *ErrorResponse) {
 	userID := c.Param("userId")
 
-	user := postgres.GetUserByID(c.Request().Context(), userID)
+	user, err := db.From(c.Request().Context()).User.Get(c.Request().Context(), userID)
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mods", slog.Any("err", err))
+		return nil, &ErrorUserNotFound
+	}
 
 	if user == nil {
 		return nil, &ErrorUserNotFound
 	}
 
-	return UserToPublicUser(user), nil
+	return &PublicUser{
+		ID:        user.ID,
+		Username:  user.Username,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
+	}, nil
 }

@@ -3,7 +3,7 @@ package nodes
 import (
 	"github.com/labstack/echo/v4"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
 )
 
 type DataFunction func(c echo.Context) (data interface{}, err *ErrorResponse)
@@ -25,7 +25,7 @@ func dataWrapper(nested DataFunction) func(c echo.Context) error {
 	}
 }
 
-type AuthorizedDataFunction func(user *postgres.User, c echo.Context) (data interface{}, err *ErrorResponse)
+type AuthorizedDataFunction func(user *ent.User, c echo.Context) (data interface{}, err *ErrorResponse)
 
 func authorized(nested AuthorizedDataFunction) DataFunction {
 	return func(c echo.Context) (interface{}, *ErrorResponse) {
