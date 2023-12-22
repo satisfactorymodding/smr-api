@@ -22,7 +22,7 @@ extend type Query {
 ### Mutations
 
 extend type Mutation {
-    createTag(tagName: TagName!): Tag @isLoggedIn
+    createTag(tagName: TagName!): Tag @canManageTags @isLoggedIn
     createMultipleTags(tagNames: [TagName!]!): [Tag!]! @canManageTags @isLoggedIn
     updateTag(tagID: TagID!, NewName: TagName!): Tag! @canManageTags @isLoggedIn
     deleteTag(tagID: TagID!): Boolean! @canManageTags @isLoggedIn

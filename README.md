@@ -1,4 +1,4 @@
-# SMR API ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/satisfactorymodding/smr-api/build) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/satisfactorymodding/smr-api) [![codecov](https://codecov.io/gh/satisfactorymodding/smr-api/branch/master/graph/badge.svg?token=LFNKYWS0N2)](https://codecov.io/gh/satisfactorymodding/smr-api) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/satisfactorymodding/smr-api)
+# SMR API [![build](https://github.com/satisfactorymodding/smr-api/actions/workflows/build.yml/badge.svg)](https://github.com/satisfactorymodding/smr-api/actions/workflows/build.yml) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/satisfactorymodding/smr-api) [![codecov](https://codecov.io/gh/satisfactorymodding/smr-api/branch/master/graph/badge.svg?token=LFNKYWS0N2)](https://codecov.io/gh/satisfactorymodding/smr-api) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/satisfactorymodding/smr-api)
 
 The Satisfactory Mod Repository backend API
 

@@ -1,11 +1,15 @@
 package nodes
 
 import (
+	"log/slog"
 	"time"
 
+	"github.com/Vilsol/slox"
 	"github.com/labstack/echo/v4"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/storage"
 )
@@ -21,13 +25,17 @@ import (
 func getVersion(c echo.Context) (interface{}, *ErrorResponse) {
 	versionID := c.Param("versionId")
 
-	version := postgres.GetVersion(c.Request().Context(), versionID)
+	version, err := db.From(c.Request().Context()).Version.Get(c.Request().Context(), versionID)
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching version", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
+	}
 
 	if version == nil {
 		return nil, &ErrorVersionNotFound
 	}
 
-	return VersionToVersion(version), nil
+	return (*conv.VersionImpl)(nil).Convert(version), nil
 }
 
 // @Summary Download a Version
@@ -41,14 +49,18 @@ func getVersion(c echo.Context) (interface{}, *ErrorResponse) {
 func downloadVersion(c echo.Context) error {
 	versionID := c.Param("versionId")
 
-	version := postgres.GetVersion(c.Request().Context(), versionID)
+	version, err := db.From(c.Request().Context()).Version.Get(c.Request().Context(), versionID)
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching version", slog.Any("err", err))
+		return err
+	}
 
 	if version == nil {
 		return c.String(404, "version not found")
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
-		postgres.IncrementVersionDownloads(c.Request().Context(), version)
+		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
 	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))
@@ -68,20 +80,28 @@ func downloadModTarget(c echo.Context) error {
 	versionID := c.Param("versionId")
 	target := c.Param("target")
 
-	version := postgres.GetVersion(c.Request().Context(), versionID)
+	version, err := db.From(c.Request().Context()).Version.Get(c.Request().Context(), versionID)
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching version", slog.Any("err", err))
+		return err
+	}
 
 	if version == nil {
 		return c.String(404, "version not found, versionID:"+versionID)
 	}
 
-	versionTarget := postgres.GetVersionTarget(c.Request().Context(), versionID, target)
+	versionTarget, err := version.QueryTargets().Where(versiontarget.TargetName(target)).First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching target", slog.Any("err", err))
+		return err
+	}
 
 	if versionTarget == nil {
 		return c.String(404, "target not found, versionID:"+versionID+" target:"+target)
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
-		postgres.IncrementVersionDownloads(c.Request().Context(), version)
+		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
 	return c.Redirect(302, storage.GenerateDownloadLink(versionTarget.Key))

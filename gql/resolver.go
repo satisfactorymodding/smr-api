@@ -62,10 +62,6 @@ func (r *Resolver) GetSMLVersions() generated.GetSMLVersionsResolver {
 	return &getSMLVersionsResolver{r}
 }
 
-func (r *Resolver) GetBootstrapVersions() generated.GetBootstrapVersionsResolver {
-	return &getBootstrapVersionsResolver{r}
-}
-
 type mutationResolver struct{ *Resolver }
 
 type queryResolver struct{ *Resolver }

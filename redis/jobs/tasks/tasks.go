@@ -6,7 +6,6 @@ var (
 	UpdateDBFromModVersionFileTask     *taskq.Task
 	UpdateDBFromModVersionJSONFileTask *taskq.Task
 	CopyObjectFromOldBucketTask        *taskq.Task
-	CopyObjectToOldBucketTask          *taskq.Task
 	ScanModOnVirusTotalTask            *taskq.Task
 )
 

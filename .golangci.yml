@@ -4,8 +4,6 @@ linters-settings:
       - .Errorf(
       - errors.New(
       - errors.Unwrap(
-      - .Wrap(
-      - .Wrapf(
       - .WithMessage(
       - .WithMessagef(
       - .WithStack(
@@ -38,7 +36,7 @@ run:
     - ./generated/generated.go
     - ./generated/models_gen.go
   skip-dirs:
-    - ./docs/
+    - ./generated/
 
 issues:
   exclude:
@@ -58,7 +56,6 @@ linters:
     - contextcheck
     - durationcheck
     - errorlint
-    - goconst
     - goimports
     - revive
     - misspell

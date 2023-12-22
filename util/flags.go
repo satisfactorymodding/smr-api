@@ -1,7 +1,10 @@
 package util
 
 import (
-	"github.com/rs/zerolog/log"
+	"context"
+	"log/slog"
+
+	"github.com/Vilsol/slox"
 	"github.com/spf13/viper"
 )
 
@@ -15,8 +18,8 @@ func FlagEnabled(flag FeatureFlag) bool {
 	return viper.GetBool("feature_flags." + string(flag))
 }
 
-func PrintFeatureFlags() {
+func PrintFeatureFlags(ctx context.Context) {
 	for _, flag := range []FeatureFlag{FeatureFlagAllowMultiTargetUpload} {
-		log.Info().Str("flag", string(flag)).Bool("enabled", FlagEnabled(flag)).Msg("flag")
+		slox.Info(ctx, "flag", slog.String("flag", string(flag)), slog.Bool("enabled", FlagEnabled(flag)))
 	}
 }

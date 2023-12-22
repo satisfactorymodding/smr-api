@@ -1,0 +1,515 @@
+basePath: /v1
+host: api.ficsit.app
+info:
+  contact: {}
+  description: Satisfactory Mod Repo API documentation.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Satisfactory Mod Repo API
+  version: "1"
+paths:
+  /mod/{modId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a mod by mod ID
+      parameters:
+      - description: Mod ID
+        in: path
+        name: modId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a Mod
+      tags:
+      - Mod
+  /mod/{modId}/authors:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a mod authors by mod ID
+      parameters:
+      - description: Mod ID
+        in: path
+        name: modId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a Mod Authors
+      tags:
+      - Mod
+  /mod/{modId}/latest-versions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of latest versions for a mod based on mod id
+      parameters:
+      - description: Mod ID
+        in: path
+        name: modId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a list of latest versions for a mod
+      tags:
+      - Mod
+  /mod/{modId}/versions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a mod versions by mod ID
+      parameters:
+      - description: How many versions to return
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for list of versions to return
+        in: query
+        name: offset
+        type: integer
+      - description: Order by field
+        enum:
+        - created_at
+        - updated_at
+        in: query
+        name: order_by
+        type: string
+      - description: Order of results
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - description: Mod ID
+        in: path
+        name: modId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a Mod Versions
+      tags:
+      - Mod
+  /mod/{modId}/versions/{versionId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a mod version by mod ID and version ID
+      parameters:
+      - description: Mod ID
+        in: path
+        name: modId
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a Mod Version
+      tags:
+      - Mod
+  /mod/{modId}/versions/{versionId}/{target}/download:
+    get:
+      consumes:
+      - application/json
+      description: Download a mod version by mod ID and version ID and TargetName
+      parameters:
+      - description: Mod ID
+        in: path
+        name: modId
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: TargetName
+        in: path
+        name: target
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Download a Mod Version by TargetName
+      tags:
+      - Mod
+  /mod/{modId}/versions/{versionId}/download:
+    get:
+      consumes:
+      - application/json
+      description: Download a mod version by mod ID and version ID
+      parameters:
+      - description: Mod ID
+        in: path
+        name: modId
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Download a Mod Version
+      tags:
+      - Mod
+  /mod/{modId}/versions/all:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all mod versions by mod ID
+      parameters:
+      - description: Mod ID
+        in: path
+        name: modId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve all Mod Versions
+      tags:
+      - Mod
+  /mods:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of mods
+      parameters:
+      - description: How many mods to return
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for list of mods to return
+        in: query
+        name: offset
+        type: integer
+      - description: Order by field
+        enum:
+        - created_at
+        - updated_at
+        - name
+        - views
+        - downloads
+        - hotness
+        - popularity
+        - last_version_date
+        in: query
+        name: order_by
+        type: string
+      - description: Order of results
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - description: Search string
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a list of Mods
+      tags:
+      - Mods
+  /mods/{modIds}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of mods by mod IDs
+      parameters:
+      - description: Mod IDs
+        in: path
+        name: modIds
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a list of Mods by ID
+      tags:
+      - Mods
+  /mods/{modIds}/latest-versions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of latest versions for mods based on mod id
+      parameters:
+      - description: Mod IDs
+        in: path
+        name: modIds
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a list of latest versions for mods
+      tags:
+      - Mods
+  /mods/count:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a count of Mods
+      parameters:
+      - description: Search string
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a count of Mods
+      tags:
+      - Mods
+  /oauth:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a list of OAuth methods
+      tags:
+      - OAuth
+  /oauth/github:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: OAuth Code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth Code
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Callback URL for github OAuth
+      tags:
+      - OAuth
+  /sml/latest-versions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of latest versions for sml
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a list of latest versions for sml
+      tags:
+      - SML
+  /user/{userId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a user by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a User
+      tags:
+      - User
+  /user/{userId}/mods:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a users mods by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a Users Mods
+      tags:
+      - User
+  /user/me:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the user associated with the token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve Current User
+      tags:
+      - User
+  /user/me/logout:
+    get:
+      consumes:
+      - application/json
+      description: Log out the user associated with the token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Log Out Current User
+      tags:
+      - User
+  /user/me/mods:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the users mods associated with the token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve Current Users Mods
+      tags:
+      - User
+  /users/{userIds}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of users by user ID
+      parameters:
+      - description: User IDs comma-separated
+        in: path
+        name: userIds
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a list of Users
+      tags:
+      - Users
+  /version/{versionId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a version by version ID
+      parameters:
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Retrieve a Version
+      tags:
+      - Version
+  /versions/{versionId}/{target}/download:
+    get:
+      consumes:
+      - application/json
+      description: Download a mod version by version ID and TargetName
+      parameters:
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      - description: TargetName
+        in: path
+        name: target
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Download a TargetName
+      tags:
+      - Version
+      - TargetName
+  /versions/{versionId}/download:
+    get:
+      consumes:
+      - application/json
+      description: Download a mod version by version ID
+      parameters:
+      - description: Version ID
+        in: path
+        name: versionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Download a Version
+      tags:
+      - Version
+swagger: "2.0"

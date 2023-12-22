@@ -1,11 +1,14 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs, unstable }:
 
 pkgs.mkShell {
   nativeBuildInputs = with pkgs.buildPackages; [
     libwebp
-    go
+    libpng
+    unstable.go_1_21
     protobuf
     protoc-gen-go-grpc
     minio-client
+    unstable.golangci-lint
+    unstable.delve
   ];
 }
