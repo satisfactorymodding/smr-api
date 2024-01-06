@@ -27,17 +27,17 @@ func WrapMutationTrace(ctx context.Context, action string) (TraceWrapper, contex
 }
 
 func wrapTrace(ctx context.Context, action string, actionType string) (TraceWrapper, context.Context) {
-	//spanCtx, span := otel.Tracer("gql").Start(ctx, "GraphQL "+action, trace.WithAttributes(
+	// spanCtx, span := otel.Tracer("gql").Start(ctx, "GraphQL "+action, trace.WithAttributes(
 	//	attribute.String("action_type", "API.graphql."+actionType),
 	//))
 
 	return TraceWrapper{
-		//Span: span,
+		// Span: span,
 	}, ctx
 }
 
 func (wrapper TraceWrapper) end() {
-	//defer wrapper.Span.End()
+	// defer wrapper.Span.End()
 	//
 	//if err := recover(); err != nil {
 	//	wrapper.Span.RecordError(fmt.Errorf("panic: %v", err))
