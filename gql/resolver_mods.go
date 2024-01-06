@@ -113,9 +113,11 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	err := postgres.ResetModTags(newCtx, modID, mod.TagIDs)
-	if err != nil {
-		return nil, err
+	if mod.TagIDs != nil {
+		err := postgres.ResetModTags(newCtx, modID, mod.TagIDs)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	dbMod := postgres.GetModByIDNoCache(newCtx, modID)
