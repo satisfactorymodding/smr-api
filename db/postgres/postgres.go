@@ -65,6 +65,10 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 	}
 
 	if logEv != nil {
+		if len(sql) > 256 {
+			sql = sql[:256]
+		}
+
 		logEv.Str("file", utils.FileWithLineNum()).
 			Float64("elapsed", elapsed).
 			Int64("rows", rows).
@@ -86,7 +90,7 @@ func InitializePostgres(ctx context.Context) {
 
 	dbInit, err := gorm.Open(connection, &gorm.Config{
 		Logger: &GormLogger{
-			SlowThreshold: time.Millisecond * 50,
+			SlowThreshold: time.Second,
 		},
 	})
 	if err != nil {
