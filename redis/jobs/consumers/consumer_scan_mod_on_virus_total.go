@@ -38,6 +38,12 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	log.Info().Msgf("starting virus scan of mod %s version %s", task.ModID, task.VersionID)
 
 	version := postgres.GetVersion(ctx, task.VersionID)
+	// Version got deleted?
+	if version == nil {
+		log.Error().Msgf("mod %s version %s does not exist to be scanned", task.ModID, task.VersionID)
+		return nil
+	}
+
 	link := storage.GenerateDownloadLink(version.Key)
 
 	response, _ := http.Get(link)

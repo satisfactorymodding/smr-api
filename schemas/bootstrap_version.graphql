@@ -67,7 +67,7 @@ extend type Query {
 ### Mutations
 
 extend type Mutation {
-    createBootstrapVersion(bootstrapVersion: NewBootstrapVersion!): BootstrapVersion @isLoggedIn
+    createBootstrapVersion(bootstrapVersion: NewBootstrapVersion!): BootstrapVersion @canEditBootstrapVersions @isLoggedIn
     updateBootstrapVersion(bootstrapVersionId: BootstrapVersionID!, bootstrapVersion: UpdateBootstrapVersion!): BootstrapVersion! @canEditBootstrapVersions @isLoggedIn
     deleteBootstrapVersion(bootstrapVersionId: BootstrapVersionID!): Boolean! @canEditBootstrapVersions @isLoggedIn
 }
