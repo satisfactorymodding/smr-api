@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
-
 	"github.com/pkg/errors"
-
 	"github.com/vmihailenco/taskq/v3"
+
+	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
 )
 
 func init() {

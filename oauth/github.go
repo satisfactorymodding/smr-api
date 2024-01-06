@@ -5,20 +5,18 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/satisfactorymodding/smr-api/redis"
-
 	"github.com/pkg/errors"
+
+	"github.com/satisfactorymodding/smr-api/redis"
 )
 
 func GithubCallback(code string, state string) (*UserData, error) {
 	_, err := redis.GetNonce(state)
-
 	if err != nil {
 		return nil, errors.New("login expired")
 	}
 
 	token, err := githubAuth.Exchange(ctx, code)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to exchange code")
 	}
@@ -26,13 +24,11 @@ func GithubCallback(code string, state string) (*UserData, error) {
 	client := githubAuth.Client(ctx, token)
 
 	resp, err := client.Get("https://api.github.com/user")
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get user data")
 	}
 
 	bytes, err := io.ReadAll(resp.Body)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read user data")
 	}

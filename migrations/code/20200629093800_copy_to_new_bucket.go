@@ -3,11 +3,11 @@ package code
 import (
 	"context"
 
-	"github.com/satisfactorymodding/smr-api/redis/jobs"
-	"github.com/satisfactorymodding/smr-api/storage"
-
 	"github.com/lab259/go-migration"
 	"github.com/rs/zerolog/log"
+
+	"github.com/satisfactorymodding/smr-api/redis/jobs"
+	"github.com/satisfactorymodding/smr-api/storage"
 )
 
 func init() {

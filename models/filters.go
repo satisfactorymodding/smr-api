@@ -4,14 +4,13 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/satisfactorymodding/smr-api/generated"
-
-	"github.com/pkg/errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/satisfactorymodding/smr-api/generated"
 )
 
 var dataValidator = validator.New()
@@ -282,7 +281,6 @@ func ApplyChanges(changes interface{}, to interface{}) error {
 			return v, nil
 		},
 	})
-
 	if err != nil {
 		return errors.Wrap(err, "failed to create decoder")
 	}

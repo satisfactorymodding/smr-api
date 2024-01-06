@@ -4,16 +4,15 @@ import (
 	"context"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/pkg/errors"
+	"gopkg.in/go-playground/validator.v9"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/pkg/errors"
-
-	"github.com/99designs/gqlgen/graphql"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 func (r *mutationResolver) CreateGuide(ctx context.Context, guide generated.NewGuide) (*generated.Guide, error) {
@@ -36,7 +35,6 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, guide generated.NewG
 	dbGuide.UserID = user.ID
 
 	resultGuide, err := postgres.CreateGuide(newCtx, dbGuide)
-
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +122,6 @@ func (r *getGuidesResolver) Guides(ctx context.Context, obj *generated.GetGuides
 
 	resolverContext := graphql.GetFieldContext(ctx)
 	guideFilter, err := models.ProcessGuideFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +152,6 @@ func (r *getGuidesResolver) Count(ctx context.Context, obj *generated.GetGuides)
 
 	resolverContext := graphql.GetFieldContext(ctx)
 	guideFilter, err := models.ProcessGuideFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return 0, err
 	}

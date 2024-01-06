@@ -9,14 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/hashstructure/v2"
-	"github.com/satisfactorymodding/smr-api/generated"
-
-	"github.com/satisfactorymodding/smr-api/util"
-
 	"github.com/finnbear/moderation"
-
+	"github.com/mitchellh/hashstructure/v2"
 	"github.com/patrickmn/go-cache"
+
+	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func ValidateTagName(tag string) error {
@@ -88,7 +86,7 @@ func GetTagByName(ctx context.Context, tagName string) *Tag {
 		return nil
 	}
 
-	dbCache.Set(cacheKey, tag, cache.DefaultExpiration)
+	dbCache.Set(cacheKey, &tag, cache.DefaultExpiration)
 
 	return &tag
 }
@@ -107,7 +105,7 @@ func GetTagByID(ctx context.Context, tagID string) *Tag {
 		return nil
 	}
 
-	dbCache.Set(cacheKey, tag, cache.DefaultExpiration)
+	dbCache.Set(cacheKey, &tag, cache.DefaultExpiration)
 
 	return &tag
 }
@@ -126,7 +124,7 @@ func GetTags(ctx context.Context, filter *generated.TagFilter) []Tag {
 
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
-			cleanSearch := strings.Replace(strings.TrimSpace(*filter.Search), " ", " & ", -1)
+			cleanSearch := strings.ReplaceAll(strings.TrimSpace(*filter.Search), " ", " & ")
 			sub := DBCtx(ctx).Table("tags")
 			sub = sub.Select("id, similarity(name, ?) as s", cleanSearch, cleanSearch, cleanSearch)
 

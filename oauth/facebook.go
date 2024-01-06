@@ -4,16 +4,14 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/satisfactorymodding/smr-api/redis"
-
 	"github.com/pkg/errors"
-
 	"golang.org/x/oauth2"
+
+	"github.com/satisfactorymodding/smr-api/redis"
 )
 
 func FacebookCallback(code string, state string) (*UserData, error) {
 	redirectURI, err := redis.GetNonce(state)
-
 	if err != nil {
 		return nil, errors.New("login expired")
 	}
@@ -21,7 +19,6 @@ func FacebookCallback(code string, state string) (*UserData, error) {
 	urlParam := oauth2.SetAuthURLParam("redirect_uri", redirectURI)
 
 	token, err := facebookAuth.Exchange(ctx, code, urlParam)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to exchange code")
 	}
@@ -29,13 +26,11 @@ func FacebookCallback(code string, state string) (*UserData, error) {
 	client := facebookAuth.Client(ctx, token)
 
 	resp, err := client.Get("https://graph.facebook.com/v5.0/me?fields=email,short_name,id,picture{url}")
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get user data")
 	}
 
 	bytes, err := io.ReadAll(resp.Body)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read response body")
 	}

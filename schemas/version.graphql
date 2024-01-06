@@ -32,12 +32,21 @@ type Version {
     updated_at: Date!
     created_at: Date!
     link: String!
+    targets: [VersionTarget]!
     metadata: String
     size: Int
     hash: String
 
     mod: Mod!
     dependencies: [VersionDependency!]!
+}
+
+type VersionTarget {
+    VersionID: VersionID!
+    targetName: TargetName!
+    link: String!
+    size: Int
+    hash: String
 }
 
 type CreateVersionResponse {

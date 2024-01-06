@@ -7,11 +7,11 @@ import (
 )
 
 type User struct {
+	CreatedAt time.Time `json:"created_at"`
 	ID        string    `json:"id"`
 	Email     string    `json:"email"`
 	Username  string    `json:"username"`
 	Avatar    string    `json:"avatar"`
-	CreatedAt time.Time `json:"created_at"`
 }
 
 func UserToPrivateUser(user *postgres.User) *User {
@@ -25,10 +25,10 @@ func UserToPrivateUser(user *postgres.User) *User {
 }
 
 type PublicUser struct {
+	CreatedAt time.Time `json:"created_at"`
 	ID        string    `json:"id"`
 	Username  string    `json:"username"`
 	Avatar    string    `json:"avatar"`
-	CreatedAt time.Time `json:"created_at"`
 }
 
 func UserToPublicUser(user *postgres.User) *PublicUser {

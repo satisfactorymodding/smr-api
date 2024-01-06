@@ -7,20 +7,20 @@ import (
 )
 
 type Mod struct {
-	ID               string    `json:"id"`
-	Name             string    `json:"name"`
-	ShortDescription string    `json:"short_description"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
+	CreatorID        string    `json:"creator_id"`
 	FullDescription  string    `json:"full_description"`
 	Logo             string    `json:"logo"`
 	SourceURL        string    `json:"source_url"`
-	CreatorID        string    `json:"creator_id"`
-	Approved         bool      `json:"approved"`
+	ID               string    `json:"id"`
+	ShortDescription string    `json:"short_description"`
+	Name             string    `json:"name"`
 	Views            uint      `json:"views"`
 	Downloads        uint      `json:"downloads"`
 	Hotness          uint      `json:"hotness"`
 	Popularity       uint      `json:"popularity"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	CreatedAt        time.Time `json:"created_at"`
+	Approved         bool      `json:"approved"`
 }
 
 func ModToMod(mod *postgres.Mod, short bool) *Mod {
@@ -48,16 +48,60 @@ func ModToMod(mod *postgres.Mod, short bool) *Mod {
 }
 
 type Version struct {
-	ID         string    `json:"id"`
-	Version    string    `json:"version"`
-	SMLVersion string    `json:"sml_version"`
-	Changelog  string    `json:"changelog"`
-	Downloads  uint      `json:"downloads"`
-	Stability  string    `json:"stability"`
-	ModID      string    `json:"mod_id"`
-	Approved   bool      `json:"approved"`
-	UpdatedAt  time.Time `json:"updated_at"`
-	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt    time.Time           `json:"updated_at,omitempty"`
+	CreatedAt    time.Time           `json:"created_at,omitempty"`
+	ID           string              `json:"id,omitempty"`
+	Version      string              `json:"version,omitempty"`
+	SMLVersion   string              `json:"sml_version,omitempty"`
+	Changelog    string              `json:"changelog,omitempty"`
+	Stability    string              `json:"stability,omitempty"`
+	ModID        string              `json:"mod_id,omitempty"`
+	Dependencies []VersionDependency `json:"dependencies,omitempty"`
+	Targets      []VersionTarget     `json:"targets,omitempty"`
+	Downloads    uint                `json:"downloads,omitempty"`
+	Approved     bool                `json:"approved,omitempty"`
+}
+
+type VersionDependency struct {
+	ModID     string `json:"mod_id"`
+	Condition string `json:"condition"`
+	Optional  bool   `json:"optional"`
+}
+
+type VersionTarget struct {
+	VersionID  string `json:"version_id"`
+	TargetName string `json:"target_name"`
+	Key        string `json:"key"`
+	Hash       string `json:"hash"`
+	Size       int64  `json:"size"`
+}
+
+func TinyVersionToVersion(version *postgres.TinyVersion) *Version {
+	var dependencies []VersionDependency
+	if version.Dependencies != nil {
+		dependencies = make([]VersionDependency, len(version.Dependencies))
+		for i, v := range version.Dependencies {
+			dependencies[i] = VersionDependencyToVersionDependency(v)
+		}
+	}
+
+	var targets []VersionTarget
+	if version.Targets != nil {
+		targets = make([]VersionTarget, len(version.Targets))
+		for i, v := range version.Targets {
+			targets[i] = VersionTargetToVersionTarget(v)
+		}
+	}
+
+	return &Version{
+		UpdatedAt:    version.UpdatedAt,
+		CreatedAt:    version.CreatedAt,
+		ID:           version.ID,
+		Version:      version.Version,
+		SMLVersion:   version.SMLVersion,
+		Dependencies: dependencies,
+		Targets:      targets,
+	}
 }
 
 func VersionToVersion(version *postgres.Version) *Version {
@@ -75,6 +119,24 @@ func VersionToVersion(version *postgres.Version) *Version {
 	}
 }
 
+func VersionDependencyToVersionDependency(version postgres.VersionDependency) VersionDependency {
+	return VersionDependency{
+		ModID:     version.ModID,
+		Condition: version.Condition,
+		Optional:  version.Optional,
+	}
+}
+
+func VersionTargetToVersionTarget(version postgres.VersionTarget) VersionTarget {
+	return VersionTarget{
+		VersionID:  version.VersionID,
+		TargetName: version.TargetName,
+		Key:        version.Key,
+		Hash:       version.Hash,
+		Size:       version.Size,
+	}
+}
+
 type ModUser struct {
 	UserID string `json:"user_id"`
 	Role   string `json:"role"`
@@ -88,16 +150,16 @@ func ModUserToModUser(userMod *postgres.UserMod) *ModUser {
 }
 
 type SMLVersion struct {
-	ID                  string    `json:"id"`
-	Version             string    `json:"version"`
-	SatisfactoryVersion int       `json:"satisfactory_version"`
-	BootstrapVersion    *string   `json:"bootstrap_version"`
-	Stability           string    `json:"stability"`
 	Date                time.Time `json:"date"`
-	Link                string    `json:"link"`
-	Changelog           string    `json:"changelog"`
 	UpdatedAt           time.Time `json:"updated_at"`
 	CreatedAt           time.Time `json:"created_at"`
+	BootstrapVersion    *string   `json:"bootstrap_version"`
+	ID                  string    `json:"id"`
+	Version             string    `json:"version"`
+	Stability           string    `json:"stability"`
+	Link                string    `json:"link"`
+	Changelog           string    `json:"changelog"`
+	SatisfactoryVersion int       `json:"satisfactory_version"`
 }
 
 func SMLVersionToSMLVersion(version *postgres.SMLVersion) *SMLVersion {

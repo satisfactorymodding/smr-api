@@ -2,6 +2,7 @@ package nodes
 
 import (
 	"github.com/labstack/echo/v4"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 )
 

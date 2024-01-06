@@ -4,15 +4,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/pkg/errors"
+	"gopkg.in/go-playground/validator.v9"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/pkg/errors"
-
-	"github.com/99designs/gqlgen/graphql"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion generated.NewSMLVersion) (*generated.SMLVersion, error) {
@@ -25,7 +24,6 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 	}
 
 	date, err := time.Parse(time.RFC3339Nano, smlVersion.Date)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse date")
 	}
@@ -38,9 +36,18 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 		Link:                smlVersion.Link,
 		Changelog:           smlVersion.Changelog,
 		Date:                date,
+		EngineVersion:       smlVersion.EngineVersion,
 	}
 
 	resultSMLVersion, err := postgres.CreateSMLVersion(newCtx, dbSMLVersion)
+
+	for _, smlVersionTarget := range smlVersion.Targets {
+		postgres.Save(newCtx, &postgres.SMLVersionTarget{
+			VersionID:  resultSMLVersion.ID,
+			TargetName: string(smlVersionTarget.TargetName),
+			Link:       smlVersionTarget.Link,
+		})
+	}
 
 	if err != nil {
 		return nil, err
@@ -58,6 +65,30 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
+	dbSMLTargets := postgres.GetSMLVersionTargets(newCtx, smlVersionID)
+
+	for _, dbSMLTarget := range dbSMLTargets {
+		found := false
+
+		for _, smlTarget := range smlVersion.Targets {
+			if dbSMLTarget.TargetName == string(smlTarget.TargetName) {
+				found = true
+			}
+		}
+
+		if !found {
+			postgres.Delete(newCtx, &dbSMLTarget)
+		}
+	}
+
+	for _, smlTarget := range smlVersion.Targets {
+		postgres.Save(newCtx, &postgres.SMLVersionTarget{
+			VersionID:  smlVersionID,
+			TargetName: string(smlTarget.TargetName),
+			Link:       smlTarget.Link,
+		})
+	}
+
 	dbSMLVersion := postgres.GetSMLVersionByID(newCtx, smlVersionID)
 
 	if dbSMLVersion == nil {
@@ -71,6 +102,7 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 	SetStringINNOE(smlVersion.Link, &dbSMLVersion.Link)
 	SetStringINNOE(smlVersion.Changelog, &dbSMLVersion.Changelog)
 	SetDateINN(smlVersion.Date, &dbSMLVersion.Date)
+	SetStringINNOE(smlVersion.EngineVersion, &dbSMLVersion.EngineVersion)
 
 	postgres.Save(newCtx, &dbSMLVersion)
 
@@ -85,6 +117,12 @@ func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID st
 
 	if dbSMLVersion == nil {
 		return false, errors.New("smlVersion not found")
+	}
+
+	dbSMLVersionTargets := postgres.GetSMLVersionTargets(newCtx, smlVersionID)
+
+	for _, dbSMLVersionTarget := range dbSMLVersionTargets {
+		postgres.Delete(newCtx, &dbSMLVersionTarget)
 	}
 
 	postgres.Delete(newCtx, &dbSMLVersion)
@@ -113,7 +151,6 @@ func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, obj *generated
 
 	resolverContext := graphql.GetFieldContext(ctx)
 	smlVersionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +181,6 @@ func (r *getSMLVersionsResolver) Count(ctx context.Context, obj *generated.GetSM
 
 	resolverContext := graphql.GetFieldContext(ctx)
 	smlVersionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return 0, err
 	}

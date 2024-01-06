@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/patrickmn/go-cache"
+
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/patrickmn/go-cache"
 )
 
 var semverCheck = regexp.MustCompile(`^(<=|<|>|>=|\^)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
@@ -24,7 +24,7 @@ func GetVersionsByID(ctx context.Context, versionIds []string) []Version {
 	}
 
 	var versions []Version
-	DBCtx(ctx).Find(&versions, "id in (?)", versionIds)
+	DBCtx(ctx).Preload("Targets").Find(&versions, "id in (?)", versionIds)
 
 	if len(versionIds) != len(versions) {
 		return nil
@@ -43,7 +43,7 @@ func GetModLatestVersions(ctx context.Context, modID string, unapproved bool) *[
 
 	var versions []Version
 
-	DBCtx(ctx).Select("distinct on (mod_id, stability) *").
+	DBCtx(ctx).Preload("Targets").Select("distinct on (mod_id, stability) *").
 		Where("mod_id = ?", modID).
 		Where("approved = ? AND denied = ?", !unapproved, false).
 		Order("mod_id, stability, created_at desc").
@@ -62,7 +62,7 @@ func GetModsLatestVersions(ctx context.Context, modIds []string, unapproved bool
 
 	var versions []Version
 
-	DBCtx(ctx).Select("distinct on (mod_id, stability) *").
+	DBCtx(ctx).Preload("Targets").Select("distinct on (mod_id, stability) *").
 		Where("mod_id in (?)", modIds).
 		Where("approved = ? AND denied = ?", !unapproved, false).
 		Order("mod_id, stability, created_at desc").
@@ -80,7 +80,25 @@ func GetModVersions(ctx context.Context, modID string, limit int, offset int, or
 	}
 
 	var versions []Version
-	DBCtx(ctx).Limit(limit).Offset(offset).Order(orderBy+" "+order).Where("approved = ? AND denied = ?", !unapproved, false).Find(&versions, "mod_id = ?", modID)
+	DBCtx(ctx).Preload("Targets").Limit(limit).Offset(offset).Order(orderBy+" "+order).Where("approved = ? AND denied = ?", !unapproved, false).Find(&versions, "mod_id = ?", modID)
+
+	dbCache.Set(cacheKey, versions, cache.DefaultExpiration)
+
+	return versions
+}
+
+func GetAllModVersionsWithDependencies(ctx context.Context, modID string) []TinyVersion {
+	cacheKey := "GetAllModVersionsWithDependencies_" + modID
+	if versions, ok := dbCache.Get(cacheKey); ok {
+		return versions.([]TinyVersion)
+	}
+
+	var versions []TinyVersion
+	DBCtx(ctx).
+		Preload("Dependencies").
+		Preload("Targets").
+		Where("approved = ? AND denied = ?", true, false).
+		Find(&versions, "mod_id = ?", modID)
 
 	dbCache.Set(cacheKey, versions, cache.DefaultExpiration)
 
@@ -98,7 +116,7 @@ func GetModVersionsNew(ctx context.Context, modID string, filter *models.Version
 	}
 
 	var versions []Version
-	query := DBCtx(ctx)
+	query := DBCtx(ctx).Preload("Targets")
 
 	if filter != nil {
 		query = query.Limit(*filter.Limit).
@@ -106,7 +124,7 @@ func GetModVersionsNew(ctx context.Context, modID string, filter *models.Version
 			Order(string(*filter.OrderBy) + " " + string(*filter.Order))
 	}
 
-	query.Where("approved = ? AND denied = ?", !unapproved, false).Find(&versions, "mod_id = ?", modID)
+	query.Preload("Targets").Where("approved = ? AND denied = ?", !unapproved, false).Find(&versions, "mod_id = ?", modID)
 
 	if cacheKey != "" {
 		dbCache.Set(cacheKey, versions, cache.DefaultExpiration)
@@ -122,7 +140,7 @@ func GetModVersion(ctx context.Context, modID string, versionID string) *Version
 	}
 
 	var version Version
-	DBCtx(ctx).First(&version, "mod_id = ? AND id = ?", modID, versionID)
+	DBCtx(ctx).Preload("Targets").First(&version, "mod_id = ? AND id = ?", modID, versionID)
 
 	if version.ID == "" {
 		return nil
@@ -140,7 +158,7 @@ func GetModVersionByName(ctx context.Context, modID string, versionName string) 
 	}
 
 	var version Version
-	DBCtx(ctx).First(&version, "mod_id = ? AND version = ?", modID, versionName)
+	DBCtx(ctx).Preload("Targets").First(&version, "mod_id = ? AND version = ?", modID, versionName)
 
 	if version.ID == "" {
 		return nil
@@ -186,7 +204,7 @@ func GetVersion(ctx context.Context, versionID string) *Version {
 	}
 
 	var version Version
-	DBCtx(ctx).First(&version, "id = ?", versionID)
+	DBCtx(ctx).Preload("Targets").First(&version, "id = ?", versionID)
 
 	if version.ID == "" {
 		return nil
@@ -208,7 +226,7 @@ func GetVersionsNew(ctx context.Context, filter *models.VersionFilter, unapprove
 	}
 
 	var versions []Version
-	query := DBCtx(ctx).Where("approved = ? AND denied = ?", !unapproved, false)
+	query := DBCtx(ctx).Preload("Targets").Where("approved = ? AND denied = ?", !unapproved, false)
 
 	if filter != nil {
 		query = query.Limit(*filter.Limit).
@@ -216,7 +234,7 @@ func GetVersionsNew(ctx context.Context, filter *models.VersionFilter, unapprove
 			Order(string(*filter.OrderBy) + " " + string(*filter.Order))
 
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 
 		if filter.Fields != nil && len(filter.Fields) > 0 {
@@ -224,7 +242,7 @@ func GetVersionsNew(ctx context.Context, filter *models.VersionFilter, unapprove
 		}
 	}
 
-	query.Find(&versions)
+	query.Preload("Targets").Find(&versions)
 
 	if cacheKey != "" {
 		dbCache.Set(cacheKey, versions, cache.DefaultExpiration)
@@ -248,7 +266,7 @@ func GetVersionCountNew(ctx context.Context, filter *models.VersionFilter, unapp
 
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(version) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 	}
 
@@ -259,6 +277,24 @@ func GetVersionCountNew(ctx context.Context, filter *models.VersionFilter, unapp
 	}
 
 	return versionCount
+}
+
+func GetVersionTarget(ctx context.Context, versionID string, target string) *VersionTarget {
+	cacheKey := "GetVersionTarget_" + versionID + "_" + target
+	if versionTarget, ok := dbCache.Get(cacheKey); ok {
+		return versionTarget.(*VersionTarget)
+	}
+
+	var versionTarget VersionTarget
+	DBCtx(ctx).First(&versionTarget, "version_id = ? AND target_name = ?", versionID, target)
+
+	if versionTarget.VersionID == "" {
+		return nil
+	}
+
+	dbCache.Set(cacheKey, &versionTarget, cache.DefaultExpiration)
+
+	return &versionTarget
 }
 
 func GetVersionDependencies(ctx context.Context, versionID string) []VersionDependency {
@@ -288,7 +324,7 @@ func GetModVersionsConstraint(ctx context.Context, modID string, constraint stri
 		return nil
 	}
 
-	query := DBCtx(ctx).Where("mod_id", modID)
+	query := DBCtx(ctx).Preload("Targets").Where("mod_id", modID)
 
 	/*
 		<=1.2.3
@@ -357,6 +393,6 @@ func GetModVersionsConstraint(ctx context.Context, modID string, constraint stri
 	}
 
 	var versions []Version
-	query.Find(&versions)
+	query.Preload("Targets").Find(&versions)
 	return versions
 }

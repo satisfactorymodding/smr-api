@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/patrickmn/go-cache"
+
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/patrickmn/go-cache"
 )
 
 func CreateGuide(ctx context.Context, guide *Guide) (*Guide, error) {
@@ -85,7 +85,7 @@ func GetGuides(ctx context.Context, filter *models.GuideFilter) []Guide {
 			Order(string(*filter.OrderBy) + " " + string(*filter.Order))
 
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 
 		if filter.TagIDs != nil && len(filter.TagIDs) > 0 {
@@ -136,7 +136,7 @@ func GetGuideCount(ctx context.Context, filter *models.GuideFilter) int64 {
 
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 	}
 

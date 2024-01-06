@@ -11,9 +11,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-func InitializeConfig() context.Context {
+var configDir = "."
+
+func SetConfigDir(newConfigDir string) {
+	configDir = newConfigDir
+}
+
+func InitializeConfig(baseCtx context.Context) context.Context {
 	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(configDir)
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("repo")
 
@@ -30,7 +36,12 @@ func InitializeConfig() context.Context {
 	}
 
 	log.Logger = zerolog.New(out).With().Str("service", "api").Timestamp().Logger()
-	ctx := log.Logger.WithContext(context.Background())
+
+	if baseCtx == nil {
+		baseCtx = context.Background()
+	}
+
+	ctx := log.Logger.WithContext(baseCtx)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("config initialized using defaults and environment only!")
@@ -67,6 +78,7 @@ func initializeDefaults() {
 	viper.SetDefault("storage.endpoint", "http://localhost:9000")
 	viper.SetDefault("storage.region", "eu-central-1")
 	viper.SetDefault("storage.base_url", "http://localhost:9000")
+	viper.SetDefault("storage.keypath", "%s/file/%s/%s")
 
 	viper.SetDefault("oauth.github.client_id", "")
 	viper.SetDefault("oauth.github.client_secret", "")
@@ -88,4 +100,8 @@ func initializeDefaults() {
 	viper.SetDefault("frontend.url", "")
 
 	viper.SetDefault("virustotal.key", "")
+
+	viper.SetDefault("feature_flags.allow_multi_target_upload", false)
+
+	viper.SetDefault("extractor_host", "localhost:50051")
 }

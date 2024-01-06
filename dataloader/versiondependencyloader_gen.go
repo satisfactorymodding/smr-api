@@ -32,34 +32,20 @@ func NewVersionDependencyLoader(config VersionDependencyLoaderConfig) *VersionDe
 
 // VersionDependencyLoader batches and caches requests
 type VersionDependencyLoader struct {
-	// this method provides the data for the loader
-	fetch func(keys []string) ([][]postgres.VersionDependency, []error)
-
-	// how long to done before sending a batch
-	wait time.Duration
-
-	// this will limit the maximum number of keys to send in one batch, 0 = no limit
+	fetch    func(keys []string) ([][]postgres.VersionDependency, []error)
+	cache    map[string][]postgres.VersionDependency
+	batch    *versionDependencyLoaderBatch
+	wait     time.Duration
 	maxBatch int
-
-	// INTERNAL
-
-	// lazily created cache
-	cache map[string][]postgres.VersionDependency
-
-	// the current batch. keys will continue to be collected until timeout is hit,
-	// then everything will be sent to the fetch method and out to the listeners
-	batch *versionDependencyLoaderBatch
-
-	// mutex to prevent races
-	mu sync.Mutex
+	mu       sync.Mutex
 }
 
 type versionDependencyLoaderBatch struct {
+	done    chan struct{}
 	keys    []string
 	data    [][]postgres.VersionDependency
 	error   []error
 	closing bool
-	done    chan struct{}
 }
 
 // Load a VersionDependency by key, batching and caching will be applied automatically

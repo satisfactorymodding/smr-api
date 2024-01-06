@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vmihailenco/taskq/extra/taskqotel/v3"
-
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog/log"
-	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
 	"github.com/spf13/viper"
+	"github.com/vmihailenco/taskq/extra/taskqotel/v3"
 	"github.com/vmihailenco/taskq/v3"
 	"github.com/vmihailenco/taskq/v3/redisq"
+
+	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
 )
 
 var queue taskq.Queue
@@ -53,7 +53,6 @@ func SubmitJobUpdateDBFromModVersionFileTask(ctx context.Context, modID string, 
 	})
 
 	err := queue.Add(tasks.UpdateDBFromModVersionFileTask.WithArgs(ctx, task))
-
 	if err != nil {
 		log.Err(err).Msg("error adding task")
 	}
@@ -66,7 +65,6 @@ func SubmitJobUpdateDBFromModVersionJSONFileTask(ctx context.Context, modID stri
 	})
 
 	err := queue.Add(tasks.UpdateDBFromModVersionJSONFileTask.WithArgs(ctx, task))
-
 	if err != nil {
 		log.Err(err).Msg("error adding task")
 	}
@@ -78,7 +76,6 @@ func SubmitJobCopyObjectFromOldBucketTask(ctx context.Context, key string) {
 	})
 
 	err := queue.Add(tasks.CopyObjectFromOldBucketTask.WithArgs(ctx, task))
-
 	if err != nil {
 		log.Err(err).Msg("error adding task")
 	}
@@ -90,7 +87,6 @@ func SubmitJobCopyObjectToOldBucketTask(ctx context.Context, key string) {
 	})
 
 	err := queue.Add(tasks.CopyObjectToOldBucketTask.WithArgs(ctx, task))
-
 	if err != nil {
 		log.Err(err).Msg("error adding task")
 	}
@@ -104,7 +100,6 @@ func SubmitJobScanModOnVirusTotalTask(ctx context.Context, modID string, version
 	})
 
 	err := queue.Add(tasks.ScanModOnVirusTotalTask.WithArgs(ctx, task))
-
 	if err != nil {
 		log.Err(err).Msg("error adding task")
 	}

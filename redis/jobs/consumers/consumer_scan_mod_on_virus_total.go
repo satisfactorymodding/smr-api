@@ -10,17 +10,16 @@ import (
 	"path"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+	"github.com/vmihailenco/taskq/v3"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
-
-	"github.com/pkg/errors"
-
-	"github.com/rs/zerolog/log"
-	"github.com/vmihailenco/taskq/v3"
 )
 
 func init() {
@@ -50,13 +49,11 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	response, _ := http.Get(link)
 
 	fileData, err := io.ReadAll(response.Body)
-
 	if err != nil {
 		return errors.Wrap(err, "failed to read mod file")
 	}
 
 	archive, err := zip.NewReader(bytes.NewReader(fileData), int64(len(fileData)))
-
 	if err != nil {
 		return errors.Wrap(err, "failed to unzip mod file")
 	}
@@ -64,9 +61,8 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	toScan := make([]io.Reader, 0)
 	names := make([]string, 0)
 	for _, file := range archive.File {
-		if path.Ext(file.Name) == ".dll" {
+		if path.Ext(file.Name) == ".dll" || path.Ext(file.Name) == ".so" {
 			open, err := file.Open()
-
 			if err != nil {
 				return errors.Wrap(err, "failed to open mod file")
 			}
@@ -77,7 +73,6 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 	}
 
 	success, err := validation.ScanFiles(ctx, toScan, names)
-
 	if err != nil {
 		return err
 	}

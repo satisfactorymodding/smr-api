@@ -7,16 +7,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
 	"github.com/satisfactorymodding/smr-api/redis"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 type B2 struct {
@@ -35,7 +34,6 @@ func initializeB2(ctx context.Context, config Config) *B2 {
 	}
 
 	newSession, err := session.NewSession(s3Config)
-
 	if err != nil {
 		log.Err(err).Msg("failed to create S3 session")
 		return nil
@@ -58,7 +56,6 @@ func (b2o *B2) Get(key string) (io.ReadCloser, error) {
 		Bucket: aws.String(b2o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get object")
 	}
@@ -75,7 +72,6 @@ func (b2o *B2) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 		Bucket: aws.String(b2o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
-
 	if err != nil {
 		return cleanedKey, errors.Wrap(err, "failed to upload file")
 	}
@@ -100,7 +96,6 @@ func (b2o *B2) StartMultipartUpload(key string) error {
 		Bucket: aws.String(b2o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
-
 	if err != nil {
 		return errors.Wrap(err, "failed to create multipart upload")
 	}
@@ -121,7 +116,6 @@ func (b2o *B2) UploadPart(key string, part int64, data io.ReadSeeker) error {
 		PartNumber: aws.Int64(part),
 		UploadId:   aws.String(id),
 	})
-
 	if err != nil {
 		return errors.Wrap(err, "failed to upload part")
 	}
@@ -173,7 +167,6 @@ func (b2o *B2) Delete(key string) error {
 			KeyMarker: aws.String(cleanedKey),
 			Prefix:    aws.String(cleanedKey),
 		})
-
 		if err != nil {
 			return errors.Wrap(err, "failed to list object versions")
 		}
@@ -220,7 +213,6 @@ func (b2o *B2) Meta(key string) (*ObjectMeta, error) {
 		Bucket: aws.String(b2o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
-
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get object meta")
 	}
@@ -229,4 +221,8 @@ func (b2o *B2) Meta(key string) (*ObjectMeta, error) {
 		ContentLength: data.ContentLength,
 		ContentType:   data.ContentType,
 	}, nil
+}
+
+func (b2o *B2) List(key string) ([]Object, error) {
+	return nil, nil // no-op
 }

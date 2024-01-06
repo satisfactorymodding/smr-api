@@ -14,6 +14,32 @@ linters-settings:
     ignorePackageGlobs:
       - github.com/satisfactorymodding/smr-api/*
 
+  govet:
+    check-shadowing: true
+    enable-all: true
+    disable:
+      - shadow
+
+  gocritic:
+    disabled-checks:
+      - ifElseChain
+
+  gci:
+    custom-order: true
+    sections:
+      - standard
+      - default
+      - prefix(github.com/satisfactorymodding/smr-api)
+      - blank
+      - dot
+
+run:
+  skip-files:
+    - ./generated/generated.go
+    - ./generated/models_gen.go
+  skip-dirs:
+    - ./docs/
+
 issues:
   exclude:
     - should pass the context parameter
@@ -21,16 +47,13 @@ issues:
 linters:
   disable-all: true
   enable:
-    - deadcode
     - errcheck
     - gosimple
     - govet
     - ineffassign
     - staticcheck
-    - structcheck
     - typecheck
     - unused
-    - varcheck
     - bidichk
     - contextcheck
     - durationcheck
@@ -38,8 +61,11 @@ linters:
     - goconst
     - goimports
     - revive
-    - ifshort
     - misspell
     - prealloc
     - whitespace
     - wrapcheck
+    - gci
+    - gocritic
+    - gofumpt
+    - nonamedreturns

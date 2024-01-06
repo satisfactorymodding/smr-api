@@ -21,7 +21,7 @@ type UpdateMod struct {
 	SourceURL        *string                 `json:"source_url"`
 	ModReference     *string                 `json:"mod_reference"`
 	Hidden           *bool                   `json:"hidden"`
+	Compatibility    *CompatibilityInfoInput `json:"compatibility"`
 	Authors          []UpdateUserMod         `json:"authors"`
 	TagIDs           []string                `json:"tagIDs" validate:"dive,min=3,max=24"`
-	Compatibility    *CompatibilityInfoInput `json:"compatibility"`
 }

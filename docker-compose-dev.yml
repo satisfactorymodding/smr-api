@@ -15,7 +15,7 @@ services:
       - 5432:5432
 
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     ports:
       - 9000:9000
       - 9001:9001
@@ -26,3 +26,8 @@ services:
       MINIO_ROOT_PASSWORD: minio123
       MINIO_ACCESS_KEY: REPLACE_ME_KEY
       MINIO_SECRET_KEY: REPLACE_ME_SECRET
+
+  pak_parser:
+    image: ghcr.io/vilsol/ficsit-pak-parser:v0.0.3
+    ports:
+      - 50051:50051

@@ -16,7 +16,6 @@ func main() {
 
 	validation.InitializeValidator()
 	_, err := validation.ExtractModInfo(context.Background(), f, true, true, "N/A")
-
 	if err != nil {
 		panic(err)
 	}

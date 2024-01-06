@@ -105,8 +105,10 @@ var (
 	}
 )
 
-var idToGroupMapping = make(map[string]*Group)
-var roleToGroupMapping = make(map[*Role][]*Group)
+var (
+	idToGroupMapping   = make(map[string]*Group)
+	roleToGroupMapping = make(map[*Role][]*Group)
+)
 
 func initializePermissions() {
 	groups := []*Group{GroupAdmin, GroupModerator, GroupSMLDev, GroupBootstrapDev, GroupCompatibilityOfficer}

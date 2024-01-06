@@ -5,14 +5,14 @@ import (
 	"errors"
 	"strings"
 
-	postgres2 "github.com/satisfactorymodding/smr-api/db/postgres"
-
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/rs/zerolog/log"
+
+	postgres2 "github.com/satisfactorymodding/smr-api/db/postgres"
 
 	// Import migrations
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/rs/zerolog/log"
 )
 
 func RunMigrations(ctx context.Context) {
@@ -21,16 +21,20 @@ func RunMigrations(ctx context.Context) {
 	log.Info().Msg("Migrations Complete")
 }
 
+var migrationDir = "./migrations"
+
+func SetMigrationDir(newMigrationDir string) {
+	migrationDir = newMigrationDir
+}
+
 func databaseMigrations(ctx context.Context) {
 	db, _ := postgres2.DBCtx(ctx).DB()
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
-
 	if err != nil {
 		panic(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://./migrations/sql", "postgres", driver)
-
+	m, err := migrate.NewWithDatabaseInstance("file://"+migrationDir+"/sql", "postgres", driver)
 	if err != nil {
 		panic(err)
 	}

@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/patrickmn/go-cache"
+	"gorm.io/gorm"
+
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/patrickmn/go-cache"
-	"gorm.io/gorm"
 )
 
 func GetModByID(ctx context.Context, modID string) *Mod {
@@ -26,7 +26,7 @@ func GetModByID(ctx context.Context, modID string) *Mod {
 
 func GetModByIDNoCache(ctx context.Context, modID string) *Mod {
 	var mod Mod
-	DBCtx(ctx).Preload("Tags").Find(&mod, "id = ?", modID)
+	DBCtx(ctx).Preload("Tags").Preload("Versions.Targets").Find(&mod, "id = ?", modID)
 
 	if mod.ID == "" {
 		return nil
@@ -44,7 +44,7 @@ func GetModByReference(ctx context.Context, modReference string) *Mod {
 	}
 
 	var mod Mod
-	DBCtx(ctx).Preload("Tags").Find(&mod, "mod_reference = ?", modReference)
+	DBCtx(ctx).Preload("Tags").Preload("Versions.Targets").Find(&mod, "mod_reference = ?", modReference)
 
 	if mod.ID == "" {
 		return nil
@@ -89,7 +89,7 @@ func GetModCount(ctx context.Context, search string, unapproved bool) int64 {
 	query := DBCtx(ctx).Model(Mod{}).Where("approved = ? AND denied = ?", !unapproved, false)
 
 	if search != "" {
-		query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(search, " ", " & ", -1))
+		query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(search, " ", " & "))
 	}
 
 	query.Count(&modCount)
@@ -141,7 +141,7 @@ func GetMods(ctx context.Context, limit int, offset int, orderBy string, order s
 	query = query.Where("approved = ? AND denied = ?", !unapproved, false)
 
 	if search != "" {
-		query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(search, " ", " & ", -1))
+		query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(search, " ", " & "))
 	}
 
 	query.Find(&mods)
@@ -213,10 +213,10 @@ func NewModQuery(ctx context.Context, filter *models.ModFilter, unapproved bool,
 	}
 
 	query = query.Where("approved = ? AND denied = ?", !unapproved, false)
-	query = query.Preload("Tags")
+	query = query.Preload("Tags").Preload("Versions.Targets")
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
-			cleanSearch := strings.Replace(strings.TrimSpace(*filter.Search), " ", " & ", -1)
+			cleanSearch := strings.ReplaceAll(strings.TrimSpace(*filter.Search), " ", " & ")
 			sub := DBCtx(ctx).Table("mods")
 			sub = sub.Select("id, (similarity(name, ?) * 2 + similarity(short_description, ?) + similarity(full_description, ?) * 0.5) as s", cleanSearch, cleanSearch, cleanSearch)
 
@@ -270,7 +270,7 @@ func GetModByIDOrReference(ctx context.Context, modIDOrReference string) *Mod {
 	}
 
 	var mod Mod
-	DBCtx(ctx).Preload("Tags").Find(&mod, "mod_reference = ? OR id = ?", modIDOrReference, modIDOrReference)
+	DBCtx(ctx).Preload("Tags").Preload("Versions.Targets").Find(&mod, "mod_reference = ? OR id = ?", modIDOrReference, modIDOrReference)
 
 	if mod.ID == "" {
 		return nil

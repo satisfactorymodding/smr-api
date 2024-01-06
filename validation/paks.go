@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/Vilsol/ue4pak/parser"
+	"github.com/rs/zerolog/log"
 
 	// Import satisfactory-specific types
 	_ "github.com/Vilsol/ue4pak/parser/games/satisfactory"
-	"github.com/rs/zerolog/log"
 )
 
 var classInheritance = map[string]string{
@@ -168,14 +168,15 @@ var classInheritance = map[string]string{
 	"BodySetup": "",
 }
 
-func AttemptExtractDataFromPak(ctx context.Context, reader parser.PakReader) (data map[string]map[string][]interface{}, err error) {
+func AttemptExtractDataFromPak(ctx context.Context, reader parser.PakReader) (map[string]map[string][]interface{}, error) {
+	var err error
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%s\n%s", r, string(debug.Stack()))
 		}
 	}()
 
-	return ExtractDataFromPak(ctx, reader), nil
+	return ExtractDataFromPak(ctx, reader), err
 }
 
 // TODO Extract Images

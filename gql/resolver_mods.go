@@ -4,7 +4,13 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"strings"
 	"time"
+
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/dgraph-io/ristretto"
+	"github.com/pkg/errors"
+	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -15,13 +21,16 @@ import (
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/util/converter"
-
-	"github.com/pkg/errors"
-
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/dgraph-io/ristretto"
-	"gopkg.in/go-playground/validator.v9"
 )
+
+var DisallowedModReferences = map[string]bool{
+	"satisfactory":          true,
+	"factorygame":           true,
+	"sml":                   true,
+	"satisfactorymodloader": true,
+	"examplemod":            true,
+	"docmod":                true,
+}
 
 func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) (*generated.Mod, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "createMod")
@@ -30,6 +39,10 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&mod); err != nil {
 		return nil, errors.Wrap(err, "validation failed")
+	}
+
+	if DisallowedModReferences[strings.ToLower(mod.ModReference)] {
+		return nil, errors.New("using this mod reference is not allowed")
 	}
 
 	if postgres.GetModByReference(newCtx, mod.ModReference) != nil {
@@ -55,7 +68,6 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 
 	if mod.Logo != nil {
 		file, err := io.ReadAll(mod.Logo.File)
-
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read logo file")
 		}
@@ -70,7 +82,6 @@ func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) 
 	}
 
 	resultMod, err := postgres.CreateMod(newCtx, dbMod)
-
 	if err != nil {
 		return nil, err
 	}
@@ -102,10 +113,11 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 		return nil, errors.Wrap(err, "validation failed")
 	}
 
-	err := postgres.ResetModTags(newCtx, modID, mod.TagIDs)
-
-	if err != nil {
-		return nil, err
+	if mod.TagIDs != nil {
+		err := postgres.ResetModTags(newCtx, modID, mod.TagIDs)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	dbMod := postgres.GetModByIDNoCache(newCtx, modID)
@@ -128,13 +140,11 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 
 	if mod.Logo != nil {
 		file, err := io.ReadAll(mod.Logo.File)
-
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read logo file")
 		}
 
 		logoData, err := converter.ConvertAnyImageToWebp(ctx, file)
-
 		if err != nil {
 			return nil, err
 		}
@@ -151,7 +161,6 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 
 	if mod.Authors != nil {
 		authors, err := dataloader.For(ctx).UserModsByModID.Load(modID)
-
 		if err != nil {
 			return nil, err
 		}
@@ -330,7 +339,6 @@ func (r *getModsResolver) Mods(ctx context.Context, obj *generated.GetMods) ([]*
 	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +369,6 @@ func (r *getModsResolver) Count(ctx context.Context, obj *generated.GetMods) (in
 	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return 0, err
 	}
@@ -383,7 +390,6 @@ func (r *getMyModsResolver) Mods(ctx context.Context, obj *generated.GetMyMods) 
 	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return nil, err
 	}
@@ -420,7 +426,6 @@ func (r *getMyModsResolver) Count(ctx context.Context, obj *generated.GetMyMods)
 	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
-
 	if err != nil {
 		return 0, err
 	}
@@ -439,7 +444,6 @@ func (r *modResolver) Authors(ctx context.Context, obj *generated.Mod) ([]*gener
 	defer wrapper.end()
 
 	authors, err := dataloader.For(ctx).UserModsByModID.Load(obj.ID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -479,7 +483,6 @@ func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter m
 	defer wrapper.end()
 
 	versionFilter, err := models.ProcessVersionFilter(filter)
-
 	if err != nil {
 		return nil, err
 	}

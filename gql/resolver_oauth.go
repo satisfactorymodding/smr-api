@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/pkg/errors"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/oauth"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
-
-	"github.com/pkg/errors"
 )
 
 func (r *queryResolver) GetOAuthOptions(ctx context.Context, callbackURL string) (*generated.OAuthOptions, error) {
@@ -20,7 +20,6 @@ func (r *queryResolver) GetOAuthOptions(ctx context.Context, callbackURL string)
 	defer wrapper.end()
 
 	unescapedURL, err := url.PathUnescape(callbackURL)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to unescape callback url")
 	}
@@ -43,7 +42,6 @@ func (r *mutationResolver) OAuthGithub(ctx context.Context, code string, state s
 	}
 
 	user, err := oauth.GithubCallback(code, state)
-
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +50,6 @@ func (r *mutationResolver) OAuthGithub(ctx context.Context, code string, state s
 	userAgent := header.Get("User-Agent")
 
 	token, err := completeOAuthFlow(newCtx, user, userAgent)
-
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +68,6 @@ func (r *mutationResolver) OAuthGoogle(ctx context.Context, code string, state s
 	}
 
 	user, err := oauth.GoogleCallback(code, state)
-
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +76,6 @@ func (r *mutationResolver) OAuthGoogle(ctx context.Context, code string, state s
 	userAgent := header.Get("User-Agent")
 
 	token, err := completeOAuthFlow(newCtx, user, userAgent)
-
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +94,6 @@ func (r *mutationResolver) OAuthFacebook(ctx context.Context, code string, state
 	}
 
 	user, err := oauth.FacebookCallback(code, state)
-
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +102,6 @@ func (r *mutationResolver) OAuthFacebook(ctx context.Context, code string, state
 	userAgent := header.Get("User-Agent")
 
 	token, err := completeOAuthFlow(newCtx, user, userAgent)
-
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +119,6 @@ func completeOAuthFlow(ctx context.Context, user *oauth.UserData, userAgent stri
 
 	if avatarURL != "" && newUser {
 		avatarData, err := util.LinkToWebp(ctx, avatarURL)
-
 		if err != nil {
 			return nil, err
 		}

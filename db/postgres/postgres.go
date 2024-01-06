@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres/otel"
-
 	"github.com/patrickmn/go-cache"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -15,10 +13,14 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
+
+	"github.com/satisfactorymodding/smr-api/db/postgres/otel"
 )
 
-var db *gorm.DB
-var dbCache *cache.Cache
+var (
+	db      *gorm.DB
+	dbCache *cache.Cache
+)
 
 type UserKey struct{}
 
@@ -70,6 +72,8 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 	}
 }
 
+var debugEnabled = false
+
 func InitializePostgres(ctx context.Context) {
 	connection := postgres.Open(fmt.Sprintf(
 		"sslmode=disable host=%s port=%d user=%s dbname=%s password=%s",
@@ -96,6 +100,10 @@ func InitializePostgres(ctx context.Context) {
 
 	db = dbInit
 
+	if debugEnabled {
+		db = db.Debug()
+	}
+
 	dbCache = cache.New(time.Second*5, time.Second*10)
 
 	// TODO Create search indexes
@@ -109,10 +117,12 @@ func Save(ctx context.Context, object interface{}) {
 
 func Delete(ctx context.Context, object interface{}) {
 	DBCtx(ctx).Delete(object)
+	ClearCache()
 }
 
 func DeleteForced(ctx context.Context, object interface{}) {
 	DBCtx(ctx).Unscoped().Delete(object)
+	ClearCache()
 }
 
 func DBCtx(ctx context.Context) *gorm.DB {
@@ -126,4 +136,16 @@ func DBCtx(ctx context.Context) *gorm.DB {
 	}
 
 	return db
+}
+
+func ClearCache() {
+	dbCache.Flush()
+}
+
+func EnableDebug() {
+	if db != nil {
+		db = db.Debug()
+	}
+
+	debugEnabled = true
 }

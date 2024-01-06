@@ -9,30 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/satisfactorymodding/smr-api/auth"
-	"github.com/satisfactorymodding/smr-api/config"
-	"github.com/satisfactorymodding/smr-api/dataloader"
-	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
-
-	"github.com/pkg/errors"
-
-	// Load REST docs
-	_ "github.com/satisfactorymodding/smr-api/docs"
-	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/satisfactorymodding/smr-api/gql"
-	"github.com/satisfactorymodding/smr-api/migrations"
-	"github.com/satisfactorymodding/smr-api/nodes"
-	"github.com/satisfactorymodding/smr-api/oauth"
-	"github.com/satisfactorymodding/smr-api/redis"
-	"github.com/satisfactorymodding/smr-api/redis/jobs"
-
-	// Load redis consumers
-	_ "github.com/satisfactorymodding/smr-api/redis/jobs/consumers"
-	"github.com/satisfactorymodding/smr-api/storage"
-	"github.com/satisfactorymodding/smr-api/util"
-	"github.com/satisfactorymodding/smr-api/validation"
-
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -42,6 +18,7 @@ import (
 	"github.com/labstack/echo-contrib/pprof"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -54,6 +31,27 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/satisfactorymodding/smr-api/auth"
+	"github.com/satisfactorymodding/smr-api/config"
+	"github.com/satisfactorymodding/smr-api/dataloader"
+	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/gql"
+	"github.com/satisfactorymodding/smr-api/migrations"
+	"github.com/satisfactorymodding/smr-api/nodes"
+	"github.com/satisfactorymodding/smr-api/oauth"
+	"github.com/satisfactorymodding/smr-api/redis"
+	"github.com/satisfactorymodding/smr-api/redis/jobs"
+	"github.com/satisfactorymodding/smr-api/storage"
+	"github.com/satisfactorymodding/smr-api/util"
+	"github.com/satisfactorymodding/smr-api/validation"
+
+	// Load REST docs
+	_ "github.com/satisfactorymodding/smr-api/docs"
+	// Load redis consumers
+	_ "github.com/satisfactorymodding/smr-api/redis/jobs/consumers"
 )
 
 type CustomValidator struct {
@@ -64,8 +62,8 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return errors.Wrap(cv.validator.Struct(i), "validation error")
 }
 
-func Serve() {
-	ctx := config.InitializeConfig()
+func Initialize(baseCtx context.Context) context.Context {
+	ctx := config.InitializeConfig(baseCtx)
 
 	if os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != "" {
 		cleanup := installExportPipeline(ctx)
@@ -81,9 +79,18 @@ func Serve() {
 	auth.InitializeAuth()
 	jobs.InitializeJobs(ctx)
 	validation.InitializeVirusTotal()
+	util.PrintFeatureFlags()
 
+	return ctx
+}
+
+func Migrate(ctx context.Context) {
 	migrations.RunMigrations(ctx)
+}
 
+var e *echo.Echo
+
+func Setup(ctx context.Context) {
 	if viper.GetBool("profiler") {
 		go func() {
 			debugServer := echo.New()
@@ -101,7 +108,7 @@ func Serve() {
 
 	dataValidator := validator.New()
 
-	e := echo.New()
+	e = echo.New()
 	e.HideBanner = true
 	e.Validator = &CustomValidator{validator: dataValidator}
 
@@ -271,7 +278,9 @@ func Serve() {
 		<-signals
 		_ = e.Close()
 	}()
+}
 
+func Serve() {
 	address := fmt.Sprintf(":%d", viper.GetInt("port"))
 	log.Info().Str("address", address).Msg("starting server")
 
@@ -310,4 +319,15 @@ func newResource() *resource.Resource {
 		),
 	)
 	return r
+}
+
+func Start() {
+	ctx := Initialize(context.Background())
+	Migrate(ctx)
+	Setup(ctx)
+	Serve()
+}
+
+func Stop() error {
+	return errors.Wrap(e.Close(), "failed to stop http server")
 }

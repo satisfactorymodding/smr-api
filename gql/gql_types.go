@@ -12,18 +12,18 @@ func DBUserToGenerated(user *postgres.User) *generated.User {
 		return nil
 	}
 
-	Email := (*user).Email
-	Avatar := (*user).Avatar
+	Email := user.Email
+	Avatar := user.Avatar
 
 	result := &generated.User{
-		ID:         (*user).ID,
-		Username:   (*user).Username,
+		ID:         user.ID,
+		Username:   user.Username,
 		Email:      &Email,
 		Avatar:     &Avatar,
 		CreatedAt:  user.CreatedAt.Format(time.RFC3339Nano),
-		GithubID:   (*user).GithubID,
-		GoogleID:   (*user).GoogleID,
-		FacebookID: (*user).FacebookID,
+		GithubID:   user.GithubID,
+		GoogleID:   user.GoogleID,
+		FacebookID: user.FacebookID,
 	}
 
 	return result
@@ -34,13 +34,13 @@ func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 		return nil
 	}
 
-	Logo := (*mod).Logo
-	SourceURL := (*mod).SourceURL
-	FullDescription := (*mod).FullDescription
+	Logo := mod.Logo
+	SourceURL := mod.SourceURL
+	FullDescription := mod.FullDescription
 
 	var LastVersionDate string
-	if (*mod).LastVersionDate != nil {
-		LastVersionDate = (*mod).LastVersionDate.Format(time.RFC3339Nano)
+	if mod.LastVersionDate != nil {
+		LastVersionDate = mod.LastVersionDate.Format(time.RFC3339Nano)
 	}
 
 	return &generated.Mod{
@@ -61,6 +61,7 @@ func DBModToGenerated(mod *postgres.Mod) *generated.Mod {
 		LastVersionDate:  &LastVersionDate,
 		ModReference:     mod.ModReference,
 		Hidden:           mod.Hidden,
+		Versions:         DBVersionsToGeneratedSlice(mod.Versions),
 		Tags:             DBTagsToGeneratedSlice(mod.Tags),
 		Compatibility:    DBCompInfoToGenCompInfo(mod.Compatibility),
 	}
@@ -84,6 +85,7 @@ func DBVersionToGenerated(version *postgres.Version) *generated.Version {
 		Changelog:  version.Changelog,
 		Downloads:  int(version.Downloads),
 		Stability:  generated.VersionStabilities(version.Stability),
+		Targets:    DBVersionTargetsToGeneratedSlice(version.Targets),
 		Approved:   version.Approved,
 		UpdatedAt:  version.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:  version.CreatedAt.Format(time.RFC3339Nano),
@@ -92,6 +94,14 @@ func DBVersionToGenerated(version *postgres.Version) *generated.Version {
 		Hash:       version.Hash,
 		Size:       &size,
 	}
+}
+
+func DBVersionsToGeneratedSlice(versions []postgres.Version) []*generated.Version {
+	converted := make([]*generated.Version, len(versions))
+	for i, version := range versions {
+		converted[i] = DBVersionToGenerated(&version)
+	}
+	return converted
 }
 
 func DBGuideToGenerated(guide *postgres.Guide) *generated.Guide {
@@ -124,10 +134,12 @@ func DBSMLVersionToGenerated(smlVersion *postgres.SMLVersion) *generated.SMLVers
 		BootstrapVersion:    smlVersion.BootstrapVersion,
 		Stability:           generated.VersionStabilities(smlVersion.Stability),
 		Link:                smlVersion.Link,
+		Targets:             DBSMLVersionTargetToGeneratedSlice(smlVersion.Targets),
 		Changelog:           smlVersion.Changelog,
 		Date:                smlVersion.Date.Format(time.RFC3339Nano),
 		UpdatedAt:           smlVersion.UpdatedAt.Format(time.RFC3339Nano),
 		CreatedAt:           smlVersion.CreatedAt.Format(time.RFC3339Nano),
+		EngineVersion:       smlVersion.EngineVersion,
 	}
 }
 
@@ -187,8 +199,9 @@ func DBTagToGenerated(tag *postgres.Tag) *generated.Tag {
 		return nil
 	}
 	return &generated.Tag{
-		Name: tag.Name,
-		ID:   tag.ID,
+		Name:        tag.Name,
+		ID:          tag.ID,
+		Description: tag.Description,
 	}
 }
 
@@ -196,6 +209,50 @@ func DBTagsToGeneratedSlice(tags []postgres.Tag) []*generated.Tag {
 	converted := make([]*generated.Tag, len(tags))
 	for i, tag := range tags {
 		converted[i] = DBTagToGenerated(&tag)
+	}
+	return converted
+}
+
+func DBVersionTargetToGenerated(versionTarget *postgres.VersionTarget) *generated.VersionTarget {
+	if versionTarget == nil {
+		return nil
+	}
+
+	hash := versionTarget.Hash
+	size := int(versionTarget.Size)
+
+	return &generated.VersionTarget{
+		VersionID:  versionTarget.VersionID,
+		TargetName: generated.TargetName(versionTarget.TargetName),
+		Hash:       &hash,
+		Size:       &size,
+	}
+}
+
+func DBVersionTargetsToGeneratedSlice(versionTargets []postgres.VersionTarget) []*generated.VersionTarget {
+	converted := make([]*generated.VersionTarget, len(versionTargets))
+	for i, versionTarget := range versionTargets {
+		converted[i] = DBVersionTargetToGenerated(&versionTarget)
+	}
+	return converted
+}
+
+func DBSMLVersionTargetToGenerated(smlVersionTarget *postgres.SMLVersionTarget) *generated.SMLVersionTarget {
+	if smlVersionTarget == nil {
+		return nil
+	}
+
+	return &generated.SMLVersionTarget{
+		VersionID:  smlVersionTarget.VersionID,
+		TargetName: generated.TargetName(smlVersionTarget.TargetName),
+		Link:       smlVersionTarget.Link,
+	}
+}
+
+func DBSMLVersionTargetToGeneratedSlice(smlVersionTargets []postgres.SMLVersionTarget) []*generated.SMLVersionTarget {
+	converted := make([]*generated.SMLVersionTarget, len(smlVersionTargets))
+	for i, smlVersionTarget := range smlVersionTargets {
+		converted[i] = DBSMLVersionTargetToGenerated(&smlVersionTarget)
 	}
 	return converted
 }

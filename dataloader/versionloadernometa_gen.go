@@ -32,34 +32,20 @@ func NewVersionLoaderNoMeta(config VersionLoaderNoMetaConfig) *VersionLoaderNoMe
 
 // VersionLoaderNoMeta batches and caches requests
 type VersionLoaderNoMeta struct {
-	// this method provides the data for the loader
-	fetch func(keys []string) ([][]postgres.Version, []error)
-
-	// how long to done before sending a batch
-	wait time.Duration
-
-	// this will limit the maximum number of keys to send in one batch, 0 = no limit
+	fetch    func(keys []string) ([][]postgres.Version, []error)
+	cache    map[string][]postgres.Version
+	batch    *versionLoaderNoMetaBatch
+	wait     time.Duration
 	maxBatch int
-
-	// INTERNAL
-
-	// lazily created cache
-	cache map[string][]postgres.Version
-
-	// the current batch. keys will continue to be collected until timeout is hit,
-	// then everything will be sent to the fetch method and out to the listeners
-	batch *versionLoaderNoMetaBatch
-
-	// mutex to prevent races
-	mu sync.Mutex
+	mu       sync.Mutex
 }
 
 type versionLoaderNoMetaBatch struct {
+	done    chan struct{}
 	keys    []string
 	data    [][]postgres.Version
 	error   []error
 	closing bool
-	done    chan struct{}
 }
 
 // Load a Version by key, batching and caching will be applied automatically

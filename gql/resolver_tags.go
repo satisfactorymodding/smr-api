@@ -2,17 +2,19 @@ package gql
 
 import (
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
+
 	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
-	"golang.org/x/net/context"
 )
 
-func (r *mutationResolver) CreateTag(ctx context.Context, tagName string) (*generated.Tag, error) {
+func (r *mutationResolver) CreateTag(ctx context.Context, tagName string, description string) (*generated.Tag, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "createTag")
 	defer wrapper.end()
 
 	dbTag := &postgres.Tag{
-		Name: tagName,
+		Name:        tagName,
+		Description: description,
 	}
 
 	resultTag, err := postgres.CreateTag(newCtx, dbTag, true)
@@ -22,15 +24,16 @@ func (r *mutationResolver) CreateTag(ctx context.Context, tagName string) (*gene
 	return DBTagToGenerated(resultTag), nil
 }
 
-func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tagNames []string) ([]*generated.Tag, error) {
+func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tags []*generated.NewTag) ([]*generated.Tag, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "createMultipleTags")
 	defer wrapper.end()
 
-	resultTags := make([]postgres.Tag, len(tagNames))
+	resultTags := make([]postgres.Tag, len(tags))
 
-	for i, tagName := range tagNames {
+	for i, tag := range tags {
 		dbTag := &postgres.Tag{
-			Name: tagName,
+			Name:        tag.Name,
+			Description: tag.Description,
 		}
 
 		resultTag, err := postgres.CreateTag(newCtx, dbTag, false)
@@ -59,7 +62,7 @@ func (r *mutationResolver) DeleteTag(ctx context.Context, id string) (bool, erro
 	return true, nil
 }
 
-func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName string) (*generated.Tag, error) {
+func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName string, description string) (*generated.Tag, error) {
 	wrapper, newCtx := WrapMutationTrace(ctx, "updateTag")
 	defer wrapper.end()
 
@@ -75,6 +78,7 @@ func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName str
 	}
 
 	SetStringINNOE(&newName, &dbTag.Name)
+	SetStringINNOE(&description, &dbTag.Description)
 
 	postgres.Save(newCtx, &dbTag)
 

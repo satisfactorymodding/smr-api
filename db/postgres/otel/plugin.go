@@ -3,11 +3,10 @@ package otel
 import (
 	"fmt"
 
-	"gorm.io/gorm"
-
 	"go.opentelemetry.io/contrib"
 	"go.opentelemetry.io/otel"
 	oteltrace "go.opentelemetry.io/otel/trace"
+	"gorm.io/gorm"
 )
 
 const (

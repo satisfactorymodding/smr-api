@@ -18,7 +18,7 @@ func CreateSMLVersion(ctx context.Context, smlVersion *SMLVersion) (*SMLVersion,
 
 func GetSMLVersionByID(ctx context.Context, smlVersionID string) *SMLVersion {
 	var smlVersion SMLVersion
-	DBCtx(ctx).Find(&smlVersion, "id = ?", smlVersionID)
+	DBCtx(ctx).Preload("Targets").Find(&smlVersion, "id in (?)", smlVersionID)
 
 	if smlVersion.ID == "" {
 		return nil
@@ -37,17 +37,18 @@ func GetSMLVersions(ctx context.Context, filter *models.SMLVersionFilter) []SMLV
 			Order(string(*filter.OrderBy) + " " + string(*filter.Order))
 
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 	}
 
-	query.Find(&smlVersions)
+	query.Preload("Targets").Find(&smlVersions)
+
 	return smlVersions
 }
 
 func GetSMLVersionsByID(ctx context.Context, smlVersionIds []string) []SMLVersion {
 	var smlVersions []SMLVersion
-	DBCtx(ctx).Find(&smlVersions, "id in (?)", smlVersionIds)
+	DBCtx(ctx).Preload("Targets").Find(&smlVersions, "id in (?)", smlVersionIds)
 
 	if len(smlVersionIds) != len(smlVersions) {
 		return nil
@@ -62,7 +63,7 @@ func GetSMLVersionCount(ctx context.Context, filter *models.SMLVersionFilter) in
 
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
-			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.Replace(*filter.Search, " ", " & ", -1))
+			query = query.Where("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & "))
 		}
 	}
 
@@ -73,9 +74,17 @@ func GetSMLVersionCount(ctx context.Context, filter *models.SMLVersionFilter) in
 func GetSMLLatestVersions(ctx context.Context) *[]SMLVersion {
 	var smlVersions []SMLVersion
 
-	DBCtx(ctx).Select("distinct on (stability) *").
+	DBCtx(ctx).Preload("Targets").Select("distinct on (stability) *").
 		Order("stability, created_at desc").
 		Find(&smlVersions)
 
 	return &smlVersions
+}
+
+func GetSMLVersionTargets(ctx context.Context, smlVersionID string) []SMLVersionTarget {
+	var smlVersionTargets []SMLVersionTarget
+
+	DBCtx(ctx).Find(&smlVersionTargets, "version_id = ?", smlVersionID)
+
+	return smlVersionTargets
 }

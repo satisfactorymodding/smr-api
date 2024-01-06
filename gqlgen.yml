@@ -68,6 +68,15 @@ models:
         resolver: true
       dependencies:
         resolver: true
+      size:
+        resolver: true
+      hash:
+        resolver: true
+
+  VersionTarget:
+    fields:
+      link:
+        resolver: true
 
   GetMods:
     fields:

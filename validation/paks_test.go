@@ -32,7 +32,6 @@ func TestExtractDataFromPak(t *testing.T) {
 		fmt.Println("Parsing file:", f)
 
 		data, err := os.ReadFile(f)
-
 		if err != nil {
 			panic(err)
 		}
@@ -49,7 +48,7 @@ func TestExtractDataFromPak(t *testing.T) {
 		} else {
 			marshal, _ := json.MarshalIndent(pakData, "", "  ")
 
-			if err := os.WriteFile(f+".json", marshal, 0644); err != nil {
+			if err := os.WriteFile(f+".json", marshal, 0o644); err != nil {
 				t.Error(err)
 			}
 		}

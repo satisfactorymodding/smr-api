@@ -9,14 +9,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/satisfactorymodding/smr-api/generated"
-
-	"github.com/pkg/errors"
-
 	"github.com/cespare/xxhash"
 	"github.com/go-redis/redis"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+
+	"github.com/satisfactorymodding/smr-api/generated"
 )
 
 var client *redis.Client
@@ -136,4 +135,8 @@ func GetVersionUploadState(versionID string) (*generated.CreateVersionResponse, 
 	}
 
 	return data.Data, nil
+}
+
+func FlushRedis() {
+	client.FlushDB()
 }
