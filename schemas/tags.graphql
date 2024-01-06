@@ -4,6 +4,12 @@ scalar TagName
 type Tag {
     id: TagID!
     name: TagName!
+    description: String!
+}
+
+input NewTag {
+    name: TagName!
+    description: String!
 }
 
 input TagFilter {
@@ -22,8 +28,8 @@ extend type Query {
 ### Mutations
 
 extend type Mutation {
-    createTag(tagName: TagName!): Tag @isLoggedIn
-    createMultipleTags(tagNames: [TagName!]!): [Tag!]! @canManageTags @isLoggedIn
-    updateTag(tagID: TagID!, NewName: TagName!): Tag! @canManageTags @isLoggedIn
+    createTag(tagName: TagName!, description: String!): Tag @canManageTags @isLoggedIn
+    createMultipleTags(tagNames: [NewTag!]!): [Tag!]! @canManageTags @isLoggedIn
+    updateTag(tagID: TagID!, NewName: TagName!, description: String!): Tag! @canManageTags @isLoggedIn
     deleteTag(tagID: TagID!): Boolean! @canManageTags @isLoggedIn
 }

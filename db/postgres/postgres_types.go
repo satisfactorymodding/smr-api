@@ -169,7 +169,8 @@ type Announcement struct {
 type Tag struct {
 	SMRModel
 
-	Name string `gorm:"type:varchar(24)"`
+	Name        string `gorm:"type:varchar(24)"`
+	Description string `gorm:"type:varchar(512)"`
 
 	Mods []Mod `gorm:"many2many:mod_tags"`
 }

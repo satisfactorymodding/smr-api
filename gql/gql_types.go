@@ -199,8 +199,9 @@ func DBTagToGenerated(tag *postgres.Tag) *generated.Tag {
 		return nil
 	}
 	return &generated.Tag{
-		Name: tag.Name,
-		ID:   tag.ID,
+		Name:        tag.Name,
+		ID:          tag.ID,
+		Description: tag.Description,
 	}
 }
 
