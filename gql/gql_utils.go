@@ -2,11 +2,14 @@ package gql
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/satisfactorymodding/smr-api/db/postgres"
@@ -27,22 +30,22 @@ func WrapMutationTrace(ctx context.Context, action string) (TraceWrapper, contex
 }
 
 func wrapTrace(ctx context.Context, action string, actionType string) (TraceWrapper, context.Context) {
-	// spanCtx, span := otel.Tracer("gql").Start(ctx, "GraphQL "+action, trace.WithAttributes(
-	//	attribute.String("action_type", "API.graphql."+actionType),
-	//))
+	spanCtx, span := otel.Tracer("gql").Start(ctx, "GraphQL "+action, trace.WithAttributes(
+		attribute.String("action_type", "API.graphql."+actionType),
+	))
 
 	return TraceWrapper{
-		// Span: span,
-	}, ctx
+		Span: span,
+	}, spanCtx
 }
 
 func (wrapper TraceWrapper) end() {
-	// defer wrapper.Span.End()
-	//
-	//if err := recover(); err != nil {
-	//	wrapper.Span.RecordError(fmt.Errorf("panic: %v", err))
-	//	panic(err)
-	//}
+	defer wrapper.Span.End()
+
+	if err := recover(); err != nil {
+		wrapper.Span.RecordError(fmt.Errorf("panic: %v", err))
+		panic(err)
+	}
 }
 
 // SetStringINNOE sets target if value not nil or empty

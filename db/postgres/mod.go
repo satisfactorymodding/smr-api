@@ -121,7 +121,7 @@ func GetModCountNew(ctx context.Context, filter *models.ModFilter, unapproved bo
 
 func IncrementModViews(ctx context.Context, mod *Mod) {
 	// TODO unignore
-	//DBCtx(ctx).Model(mod).Update("views", mod.Views+1)
+	// DBCtx(ctx).Model(mod).Update("views", mod.Views+1)
 }
 
 func GetMods(ctx context.Context, limit int, offset int, orderBy string, order string, search string, unapproved bool) []Mod {

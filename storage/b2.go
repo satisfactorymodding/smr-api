@@ -223,6 +223,24 @@ func (b2o *B2) Meta(key string) (*ObjectMeta, error) {
 	}, nil
 }
 
-func (b2o *B2) List(key string) ([]Object, error) {
-	return nil, nil // no-op
+func (b2o *B2) List(prefix string) ([]Object, error) {
+	out := make([]Object, 0)
+
+	err := b2o.S3Client.ListObjectsPages(&s3.ListObjectsInput{
+		Bucket: aws.String(b2o.Config.Bucket),
+		Prefix: aws.String(prefix),
+	}, func(output *s3.ListObjectsOutput, b bool) bool {
+		for _, obj := range output.Contents {
+			out = append(out, Object{
+				Key:          obj.Key,
+				LastModified: obj.LastModified,
+			})
+		}
+		return true
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list objects")
+	}
+
+	return out, nil
 }

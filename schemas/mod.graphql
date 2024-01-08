@@ -119,6 +119,8 @@ extend type Query {
     getMyUnapprovedMods(filter: ModFilter): GetMyMods! @isLoggedIn
 
     resolveModVersions(filter: [ModVersionConstraint!]!): [ModVersion!]!
+
+    getModAssetList(modReference: ModID!): [String!]!
 }
 
 ### Mutations

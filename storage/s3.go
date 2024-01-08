@@ -248,20 +248,22 @@ func (s3o *S3) Meta(key string) (*ObjectMeta, error) {
 }
 
 func (s3o *S3) List(prefix string) ([]Object, error) {
-	objects, err := s3o.S3Client.ListObjects(&s3.ListObjectsInput{
+	out := make([]Object, 0)
+
+	err := s3o.S3Client.ListObjectsPages(&s3.ListObjectsInput{
 		Bucket: aws.String(viper.GetString("storage.bucket")),
 		Prefix: aws.String(prefix),
+	}, func(output *s3.ListObjectsOutput, b bool) bool {
+		for _, obj := range output.Contents {
+			out = append(out, Object{
+				Key:          obj.Key,
+				LastModified: obj.LastModified,
+			})
+		}
+		return true
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list objects")
-	}
-
-	out := make([]Object, len(objects.Contents))
-	for i, obj := range objects.Contents {
-		out[i] = Object{
-			Key:          obj.Key,
-			LastModified: obj.LastModified,
-		}
 	}
 
 	return out, nil
