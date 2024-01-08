@@ -1,11 +1,14 @@
 package redis
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strconv"
 	"time"
 
@@ -139,4 +142,37 @@ func GetVersionUploadState(versionID string) (*generated.CreateVersionResponse, 
 
 func FlushRedis() {
 	client.FlushDB()
+}
+
+func StoreModAssetList(modReference string, assets []string) {
+	var buf bytes.Buffer
+	zw := gzip.NewWriter(&buf)
+
+	b, _ := json.Marshal(assets)
+	_, _ = zw.Write(b)
+	_ = zw.Close()
+
+	client.Set(fmt.Sprintf("assets:%s", modReference), buf.Bytes(), time.Hour*24)
+}
+
+func GetModAssetList(modReference string) []string {
+	result, err := client.Get(fmt.Sprintf("assets:%s", modReference)).Result()
+	if err != nil {
+		return nil
+	}
+
+	reader, err := gzip.NewReader(bytes.NewReader([]byte(result)))
+	if err != nil {
+		return nil
+	}
+
+	all, err := io.ReadAll(reader)
+	if err != nil {
+		return nil
+	}
+
+	out := make([]string, 0)
+	_ = json.Unmarshal(all, &out)
+
+	return out
 }

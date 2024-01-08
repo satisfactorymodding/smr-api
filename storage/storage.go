@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"time"
 
@@ -445,7 +446,7 @@ func copyModFileToArchZip(file *zip.File, zipWriter *zip.Writer, newName string)
 }
 
 func DeleteOldModAssets(modReference string, before time.Time) {
-	list, err := storage.List(fmt.Sprintf("/assets/mods/%s", modReference))
+	list, err := storage.List(fmt.Sprintf("assets/mods/%s", modReference))
 	if err != nil {
 		log.Err(err).Msg("failed to list assets")
 		return
@@ -476,4 +477,28 @@ func UploadModAsset(ctx context.Context, modReference string, path string, data 
 	if err != nil {
 		log.Err(err).Str("path", path).Msg("failed to upload mod asset")
 	}
+}
+
+func ListModAssets(modReference string) ([]string, error) {
+	if storage == nil {
+		return nil, errors.New("no storage defined")
+	}
+
+	list, err := storage.List(fmt.Sprintf("assets/mods/%s", modReference))
+	if err != nil {
+		return nil, errors.New("failed to list assets")
+	}
+
+	out := make([]string, len(list))
+	for i, object := range list {
+		if object.Key == nil {
+			continue
+		}
+
+		out[i] = *object.Key
+	}
+
+	sort.Strings(out)
+
+	return out, nil
 }
