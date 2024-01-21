@@ -390,7 +390,8 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 			continue
 		}
 
-		err = copyModFileToArchZip(file, zipWriter, strings.TrimPrefix(file.Name, target+"/"))
+		encodedFileName := EncodeName(strings.TrimPrefix(file.Name, target+"/"))
+		err = copyModFileToArchZip(file, zipWriter, encodedFileName)
 
 		if err != nil {
 			log.Err(err).Msg("failed to add file to " + target + " archive")
