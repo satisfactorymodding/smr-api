@@ -386,11 +386,15 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 	zipWriter := zip.NewWriter(buf)
 
 	for _, file := range zipReader.File {
-		if !strings.HasPrefix(file.Name, target+"/") && file.Name != target+"/" {
+		if !strings.HasPrefix(file.Name, target+"/") {
+			continue
+		}
+		trimmedName := strings.TrimPrefix(file.Name, target+"/")
+		if len(trimmedName) == 0 {
 			continue
 		}
 
-		err = copyModFileToArchZip(file, zipWriter, strings.TrimPrefix(file.Name, target+"/"))
+		err = copyModFileToArchZip(file, zipWriter, trimmedName)
 
 		if err != nil {
 			log.Err(err).Msg("failed to add file to " + target + " archive")
