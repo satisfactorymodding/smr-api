@@ -404,7 +404,8 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 
 	zipWriter.Close()
 
-	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+target+"-"+modVersion)
+	filename := cleanName + "-" + target + "-" + modVersion
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
 	_, err = storage.Put(ctx, key, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -415,7 +416,8 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 	hash := sha256.New()
 	hash.Write(buf.Bytes())
 
-	return true, key, hex.EncodeToString(hash.Sum(nil)), int64(buf.Len())
+	encodedKey := fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename))
+	return true, encodedKey, hex.EncodeToString(hash.Sum(nil)), int64(buf.Len())
 }
 
 func copyModFileToArchZip(file *zip.File, zipWriter *zip.Writer, newName string) error {
