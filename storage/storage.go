@@ -276,7 +276,7 @@ func RenameVersion(ctx context.Context, modID string, name string, versionID str
 		return false, ""
 	}
 
-	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(cleanName)+"-"+version)
+	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(cleanName+"-"+version))
 }
 
 func DeleteMod(ctx context.Context, modID string, name string, versionID string) bool {
