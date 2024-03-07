@@ -276,7 +276,7 @@ func RenameVersion(ctx context.Context, modID string, name string, versionID str
 		return false, ""
 	}
 
-	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(cleanName)+"-"+version)
+	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(cleanName+"-"+version))
 }
 
 func DeleteMod(ctx context.Context, modID string, name string, versionID string) bool {
@@ -386,11 +386,15 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 	zipWriter := zip.NewWriter(buf)
 
 	for _, file := range zipReader.File {
-		if !strings.HasPrefix(file.Name, target+"/") && file.Name != target+"/" {
+		if !strings.HasPrefix(file.Name, target+"/") {
+			continue
+		}
+		trimmedName := strings.TrimPrefix(file.Name, target+"/")
+		if len(trimmedName) == 0 {
 			continue
 		}
 
-		err = copyModFileToArchZip(file, zipWriter, strings.TrimPrefix(file.Name, target+"/"))
+		err = copyModFileToArchZip(file, zipWriter, trimmedName)
 
 		if err != nil {
 			log.Err(err).Msg("failed to add file to " + target + " archive")
@@ -400,7 +404,8 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 
 	zipWriter.Close()
 
-	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+target+"-"+modVersion)
+	filename := cleanName + "-" + target + "-" + modVersion
+	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
 	_, err = storage.Put(ctx, key, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -411,7 +416,8 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 	hash := sha256.New()
 	hash.Write(buf.Bytes())
 
-	return true, key, hex.EncodeToString(hash.Sum(nil)), int64(buf.Len())
+	encodedKey := fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename))
+	return true, encodedKey, hex.EncodeToString(hash.Sum(nil)), int64(buf.Len())
 }
 
 func copyModFileToArchZip(file *zip.File, zipWriter *zip.Writer, newName string) error {
