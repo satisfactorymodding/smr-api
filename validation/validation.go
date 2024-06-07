@@ -326,8 +326,8 @@ type UPlugin struct {
 }
 
 type Plugin struct {
-	BIsBasePlugin *bool  `json:"bIsBasePlugin"`
-	BIsOptional   *bool  `json:"bIsOptional"`
+	BasePlugin *bool  `json:"BasePlugin"`
+	Optional   *bool  `json:"Optional"`
 	Name          string `json:"Name"`
 	SemVersion    string `json:"SemVersion"`
 }
@@ -384,11 +384,11 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 	}
 
 	for _, plugin := range uPlugin.Plugins {
-		if plugin.BIsBasePlugin != nil && *plugin.BIsBasePlugin {
+		if plugin.BasePlugin != nil && *plugin.BasePlugin {
 			continue
 		}
 
-		if plugin.BIsOptional != nil && *plugin.BIsOptional {
+		if plugin.Optional != nil && *plugin.Optional {
 			modInfo.OptionalDependencies[plugin.Name] = plugin.SemVersion
 		} else {
 			modInfo.Dependencies[plugin.Name] = plugin.SemVersion
