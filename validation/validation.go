@@ -326,8 +326,8 @@ type UPlugin struct {
 }
 
 type Plugin struct {
-	BasePlugin *bool  `json:"BasePlugin"`
-	Optional   *bool  `json:"Optional"`
+	BasePlugin 	  *bool  `json:"BasePlugin"`
+	Optional   	  *bool  `json:"Optional"`
 	Name          string `json:"Name"`
 	SemVersion    string `json:"SemVersion"`
 }
