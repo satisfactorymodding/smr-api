@@ -326,10 +326,10 @@ type UPlugin struct {
 }
 
 type Plugin struct {
-	BasePlugin 	  *bool  `json:"BasePlugin"`
-	Optional   	  *bool  `json:"Optional"`
-	Name          string `json:"Name"`
-	SemVersion    string `json:"SemVersion"`
+	BasePlugin *bool  `json:"BasePlugin"`
+	Optional   *bool  `json:"Optional"`
+	Name       string `json:"Name"`
+	SemVersion string `json:"SemVersion"`
 }
 
 func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidation bool, modReference string) (*ModInfo, error) {
