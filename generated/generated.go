@@ -2167,6 +2167,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCompatibilityInfoInput,
 		ec.unmarshalInputCompatibilityInput,
+		ec.unmarshalInputGuideFilter,
+		ec.unmarshalInputModFilter,
 		ec.unmarshalInputModVersionConstraint,
 		ec.unmarshalInputNewAnnouncement,
 		ec.unmarshalInputNewGuide,
@@ -2174,6 +2176,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNewSMLVersion,
 		ec.unmarshalInputNewSMLVersionTarget,
 		ec.unmarshalInputNewVersion,
+		ec.unmarshalInputSMLVersionFilter,
 		ec.unmarshalInputTagFilter,
 		ec.unmarshalInputUpdateAnnouncement,
 		ec.unmarshalInputUpdateGuide,
@@ -2183,6 +2186,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateUser,
 		ec.unmarshalInputUpdateUserMod,
 		ec.unmarshalInputUpdateVersion,
+		ec.unmarshalInputVersionFilter,
 	)
 	first := true
 
@@ -2719,7 +2723,7 @@ extend type Query {
 ### Mutations
 
 extend type Mutation {
-    createTag(tagName: TagName!): Tag @isLoggedIn
+    createTag(tagName: TagName!): Tag @canManageTags @isLoggedIn
     createMultipleTags(tagNames: [TagName!]!): [Tag!]! @canManageTags @isLoggedIn
     updateTag(tagID: TagID!, NewName: TagName!): Tag! @canManageTags @isLoggedIn
     deleteTag(tagID: TagID!): Boolean! @canManageTags @isLoggedIn
@@ -4160,7 +4164,7 @@ func (ec *executionContext) _Announcement_id(ctx context.Context, field graphql.
 	return ec.marshalNAnnouncementID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Announcement_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Announcement_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Announcement",
 		Field:      field,
@@ -4204,7 +4208,7 @@ func (ec *executionContext) _Announcement_message(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Announcement_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Announcement_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Announcement",
 		Field:      field,
@@ -4248,7 +4252,7 @@ func (ec *executionContext) _Announcement_importance(ctx context.Context, field 
 	return ec.marshalNAnnouncementImportance2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementImportance(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Announcement_importance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Announcement_importance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Announcement",
 		Field:      field,
@@ -4292,7 +4296,7 @@ func (ec *executionContext) _Compatibility_state(ctx context.Context, field grap
 	return ec.marshalNCompatibilityState2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityState(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Compatibility_state(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Compatibility_state(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Compatibility",
 		Field:      field,
@@ -4333,7 +4337,7 @@ func (ec *executionContext) _Compatibility_note(ctx context.Context, field graph
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Compatibility_note(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Compatibility_note(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Compatibility",
 		Field:      field,
@@ -4377,7 +4381,7 @@ func (ec *executionContext) _CompatibilityInfo_EA(ctx context.Context, field gra
 	return ec.marshalNCompatibility2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibility(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_CompatibilityInfo_EA(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CompatibilityInfo_EA(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CompatibilityInfo",
 		Field:      field,
@@ -4427,7 +4431,7 @@ func (ec *executionContext) _CompatibilityInfo_EXP(ctx context.Context, field gr
 	return ec.marshalNCompatibility2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibility(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_CompatibilityInfo_EXP(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CompatibilityInfo_EXP(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CompatibilityInfo",
 		Field:      field,
@@ -4477,7 +4481,7 @@ func (ec *executionContext) _CreateVersionResponse_auto_approved(ctx context.Con
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_CreateVersionResponse_auto_approved(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CreateVersionResponse_auto_approved(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CreateVersionResponse",
 		Field:      field,
@@ -4518,7 +4522,7 @@ func (ec *executionContext) _CreateVersionResponse_version(ctx context.Context, 
 	return ec.marshalOVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersion(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_CreateVersionResponse_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CreateVersionResponse_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CreateVersionResponse",
 		Field:      field,
@@ -4598,7 +4602,7 @@ func (ec *executionContext) _GetGuides_guides(ctx context.Context, field graphql
 	return ec.marshalNGuide2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGuideᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetGuides_guides(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetGuides_guides(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetGuides",
 		Field:      field,
@@ -4664,7 +4668,7 @@ func (ec *executionContext) _GetGuides_count(ctx context.Context, field graphql.
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetGuides_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetGuides_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetGuides",
 		Field:      field,
@@ -4708,7 +4712,7 @@ func (ec *executionContext) _GetMods_mods(ctx context.Context, field graphql.Col
 	return ec.marshalNMod2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetMods_mods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetMods_mods(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetMods",
 		Field:      field,
@@ -4800,7 +4804,7 @@ func (ec *executionContext) _GetMods_count(ctx context.Context, field graphql.Co
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetMods_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetMods_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetMods",
 		Field:      field,
@@ -4844,7 +4848,7 @@ func (ec *executionContext) _GetMyMods_mods(ctx context.Context, field graphql.C
 	return ec.marshalNMod2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetMyMods_mods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetMyMods_mods(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetMyMods",
 		Field:      field,
@@ -4936,7 +4940,7 @@ func (ec *executionContext) _GetMyMods_count(ctx context.Context, field graphql.
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetMyMods_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetMyMods_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetMyMods",
 		Field:      field,
@@ -4980,7 +4984,7 @@ func (ec *executionContext) _GetMyVersions_versions(ctx context.Context, field g
 	return ec.marshalNVersion2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetMyVersions_versions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetMyVersions_versions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetMyVersions",
 		Field:      field,
@@ -5060,7 +5064,7 @@ func (ec *executionContext) _GetMyVersions_count(ctx context.Context, field grap
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetMyVersions_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetMyVersions_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetMyVersions",
 		Field:      field,
@@ -5104,7 +5108,7 @@ func (ec *executionContext) _GetSMLVersions_sml_versions(ctx context.Context, fi
 	return ec.marshalNSMLVersion2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetSMLVersions_sml_versions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetSMLVersions_sml_versions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetSMLVersions",
 		Field:      field,
@@ -5174,7 +5178,7 @@ func (ec *executionContext) _GetSMLVersions_count(ctx context.Context, field gra
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetSMLVersions_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetSMLVersions_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetSMLVersions",
 		Field:      field,
@@ -5218,7 +5222,7 @@ func (ec *executionContext) _GetVersions_versions(ctx context.Context, field gra
 	return ec.marshalNVersion2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetVersions_versions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetVersions_versions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetVersions",
 		Field:      field,
@@ -5298,7 +5302,7 @@ func (ec *executionContext) _GetVersions_count(ctx context.Context, field graphq
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GetVersions_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GetVersions_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetVersions",
 		Field:      field,
@@ -5342,7 +5346,7 @@ func (ec *executionContext) _Group_id(ctx context.Context, field graphql.Collect
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Group_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Group_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Group",
 		Field:      field,
@@ -5386,7 +5390,7 @@ func (ec *executionContext) _Group_name(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Group_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Group_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Group",
 		Field:      field,
@@ -5430,7 +5434,7 @@ func (ec *executionContext) _Guide_id(ctx context.Context, field graphql.Collect
 	return ec.marshalNGuideID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5474,7 +5478,7 @@ func (ec *executionContext) _Guide_name(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5518,7 +5522,7 @@ func (ec *executionContext) _Guide_short_description(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_short_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_short_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5562,7 +5566,7 @@ func (ec *executionContext) _Guide_guide(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_guide(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_guide(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5606,7 +5610,7 @@ func (ec *executionContext) _Guide_views(ctx context.Context, field graphql.Coll
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_views(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_views(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5650,7 +5654,7 @@ func (ec *executionContext) _Guide_user_id(ctx context.Context, field graphql.Co
 	return ec.marshalNUserID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_user_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_user_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5694,7 +5698,7 @@ func (ec *executionContext) _Guide_updated_at(ctx context.Context, field graphql
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_updated_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_updated_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5738,7 +5742,7 @@ func (ec *executionContext) _Guide_created_at(ctx context.Context, field graphql
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_created_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_created_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5782,7 +5786,7 @@ func (ec *executionContext) _Guide_tags(ctx context.Context, field graphql.Colle
 	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTagᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_tags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5832,7 +5836,7 @@ func (ec *executionContext) _Guide_user(ctx context.Context, field graphql.Colle
 	return ec.marshalNUser2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Guide_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Guide_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Guide",
 		Field:      field,
@@ -5899,7 +5903,7 @@ func (ec *executionContext) _LatestVersions_alpha(ctx context.Context, field gra
 	return ec.marshalOVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersion(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_LatestVersions_alpha(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_LatestVersions_alpha(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "LatestVersions",
 		Field:      field,
@@ -5976,7 +5980,7 @@ func (ec *executionContext) _LatestVersions_beta(ctx context.Context, field grap
 	return ec.marshalOVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersion(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_LatestVersions_beta(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_LatestVersions_beta(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "LatestVersions",
 		Field:      field,
@@ -6053,7 +6057,7 @@ func (ec *executionContext) _LatestVersions_release(ctx context.Context, field g
 	return ec.marshalOVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersion(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_LatestVersions_release(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_LatestVersions_release(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "LatestVersions",
 		Field:      field,
@@ -6133,7 +6137,7 @@ func (ec *executionContext) _Mod_id(ctx context.Context, field graphql.Collected
 	return ec.marshalNModID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6177,7 +6181,7 @@ func (ec *executionContext) _Mod_name(ctx context.Context, field graphql.Collect
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6221,7 +6225,7 @@ func (ec *executionContext) _Mod_short_description(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_short_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_short_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6262,7 +6266,7 @@ func (ec *executionContext) _Mod_full_description(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_full_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_full_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6303,7 +6307,7 @@ func (ec *executionContext) _Mod_logo(ctx context.Context, field graphql.Collect
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_logo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_logo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6344,7 +6348,7 @@ func (ec *executionContext) _Mod_source_url(ctx context.Context, field graphql.C
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_source_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_source_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6388,7 +6392,7 @@ func (ec *executionContext) _Mod_creator_id(ctx context.Context, field graphql.C
 	return ec.marshalNUserID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_creator_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_creator_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6432,7 +6436,7 @@ func (ec *executionContext) _Mod_approved(ctx context.Context, field graphql.Col
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_approved(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_approved(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6476,7 +6480,7 @@ func (ec *executionContext) _Mod_views(ctx context.Context, field graphql.Collec
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_views(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_views(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6520,7 +6524,7 @@ func (ec *executionContext) _Mod_downloads(ctx context.Context, field graphql.Co
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_downloads(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_downloads(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6564,7 +6568,7 @@ func (ec *executionContext) _Mod_hotness(ctx context.Context, field graphql.Coll
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_hotness(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_hotness(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6608,7 +6612,7 @@ func (ec *executionContext) _Mod_popularity(ctx context.Context, field graphql.C
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_popularity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_popularity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6652,7 +6656,7 @@ func (ec *executionContext) _Mod_updated_at(ctx context.Context, field graphql.C
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_updated_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_updated_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6696,7 +6700,7 @@ func (ec *executionContext) _Mod_created_at(ctx context.Context, field graphql.C
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_created_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_created_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6737,7 +6741,7 @@ func (ec *executionContext) _Mod_last_version_date(ctx context.Context, field gr
 	return ec.marshalODate2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_last_version_date(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_last_version_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6781,7 +6785,7 @@ func (ec *executionContext) _Mod_mod_reference(ctx context.Context, field graphq
 	return ec.marshalNModReference2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_mod_reference(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_mod_reference(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6825,7 +6829,7 @@ func (ec *executionContext) _Mod_hidden(ctx context.Context, field graphql.Colle
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_hidden(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_hidden(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6866,7 +6870,7 @@ func (ec *executionContext) _Mod_tags(ctx context.Context, field graphql.Collect
 	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTagᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_tags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6913,7 +6917,7 @@ func (ec *executionContext) _Mod_compatibility(ctx context.Context, field graphq
 	return ec.marshalOCompatibilityInfo2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfo(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_compatibility(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_compatibility(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -6963,7 +6967,7 @@ func (ec *executionContext) _Mod_authors(ctx context.Context, field graphql.Coll
 	return ec.marshalNUserMod2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUserModᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_authors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_authors(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -7198,7 +7202,7 @@ func (ec *executionContext) _Mod_latestVersions(ctx context.Context, field graph
 	return ec.marshalNLatestVersions2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐLatestVersions(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mod_latestVersions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mod_latestVersions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -7250,7 +7254,7 @@ func (ec *executionContext) _ModVersion_id(ctx context.Context, field graphql.Co
 	return ec.marshalNModID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ModVersion_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ModVersion_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ModVersion",
 		Field:      field,
@@ -7294,7 +7298,7 @@ func (ec *executionContext) _ModVersion_mod_reference(ctx context.Context, field
 	return ec.marshalNModReference2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ModVersion_mod_reference(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ModVersion_mod_reference(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ModVersion",
 		Field:      field,
@@ -7338,7 +7342,7 @@ func (ec *executionContext) _ModVersion_versions(ctx context.Context, field grap
 	return ec.marshalNVersion2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ModVersion_versions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ModVersion_versions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ModVersion",
 		Field:      field,
@@ -8971,13 +8975,19 @@ func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graph
 			return ec.resolvers.Mutation().CreateTag(rctx, fc.Args["tagName"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.CanManageTags == nil {
+				return nil, errors.New("directive canManageTags is not implemented")
+			}
+			return ec.directives.CanManageTags(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsLoggedIn == nil {
 				return nil, errors.New("directive isLoggedIn is not implemented")
 			}
-			return ec.directives.IsLoggedIn(ctx, nil, directive0)
+			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
 
-		tmp, err := directive1(rctx)
+		tmp, err := directive2(rctx)
 		if err != nil {
 			return nil, graphql.ErrorOnPath(ctx, err)
 		}
@@ -9452,7 +9462,7 @@ func (ec *executionContext) _Mutation_logout(ctx context.Context, field graphql.
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_logout(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_logout(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -10347,7 +10357,7 @@ func (ec *executionContext) _OAuthOptions_github(ctx context.Context, field grap
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_OAuthOptions_github(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_OAuthOptions_github(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OAuthOptions",
 		Field:      field,
@@ -10391,7 +10401,7 @@ func (ec *executionContext) _OAuthOptions_google(ctx context.Context, field grap
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_OAuthOptions_google(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_OAuthOptions_google(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OAuthOptions",
 		Field:      field,
@@ -10435,7 +10445,7 @@ func (ec *executionContext) _OAuthOptions_facebook(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_OAuthOptions_facebook(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_OAuthOptions_facebook(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OAuthOptions",
 		Field:      field,
@@ -10602,7 +10612,7 @@ func (ec *executionContext) _Query_getAnnouncements(ctx context.Context, field g
 	return ec.marshalNAnnouncement2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_getAnnouncements(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getAnnouncements(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -11800,7 +11810,7 @@ func (ec *executionContext) _Query_getMe(ctx context.Context, field graphql.Coll
 	return ec.marshalOUser2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_getMe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getMe(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -12586,7 +12596,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -12644,7 +12654,7 @@ func (ec *executionContext) _SMLVersion_id(ctx context.Context, field graphql.Co
 	return ec.marshalNSMLVersionID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -12688,7 +12698,7 @@ func (ec *executionContext) _SMLVersion_version(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -12732,7 +12742,7 @@ func (ec *executionContext) _SMLVersion_satisfactory_version(ctx context.Context
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_satisfactory_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_satisfactory_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -12776,7 +12786,7 @@ func (ec *executionContext) _SMLVersion_stability(ctx context.Context, field gra
 	return ec.marshalNVersionStabilities2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_stability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_stability(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -12820,7 +12830,7 @@ func (ec *executionContext) _SMLVersion_link(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_link(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_link(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -12864,7 +12874,7 @@ func (ec *executionContext) _SMLVersion_targets(ctx context.Context, field graph
 	return ec.marshalNSMLVersionTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersionTarget(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_targets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_targets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -12916,7 +12926,7 @@ func (ec *executionContext) _SMLVersion_changelog(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_changelog(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_changelog(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -12960,7 +12970,7 @@ func (ec *executionContext) _SMLVersion_date(ctx context.Context, field graphql.
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_date(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -13001,7 +13011,7 @@ func (ec *executionContext) _SMLVersion_bootstrap_version(ctx context.Context, f
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_bootstrap_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_bootstrap_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -13045,7 +13055,7 @@ func (ec *executionContext) _SMLVersion_engine_version(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_engine_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_engine_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -13089,7 +13099,7 @@ func (ec *executionContext) _SMLVersion_updated_at(ctx context.Context, field gr
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_updated_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_updated_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -13133,7 +13143,7 @@ func (ec *executionContext) _SMLVersion_created_at(ctx context.Context, field gr
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersion_created_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersion_created_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
@@ -13177,7 +13187,7 @@ func (ec *executionContext) _SMLVersionTarget_VersionID(ctx context.Context, fie
 	return ec.marshalNSMLVersionID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersionTarget_VersionID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersionTarget_VersionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersionTarget",
 		Field:      field,
@@ -13221,7 +13231,7 @@ func (ec *executionContext) _SMLVersionTarget_targetName(ctx context.Context, fi
 	return ec.marshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersionTarget_targetName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersionTarget_targetName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersionTarget",
 		Field:      field,
@@ -13265,7 +13275,7 @@ func (ec *executionContext) _SMLVersionTarget_link(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SMLVersionTarget_link(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SMLVersionTarget_link(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersionTarget",
 		Field:      field,
@@ -13309,7 +13319,7 @@ func (ec *executionContext) _Tag_id(ctx context.Context, field graphql.Collected
 	return ec.marshalNTagID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Tag_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Tag_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Tag",
 		Field:      field,
@@ -13353,7 +13363,7 @@ func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.Collect
 	return ec.marshalNTagName2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Tag_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Tag_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Tag",
 		Field:      field,
@@ -13397,7 +13407,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	return ec.marshalNUserID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -13472,7 +13482,7 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -13516,7 +13526,7 @@ func (ec *executionContext) _User_username(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_username(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_username(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -13557,7 +13567,7 @@ func (ec *executionContext) _User_avatar(ctx context.Context, field graphql.Coll
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_avatar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_avatar(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -13601,7 +13611,7 @@ func (ec *executionContext) _User_created_at(ctx context.Context, field graphql.
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_created_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_created_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -13676,7 +13686,7 @@ func (ec *executionContext) _User_github_id(ctx context.Context, field graphql.C
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_github_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_github_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -13751,7 +13761,7 @@ func (ec *executionContext) _User_google_id(ctx context.Context, field graphql.C
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_google_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_google_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -13826,7 +13836,7 @@ func (ec *executionContext) _User_facebook_id(ctx context.Context, field graphql
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_facebook_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_facebook_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -13904,7 +13914,7 @@ func (ec *executionContext) _User_roles(ctx context.Context, field graphql.Colle
 	return ec.marshalNUserRoles2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUserRoles(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_roles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_roles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -14000,7 +14010,7 @@ func (ec *executionContext) _User_groups(ctx context.Context, field graphql.Coll
 	return ec.marshalNGroup2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGroupᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_groups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_groups(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -14050,7 +14060,7 @@ func (ec *executionContext) _User_mods(ctx context.Context, field graphql.Collec
 	return ec.marshalNUserMod2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUserModᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_mods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_mods(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -14106,7 +14116,7 @@ func (ec *executionContext) _User_guides(ctx context.Context, field graphql.Coll
 	return ec.marshalNGuide2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGuideᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_guides(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_guides(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -14172,7 +14182,7 @@ func (ec *executionContext) _UserMod_user_id(ctx context.Context, field graphql.
 	return ec.marshalNUserID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserMod_user_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserMod_user_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserMod",
 		Field:      field,
@@ -14216,7 +14226,7 @@ func (ec *executionContext) _UserMod_mod_id(ctx context.Context, field graphql.C
 	return ec.marshalNModID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserMod_mod_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserMod_mod_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserMod",
 		Field:      field,
@@ -14260,7 +14270,7 @@ func (ec *executionContext) _UserMod_role(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserMod_role(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserMod_role(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserMod",
 		Field:      field,
@@ -14304,7 +14314,7 @@ func (ec *executionContext) _UserMod_user(ctx context.Context, field graphql.Col
 	return ec.marshalNUser2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserMod_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserMod_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserMod",
 		Field:      field,
@@ -14374,7 +14384,7 @@ func (ec *executionContext) _UserMod_mod(ctx context.Context, field graphql.Coll
 	return ec.marshalNMod2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐMod(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserMod_mod(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserMod_mod(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserMod",
 		Field:      field,
@@ -14466,7 +14476,7 @@ func (ec *executionContext) _UserRoles_approveMods(ctx context.Context, field gr
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserRoles_approveMods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserRoles_approveMods(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserRoles",
 		Field:      field,
@@ -14510,7 +14520,7 @@ func (ec *executionContext) _UserRoles_approveVersions(ctx context.Context, fiel
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserRoles_approveVersions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserRoles_approveVersions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserRoles",
 		Field:      field,
@@ -14554,7 +14564,7 @@ func (ec *executionContext) _UserRoles_deleteContent(ctx context.Context, field 
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserRoles_deleteContent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserRoles_deleteContent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserRoles",
 		Field:      field,
@@ -14598,7 +14608,7 @@ func (ec *executionContext) _UserRoles_editContent(ctx context.Context, field gr
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserRoles_editContent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserRoles_editContent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserRoles",
 		Field:      field,
@@ -14642,7 +14652,7 @@ func (ec *executionContext) _UserRoles_editUsers(ctx context.Context, field grap
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserRoles_editUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserRoles_editUsers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserRoles",
 		Field:      field,
@@ -14686,7 +14696,7 @@ func (ec *executionContext) _UserRoles_editSMLVersions(ctx context.Context, fiel
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserRoles_editSMLVersions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserRoles_editSMLVersions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserRoles",
 		Field:      field,
@@ -14730,7 +14740,7 @@ func (ec *executionContext) _UserRoles_editBootstrapVersions(ctx context.Context
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserRoles_editBootstrapVersions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserRoles_editBootstrapVersions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserRoles",
 		Field:      field,
@@ -14774,7 +14784,7 @@ func (ec *executionContext) _UserRoles_editAnyModCompatibility(ctx context.Conte
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserRoles_editAnyModCompatibility(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserRoles_editAnyModCompatibility(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserRoles",
 		Field:      field,
@@ -14818,7 +14828,7 @@ func (ec *executionContext) _UserSession_token(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserSession_token(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserSession_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserSession",
 		Field:      field,
@@ -14862,7 +14872,7 @@ func (ec *executionContext) _Version_id(ctx context.Context, field graphql.Colle
 	return ec.marshalNVersionID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -14906,7 +14916,7 @@ func (ec *executionContext) _Version_mod_id(ctx context.Context, field graphql.C
 	return ec.marshalNModID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_mod_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_mod_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -14950,7 +14960,7 @@ func (ec *executionContext) _Version_version(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -14994,7 +15004,7 @@ func (ec *executionContext) _Version_sml_version(ctx context.Context, field grap
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_sml_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_sml_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15038,7 +15048,7 @@ func (ec *executionContext) _Version_changelog(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_changelog(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_changelog(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15082,7 +15092,7 @@ func (ec *executionContext) _Version_downloads(ctx context.Context, field graphq
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_downloads(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_downloads(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15126,7 +15136,7 @@ func (ec *executionContext) _Version_stability(ctx context.Context, field graphq
 	return ec.marshalNVersionStabilities2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_stability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_stability(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15170,7 +15180,7 @@ func (ec *executionContext) _Version_approved(ctx context.Context, field graphql
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_approved(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_approved(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15214,7 +15224,7 @@ func (ec *executionContext) _Version_updated_at(ctx context.Context, field graph
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_updated_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_updated_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15258,7 +15268,7 @@ func (ec *executionContext) _Version_created_at(ctx context.Context, field graph
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_created_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_created_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15302,7 +15312,7 @@ func (ec *executionContext) _Version_link(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_link(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_link(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15346,7 +15356,7 @@ func (ec *executionContext) _Version_targets(ctx context.Context, field graphql.
 	return ec.marshalNVersionTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionTarget(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_targets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_targets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15399,7 +15409,7 @@ func (ec *executionContext) _Version_metadata(ctx context.Context, field graphql
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_metadata(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15440,7 +15450,7 @@ func (ec *executionContext) _Version_size(ctx context.Context, field graphql.Col
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_size(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_size(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15481,7 +15491,7 @@ func (ec *executionContext) _Version_hash(ctx context.Context, field graphql.Col
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_hash(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_hash(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15525,7 +15535,7 @@ func (ec *executionContext) _Version_mod(ctx context.Context, field graphql.Coll
 	return ec.marshalNMod2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐMod(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_mod(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_mod(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15617,7 +15627,7 @@ func (ec *executionContext) _Version_dependencies(ctx context.Context, field gra
 	return ec.marshalNVersionDependency2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionDependencyᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_dependencies(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_dependencies(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -15675,7 +15685,7 @@ func (ec *executionContext) _VersionDependency_version_id(ctx context.Context, f
 	return ec.marshalNVersionID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionDependency_version_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionDependency_version_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionDependency",
 		Field:      field,
@@ -15719,7 +15729,7 @@ func (ec *executionContext) _VersionDependency_mod_id(ctx context.Context, field
 	return ec.marshalNModID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionDependency_mod_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionDependency_mod_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionDependency",
 		Field:      field,
@@ -15763,7 +15773,7 @@ func (ec *executionContext) _VersionDependency_condition(ctx context.Context, fi
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionDependency_condition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionDependency_condition(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionDependency",
 		Field:      field,
@@ -15807,7 +15817,7 @@ func (ec *executionContext) _VersionDependency_optional(ctx context.Context, fie
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionDependency_optional(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionDependency_optional(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionDependency",
 		Field:      field,
@@ -15848,7 +15858,7 @@ func (ec *executionContext) _VersionDependency_mod(ctx context.Context, field gr
 	return ec.marshalOMod2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐMod(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionDependency_mod(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionDependency_mod(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionDependency",
 		Field:      field,
@@ -15937,7 +15947,7 @@ func (ec *executionContext) _VersionDependency_version(ctx context.Context, fiel
 	return ec.marshalOVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersion(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionDependency_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionDependency_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionDependency",
 		Field:      field,
@@ -16017,7 +16027,7 @@ func (ec *executionContext) _VersionTarget_VersionID(ctx context.Context, field 
 	return ec.marshalNVersionID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionTarget_VersionID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionTarget_VersionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionTarget",
 		Field:      field,
@@ -16061,7 +16071,7 @@ func (ec *executionContext) _VersionTarget_targetName(ctx context.Context, field
 	return ec.marshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionTarget_targetName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionTarget_targetName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionTarget",
 		Field:      field,
@@ -16105,7 +16115,7 @@ func (ec *executionContext) _VersionTarget_link(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionTarget_link(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionTarget_link(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionTarget",
 		Field:      field,
@@ -16146,7 +16156,7 @@ func (ec *executionContext) _VersionTarget_size(ctx context.Context, field graph
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionTarget_size(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionTarget_size(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionTarget",
 		Field:      field,
@@ -16187,7 +16197,7 @@ func (ec *executionContext) _VersionTarget_hash(ctx context.Context, field graph
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VersionTarget_hash(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VersionTarget_hash(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VersionTarget",
 		Field:      field,
@@ -16231,7 +16241,7 @@ func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -16272,7 +16282,7 @@ func (ec *executionContext) ___Directive_description(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -16316,7 +16326,7 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 	return ec.marshalN__DirectiveLocation2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_locations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_locations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -16360,7 +16370,7 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_args(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -16414,7 +16424,7 @@ func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_isRepeatable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_isRepeatable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -16458,7 +16468,7 @@ func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___EnumValue_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___EnumValue_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__EnumValue",
 		Field:      field,
@@ -16499,7 +16509,7 @@ func (ec *executionContext) ___EnumValue_description(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___EnumValue_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___EnumValue_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__EnumValue",
 		Field:      field,
@@ -16543,7 +16553,7 @@ func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___EnumValue_isDeprecated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___EnumValue_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__EnumValue",
 		Field:      field,
@@ -16584,7 +16594,7 @@ func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___EnumValue_deprecationReason(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___EnumValue_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__EnumValue",
 		Field:      field,
@@ -16628,7 +16638,7 @@ func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -16669,7 +16679,7 @@ func (ec *executionContext) ___Field_description(ctx context.Context, field grap
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -16713,7 +16723,7 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_args(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -16767,7 +16777,7 @@ func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.Col
 	return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -16833,7 +16843,7 @@ func (ec *executionContext) ___Field_isDeprecated(ctx context.Context, field gra
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_isDeprecated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -16874,7 +16884,7 @@ func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, fiel
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_deprecationReason(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -16918,7 +16928,7 @@ func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___InputValue_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___InputValue_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
 		Field:      field,
@@ -16959,7 +16969,7 @@ func (ec *executionContext) ___InputValue_description(ctx context.Context, field
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___InputValue_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___InputValue_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
 		Field:      field,
@@ -17003,7 +17013,7 @@ func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphq
 	return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___InputValue_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___InputValue_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
 		Field:      field,
@@ -17066,7 +17076,7 @@ func (ec *executionContext) ___InputValue_defaultValue(ctx context.Context, fiel
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___InputValue_defaultValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___InputValue_defaultValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
 		Field:      field,
@@ -17107,7 +17117,7 @@ func (ec *executionContext) ___Schema_description(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -17151,7 +17161,7 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 	return ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_types(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_types(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -17217,7 +17227,7 @@ func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graph
 	return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_queryType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_queryType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -17280,7 +17290,7 @@ func (ec *executionContext) ___Schema_mutationType(ctx context.Context, field gr
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_mutationType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_mutationType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -17343,7 +17353,7 @@ func (ec *executionContext) ___Schema_subscriptionType(ctx context.Context, fiel
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_subscriptionType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_subscriptionType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -17409,7 +17419,7 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 	return ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_directives(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_directives(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -17465,7 +17475,7 @@ func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.Coll
 	return ec.marshalN__TypeKind2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_kind(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_kind(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -17506,7 +17516,7 @@ func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.Coll
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -17547,7 +17557,7 @@ func (ec *executionContext) ___Type_description(ctx context.Context, field graph
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -17654,7 +17664,7 @@ func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphq
 	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_interfaces(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_interfaces(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -17717,7 +17727,7 @@ func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field gra
 	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_possibleTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_possibleTypes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -17842,7 +17852,7 @@ func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graph
 	return ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_inputFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_inputFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -17893,7 +17903,7 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_ofType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_ofType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -17956,7 +17966,7 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -17988,8 +17998,6 @@ func (ec *executionContext) unmarshalInputCompatibilityInfoInput(ctx context.Con
 		}
 		switch k {
 		case "EA":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("EA"))
 			data, err := ec.unmarshalNCompatibilityInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInput(ctx, v)
 			if err != nil {
@@ -17997,8 +18005,6 @@ func (ec *executionContext) unmarshalInputCompatibilityInfoInput(ctx context.Con
 			}
 			it.Ea = data
 		case "EXP":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("EXP"))
 			data, err := ec.unmarshalNCompatibilityInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInput(ctx, v)
 			if err != nil {
@@ -18026,8 +18032,6 @@ func (ec *executionContext) unmarshalInputCompatibilityInput(ctx context.Context
 		}
 		switch k {
 		case "state":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
 			data, err := ec.unmarshalNCompatibilityState2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityState(ctx, v)
 			if err != nil {
@@ -18035,14 +18039,164 @@ func (ec *executionContext) unmarshalInputCompatibilityInput(ctx context.Context
 			}
 			it.State = data
 		case "note":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Note = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputGuideFilter(ctx context.Context, obj interface{}) (map[string]interface{}, error) {
+	it := make(map[string]interface{}, len(obj.(map[string]interface{})))
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"limit", "offset", "order_by", "order", "search", "ids", "tagIDs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "limit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["limit"] = data
+		case "offset":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["offset"] = data
+		case "order_by":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order_by"))
+			data, err := ec.unmarshalOGuideFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGuideFields(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["order_by"] = data
+		case "order":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalOOrder2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐOrder(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["order"] = data
+		case "search":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("search"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["search"] = data
+		case "ids":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["ids"] = data
+		case "tagIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagIDs"))
+			data, err := ec.unmarshalOTagID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["tagIDs"] = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputModFilter(ctx context.Context, obj interface{}) (map[string]interface{}, error) {
+	it := make(map[string]interface{}, len(obj.(map[string]interface{})))
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"limit", "offset", "order_by", "order", "search", "ids", "references", "hidden", "tagIDs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "limit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["limit"] = data
+		case "offset":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["offset"] = data
+		case "order_by":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order_by"))
+			data, err := ec.unmarshalOModFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModFields(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["order_by"] = data
+		case "order":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalOOrder2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐOrder(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["order"] = data
+		case "search":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("search"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["search"] = data
+		case "ids":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["ids"] = data
+		case "references":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("references"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["references"] = data
+		case "hidden":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hidden"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["hidden"] = data
+		case "tagIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagIDs"))
+			data, err := ec.unmarshalOTagID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["tagIDs"] = data
 		}
 	}
 
@@ -18064,8 +18218,6 @@ func (ec *executionContext) unmarshalInputModVersionConstraint(ctx context.Conte
 		}
 		switch k {
 		case "modIdOrReference":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modIdOrReference"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18073,8 +18225,6 @@ func (ec *executionContext) unmarshalInputModVersionConstraint(ctx context.Conte
 			}
 			it.ModIDOrReference = data
 		case "version":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18102,8 +18252,6 @@ func (ec *executionContext) unmarshalInputNewAnnouncement(ctx context.Context, o
 		}
 		switch k {
 		case "message":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("message"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18111,8 +18259,6 @@ func (ec *executionContext) unmarshalInputNewAnnouncement(ctx context.Context, o
 			}
 			it.Message = data
 		case "importance":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("importance"))
 			data, err := ec.unmarshalNAnnouncementImportance2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementImportance(ctx, v)
 			if err != nil {
@@ -18140,8 +18286,6 @@ func (ec *executionContext) unmarshalInputNewGuide(ctx context.Context, obj inte
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18149,8 +18293,6 @@ func (ec *executionContext) unmarshalInputNewGuide(ctx context.Context, obj inte
 			}
 			it.Name = data
 		case "short_description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("short_description"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18158,8 +18300,6 @@ func (ec *executionContext) unmarshalInputNewGuide(ctx context.Context, obj inte
 			}
 			it.ShortDescription = data
 		case "guide":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("guide"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18167,8 +18307,6 @@ func (ec *executionContext) unmarshalInputNewGuide(ctx context.Context, obj inte
 			}
 			it.Guide = data
 		case "tagIDs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagIDs"))
 			data, err := ec.unmarshalOTagID2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -18196,8 +18334,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18205,8 +18341,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 			}
 			it.Name = data
 		case "short_description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("short_description"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18214,8 +18348,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 			}
 			it.ShortDescription = data
 		case "full_description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("full_description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18223,8 +18355,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 			}
 			it.FullDescription = data
 		case "logo":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logo"))
 			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
 			if err != nil {
@@ -18232,8 +18362,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 			}
 			it.Logo = data
 		case "source_url":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source_url"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18241,8 +18369,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 			}
 			it.SourceURL = data
 		case "mod_reference":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mod_reference"))
 			data, err := ec.unmarshalNModReference2string(ctx, v)
 			if err != nil {
@@ -18250,8 +18376,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 			}
 			it.ModReference = data
 		case "hidden":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hidden"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -18259,8 +18383,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 			}
 			it.Hidden = data
 		case "tagIDs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagIDs"))
 			data, err := ec.unmarshalOTagID2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -18288,8 +18410,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 		}
 		switch k {
 		case "version":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18297,8 +18417,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 			}
 			it.Version = data
 		case "satisfactory_version":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("satisfactory_version"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -18306,8 +18424,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 			}
 			it.SatisfactoryVersion = data
 		case "stability":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stability"))
 			data, err := ec.unmarshalNVersionStabilities2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx, v)
 			if err != nil {
@@ -18315,8 +18431,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 			}
 			it.Stability = data
 		case "link":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("link"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18324,8 +18438,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 			}
 			it.Link = data
 		case "targets":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targets"))
 			data, err := ec.unmarshalNNewSMLVersionTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSMLVersionTargetᚄ(ctx, v)
 			if err != nil {
@@ -18333,8 +18445,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 			}
 			it.Targets = data
 		case "changelog":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changelog"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18342,8 +18452,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 			}
 			it.Changelog = data
 		case "date":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
 			data, err := ec.unmarshalNDate2string(ctx, v)
 			if err != nil {
@@ -18351,8 +18459,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 			}
 			it.Date = data
 		case "bootstrap_version":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bootstrap_version"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18360,8 +18466,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 			}
 			it.BootstrapVersion = data
 		case "engine_version":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("engine_version"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18389,8 +18493,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersionTarget(ctx context.Contex
 		}
 		switch k {
 		case "targetName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetName"))
 			data, err := ec.unmarshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx, v)
 			if err != nil {
@@ -18398,8 +18500,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersionTarget(ctx context.Contex
 			}
 			it.TargetName = data
 		case "link":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("link"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18427,8 +18527,6 @@ func (ec *executionContext) unmarshalInputNewVersion(ctx context.Context, obj in
 		}
 		switch k {
 		case "changelog":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changelog"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18436,14 +18534,74 @@ func (ec *executionContext) unmarshalInputNewVersion(ctx context.Context, obj in
 			}
 			it.Changelog = data
 		case "stability":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stability"))
 			data, err := ec.unmarshalNVersionStabilities2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Stability = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSMLVersionFilter(ctx context.Context, obj interface{}) (map[string]interface{}, error) {
+	it := make(map[string]interface{}, len(obj.(map[string]interface{})))
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"limit", "offset", "order_by", "order", "search", "ids"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "limit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["limit"] = data
+		case "offset":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["offset"] = data
+		case "order_by":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order_by"))
+			data, err := ec.unmarshalOSMLVersionFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersionFields(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["order_by"] = data
+		case "order":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalOOrder2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐOrder(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["order"] = data
+		case "search":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("search"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["search"] = data
+		case "ids":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["ids"] = data
 		}
 	}
 
@@ -18465,8 +18623,6 @@ func (ec *executionContext) unmarshalInputTagFilter(ctx context.Context, obj int
 		}
 		switch k {
 		case "limit":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -18474,8 +18630,6 @@ func (ec *executionContext) unmarshalInputTagFilter(ctx context.Context, obj int
 			}
 			it.Limit = data
 		case "offset":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -18483,8 +18637,6 @@ func (ec *executionContext) unmarshalInputTagFilter(ctx context.Context, obj int
 			}
 			it.Offset = data
 		case "order":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
 			data, err := ec.unmarshalOOrder2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐOrder(ctx, v)
 			if err != nil {
@@ -18492,8 +18644,6 @@ func (ec *executionContext) unmarshalInputTagFilter(ctx context.Context, obj int
 			}
 			it.Order = data
 		case "search":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("search"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18501,8 +18651,6 @@ func (ec *executionContext) unmarshalInputTagFilter(ctx context.Context, obj int
 			}
 			it.Search = data
 		case "ids":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
 			data, err := ec.unmarshalOTagID2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -18530,8 +18678,6 @@ func (ec *executionContext) unmarshalInputUpdateAnnouncement(ctx context.Context
 		}
 		switch k {
 		case "message":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("message"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18539,8 +18685,6 @@ func (ec *executionContext) unmarshalInputUpdateAnnouncement(ctx context.Context
 			}
 			it.Message = data
 		case "importance":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("importance"))
 			data, err := ec.unmarshalOAnnouncementImportance2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementImportance(ctx, v)
 			if err != nil {
@@ -18568,8 +18712,6 @@ func (ec *executionContext) unmarshalInputUpdateGuide(ctx context.Context, obj i
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18577,8 +18719,6 @@ func (ec *executionContext) unmarshalInputUpdateGuide(ctx context.Context, obj i
 			}
 			it.Name = data
 		case "short_description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("short_description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18586,8 +18726,6 @@ func (ec *executionContext) unmarshalInputUpdateGuide(ctx context.Context, obj i
 			}
 			it.ShortDescription = data
 		case "guide":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("guide"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18595,8 +18733,6 @@ func (ec *executionContext) unmarshalInputUpdateGuide(ctx context.Context, obj i
 			}
 			it.Guide = data
 		case "tagIDs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagIDs"))
 			data, err := ec.unmarshalOTagID2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -18624,8 +18760,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18633,8 +18767,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			}
 			it.Name = data
 		case "short_description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("short_description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18642,8 +18774,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			}
 			it.ShortDescription = data
 		case "full_description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("full_description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18651,8 +18781,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			}
 			it.FullDescription = data
 		case "logo":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logo"))
 			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
 			if err != nil {
@@ -18660,8 +18788,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			}
 			it.Logo = data
 		case "source_url":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source_url"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18669,8 +18795,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			}
 			it.SourceURL = data
 		case "mod_reference":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mod_reference"))
 			data, err := ec.unmarshalOModReference2ᚖstring(ctx, v)
 			if err != nil {
@@ -18678,8 +18802,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			}
 			it.ModReference = data
 		case "authors":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authors"))
 			data, err := ec.unmarshalOUpdateUserMod2ᚕgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserModᚄ(ctx, v)
 			if err != nil {
@@ -18687,8 +18809,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			}
 			it.Authors = data
 		case "hidden":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hidden"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -18696,8 +18816,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			}
 			it.Hidden = data
 		case "tagIDs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagIDs"))
 			data, err := ec.unmarshalOTagID2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -18705,8 +18823,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			}
 			it.TagIDs = data
 		case "compatibility":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("compatibility"))
 			data, err := ec.unmarshalOCompatibilityInfoInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx, v)
 			if err != nil {
@@ -18734,8 +18850,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 		}
 		switch k {
 		case "version":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18743,8 +18857,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 			}
 			it.Version = data
 		case "satisfactory_version":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("satisfactory_version"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -18752,8 +18864,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 			}
 			it.SatisfactoryVersion = data
 		case "stability":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stability"))
 			data, err := ec.unmarshalOVersionStabilities2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx, v)
 			if err != nil {
@@ -18761,8 +18871,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 			}
 			it.Stability = data
 		case "link":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("link"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18770,8 +18878,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 			}
 			it.Link = data
 		case "targets":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targets"))
 			data, err := ec.unmarshalNUpdateSMLVersionTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSMLVersionTarget(ctx, v)
 			if err != nil {
@@ -18779,8 +18885,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 			}
 			it.Targets = data
 		case "changelog":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changelog"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18788,8 +18892,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 			}
 			it.Changelog = data
 		case "date":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
 			data, err := ec.unmarshalODate2ᚖstring(ctx, v)
 			if err != nil {
@@ -18797,8 +18899,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 			}
 			it.Date = data
 		case "bootstrap_version":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bootstrap_version"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18806,8 +18906,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 			}
 			it.BootstrapVersion = data
 		case "engine_version":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("engine_version"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18835,8 +18933,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersionTarget(ctx context.Con
 		}
 		switch k {
 		case "targetName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetName"))
 			data, err := ec.unmarshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx, v)
 			if err != nil {
@@ -18844,8 +18940,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersionTarget(ctx context.Con
 			}
 			it.TargetName = data
 		case "link":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("link"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18873,8 +18967,6 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj in
 		}
 		switch k {
 		case "avatar":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("avatar"))
 			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
 			if err != nil {
@@ -18882,8 +18974,6 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj in
 			}
 			it.Avatar = data
 		case "groups":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groups"))
 			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOString2ᚕstringᚄ(ctx, v) }
 			directive1 := func(ctx context.Context) (interface{}, error) {
@@ -18912,8 +19002,6 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj in
 				return it, graphql.ErrorOnPath(ctx, err)
 			}
 		case "username":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18941,8 +19029,6 @@ func (ec *executionContext) unmarshalInputUpdateUserMod(ctx context.Context, obj
 		}
 		switch k {
 		case "user_id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
 			data, err := ec.unmarshalNUserID2string(ctx, v)
 			if err != nil {
@@ -18950,8 +19036,6 @@ func (ec *executionContext) unmarshalInputUpdateUserMod(ctx context.Context, obj
 			}
 			it.UserID = data
 		case "role":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("role"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -18979,8 +19063,6 @@ func (ec *executionContext) unmarshalInputUpdateVersion(ctx context.Context, obj
 		}
 		switch k {
 		case "changelog":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changelog"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -18988,14 +19070,74 @@ func (ec *executionContext) unmarshalInputUpdateVersion(ctx context.Context, obj
 			}
 			it.Changelog = data
 		case "stability":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stability"))
 			data, err := ec.unmarshalOVersionStabilities2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Stability = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputVersionFilter(ctx context.Context, obj interface{}) (map[string]interface{}, error) {
+	it := make(map[string]interface{}, len(obj.(map[string]interface{})))
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"limit", "offset", "order_by", "order", "search", "ids"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "limit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["limit"] = data
+		case "offset":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["offset"] = data
+		case "order_by":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order_by"))
+			data, err := ec.unmarshalOVersionFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionFields(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["order_by"] = data
+		case "order":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalOOrder2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐOrder(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["order"] = data
+		case "search":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("search"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["search"] = data
+		case "ids":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it["ids"] = data
 		}
 	}
 
@@ -20147,7 +20289,7 @@ func (ec *executionContext) _Mod(ctx context.Context, sel ast.SelectionSet, obj 
 		case "version":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -20660,7 +20802,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getAnnouncement":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -20723,7 +20865,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getGuide":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -20764,7 +20906,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getMod":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -20783,7 +20925,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getModByReference":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -20802,7 +20944,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getModByIdOrReference":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -20931,7 +21073,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getSMLVersion":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -20972,7 +21114,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getTag":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -21013,7 +21155,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getMe":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -21032,7 +21174,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getUser":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -21073,7 +21215,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "getVersion":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -21136,7 +21278,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "checkVersionUploadState":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -21955,7 +22097,7 @@ func (ec *executionContext) _Version(ctx context.Context, sel ast.SelectionSet, 
 		case "size":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -21988,7 +22130,7 @@ func (ec *executionContext) _Version(ctx context.Context, sel ast.SelectionSet, 
 		case "hash":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
@@ -24253,7 +24395,8 @@ func (ec *executionContext) unmarshalOGuideFilter2map(ctx context.Context, v int
 	if v == nil {
 		return nil, nil
 	}
-	return v.(map[string]interface{}), nil
+	res, err := ec.unmarshalInputGuideFilter(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
@@ -24299,7 +24442,8 @@ func (ec *executionContext) unmarshalOModFilter2map(ctx context.Context, v inter
 	if v == nil {
 		return nil, nil
 	}
-	return v.(map[string]interface{}), nil
+	res, err := ec.unmarshalInputModFilter(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOModReference2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
@@ -24361,7 +24505,8 @@ func (ec *executionContext) unmarshalOSMLVersionFilter2map(ctx context.Context, 
 	if v == nil {
 		return nil, nil
 	}
-	return v.(map[string]interface{}), nil
+	res, err := ec.unmarshalInputSMLVersionFilter(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOSMLVersionTarget2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersionTarget(ctx context.Context, sel ast.SelectionSet, v *SMLVersionTarget) graphql.Marshaler {
@@ -24610,7 +24755,8 @@ func (ec *executionContext) unmarshalOVersionFilter2map(ctx context.Context, v i
 	if v == nil {
 		return nil, nil
 	}
-	return v.(map[string]interface{}), nil
+	res, err := ec.unmarshalInputVersionFilter(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOVersionStabilities2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx context.Context, v interface{}) (*VersionStabilities, error) {

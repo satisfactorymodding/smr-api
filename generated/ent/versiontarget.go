@@ -45,12 +45,10 @@ type VersionTargetEdges struct {
 // SmlVersionOrErr returns the SmlVersion value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e VersionTargetEdges) SmlVersionOrErr() (*Version, error) {
-	if e.loadedTypes[0] {
-		if e.SmlVersion == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: version.Label}
-		}
+	if e.SmlVersion != nil {
 		return e.SmlVersion, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: version.Label}
 	}
 	return nil, &NotLoadedError{edge: "sml_version"}
 }

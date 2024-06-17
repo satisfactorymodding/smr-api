@@ -36,9 +36,25 @@ func (gtu *GuideTagUpdate) SetGuideID(s string) *GuideTagUpdate {
 	return gtu
 }
 
+// SetNillableGuideID sets the "guide_id" field if the given value is not nil.
+func (gtu *GuideTagUpdate) SetNillableGuideID(s *string) *GuideTagUpdate {
+	if s != nil {
+		gtu.SetGuideID(*s)
+	}
+	return gtu
+}
+
 // SetTagID sets the "tag_id" field.
 func (gtu *GuideTagUpdate) SetTagID(s string) *GuideTagUpdate {
 	gtu.mutation.SetTagID(s)
+	return gtu
+}
+
+// SetNillableTagID sets the "tag_id" field if the given value is not nil.
+func (gtu *GuideTagUpdate) SetNillableTagID(s *string) *GuideTagUpdate {
+	if s != nil {
+		gtu.SetTagID(*s)
+	}
 	return gtu
 }
 
@@ -211,9 +227,25 @@ func (gtuo *GuideTagUpdateOne) SetGuideID(s string) *GuideTagUpdateOne {
 	return gtuo
 }
 
+// SetNillableGuideID sets the "guide_id" field if the given value is not nil.
+func (gtuo *GuideTagUpdateOne) SetNillableGuideID(s *string) *GuideTagUpdateOne {
+	if s != nil {
+		gtuo.SetGuideID(*s)
+	}
+	return gtuo
+}
+
 // SetTagID sets the "tag_id" field.
 func (gtuo *GuideTagUpdateOne) SetTagID(s string) *GuideTagUpdateOne {
 	gtuo.mutation.SetTagID(s)
+	return gtuo
+}
+
+// SetNillableTagID sets the "tag_id" field if the given value is not nil.
+func (gtuo *GuideTagUpdateOne) SetNillableTagID(s *string) *GuideTagUpdateOne {
+	if s != nil {
+		gtuo.SetTagID(*s)
+	}
 	return gtuo
 }
 

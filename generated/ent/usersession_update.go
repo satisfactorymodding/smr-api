@@ -62,6 +62,14 @@ func (usu *UserSessionUpdate) SetToken(s string) *UserSessionUpdate {
 	return usu
 }
 
+// SetNillableToken sets the "token" field if the given value is not nil.
+func (usu *UserSessionUpdate) SetNillableToken(s *string) *UserSessionUpdate {
+	if s != nil {
+		usu.SetToken(*s)
+	}
+	return usu
+}
+
 // SetUserAgent sets the "user_agent" field.
 func (usu *UserSessionUpdate) SetUserAgent(s string) *UserSessionUpdate {
 	usu.mutation.SetUserAgent(s)
@@ -275,6 +283,14 @@ func (usuo *UserSessionUpdateOne) ClearDeletedAt() *UserSessionUpdateOne {
 // SetToken sets the "token" field.
 func (usuo *UserSessionUpdateOne) SetToken(s string) *UserSessionUpdateOne {
 	usuo.mutation.SetToken(s)
+	return usuo
+}
+
+// SetNillableToken sets the "token" field if the given value is not nil.
+func (usuo *UserSessionUpdateOne) SetNillableToken(s *string) *UserSessionUpdateOne {
+	if s != nil {
+		usuo.SetToken(*s)
+	}
 	return usuo
 }
 

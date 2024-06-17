@@ -35,9 +35,25 @@ func (vtu *VersionTargetUpdate) SetVersionID(s string) *VersionTargetUpdate {
 	return vtu
 }
 
+// SetNillableVersionID sets the "version_id" field if the given value is not nil.
+func (vtu *VersionTargetUpdate) SetNillableVersionID(s *string) *VersionTargetUpdate {
+	if s != nil {
+		vtu.SetVersionID(*s)
+	}
+	return vtu
+}
+
 // SetTargetName sets the "target_name" field.
 func (vtu *VersionTargetUpdate) SetTargetName(s string) *VersionTargetUpdate {
 	vtu.mutation.SetTargetName(s)
+	return vtu
+}
+
+// SetNillableTargetName sets the "target_name" field if the given value is not nil.
+func (vtu *VersionTargetUpdate) SetNillableTargetName(s *string) *VersionTargetUpdate {
+	if s != nil {
+		vtu.SetTargetName(*s)
+	}
 	return vtu
 }
 
@@ -264,9 +280,25 @@ func (vtuo *VersionTargetUpdateOne) SetVersionID(s string) *VersionTargetUpdateO
 	return vtuo
 }
 
+// SetNillableVersionID sets the "version_id" field if the given value is not nil.
+func (vtuo *VersionTargetUpdateOne) SetNillableVersionID(s *string) *VersionTargetUpdateOne {
+	if s != nil {
+		vtuo.SetVersionID(*s)
+	}
+	return vtuo
+}
+
 // SetTargetName sets the "target_name" field.
 func (vtuo *VersionTargetUpdateOne) SetTargetName(s string) *VersionTargetUpdateOne {
 	vtuo.mutation.SetTargetName(s)
+	return vtuo
+}
+
+// SetNillableTargetName sets the "target_name" field if the given value is not nil.
+func (vtuo *VersionTargetUpdateOne) SetNillableTargetName(s *string) *VersionTargetUpdateOne {
+	if s != nil {
+		vtuo.SetTargetName(*s)
+	}
 	return vtuo
 }
 

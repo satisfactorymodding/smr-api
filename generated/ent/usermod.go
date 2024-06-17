@@ -42,12 +42,10 @@ type UserModEdges struct {
 // UserOrErr returns the User value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e UserModEdges) UserOrErr() (*User, error) {
-	if e.loadedTypes[0] {
-		if e.User == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: user.Label}
-		}
+	if e.User != nil {
 		return e.User, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
 }
@@ -55,12 +53,10 @@ func (e UserModEdges) UserOrErr() (*User, error) {
 // ModOrErr returns the Mod value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e UserModEdges) ModOrErr() (*Mod, error) {
-	if e.loadedTypes[1] {
-		if e.Mod == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: mod.Label}
-		}
+	if e.Mod != nil {
 		return e.Mod, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: mod.Label}
 	}
 	return nil, &NotLoadedError{edge: "mod"}
 }

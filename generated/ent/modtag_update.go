@@ -36,9 +36,25 @@ func (mtu *ModTagUpdate) SetModID(s string) *ModTagUpdate {
 	return mtu
 }
 
+// SetNillableModID sets the "mod_id" field if the given value is not nil.
+func (mtu *ModTagUpdate) SetNillableModID(s *string) *ModTagUpdate {
+	if s != nil {
+		mtu.SetModID(*s)
+	}
+	return mtu
+}
+
 // SetTagID sets the "tag_id" field.
 func (mtu *ModTagUpdate) SetTagID(s string) *ModTagUpdate {
 	mtu.mutation.SetTagID(s)
+	return mtu
+}
+
+// SetNillableTagID sets the "tag_id" field if the given value is not nil.
+func (mtu *ModTagUpdate) SetNillableTagID(s *string) *ModTagUpdate {
+	if s != nil {
+		mtu.SetTagID(*s)
+	}
 	return mtu
 }
 
@@ -211,9 +227,25 @@ func (mtuo *ModTagUpdateOne) SetModID(s string) *ModTagUpdateOne {
 	return mtuo
 }
 
+// SetNillableModID sets the "mod_id" field if the given value is not nil.
+func (mtuo *ModTagUpdateOne) SetNillableModID(s *string) *ModTagUpdateOne {
+	if s != nil {
+		mtuo.SetModID(*s)
+	}
+	return mtuo
+}
+
 // SetTagID sets the "tag_id" field.
 func (mtuo *ModTagUpdateOne) SetTagID(s string) *ModTagUpdateOne {
 	mtuo.mutation.SetTagID(s)
+	return mtuo
+}
+
+// SetNillableTagID sets the "tag_id" field if the given value is not nil.
+func (mtuo *ModTagUpdateOne) SetNillableTagID(s *string) *ModTagUpdateOne {
+	if s != nil {
+		mtuo.SetTagID(*s)
+	}
 	return mtuo
 }
 

@@ -61,9 +61,25 @@ func (au *AnnouncementUpdate) SetMessage(s string) *AnnouncementUpdate {
 	return au
 }
 
+// SetNillableMessage sets the "message" field if the given value is not nil.
+func (au *AnnouncementUpdate) SetNillableMessage(s *string) *AnnouncementUpdate {
+	if s != nil {
+		au.SetMessage(*s)
+	}
+	return au
+}
+
 // SetImportance sets the "importance" field.
 func (au *AnnouncementUpdate) SetImportance(s string) *AnnouncementUpdate {
 	au.mutation.SetImportance(s)
+	return au
+}
+
+// SetNillableImportance sets the "importance" field if the given value is not nil.
+func (au *AnnouncementUpdate) SetNillableImportance(s *string) *AnnouncementUpdate {
+	if s != nil {
+		au.SetImportance(*s)
+	}
 	return au
 }
 
@@ -198,9 +214,25 @@ func (auo *AnnouncementUpdateOne) SetMessage(s string) *AnnouncementUpdateOne {
 	return auo
 }
 
+// SetNillableMessage sets the "message" field if the given value is not nil.
+func (auo *AnnouncementUpdateOne) SetNillableMessage(s *string) *AnnouncementUpdateOne {
+	if s != nil {
+		auo.SetMessage(*s)
+	}
+	return auo
+}
+
 // SetImportance sets the "importance" field.
 func (auo *AnnouncementUpdateOne) SetImportance(s string) *AnnouncementUpdateOne {
 	auo.mutation.SetImportance(s)
+	return auo
+}
+
+// SetNillableImportance sets the "importance" field if the given value is not nil.
+func (auo *AnnouncementUpdateOne) SetNillableImportance(s *string) *AnnouncementUpdateOne {
+	if s != nil {
+		auo.SetImportance(*s)
+	}
 	return auo
 }
 

@@ -64,15 +64,39 @@ func (vu *VersionUpdate) SetModID(s string) *VersionUpdate {
 	return vu
 }
 
+// SetNillableModID sets the "mod_id" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableModID(s *string) *VersionUpdate {
+	if s != nil {
+		vu.SetModID(*s)
+	}
+	return vu
+}
+
 // SetVersion sets the "version" field.
 func (vu *VersionUpdate) SetVersion(s string) *VersionUpdate {
 	vu.mutation.SetVersion(s)
 	return vu
 }
 
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableVersion(s *string) *VersionUpdate {
+	if s != nil {
+		vu.SetVersion(*s)
+	}
+	return vu
+}
+
 // SetSmlVersion sets the "sml_version" field.
 func (vu *VersionUpdate) SetSmlVersion(s string) *VersionUpdate {
 	vu.mutation.SetSmlVersion(s)
+	return vu
+}
+
+// SetNillableSmlVersion sets the "sml_version" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableSmlVersion(s *string) *VersionUpdate {
+	if s != nil {
+		vu.SetSmlVersion(*s)
+	}
 	return vu
 }
 
@@ -140,6 +164,14 @@ func (vu *VersionUpdate) ClearKey() *VersionUpdate {
 // SetStability sets the "stability" field.
 func (vu *VersionUpdate) SetStability(u util.Stability) *VersionUpdate {
 	vu.mutation.SetStability(u)
+	return vu
+}
+
+// SetNillableStability sets the "stability" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableStability(u *util.Stability) *VersionUpdate {
+	if u != nil {
+		vu.SetStability(*u)
+	}
 	return vu
 }
 
@@ -215,6 +247,14 @@ func (vu *VersionUpdate) ClearMetadata() *VersionUpdate {
 // SetModReference sets the "mod_reference" field.
 func (vu *VersionUpdate) SetModReference(s string) *VersionUpdate {
 	vu.mutation.SetModReference(s)
+	return vu
+}
+
+// SetNillableModReference sets the "mod_reference" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableModReference(s *string) *VersionUpdate {
+	if s != nil {
+		vu.SetModReference(*s)
+	}
 	return vu
 }
 
@@ -811,15 +851,39 @@ func (vuo *VersionUpdateOne) SetModID(s string) *VersionUpdateOne {
 	return vuo
 }
 
+// SetNillableModID sets the "mod_id" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableModID(s *string) *VersionUpdateOne {
+	if s != nil {
+		vuo.SetModID(*s)
+	}
+	return vuo
+}
+
 // SetVersion sets the "version" field.
 func (vuo *VersionUpdateOne) SetVersion(s string) *VersionUpdateOne {
 	vuo.mutation.SetVersion(s)
 	return vuo
 }
 
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableVersion(s *string) *VersionUpdateOne {
+	if s != nil {
+		vuo.SetVersion(*s)
+	}
+	return vuo
+}
+
 // SetSmlVersion sets the "sml_version" field.
 func (vuo *VersionUpdateOne) SetSmlVersion(s string) *VersionUpdateOne {
 	vuo.mutation.SetSmlVersion(s)
+	return vuo
+}
+
+// SetNillableSmlVersion sets the "sml_version" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableSmlVersion(s *string) *VersionUpdateOne {
+	if s != nil {
+		vuo.SetSmlVersion(*s)
+	}
 	return vuo
 }
 
@@ -887,6 +951,14 @@ func (vuo *VersionUpdateOne) ClearKey() *VersionUpdateOne {
 // SetStability sets the "stability" field.
 func (vuo *VersionUpdateOne) SetStability(u util.Stability) *VersionUpdateOne {
 	vuo.mutation.SetStability(u)
+	return vuo
+}
+
+// SetNillableStability sets the "stability" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableStability(u *util.Stability) *VersionUpdateOne {
+	if u != nil {
+		vuo.SetStability(*u)
+	}
 	return vuo
 }
 
@@ -962,6 +1034,14 @@ func (vuo *VersionUpdateOne) ClearMetadata() *VersionUpdateOne {
 // SetModReference sets the "mod_reference" field.
 func (vuo *VersionUpdateOne) SetModReference(s string) *VersionUpdateOne {
 	vuo.mutation.SetModReference(s)
+	return vuo
+}
+
+// SetNillableModReference sets the "mod_reference" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableModReference(s *string) *VersionUpdateOne {
+	if s != nil {
+		vuo.SetModReference(*s)
+	}
 	return vuo
 }
 

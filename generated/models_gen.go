@@ -132,6 +132,9 @@ type ModVersionConstraint struct {
 	Version          string `json:"version"`
 }
 
+type Mutation struct {
+}
+
 type NewAnnouncement struct {
 	Message    string                 `json:"message"`
 	Importance AnnouncementImportance `json:"importance"`
@@ -170,6 +173,9 @@ type OAuthOptions struct {
 	Github   string `json:"github"`
 	Google   string `json:"google"`
 	Facebook string `json:"facebook"`
+}
+
+type Query struct {
 }
 
 type SMLVersion struct {

@@ -63,10 +63,26 @@ func (svu *SmlVersionUpdate) SetVersion(s string) *SmlVersionUpdate {
 	return svu
 }
 
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (svu *SmlVersionUpdate) SetNillableVersion(s *string) *SmlVersionUpdate {
+	if s != nil {
+		svu.SetVersion(*s)
+	}
+	return svu
+}
+
 // SetSatisfactoryVersion sets the "satisfactory_version" field.
 func (svu *SmlVersionUpdate) SetSatisfactoryVersion(i int) *SmlVersionUpdate {
 	svu.mutation.ResetSatisfactoryVersion()
 	svu.mutation.SetSatisfactoryVersion(i)
+	return svu
+}
+
+// SetNillableSatisfactoryVersion sets the "satisfactory_version" field if the given value is not nil.
+func (svu *SmlVersionUpdate) SetNillableSatisfactoryVersion(i *int) *SmlVersionUpdate {
+	if i != nil {
+		svu.SetSatisfactoryVersion(*i)
+	}
 	return svu
 }
 
@@ -82,9 +98,25 @@ func (svu *SmlVersionUpdate) SetStability(u util.Stability) *SmlVersionUpdate {
 	return svu
 }
 
+// SetNillableStability sets the "stability" field if the given value is not nil.
+func (svu *SmlVersionUpdate) SetNillableStability(u *util.Stability) *SmlVersionUpdate {
+	if u != nil {
+		svu.SetStability(*u)
+	}
+	return svu
+}
+
 // SetDate sets the "date" field.
 func (svu *SmlVersionUpdate) SetDate(t time.Time) *SmlVersionUpdate {
 	svu.mutation.SetDate(t)
+	return svu
+}
+
+// SetNillableDate sets the "date" field if the given value is not nil.
+func (svu *SmlVersionUpdate) SetNillableDate(t *time.Time) *SmlVersionUpdate {
+	if t != nil {
+		svu.SetDate(*t)
+	}
 	return svu
 }
 
@@ -94,9 +126,25 @@ func (svu *SmlVersionUpdate) SetLink(s string) *SmlVersionUpdate {
 	return svu
 }
 
+// SetNillableLink sets the "link" field if the given value is not nil.
+func (svu *SmlVersionUpdate) SetNillableLink(s *string) *SmlVersionUpdate {
+	if s != nil {
+		svu.SetLink(*s)
+	}
+	return svu
+}
+
 // SetChangelog sets the "changelog" field.
 func (svu *SmlVersionUpdate) SetChangelog(s string) *SmlVersionUpdate {
 	svu.mutation.SetChangelog(s)
+	return svu
+}
+
+// SetNillableChangelog sets the "changelog" field if the given value is not nil.
+func (svu *SmlVersionUpdate) SetNillableChangelog(s *string) *SmlVersionUpdate {
+	if s != nil {
+		svu.SetChangelog(*s)
+	}
 	return svu
 }
 
@@ -398,10 +446,26 @@ func (svuo *SmlVersionUpdateOne) SetVersion(s string) *SmlVersionUpdateOne {
 	return svuo
 }
 
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (svuo *SmlVersionUpdateOne) SetNillableVersion(s *string) *SmlVersionUpdateOne {
+	if s != nil {
+		svuo.SetVersion(*s)
+	}
+	return svuo
+}
+
 // SetSatisfactoryVersion sets the "satisfactory_version" field.
 func (svuo *SmlVersionUpdateOne) SetSatisfactoryVersion(i int) *SmlVersionUpdateOne {
 	svuo.mutation.ResetSatisfactoryVersion()
 	svuo.mutation.SetSatisfactoryVersion(i)
+	return svuo
+}
+
+// SetNillableSatisfactoryVersion sets the "satisfactory_version" field if the given value is not nil.
+func (svuo *SmlVersionUpdateOne) SetNillableSatisfactoryVersion(i *int) *SmlVersionUpdateOne {
+	if i != nil {
+		svuo.SetSatisfactoryVersion(*i)
+	}
 	return svuo
 }
 
@@ -417,9 +481,25 @@ func (svuo *SmlVersionUpdateOne) SetStability(u util.Stability) *SmlVersionUpdat
 	return svuo
 }
 
+// SetNillableStability sets the "stability" field if the given value is not nil.
+func (svuo *SmlVersionUpdateOne) SetNillableStability(u *util.Stability) *SmlVersionUpdateOne {
+	if u != nil {
+		svuo.SetStability(*u)
+	}
+	return svuo
+}
+
 // SetDate sets the "date" field.
 func (svuo *SmlVersionUpdateOne) SetDate(t time.Time) *SmlVersionUpdateOne {
 	svuo.mutation.SetDate(t)
+	return svuo
+}
+
+// SetNillableDate sets the "date" field if the given value is not nil.
+func (svuo *SmlVersionUpdateOne) SetNillableDate(t *time.Time) *SmlVersionUpdateOne {
+	if t != nil {
+		svuo.SetDate(*t)
+	}
 	return svuo
 }
 
@@ -429,9 +509,25 @@ func (svuo *SmlVersionUpdateOne) SetLink(s string) *SmlVersionUpdateOne {
 	return svuo
 }
 
+// SetNillableLink sets the "link" field if the given value is not nil.
+func (svuo *SmlVersionUpdateOne) SetNillableLink(s *string) *SmlVersionUpdateOne {
+	if s != nil {
+		svuo.SetLink(*s)
+	}
+	return svuo
+}
+
 // SetChangelog sets the "changelog" field.
 func (svuo *SmlVersionUpdateOne) SetChangelog(s string) *SmlVersionUpdateOne {
 	svuo.mutation.SetChangelog(s)
+	return svuo
+}
+
+// SetNillableChangelog sets the "changelog" field if the given value is not nil.
+func (svuo *SmlVersionUpdateOne) SetNillableChangelog(s *string) *SmlVersionUpdateOne {
+	if s != nil {
+		svuo.SetChangelog(*s)
+	}
 	return svuo
 }
 

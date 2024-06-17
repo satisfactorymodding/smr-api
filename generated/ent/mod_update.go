@@ -65,9 +65,25 @@ func (mu *ModUpdate) SetName(s string) *ModUpdate {
 	return mu
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableName(s *string) *ModUpdate {
+	if s != nil {
+		mu.SetName(*s)
+	}
+	return mu
+}
+
 // SetShortDescription sets the "short_description" field.
 func (mu *ModUpdate) SetShortDescription(s string) *ModUpdate {
 	mu.mutation.SetShortDescription(s)
+	return mu
+}
+
+// SetNillableShortDescription sets the "short_description" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableShortDescription(s *string) *ModUpdate {
+	if s != nil {
+		mu.SetShortDescription(*s)
+	}
 	return mu
 }
 
@@ -77,9 +93,25 @@ func (mu *ModUpdate) SetFullDescription(s string) *ModUpdate {
 	return mu
 }
 
+// SetNillableFullDescription sets the "full_description" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableFullDescription(s *string) *ModUpdate {
+	if s != nil {
+		mu.SetFullDescription(*s)
+	}
+	return mu
+}
+
 // SetLogo sets the "logo" field.
 func (mu *ModUpdate) SetLogo(s string) *ModUpdate {
 	mu.mutation.SetLogo(s)
+	return mu
+}
+
+// SetNillableLogo sets the "logo" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableLogo(s *string) *ModUpdate {
+	if s != nil {
+		mu.SetLogo(*s)
+	}
 	return mu
 }
 
@@ -106,6 +138,14 @@ func (mu *ModUpdate) ClearSourceURL() *ModUpdate {
 // SetCreatorID sets the "creator_id" field.
 func (mu *ModUpdate) SetCreatorID(s string) *ModUpdate {
 	mu.mutation.SetCreatorID(s)
+	return mu
+}
+
+// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableCreatorID(s *string) *ModUpdate {
+	if s != nil {
+		mu.SetCreatorID(*s)
+	}
 	return mu
 }
 
@@ -244,6 +284,14 @@ func (mu *ModUpdate) ClearLastVersionDate() *ModUpdate {
 // SetModReference sets the "mod_reference" field.
 func (mu *ModUpdate) SetModReference(s string) *ModUpdate {
 	mu.mutation.SetModReference(s)
+	return mu
+}
+
+// SetNillableModReference sets the "mod_reference" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableModReference(s *string) *ModUpdate {
+	if s != nil {
+		mu.SetModReference(*s)
+	}
 	return mu
 }
 
@@ -826,9 +874,25 @@ func (muo *ModUpdateOne) SetName(s string) *ModUpdateOne {
 	return muo
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableName(s *string) *ModUpdateOne {
+	if s != nil {
+		muo.SetName(*s)
+	}
+	return muo
+}
+
 // SetShortDescription sets the "short_description" field.
 func (muo *ModUpdateOne) SetShortDescription(s string) *ModUpdateOne {
 	muo.mutation.SetShortDescription(s)
+	return muo
+}
+
+// SetNillableShortDescription sets the "short_description" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableShortDescription(s *string) *ModUpdateOne {
+	if s != nil {
+		muo.SetShortDescription(*s)
+	}
 	return muo
 }
 
@@ -838,9 +902,25 @@ func (muo *ModUpdateOne) SetFullDescription(s string) *ModUpdateOne {
 	return muo
 }
 
+// SetNillableFullDescription sets the "full_description" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableFullDescription(s *string) *ModUpdateOne {
+	if s != nil {
+		muo.SetFullDescription(*s)
+	}
+	return muo
+}
+
 // SetLogo sets the "logo" field.
 func (muo *ModUpdateOne) SetLogo(s string) *ModUpdateOne {
 	muo.mutation.SetLogo(s)
+	return muo
+}
+
+// SetNillableLogo sets the "logo" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableLogo(s *string) *ModUpdateOne {
+	if s != nil {
+		muo.SetLogo(*s)
+	}
 	return muo
 }
 
@@ -867,6 +947,14 @@ func (muo *ModUpdateOne) ClearSourceURL() *ModUpdateOne {
 // SetCreatorID sets the "creator_id" field.
 func (muo *ModUpdateOne) SetCreatorID(s string) *ModUpdateOne {
 	muo.mutation.SetCreatorID(s)
+	return muo
+}
+
+// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableCreatorID(s *string) *ModUpdateOne {
+	if s != nil {
+		muo.SetCreatorID(*s)
+	}
 	return muo
 }
 
@@ -1005,6 +1093,14 @@ func (muo *ModUpdateOne) ClearLastVersionDate() *ModUpdateOne {
 // SetModReference sets the "mod_reference" field.
 func (muo *ModUpdateOne) SetModReference(s string) *ModUpdateOne {
 	muo.mutation.SetModReference(s)
+	return muo
+}
+
+// SetNillableModReference sets the "mod_reference" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableModReference(s *string) *ModUpdateOne {
+	if s != nil {
+		muo.SetModReference(*s)
+	}
 	return muo
 }
 

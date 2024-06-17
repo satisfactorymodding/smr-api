@@ -51,12 +51,10 @@ type VersionDependencyEdges struct {
 // VersionOrErr returns the Version value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e VersionDependencyEdges) VersionOrErr() (*Version, error) {
-	if e.loadedTypes[0] {
-		if e.Version == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: version.Label}
-		}
+	if e.Version != nil {
 		return e.Version, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: version.Label}
 	}
 	return nil, &NotLoadedError{edge: "version"}
 }
@@ -64,12 +62,10 @@ func (e VersionDependencyEdges) VersionOrErr() (*Version, error) {
 // ModOrErr returns the Mod value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e VersionDependencyEdges) ModOrErr() (*Mod, error) {
-	if e.loadedTypes[1] {
-		if e.Mod == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: mod.Label}
-		}
+	if e.Mod != nil {
 		return e.Mod, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: mod.Label}
 	}
 	return nil, &NotLoadedError{edge: "mod"}
 }

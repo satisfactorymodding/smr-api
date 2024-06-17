@@ -63,9 +63,25 @@ func (vdu *VersionDependencyUpdate) SetVersionID(s string) *VersionDependencyUpd
 	return vdu
 }
 
+// SetNillableVersionID sets the "version_id" field if the given value is not nil.
+func (vdu *VersionDependencyUpdate) SetNillableVersionID(s *string) *VersionDependencyUpdate {
+	if s != nil {
+		vdu.SetVersionID(*s)
+	}
+	return vdu
+}
+
 // SetModID sets the "mod_id" field.
 func (vdu *VersionDependencyUpdate) SetModID(s string) *VersionDependencyUpdate {
 	vdu.mutation.SetModID(s)
+	return vdu
+}
+
+// SetNillableModID sets the "mod_id" field if the given value is not nil.
+func (vdu *VersionDependencyUpdate) SetNillableModID(s *string) *VersionDependencyUpdate {
+	if s != nil {
+		vdu.SetModID(*s)
+	}
 	return vdu
 }
 
@@ -75,9 +91,25 @@ func (vdu *VersionDependencyUpdate) SetCondition(s string) *VersionDependencyUpd
 	return vdu
 }
 
+// SetNillableCondition sets the "condition" field if the given value is not nil.
+func (vdu *VersionDependencyUpdate) SetNillableCondition(s *string) *VersionDependencyUpdate {
+	if s != nil {
+		vdu.SetCondition(*s)
+	}
+	return vdu
+}
+
 // SetOptional sets the "optional" field.
 func (vdu *VersionDependencyUpdate) SetOptional(b bool) *VersionDependencyUpdate {
 	vdu.mutation.SetOptional(b)
+	return vdu
+}
+
+// SetNillableOptional sets the "optional" field if the given value is not nil.
+func (vdu *VersionDependencyUpdate) SetNillableOptional(b *bool) *VersionDependencyUpdate {
+	if b != nil {
+		vdu.SetOptional(*b)
+	}
 	return vdu
 }
 
@@ -311,9 +343,25 @@ func (vduo *VersionDependencyUpdateOne) SetVersionID(s string) *VersionDependenc
 	return vduo
 }
 
+// SetNillableVersionID sets the "version_id" field if the given value is not nil.
+func (vduo *VersionDependencyUpdateOne) SetNillableVersionID(s *string) *VersionDependencyUpdateOne {
+	if s != nil {
+		vduo.SetVersionID(*s)
+	}
+	return vduo
+}
+
 // SetModID sets the "mod_id" field.
 func (vduo *VersionDependencyUpdateOne) SetModID(s string) *VersionDependencyUpdateOne {
 	vduo.mutation.SetModID(s)
+	return vduo
+}
+
+// SetNillableModID sets the "mod_id" field if the given value is not nil.
+func (vduo *VersionDependencyUpdateOne) SetNillableModID(s *string) *VersionDependencyUpdateOne {
+	if s != nil {
+		vduo.SetModID(*s)
+	}
 	return vduo
 }
 
@@ -323,9 +371,25 @@ func (vduo *VersionDependencyUpdateOne) SetCondition(s string) *VersionDependenc
 	return vduo
 }
 
+// SetNillableCondition sets the "condition" field if the given value is not nil.
+func (vduo *VersionDependencyUpdateOne) SetNillableCondition(s *string) *VersionDependencyUpdateOne {
+	if s != nil {
+		vduo.SetCondition(*s)
+	}
+	return vduo
+}
+
 // SetOptional sets the "optional" field.
 func (vduo *VersionDependencyUpdateOne) SetOptional(b bool) *VersionDependencyUpdateOne {
 	vduo.mutation.SetOptional(b)
+	return vduo
+}
+
+// SetNillableOptional sets the "optional" field if the given value is not nil.
+func (vduo *VersionDependencyUpdateOne) SetNillableOptional(b *bool) *VersionDependencyUpdateOne {
+	if b != nil {
+		vduo.SetOptional(*b)
+	}
 	return vduo
 }
 

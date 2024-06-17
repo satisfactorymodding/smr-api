@@ -83,15 +83,39 @@ func (gu *GuideUpdate) SetName(s string) *GuideUpdate {
 	return gu
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (gu *GuideUpdate) SetNillableName(s *string) *GuideUpdate {
+	if s != nil {
+		gu.SetName(*s)
+	}
+	return gu
+}
+
 // SetShortDescription sets the "short_description" field.
 func (gu *GuideUpdate) SetShortDescription(s string) *GuideUpdate {
 	gu.mutation.SetShortDescription(s)
 	return gu
 }
 
+// SetNillableShortDescription sets the "short_description" field if the given value is not nil.
+func (gu *GuideUpdate) SetNillableShortDescription(s *string) *GuideUpdate {
+	if s != nil {
+		gu.SetShortDescription(*s)
+	}
+	return gu
+}
+
 // SetGuide sets the "guide" field.
 func (gu *GuideUpdate) SetGuide(s string) *GuideUpdate {
 	gu.mutation.SetGuide(s)
+	return gu
+}
+
+// SetNillableGuide sets the "guide" field if the given value is not nil.
+func (gu *GuideUpdate) SetNillableGuide(s *string) *GuideUpdate {
+	if s != nil {
+		gu.SetGuide(*s)
+	}
 	return gu
 }
 
@@ -415,15 +439,39 @@ func (guo *GuideUpdateOne) SetName(s string) *GuideUpdateOne {
 	return guo
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (guo *GuideUpdateOne) SetNillableName(s *string) *GuideUpdateOne {
+	if s != nil {
+		guo.SetName(*s)
+	}
+	return guo
+}
+
 // SetShortDescription sets the "short_description" field.
 func (guo *GuideUpdateOne) SetShortDescription(s string) *GuideUpdateOne {
 	guo.mutation.SetShortDescription(s)
 	return guo
 }
 
+// SetNillableShortDescription sets the "short_description" field if the given value is not nil.
+func (guo *GuideUpdateOne) SetNillableShortDescription(s *string) *GuideUpdateOne {
+	if s != nil {
+		guo.SetShortDescription(*s)
+	}
+	return guo
+}
+
 // SetGuide sets the "guide" field.
 func (guo *GuideUpdateOne) SetGuide(s string) *GuideUpdateOne {
 	guo.mutation.SetGuide(s)
+	return guo
+}
+
+// SetNillableGuide sets the "guide" field if the given value is not nil.
+func (guo *GuideUpdateOne) SetNillableGuide(s *string) *GuideUpdateOne {
+	if s != nil {
+		guo.SetGuide(*s)
+	}
 	return guo
 }
 

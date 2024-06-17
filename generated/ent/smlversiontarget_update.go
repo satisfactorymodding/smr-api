@@ -35,15 +35,39 @@ func (svtu *SmlVersionTargetUpdate) SetVersionID(s string) *SmlVersionTargetUpda
 	return svtu
 }
 
+// SetNillableVersionID sets the "version_id" field if the given value is not nil.
+func (svtu *SmlVersionTargetUpdate) SetNillableVersionID(s *string) *SmlVersionTargetUpdate {
+	if s != nil {
+		svtu.SetVersionID(*s)
+	}
+	return svtu
+}
+
 // SetTargetName sets the "target_name" field.
 func (svtu *SmlVersionTargetUpdate) SetTargetName(s string) *SmlVersionTargetUpdate {
 	svtu.mutation.SetTargetName(s)
 	return svtu
 }
 
+// SetNillableTargetName sets the "target_name" field if the given value is not nil.
+func (svtu *SmlVersionTargetUpdate) SetNillableTargetName(s *string) *SmlVersionTargetUpdate {
+	if s != nil {
+		svtu.SetTargetName(*s)
+	}
+	return svtu
+}
+
 // SetLink sets the "link" field.
 func (svtu *SmlVersionTargetUpdate) SetLink(s string) *SmlVersionTargetUpdate {
 	svtu.mutation.SetLink(s)
+	return svtu
+}
+
+// SetNillableLink sets the "link" field if the given value is not nil.
+func (svtu *SmlVersionTargetUpdate) SetNillableLink(s *string) *SmlVersionTargetUpdate {
+	if s != nil {
+		svtu.SetLink(*s)
+	}
 	return svtu
 }
 
@@ -185,15 +209,39 @@ func (svtuo *SmlVersionTargetUpdateOne) SetVersionID(s string) *SmlVersionTarget
 	return svtuo
 }
 
+// SetNillableVersionID sets the "version_id" field if the given value is not nil.
+func (svtuo *SmlVersionTargetUpdateOne) SetNillableVersionID(s *string) *SmlVersionTargetUpdateOne {
+	if s != nil {
+		svtuo.SetVersionID(*s)
+	}
+	return svtuo
+}
+
 // SetTargetName sets the "target_name" field.
 func (svtuo *SmlVersionTargetUpdateOne) SetTargetName(s string) *SmlVersionTargetUpdateOne {
 	svtuo.mutation.SetTargetName(s)
 	return svtuo
 }
 
+// SetNillableTargetName sets the "target_name" field if the given value is not nil.
+func (svtuo *SmlVersionTargetUpdateOne) SetNillableTargetName(s *string) *SmlVersionTargetUpdateOne {
+	if s != nil {
+		svtuo.SetTargetName(*s)
+	}
+	return svtuo
+}
+
 // SetLink sets the "link" field.
 func (svtuo *SmlVersionTargetUpdateOne) SetLink(s string) *SmlVersionTargetUpdateOne {
 	svtuo.mutation.SetLink(s)
+	return svtuo
+}
+
+// SetNillableLink sets the "link" field if the given value is not nil.
+func (svtuo *SmlVersionTargetUpdateOne) SetNillableLink(s *string) *SmlVersionTargetUpdateOne {
+	if s != nil {
+		svtuo.SetLink(*s)
+	}
 	return svtuo
 }
 

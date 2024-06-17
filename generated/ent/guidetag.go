@@ -40,12 +40,10 @@ type GuideTagEdges struct {
 // GuideOrErr returns the Guide value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e GuideTagEdges) GuideOrErr() (*Guide, error) {
-	if e.loadedTypes[0] {
-		if e.Guide == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: guide.Label}
-		}
+	if e.Guide != nil {
 		return e.Guide, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: guide.Label}
 	}
 	return nil, &NotLoadedError{edge: "guide"}
 }
@@ -53,12 +51,10 @@ func (e GuideTagEdges) GuideOrErr() (*Guide, error) {
 // TagOrErr returns the Tag value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e GuideTagEdges) TagOrErr() (*Tag, error) {
-	if e.loadedTypes[1] {
-		if e.Tag == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: tag.Label}
-		}
+	if e.Tag != nil {
 		return e.Tag, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: tag.Label}
 	}
 	return nil, &NotLoadedError{edge: "tag"}
 }

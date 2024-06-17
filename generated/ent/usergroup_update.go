@@ -62,9 +62,25 @@ func (ugu *UserGroupUpdate) SetUserID(s string) *UserGroupUpdate {
 	return ugu
 }
 
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (ugu *UserGroupUpdate) SetNillableUserID(s *string) *UserGroupUpdate {
+	if s != nil {
+		ugu.SetUserID(*s)
+	}
+	return ugu
+}
+
 // SetGroupID sets the "group_id" field.
 func (ugu *UserGroupUpdate) SetGroupID(s string) *UserGroupUpdate {
 	ugu.mutation.SetGroupID(s)
+	return ugu
+}
+
+// SetNillableGroupID sets the "group_id" field if the given value is not nil.
+func (ugu *UserGroupUpdate) SetNillableGroupID(s *string) *UserGroupUpdate {
+	if s != nil {
+		ugu.SetGroupID(*s)
+	}
 	return ugu
 }
 
@@ -257,9 +273,25 @@ func (uguo *UserGroupUpdateOne) SetUserID(s string) *UserGroupUpdateOne {
 	return uguo
 }
 
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (uguo *UserGroupUpdateOne) SetNillableUserID(s *string) *UserGroupUpdateOne {
+	if s != nil {
+		uguo.SetUserID(*s)
+	}
+	return uguo
+}
+
 // SetGroupID sets the "group_id" field.
 func (uguo *UserGroupUpdateOne) SetGroupID(s string) *UserGroupUpdateOne {
 	uguo.mutation.SetGroupID(s)
+	return uguo
+}
+
+// SetNillableGroupID sets the "group_id" field if the given value is not nil.
+func (uguo *UserGroupUpdateOne) SetNillableGroupID(s *string) *UserGroupUpdateOne {
+	if s != nil {
+		uguo.SetGroupID(*s)
+	}
 	return uguo
 }
 

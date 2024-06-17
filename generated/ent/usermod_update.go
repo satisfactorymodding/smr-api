@@ -36,15 +36,39 @@ func (umu *UserModUpdate) SetUserID(s string) *UserModUpdate {
 	return umu
 }
 
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (umu *UserModUpdate) SetNillableUserID(s *string) *UserModUpdate {
+	if s != nil {
+		umu.SetUserID(*s)
+	}
+	return umu
+}
+
 // SetModID sets the "mod_id" field.
 func (umu *UserModUpdate) SetModID(s string) *UserModUpdate {
 	umu.mutation.SetModID(s)
 	return umu
 }
 
+// SetNillableModID sets the "mod_id" field if the given value is not nil.
+func (umu *UserModUpdate) SetNillableModID(s *string) *UserModUpdate {
+	if s != nil {
+		umu.SetModID(*s)
+	}
+	return umu
+}
+
 // SetRole sets the "role" field.
 func (umu *UserModUpdate) SetRole(s string) *UserModUpdate {
 	umu.mutation.SetRole(s)
+	return umu
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (umu *UserModUpdate) SetNillableRole(s *string) *UserModUpdate {
+	if s != nil {
+		umu.SetRole(*s)
+	}
 	return umu
 }
 
@@ -220,15 +244,39 @@ func (umuo *UserModUpdateOne) SetUserID(s string) *UserModUpdateOne {
 	return umuo
 }
 
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (umuo *UserModUpdateOne) SetNillableUserID(s *string) *UserModUpdateOne {
+	if s != nil {
+		umuo.SetUserID(*s)
+	}
+	return umuo
+}
+
 // SetModID sets the "mod_id" field.
 func (umuo *UserModUpdateOne) SetModID(s string) *UserModUpdateOne {
 	umuo.mutation.SetModID(s)
 	return umuo
 }
 
+// SetNillableModID sets the "mod_id" field if the given value is not nil.
+func (umuo *UserModUpdateOne) SetNillableModID(s *string) *UserModUpdateOne {
+	if s != nil {
+		umuo.SetModID(*s)
+	}
+	return umuo
+}
+
 // SetRole sets the "role" field.
 func (umuo *UserModUpdateOne) SetRole(s string) *UserModUpdateOne {
 	umuo.mutation.SetRole(s)
+	return umuo
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (umuo *UserModUpdateOne) SetNillableRole(s *string) *UserModUpdateOne {
+	if s != nil {
+		umuo.SetRole(*s)
+	}
 	return umuo
 }
 

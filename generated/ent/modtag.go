@@ -40,12 +40,10 @@ type ModTagEdges struct {
 // ModOrErr returns the Mod value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e ModTagEdges) ModOrErr() (*Mod, error) {
-	if e.loadedTypes[0] {
-		if e.Mod == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: mod.Label}
-		}
+	if e.Mod != nil {
 		return e.Mod, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: mod.Label}
 	}
 	return nil, &NotLoadedError{edge: "mod"}
 }
@@ -53,12 +51,10 @@ func (e ModTagEdges) ModOrErr() (*Mod, error) {
 // TagOrErr returns the Tag value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e ModTagEdges) TagOrErr() (*Tag, error) {
-	if e.loadedTypes[1] {
-		if e.Tag == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: tag.Label}
-		}
+	if e.Tag != nil {
 		return e.Tag, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: tag.Label}
 	}
 	return nil, &NotLoadedError{edge: "tag"}
 }
