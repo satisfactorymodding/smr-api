@@ -6,19 +6,21 @@ import (
 	"encoding/json"
 	"html"
 	"io"
+	"log/slog"
 	"net/http"
 	"runtime/debug"
 	"strings"
 
+	"github.com/Vilsol/slox"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/rs/zerolog/log"
 	"github.com/russross/blackfriday"
 	"github.com/spf13/viper"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
 )
 
-func NewMod(ctx context.Context, mod *postgres.Mod) {
+func NewMod(ctx context.Context, mod *ent.Mod) {
 	if mod == nil {
 		return
 	}
@@ -31,7 +33,11 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 		return
 	}
 
-	user := postgres.GetUserByID(ctx, mod.CreatorID)
+	user, err := db.From(ctx).User.Get(ctx, mod.CreatorID)
+	if err != nil {
+		slox.Error(ctx, "failed retrieving user", slog.Any("err", err))
+		return
+	}
 
 	if user == nil {
 		return
@@ -59,14 +65,14 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
-		log.Err(err).Msg("error marshaling discord webhook")
+		slox.Error(ctx, "error marshaling discord webhook", slog.Any("err", err))
 		return
 	}
 
 	req, _ := http.NewRequest("POST", viper.GetString("discord.webhook_url"), bytes.NewReader(payloadJSON))
 
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("Cache-Control", "no-cache")
 
 	res, _ := http.DefaultClient.Do(req)
 
@@ -77,8 +83,8 @@ func NewMod(ctx context.Context, mod *postgres.Mod) {
 	_, _ = io.ReadAll(res.Body)
 }
 
-func NewVersion(ctx context.Context, version *postgres.Version) {
-	log.Info().Str("stack", string(debug.Stack())).Msg("new version discord webhook")
+func NewVersion(ctx context.Context, version *ent.Version) {
+	slox.Info(ctx, "new version discord webhook", slog.String("stack", string(debug.Stack())))
 
 	if version == nil {
 		return
@@ -88,9 +94,9 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 		return
 	}
 
-	mod := postgres.GetModByID(ctx, version.ModID)
-
-	if mod == nil {
+	mod, err := db.From(ctx).Mod.Get(ctx, version.ModID)
+	if err != nil {
+		slox.Error(ctx, "failed retrieving mod", slog.Any("err", err))
 		return
 	}
 
@@ -143,14 +149,14 @@ func NewVersion(ctx context.Context, version *postgres.Version) {
 
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
-		log.Err(err).Msg("error marshaling discord webhook")
+		slox.Error(ctx, "error marshaling discord webhook", slog.Any("err", err))
 		return
 	}
 
 	req, _ := http.NewRequest("POST", viper.GetString("discord.webhook_url"), bytes.NewReader(payloadJSON))
 
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("Cache-Control", "no-cache")
 
 	res, _ := http.DefaultClient.Do(req)
 

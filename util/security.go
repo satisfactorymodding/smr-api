@@ -17,7 +17,6 @@ var (
 func InitializeSecurity() {
 	var err error
 	privateKey, err = hex.DecodeString(viper.GetString("paseto.private_key"))
-
 	if err != nil {
 		panic(err)
 	}

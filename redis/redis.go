@@ -12,10 +12,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Vilsol/slox"
 	"github.com/cespare/xxhash"
 	"github.com/go-redis/redis"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
 	"github.com/satisfactorymodding/smr-api/generated"
@@ -40,7 +40,7 @@ func InitializeRedis(ctx context.Context) {
 		panic(ping.Err())
 	}
 
-	log.Info().Msg("Redis initialized")
+	slox.Info(ctx, "Redis initialized")
 }
 
 func CanIncrement(ip string, action string, object string, expiration time.Duration) bool {
@@ -56,7 +56,10 @@ func StoreNonce(nonce string, redirectURI string) {
 
 func GetNonce(nonce string) (string, error) {
 	result, err := client.Get("nonce:" + nonce).Result()
-	return result, errors.Wrap(err, "failed to get nonce")
+	if err != nil {
+		return "", fmt.Errorf("failed to get nonce: %w", err)
+	}
+	return result, nil
 }
 
 func GetAllKeys() []string {
@@ -108,11 +111,15 @@ func StoreVersionUploadState(versionID string, data *generated.CreateVersionResp
 	marshaled, e := json.Marshal(state)
 
 	if e != nil {
-		return errors.Wrap(err, "failed to marshal version upload state")
+		return fmt.Errorf("failed to marshal version upload state: %w", err)
 	}
 
 	redisKey := "version:upload:state:" + versionID
-	return errors.Wrap(client.Set(redisKey, string(marshaled), time.Minute*10).Err(), "failed to store version upload state")
+	if err := client.Set(redisKey, string(marshaled), time.Minute*10).Err(); err != nil {
+		return fmt.Errorf("failed to store version upload state: %w", err)
+	}
+
+	return nil
 }
 
 func GetVersionUploadState(versionID string) (*generated.CreateVersionResponse, error) {
@@ -127,7 +134,7 @@ func GetVersionUploadState(versionID string) (*generated.CreateVersionResponse, 
 		if errors.Is(get.Err(), redis.Nil) {
 			return nil, nil
 		}
-		return nil, errors.Wrap(get.Err(), "failed to get version upload state")
+		return nil, fmt.Errorf("failed to get version upload state: %w", get.Err())
 	}
 
 	data := &StoredVersionUploadState{}

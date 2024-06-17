@@ -3,11 +3,12 @@ package converter
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image"
+	"log/slog"
 
+	"github.com/Vilsol/slox"
 	"github.com/chai2010/webp"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	giftowebp "github.com/sizeofint/gif-to-webp"
 
 	// GIF Support
@@ -24,8 +25,8 @@ func ConvertAnyImageToWebp(ctx context.Context, imageAsBytes []byte) ([]byte, er
 	imageData, imageType, err := image.Decode(bytes.NewReader(imageAsBytes))
 	if err != nil {
 		message := "error converting image to webp"
-		log.Err(err).Msg(message)
-		return nil, errors.Wrap(err, message)
+		slox.Error(ctx, message, slog.Any("err", err))
+		return nil, fmt.Errorf("%s: %w", message, err)
 	}
 
 	result := bytes.NewBuffer(make([]byte, 0))
@@ -34,15 +35,15 @@ func ConvertAnyImageToWebp(ctx context.Context, imageAsBytes []byte) ([]byte, er
 		webpBin, err := converter.Convert(imageAsBytes)
 		if err != nil {
 			message := "error converting image to webp"
-			log.Err(err).Msg(message)
-			return nil, errors.Wrap(err, message)
+			slox.Error(ctx, message, slog.Any("err", err))
+			return nil, fmt.Errorf("%s: %w", message, err)
 		}
 
 		return webpBin, nil
 	}
 
 	if err := webp.Encode(result, imageData, nil); err != nil {
-		return nil, errors.Wrap(err, "error converting image to webp")
+		return nil, fmt.Errorf("error converting image to webp: %w", err)
 	}
 
 	return result.Bytes(), nil

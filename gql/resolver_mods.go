@@ -3,18 +3,28 @@ package gql
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
+	"log/slog"
+	"math"
 	"strings"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/Vilsol/slox"
 	"github.com/dgraph-io/ristretto"
 	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/redis"
@@ -32,116 +42,158 @@ var DisallowedModReferences = map[string]bool{
 	"docmod":                true,
 }
 
-func (r *mutationResolver) CreateMod(ctx context.Context, mod generated.NewMod) (*generated.Mod, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "createMod")
+func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMod) (*generated.Mod, error) {
+	wrapper, ctx := WrapMutationTrace(ctx, "createMod")
 	defer wrapper.end()
 
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
-	if err := val.Struct(&mod); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
+	if err := val.Struct(&newMod); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	if DisallowedModReferences[strings.ToLower(mod.ModReference)] {
+	if DisallowedModReferences[strings.ToLower(newMod.ModReference)] {
 		return nil, errors.New("using this mod reference is not allowed")
 	}
 
-	if postgres.GetModByReference(newCtx, mod.ModReference) != nil {
+	exist, err := db.From(ctx).Mod.Query().Where(mod.ModReference(newMod.ModReference)).Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if exist {
 		return nil, errors.New("mod with this mod reference already exists")
 	}
 
-	dbMod := &postgres.Mod{
-		Name:             mod.Name,
-		ShortDescription: mod.ShortDescription,
-		Approved:         true,
-		ModReference:     mod.ModReference,
+	dbMod := db.From(ctx).Mod.Create().
+		SetName(newMod.Name).
+		SetShortDescription(newMod.ShortDescription).
+		SetApproved(true).
+		SetModReference(newMod.ModReference)
+
+	SetINNF(newMod.SourceURL, dbMod.SetSourceURL)
+	SetINNF(newMod.FullDescription, dbMod.SetFullDescription)
+	SetINNF(newMod.Hidden, dbMod.SetHidden)
+
+	user, _, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	SetINN(mod.SourceURL, &dbMod.SourceURL)
-	SetINN(mod.FullDescription, &dbMod.FullDescription)
-	SetINN(mod.Hidden, &dbMod.Hidden)
-
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
-
-	dbMod.CreatorID = user.ID
+	dbMod.SetCreatorID(user.ID)
 
 	var logoData []byte
 
-	if mod.Logo != nil {
-		file, err := io.ReadAll(mod.Logo.File)
+	if newMod.Logo != nil {
+		file, err := io.ReadAll(newMod.Logo.File)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read logo file")
+			return nil, fmt.Errorf("failed to read logo file: %w", err)
 		}
 
 		logoData, err = converter.ConvertAnyImageToWebp(ctx, file)
-
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to convert logo file")
+			return nil, fmt.Errorf("failed to convert logo file: %w", err)
 		}
 	} else {
-		dbMod.Logo = ""
+		dbMod.SetLogo("")
 	}
 
-	resultMod, err := postgres.CreateMod(newCtx, dbMod)
+	// Allow only new 4 mods per 24h
+	existingMods, err := db.From(ctx).Mod.Query().
+		Order(mod.ByCreatedAt(sql.OrderAsc())).
+		Where(mod.CreatorID(user.ID), mod.CreatedAtGT(time.Now().Add(time.Hour*24*-1))).
+		All(ctx)
 	if err != nil {
+		return nil, err
+	}
+
+	currentAvailable := float64(4)
+	lastModTime := time.Now()
+	for _, mod := range existingMods {
+		currentAvailable--
+		if mod.CreatedAt.After(lastModTime) {
+			diff := mod.CreatedAt.Sub(lastModTime)
+			currentAvailable = math.Min(4, currentAvailable+diff.Hours()/6)
+		}
+		lastModTime = mod.CreatedAt
+	}
+
+	if currentAvailable < 1 {
+		timeToWait := time.Until(lastModTime.Add(time.Hour * 6)).Minutes()
+		return nil, fmt.Errorf("please wait %.0f minutes to post another mod", timeToWait)
+	}
+
+	// Create mod
+	resultMod, err := dbMod.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.From(ctx).UserMod.Create().
+		SetRole("creator").
+		SetModID(resultMod.ID).
+		SetUserID(user.ID).
+		Exec(ctx); err != nil {
 		return nil, err
 	}
 
 	if logoData != nil {
 		success, logoKey := storage.UploadModLogo(ctx, resultMod.ID, bytes.NewReader(logoData))
 		if success {
-			resultMod.Logo = storage.GenerateDownloadLink(logoKey)
-			postgres.Save(newCtx, &resultMod)
+			resultMod, err = resultMod.Update().SetLogo(storage.GenerateDownloadLink(logoKey)).Save(ctx)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	err = postgres.SetModTags(newCtx, resultMod.ID, mod.TagIDs)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Need to get the mod again to populate tags
-	return DBModToGenerated(postgres.GetModByIDNoCache(newCtx, resultMod.ID)), nil
-}
-
-func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod generated.UpdateMod) (*generated.Mod, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "updateMod")
-	defer wrapper.end()
-
-	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
-	if err := val.Struct(&mod); err != nil {
-		return nil, errors.Wrap(err, "validation failed")
-	}
-
-	if mod.TagIDs != nil {
-		err := postgres.ResetModTags(newCtx, modID, mod.TagIDs)
-		if err != nil {
+	if len(newMod.TagIDs) > 0 {
+		if err := resultMod.Update().AddTagIDs(newMod.TagIDs...).Exec(ctx); err != nil {
 			return nil, err
 		}
 	}
 
-	dbMod := postgres.GetModByIDNoCache(newCtx, modID)
+	// Need to get the mod again to populate tags
 
-	if dbMod == nil {
-		return nil, errors.New("mod not found")
+	resultMod, err = db.From(ctx).Mod.Query().WithTags().Where(mod.ID(resultMod.ID)).First(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	if mod.ModReference != nil && *mod.ModReference != dbMod.ModReference && dbMod.ID != dbMod.ModReference {
+	return (*conv.ModImpl)(nil).Convert(resultMod), nil
+}
+
+func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMod generated.UpdateMod) (*generated.Mod, error) {
+	wrapper, ctx := WrapMutationTrace(ctx, "updateMod")
+	defer wrapper.end()
+
+	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
+	if err := val.Struct(&updateMod); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	dbMod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return nil, err
+	}
+
+	if updateMod.ModReference != nil && *updateMod.ModReference != dbMod.ModReference && dbMod.ID != dbMod.ModReference {
 		return nil, errors.New("this mod already has set a mod reference")
 	}
 
-	SetStringINNOE(mod.Name, &dbMod.Name)
-	SetStringINNOE(mod.ShortDescription, &dbMod.ShortDescription)
-	SetINN(mod.SourceURL, &dbMod.SourceURL)
-	SetINN(mod.FullDescription, &dbMod.FullDescription)
-	SetINN(mod.ModReference, &dbMod.ModReference)
-	SetINN(mod.Hidden, &dbMod.Hidden)
-	SetCompatibilityINN(mod.Compatibility, &dbMod.Compatibility)
+	dbUpdate := dbMod.Update().ClearTags().AddTagIDs(updateMod.TagIDs...)
 
-	if mod.Logo != nil {
-		file, err := io.ReadAll(mod.Logo.File)
+	SetINNOEF(updateMod.Name, dbUpdate.SetName)
+	SetINNOEF(updateMod.ShortDescription, dbUpdate.SetShortDescription)
+	SetINNF(updateMod.SourceURL, dbUpdate.SetSourceURL)
+	SetINNF(updateMod.FullDescription, dbUpdate.SetFullDescription)
+	SetINNF(updateMod.ModReference, dbUpdate.SetModReference)
+	SetINNF(updateMod.Hidden, dbUpdate.SetHidden)
+	SetCompatibilityINNF(updateMod.Compatibility, dbUpdate.SetCompatibility)
+
+	if updateMod.Logo != nil {
+		file, err := io.ReadAll(updateMod.Logo.File)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read logo file")
+			return nil, fmt.Errorf("failed to read logo file: %w", err)
 		}
 
 		logoData, err := converter.ConvertAnyImageToWebp(ctx, file)
@@ -157,10 +209,13 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 		}
 	}
 
-	postgres.Save(newCtx, &dbMod)
+	dbMod, err = dbUpdate.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if mod.Authors != nil {
-		authors, err := dataloader.For(ctx).UserModsByModID.Load(modID)
+	if updateMod.Authors != nil {
+		authors, err := dataloader.For(ctx).UserModsByModID.Load(ctx, modID)()
 		if err != nil {
 			return nil, err
 		}
@@ -172,7 +227,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 			}
 
 			found := false
-			for _, userMod := range mod.Authors {
+			for _, userMod := range updateMod.Authors {
 				if userMod.UserID == author.UserID {
 					found = true
 					break
@@ -180,26 +235,32 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, mod gene
 			}
 
 			if !found {
-				postgres.Delete(newCtx, author)
+				if _, err := db.From(ctx).UserMod.Delete().
+					Where(usermod.UserID(author.UserID), usermod.ModID(author.ModID)).
+					Exec(ctx); err != nil {
+					return nil, err
+				}
 			}
 		}
 
-		for _, userMod := range mod.Authors {
+		for _, userMod := range updateMod.Authors {
 			role := "creator"
 
 			if userMod.Role == "editor" {
 				role = "editor"
 			}
 
-			postgres.Save(newCtx, &postgres.UserMod{
-				UserID: userMod.UserID,
-				ModID:  modID,
-				Role:   role,
-			})
+			if err := db.From(ctx).UserMod.Create().
+				SetUserID(userMod.UserID).
+				SetModID(modID).
+				SetRole(role).
+				Exec(ctx); err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	return DBModToGenerated(dbMod), nil
+	return (*conv.ModImpl)(nil).Convert(dbMod), nil
 }
 
 func (r *mutationResolver) UpdateModCompatibility(ctx context.Context, modID string, compatibility generated.CompatibilityInfoInput) (bool, error) {
@@ -224,106 +285,121 @@ func (r *mutationResolver) UpdateMultipleModCompatibilities(ctx context.Context,
 }
 
 func (r *mutationResolver) DeleteMod(ctx context.Context, modID string) (bool, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "deleteMod")
+	wrapper, ctx := WrapMutationTrace(ctx, "deleteMod")
 	defer wrapper.end()
 
-	dbMod := postgres.GetModByID(newCtx, modID)
-
-	if dbMod == nil {
-		return false, errors.New("mod not found")
+	if err := db.From(ctx).Mod.DeleteOneID(modID).Exec(ctx); err != nil {
+		return false, err
 	}
-
-	postgres.Delete(newCtx, &dbMod)
 
 	return true, nil
 }
 
 func (r *mutationResolver) ApproveMod(ctx context.Context, modID string) (bool, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "approveMod")
+	wrapper, ctx := WrapMutationTrace(ctx, "approveMod")
 	defer wrapper.end()
 
-	dbMod := postgres.GetModByID(newCtx, modID)
+	dbMod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return false, err
+	}
 
 	if dbMod == nil {
 		return false, errors.New("mod not found")
 	}
 
-	dbMod.Approved = true
+	if err := dbMod.Update().SetApproved(true).Exec(ctx); err != nil {
+		return false, err
+	}
 
-	postgres.Save(newCtx, &dbMod)
-
-	go integrations.NewMod(util.ReWrapCtx(ctx), dbMod)
+	go integrations.NewMod(db.ReWrapCtx(ctx), dbMod)
 
 	return true, nil
 }
 
 func (r *mutationResolver) DenyMod(ctx context.Context, modID string) (bool, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "denyMod")
+	wrapper, ctx := WrapMutationTrace(ctx, "denyMod")
 	defer wrapper.end()
 
-	dbMod := postgres.GetModByID(newCtx, modID)
+	dbMod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return false, err
+	}
 
 	if dbMod == nil {
 		return false, errors.New("mod not found")
 	}
 
-	dbMod.Denied = true
+	if err := dbMod.Update().SetDenied(true).Exec(ctx); err != nil {
+		return false, err
+	}
 
-	postgres.Save(newCtx, &dbMod)
-	postgres.Delete(newCtx, &dbMod)
+	if err := db.From(ctx).Mod.DeleteOneID(modID).Exec(ctx); err != nil {
+		return false, err
+	}
 
 	return true, nil
 }
 
 func (r *queryResolver) GetMod(ctx context.Context, modID string) (*generated.Mod, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getMod")
+	wrapper, ctx := WrapQueryTrace(ctx, "getMod")
 	defer wrapper.end()
 
-	mod := postgres.GetModByID(newCtx, modID)
+	dbMod, err := db.From(ctx).Mod.Query().Where(mod.ID(modID)).WithTags().First(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if mod != nil {
+	if dbMod != nil {
 		if redis.CanIncrement(RealIP(ctx), "view", "mod:"+modID, time.Hour*4) {
-			postgres.IncrementModViews(newCtx, mod)
+			if err := dbMod.Update().AddViews(1).Exec(ctx); err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	return DBModToGenerated(mod), nil
+	return (*conv.ModImpl)(nil).Convert(dbMod), nil
 }
 
 func (r *queryResolver) GetModByReference(ctx context.Context, modReference string) (*generated.Mod, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getModByReference")
+	wrapper, ctx := WrapQueryTrace(ctx, "getModByReference")
 	defer wrapper.end()
 
-	mod := postgres.GetModByReference(newCtx, modReference)
+	dbMod, err := db.From(ctx).Mod.Query().Where(mod.ModReference(modReference)).WithTags().First(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if mod != nil {
-		if redis.CanIncrement(RealIP(ctx), "view", "mod:"+mod.ID, time.Hour*4) {
-			postgres.IncrementModViews(newCtx, mod)
+	if dbMod != nil {
+		if redis.CanIncrement(RealIP(ctx), "view", "mod:"+dbMod.ID, time.Hour*4) {
+			if err := dbMod.Update().AddViews(1).Exec(ctx); err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	return DBModToGenerated(mod), nil
+	return (*conv.ModImpl)(nil).Convert(dbMod), nil
 }
 
-func (r *queryResolver) GetMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMods, error) {
+func (r *queryResolver) GetMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMods")
 	defer wrapper.end()
 	return &generated.GetMods{}, nil
 }
 
-func (r *queryResolver) GetUnapprovedMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMods, error) {
+func (r *queryResolver) GetUnapprovedMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getUnapprovedMods")
 	defer wrapper.end()
 	return &generated.GetMods{}, nil
 }
 
-func (r *queryResolver) GetMyMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMyMods, error) {
+func (r *queryResolver) GetMyMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMyMods")
 	defer wrapper.end()
 	return &generated.GetMyMods{}, nil
 }
 
-func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, filter map[string]interface{}) (*generated.GetMyMods, error) {
+func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
 	wrapper, _ := WrapQueryTrace(ctx, "getMyUnapprovedMods")
 	defer wrapper.end()
 	return &generated.GetMyMods{}, nil
@@ -331,8 +407,8 @@ func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, filter map[stri
 
 type getModsResolver struct{ *Resolver }
 
-func (r *getModsResolver) Mods(ctx context.Context, obj *generated.GetMods) ([]*generated.Mod, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "GetMods.mods")
+func (r *getModsResolver) Mods(ctx context.Context, _ *generated.GetMods) ([]*generated.Mod, error) {
+	wrapper, ctx := WrapQueryTrace(ctx, "GetMods.mods")
 	defer wrapper.end()
 
 	resolverContext := graphql.GetFieldContext(ctx)
@@ -347,22 +423,19 @@ func (r *getModsResolver) Mods(ctx context.Context, obj *generated.GetMods) ([]*
 		modFilter.AddField(field.Name)
 	}
 
-	mods := postgres.GetModsNew(newCtx, modFilter, unapproved)
+	query := db.From(ctx).Mod.Query()
+	query = db.ConvertModFilter(query, modFilter, false, unapproved)
 
-	if mods == nil {
-		return nil, errors.New("mods not found")
+	result, err := query.All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	converted := make([]*generated.Mod, len(mods))
-	for k, v := range mods {
-		converted[k] = DBModToGenerated(&v)
-	}
-
-	return converted, nil
+	return (*conv.ModImpl)(nil).ConvertSlice(result), nil
 }
 
-func (r *getModsResolver) Count(ctx context.Context, obj *generated.GetMods) (int, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "GetMods.count")
+func (r *getModsResolver) Count(ctx context.Context, _ *generated.GetMods) (int, error) {
+	wrapper, ctx := WrapQueryTrace(ctx, "GetMods.count")
 	defer wrapper.end()
 
 	resolverContext := graphql.GetFieldContext(ctx)
@@ -373,17 +446,21 @@ func (r *getModsResolver) Count(ctx context.Context, obj *generated.GetMods) (in
 		return 0, err
 	}
 
-	if modFilter.Ids != nil && len(modFilter.Ids) != 0 {
-		return len(modFilter.Ids), nil
+	query := db.From(ctx).Mod.Query()
+	query = db.ConvertModFilter(query, modFilter, false, unapproved)
+
+	result, err := query.Count(ctx)
+	if err != nil {
+		return 0, err
 	}
 
-	return int(postgres.GetModCountNew(newCtx, modFilter, unapproved)), nil
+	return result, nil
 }
 
 type getMyModsResolver struct{ *Resolver }
 
-func (r *getMyModsResolver) Mods(ctx context.Context, obj *generated.GetMyMods) ([]*generated.Mod, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "GetMyMods.mods")
+func (r *getMyModsResolver) Mods(ctx context.Context, _ *generated.GetMyMods) ([]*generated.Mod, error) {
+	wrapper, ctx := WrapQueryTrace(ctx, "GetMyMods.mods")
 	defer wrapper.end()
 
 	resolverContext := graphql.GetFieldContext(ctx)
@@ -398,28 +475,19 @@ func (r *getMyModsResolver) Mods(ctx context.Context, obj *generated.GetMyMods) 
 		modFilter.AddField(field.Name)
 	}
 
-	var mods []postgres.Mod
+	query := db.From(ctx).Mod.Query()
+	query = db.ConvertModFilter(query, modFilter, false, unapproved)
 
-	if modFilter.Ids == nil || len(modFilter.Ids) == 0 {
-		mods = postgres.GetModsNew(newCtx, modFilter, unapproved)
-	} else {
-		mods = postgres.GetModsByID(newCtx, modFilter.Ids)
+	result, err := query.All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	if mods == nil {
-		return nil, errors.New("mods not found")
-	}
-
-	converted := make([]*generated.Mod, len(mods))
-	for k, v := range mods {
-		converted[k] = DBModToGenerated(&v)
-	}
-
-	return converted, nil
+	return (*conv.ModImpl)(nil).ConvertSlice(result), nil
 }
 
-func (r *getMyModsResolver) Count(ctx context.Context, obj *generated.GetMyMods) (int, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "GetMyMods.count")
+func (r *getMyModsResolver) Count(ctx context.Context, _ *generated.GetMyMods) (int, error) {
+	wrapper, ctx := WrapQueryTrace(ctx, "GetMyMods.count")
 	defer wrapper.end()
 
 	resolverContext := graphql.GetFieldContext(ctx)
@@ -430,11 +498,15 @@ func (r *getMyModsResolver) Count(ctx context.Context, obj *generated.GetMyMods)
 		return 0, err
 	}
 
-	if modFilter.Ids != nil && len(modFilter.Ids) != 0 {
-		return len(modFilter.Ids), nil
+	query := db.From(ctx).Mod.Query()
+	query = db.ConvertModFilter(query, modFilter, false, unapproved)
+
+	result, err := query.Count(ctx)
+	if err != nil {
+		return 0, err
 	}
 
-	return int(postgres.GetModCountNew(newCtx, modFilter, unapproved)), nil
+	return result, nil
 }
 
 type modResolver struct{ *Resolver }
@@ -443,7 +515,7 @@ func (r *modResolver) Authors(ctx context.Context, obj *generated.Mod) ([]*gener
 	wrapper, _ := WrapQueryTrace(ctx, "Mod.authors")
 	defer wrapper.end()
 
-	authors, err := dataloader.For(ctx).UserModsByModID.Load(obj.ID)
+	authors, err := dataloader.For(ctx).UserModsByModID.Load(ctx, obj.ID)()
 	if err != nil {
 		return nil, err
 	}
@@ -464,10 +536,19 @@ func (r *modResolver) Authors(ctx context.Context, obj *generated.Mod) ([]*gener
 	return converted, nil
 }
 
-func (r *modResolver) Version(ctx context.Context, obj *generated.Mod, version string) (*generated.Version, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "Mod.version")
+func (r *modResolver) Version(ctx context.Context, obj *generated.Mod, versionName string) (*generated.Version, error) {
+	wrapper, ctx := WrapQueryTrace(ctx, "Mod.version")
 	defer wrapper.end()
-	return DBVersionToGenerated(postgres.GetModVersionByName(newCtx, obj.ID, version)), nil
+
+	dbVersion, err := db.From(ctx).Version.Query().
+		WithTargets().
+		Where(version.Version(versionName), version.ModID(obj.ID)).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.VersionImpl)(nil).Convert(dbVersion), nil
 }
 
 var versionNoMetaCache, _ = ristretto.NewCache(&ristretto.Config{
@@ -479,7 +560,7 @@ var versionNoMetaCache, _ = ristretto.NewCache(&ristretto.Config{
 const versionNoMetaCacheTTL = time.Second * 30
 
 func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter map[string]interface{}) ([]*generated.Version, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "Mod.versions")
+	wrapper, ctx := WrapQueryTrace(ctx, "Mod.versions")
 	defer wrapper.end()
 
 	versionFilter, err := models.ProcessVersionFilter(filter)
@@ -496,18 +577,18 @@ func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter m
 		}
 	}
 
-	var versions []postgres.Version
+	var versions []*ent.Version
 
 	if versionFilter == nil || versionFilter.IsDefault(true) {
 		if hasMetadata {
-			versions, err = dataloader.For(ctx).VersionsByModID.Load(obj.ID)
+			versions, err = dataloader.For(ctx).VersionsByModID.Load(ctx, obj.ID)()
 		} else {
 			if cacheVersions, ok := versionNoMetaCache.Get(obj.ID); ok {
-				versions = cacheVersions.([]postgres.Version)
+				versions = cacheVersions.([]*ent.Version)
 			}
 
 			if versions == nil {
-				versions, err = dataloader.For(ctx).VersionsByModIDNoMeta.Load(obj.ID)
+				versions, err = dataloader.For(ctx).VersionsByModIDNoMeta.Load(ctx, obj.ID)()
 				if err == nil && versions != nil {
 					versionNoMetaCache.SetWithTTL(obj.ID, versions, int64(len(versions)), versionNoMetaCacheTTL)
 				}
@@ -522,42 +603,68 @@ func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter m
 			versions = versions[:*versionFilter.Limit]
 		}
 	} else {
-		versions = postgres.GetModVersionsNew(newCtx, obj.ID, versionFilter, false)
+		query := db.From(ctx).Version.Query().WithTargets().Where(
+			version.Approved(true),
+			version.Denied(false),
+			version.ModID(obj.ID),
+		)
+
+		if filter != nil {
+			query = query.Limit(*versionFilter.Limit).
+				Offset(*versionFilter.Offset).
+				Order(sql.OrderByField(
+					versionFilter.OrderBy.String(),
+					db.OrderToOrder(versionFilter.Order.String()),
+				).ToFunc())
+		}
+
+		versions, err = query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if versions == nil {
 		return nil, errors.New("versions not found")
 	}
 
-	converted := make([]*generated.Version, len(versions))
-	for k, v := range versions {
-		converted[k] = DBVersionToGenerated(&v)
-	}
-
-	return converted, nil
+	return (*conv.VersionImpl)(nil).ConvertSlice(versions), nil
 }
 
 func (r *modResolver) LatestVersions(ctx context.Context, obj *generated.Mod) (*generated.LatestVersions, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "Mod.latestVersions")
+	wrapper, ctx := WrapQueryTrace(ctx, "Mod.latestVersions")
 	defer wrapper.end()
 
-	versions := postgres.GetModLatestVersions(newCtx, obj.ID, false)
-
-	if versions == nil {
-		return nil, errors.New("versions not found")
+	versions, err := db.From(ctx).Version.
+		Query().
+		WithTargets().
+		Where(
+			version.ModID(obj.ID),
+			version.Approved(true),
+			version.Denied(false),
+		).
+		Order(
+			version.ByModID(),
+			version.ByStability(),
+			version.ByCreatedAt(),
+		).
+		Modify(func(s *sql.Selector) {
+			s.SelectExpr(sql.Expr("DISTINCT on (mod_id, stability) *"))
+		}).
+		All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	versionsD := *versions
-
 	converted := generated.LatestVersions{}
-	for _, v := range versionsD {
+	for _, v := range versions {
 		switch v.Stability {
-		case string(generated.VersionStabilitiesAlpha):
-			converted.Alpha = DBVersionToGenerated(&v)
-		case string(generated.VersionStabilitiesBeta):
-			converted.Beta = DBVersionToGenerated(&v)
-		case string(generated.VersionStabilitiesRelease):
-			converted.Release = DBVersionToGenerated(&v)
+		case util.StabilityAlpha:
+			converted.Alpha = (*conv.VersionImpl)(nil).Convert(v)
+		case util.StabilityBeta:
+			converted.Beta = (*conv.VersionImpl)(nil).Convert(v)
+		case util.StabilityRelease:
+			converted.Release = (*conv.VersionImpl)(nil).Convert(v)
 		}
 	}
 
@@ -565,22 +672,30 @@ func (r *modResolver) LatestVersions(ctx context.Context, obj *generated.Mod) (*
 }
 
 func (r *queryResolver) GetModByIDOrReference(ctx context.Context, modIDOrReference string) (*generated.Mod, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getModByIdOrReference")
+	wrapper, ctx := WrapQueryTrace(ctx, "getModByIdOrReference")
 	defer wrapper.end()
 
-	mod := postgres.GetModByIDOrReference(newCtx, modIDOrReference)
+	m, err := db.From(ctx).Mod.Query().WithTags().Where(mod.Or(
+		mod.ID(modIDOrReference),
+		mod.ModReference(modIDOrReference),
+	)).First(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if mod != nil {
-		if redis.CanIncrement(RealIP(ctx), "view", "mod:"+mod.ID, time.Hour*4) {
-			postgres.IncrementModViews(newCtx, mod)
+	if m != nil {
+		if redis.CanIncrement(RealIP(ctx), "view", "mod:"+m.ID, time.Hour*4) {
+			if err := m.Update().AddViews(1).Exec(ctx); err != nil {
+				slox.Error(ctx, "failed incrementing mod views", slog.Any("err", err))
+			}
 		}
 	}
 
-	return DBModToGenerated(mod), nil
+	return (*conv.ModImpl)(nil).Convert(m), nil
 }
 
 func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []*generated.ModVersionConstraint) ([]*generated.ModVersion, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "resolveModVersions")
+	wrapper, ctx := WrapQueryTrace(ctx, "resolveModVersions")
 	defer wrapper.end()
 
 	constraintMapping := make(map[string]string)
@@ -590,30 +705,30 @@ func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []*genera
 		constraintMapping[constraint.ModIDOrReference] = constraint.Version
 	}
 
-	mods := postgres.GetModsByIDOrReference(newCtx, modIDOrReferences)
-
-	if mods == nil {
-		return nil, errors.New("no mods found")
+	mods, err := db.From(ctx).Mod.Query().
+		WithTags().
+		Where(mod.Or(mod.IDIn(modIDOrReferences...), mod.ModReferenceIn(modIDOrReferences...))).
+		All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	modVersions := make([]*generated.ModVersion, len(mods))
-	for i, mod := range mods {
-		constraint, ok := constraintMapping[mod.ID]
+	for i, m := range mods {
+		constraint, ok := constraintMapping[m.ID]
 		if !ok {
-			constraint = constraintMapping[mod.ModReference]
+			constraint = constraintMapping[m.ModReference]
 		}
 
-		versions := postgres.GetModVersionsConstraint(newCtx, mod.ID, constraint)
-
-		converted := make([]*generated.Version, len(versions))
-		for k, v := range versions {
-			converted[k] = DBVersionToGenerated(&v)
+		versions, err := db.GetModVersionsConstraint(ctx, m.ID, constraint)
+		if err != nil {
+			return nil, err
 		}
 
 		modVersions[i] = &generated.ModVersion{
-			ID:           mod.ID,
-			ModReference: mod.ModReference,
-			Versions:     converted,
+			ID:           m.ID,
+			ModReference: m.ModReference,
+			Versions:     (*conv.VersionImpl)(nil).ConvertSlice(versions),
 		}
 	}
 

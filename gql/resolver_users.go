@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -16,27 +17,36 @@ import (
 
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/dataloader"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/db/schema"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
+	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/user"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/util/converter"
 )
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input generated.UpdateUser) (*generated.User, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "updateUser")
+	wrapper, ctx := WrapMutationTrace(ctx, "updateUser")
 	defer wrapper.end()
 
-	dbUser := postgres.GetUserByID(newCtx, userID)
-
-	if dbUser == nil {
-		return nil, errors.New("user not found")
+	u, err := db.From(ctx).User.Get(ctx, userID)
+	if err != nil {
+		return nil, err
 	}
 
+	update := u.Update()
 	if input.Avatar != nil {
 		file, err := io.ReadAll(input.Avatar.File)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read avatar file")
+			return nil, fmt.Errorf("failed to read avatar file: %w", err)
 		}
 
 		avatarData, err := converter.ConvertAnyImageToWebp(ctx, file)
@@ -44,14 +54,78 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 			return nil, err
 		}
 
-		success, avatarKey := storage.UploadUserAvatar(ctx, dbUser.ID, bytes.NewReader(avatarData))
+		success, avatarKey := storage.UploadUserAvatar(ctx, u.ID, bytes.NewReader(avatarData))
 		if success {
-			dbUser.Avatar = storage.GenerateDownloadLink(avatarKey)
+			update = update.SetAvatar(storage.GenerateDownloadLink(avatarKey))
 		}
 	}
 
 	if input.Groups != nil {
-		dbUser.SetGroups(newCtx, input.Groups)
+		currentGroups, err := db.From(ctx).UserGroup.
+			Query().
+			Where(usergroup.UserID(u.ID)).
+			All(schema.SkipSoftDelete(ctx))
+		if err != nil {
+			return nil, err
+		}
+
+		err = db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+			for _, group := range input.Groups {
+				if auth.GetGroupByID(group) == nil {
+					continue
+				}
+
+				found := false
+				var deleted *ent.UserGroup
+				for _, currentGroup := range currentGroups {
+					if group == currentGroup.GroupID {
+						found = true
+						if currentGroup.DeletedAt.IsZero() {
+							deleted = currentGroup
+						}
+						break
+					}
+				}
+
+				if !found {
+					if err := tx.UserGroup.
+						Create().
+						SetUserID(u.ID).
+						SetGroupID(group).
+						Exec(ctx); err != nil {
+						return err
+					}
+				} else if deleted != nil {
+					if err := deleted.Update().ClearDeletedAt().Exec(schema.SkipSoftDelete(ctx)); err != nil {
+						return err
+					}
+				}
+			}
+
+			for _, currentGroup := range currentGroups {
+				found := false
+				for _, group := range input.Groups {
+					if group == currentGroup.GroupID {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					if _, err := tx.UserGroup.Delete().Where(
+						usergroup.UserID(u.ID),
+						usergroup.GroupID(currentGroup.GroupID),
+					).Exec(ctx); err != nil {
+						return err
+					}
+				}
+			}
+
+			return nil
+		}, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if input.Username != nil {
@@ -59,126 +133,150 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 			return nil, errors.New("username must be at least 3 characters long")
 		}
 
-		dbUser.Username = *input.Username
-
-		if len(dbUser.Username) > 32 {
-			dbUser.Username = dbUser.Username[:32]
+		newUsername := *input.Username
+		if len(newUsername) > 32 {
+			newUsername = newUsername[:32]
 		}
+
+		update = update.SetUsername(newUsername)
 	}
 
-	postgres.Save(newCtx, &dbUser)
+	result, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	return DBUserToGenerated(dbUser), nil
+	return (*conv.UserImpl)(nil).Convert(result), nil
 }
 
 func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
-	wrapper, newCtx := WrapMutationTrace(ctx, "logout")
+	wrapper, ctx := WrapMutationTrace(ctx, "logout")
 	defer wrapper.end()
 
 	header := ctx.Value(util.ContextHeader{}).(http.Header)
-	postgres.LogoutSession(newCtx, header.Get("Authorization"))
+
+	// TODO Archive old deleted sessions to cold storage
+	if _, err := db.From(ctx).UserSession.Delete().Where(usersession.Token(header.Get("Authorization"))).Exec(ctx); err != nil {
+		return false, err
+	}
 
 	return true, nil
 }
 
 func (r *queryResolver) GetMe(ctx context.Context) (*generated.User, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getMe")
+	wrapper, ctx := WrapQueryTrace(ctx, "getMe")
 	defer wrapper.end()
-	return DBUserToGenerated(ctx.Value(postgres.UserKey{}).(*postgres.User)), nil
+
+	result, _, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.UserImpl)(nil).Convert(result), nil
 }
 
 func (r *queryResolver) GetUser(ctx context.Context, userID string) (*generated.User, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getUser")
+	wrapper, ctx := WrapQueryTrace(ctx, "getUser")
 	defer wrapper.end()
-	return DBUserToGenerated(postgres.GetUserByID(newCtx, userID)), nil
+
+	result, err := db.From(ctx).User.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.UserImpl)(nil).Convert(result), nil
 }
 
-func (r *queryResolver) GetUsers(ctx context.Context, userIds []string) ([]*generated.User, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "getUsers")
+func (r *queryResolver) GetUsers(ctx context.Context, userIDs []string) ([]*generated.User, error) {
+	wrapper, ctx := WrapQueryTrace(ctx, "getUsers")
 	defer wrapper.end()
 
-	users := postgres.GetUsersByID(newCtx, userIds)
-
-	if users == nil {
-		return nil, errors.New("users not found")
+	result, err := db.From(ctx).User.Query().Where(user.IDIn(userIDs...)).All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	converted := make([]*generated.User, len(*users))
-	for k, v := range *users {
-		converted[k] = DBUserToGenerated(&v)
-	}
-
-	return converted, nil
+	return (*conv.UserImpl)(nil).ConvertSlice(result), nil
 }
 
 type userResolver struct{ *Resolver }
 
 func (r *userResolver) Mods(ctx context.Context, obj *generated.User) ([]*generated.UserMod, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "User.mods")
+	wrapper, ctx := WrapQueryTrace(ctx, "User.mods")
 	defer wrapper.end()
 
-	mods := postgres.GetUserMods(newCtx, obj.ID)
-
-	if mods == nil {
-		return []*generated.UserMod{}, nil
+	result, err := db.From(ctx).UserMod.
+		Query().
+		Where(usermod.UserID(obj.ID)).
+		Where(usermod.HasModWith(mod.DeletedAtIsNil())).
+		All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	converted := make([]*generated.UserMod, len(mods))
-	for k, v := range mods {
-		converted[k] = &generated.UserMod{
-			UserID: v.UserID,
-			ModID:  v.ModID,
-			Role:   v.Role,
-		}
-	}
-
-	return converted, nil
+	return (*conv.UserModImpl)(nil).ConvertSlice(result), nil
 }
 
 func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]*generated.Guide, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
+	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
-	guides := postgres.GetUserGuides(newCtx, obj.ID)
-
-	if guides == nil {
-		return nil, errors.New("guides not found")
+	result, err := db.From(ctx).Guide.Query().Where(guide.UserID(obj.ID)).WithTags().All(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	converted := make([]*generated.Guide, len(guides))
-	for k, v := range guides {
-		converted[k] = DBGuideToGenerated(&v)
-	}
-
-	return converted, nil
+	return (*conv.GuideImpl)(nil).ConvertSlice(result), nil
 }
 
-func (r *userResolver) Groups(ctx context.Context, obj *generated.User) ([]*generated.Group, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
+func (r *userResolver) Groups(ctx context.Context, _ *generated.User) ([]*generated.Group, error) {
+	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	u, _, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	groups := user.GetGroups(newCtx)
+	groups, err := u.QueryGroups().All(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	converted := make([]*generated.Group, len(groups))
 	for k, v := range groups {
+		g := auth.GetGroupByID(v.GroupID)
 		converted[k] = &generated.Group{
-			ID:   v.ID,
-			Name: v.Name,
+			ID:   g.ID,
+			Name: g.Name,
 		}
 	}
 
 	return converted, nil
 }
 
-func (r *userResolver) Roles(ctx context.Context, obj *generated.User) (*generated.UserRoles, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "User.guides")
+func (r *userResolver) Roles(ctx context.Context, _ *generated.User) (*generated.UserRoles, error) {
+	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
 	defer wrapper.end()
 
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	u, _, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	roles := user.GetRoles(newCtx)
+	groups, err := u.QueryGroups().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	roles := make(map[*auth.Role]bool)
+
+	for _, group := range groups {
+		gr := auth.GetGroupByID(group.GroupID)
+		for _, role := range gr.Roles {
+			roles[role] = true
+		}
+	}
 
 	userRoles := &generated.UserRoles{}
 
@@ -223,29 +321,24 @@ func (r *userModResolver) User(ctx context.Context, obj *generated.UserMod) (*ge
 	wrapper, _ := WrapQueryTrace(ctx, "UserMod.user")
 	defer wrapper.end()
 
-	user, err := dataloader.For(ctx).UserByID.Load(obj.UserID)
+	result, err := dataloader.For(ctx).UserByID.Load(ctx, obj.UserID)()
 	if err != nil {
 		return nil, err
 	}
 
-	if user == nil {
-		return nil, errors.New("user not found")
-	}
-
-	return DBUserToGenerated(user), nil
+	return (*conv.UserImpl)(nil).Convert(result), nil
 }
 
 func (r *userModResolver) Mod(ctx context.Context, obj *generated.UserMod) (*generated.Mod, error) {
-	wrapper, newCtx := WrapQueryTrace(ctx, "UserMod.mod")
+	wrapper, ctx := WrapQueryTrace(ctx, "UserMod.mod")
 	defer wrapper.end()
 
-	mod := postgres.GetModByID(newCtx, obj.ModID)
-
-	if mod == nil {
-		return nil, errors.New("mod not found")
+	result, err := db.From(ctx).Mod.Get(ctx, obj.ModID)
+	if err != nil {
+		return nil, err
 	}
 
-	return DBModToGenerated(mod), nil
+	return (*conv.ModImpl)(nil).Convert(result), nil
 }
 
 func (r *mutationResolver) DiscourseSso(ctx context.Context, sso string, sig string) (*string, error) {
@@ -261,16 +354,19 @@ func (r *mutationResolver) DiscourseSso(ctx context.Context, sso string, sig str
 
 	nonceString, err := base64.StdEncoding.DecodeString(sso)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode sso")
+		return nil, fmt.Errorf("failed to decode sso: %w", err)
 	}
 
-	user := ctx.Value(postgres.UserKey{}).(*postgres.User)
+	u, _, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	if user == nil {
+	if u == nil {
 		return nil, errors.New("user not logged in")
 	}
 
-	rawResult := string(nonceString) + "&username=" + user.Username + "&email=" + url.QueryEscape(user.Email) + "&external_id=" + user.ID
+	rawResult := string(nonceString) + "&username=" + u.Username + "&email=" + url.QueryEscape(u.Email) + "&external_id=" + u.ID
 	encodedResult := base64.StdEncoding.EncodeToString([]byte(rawResult))
 	escapedResult := url.QueryEscape(encodedResult)
 

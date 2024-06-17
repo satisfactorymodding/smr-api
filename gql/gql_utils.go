@@ -12,7 +12,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/util"
 )
@@ -30,6 +29,7 @@ func WrapMutationTrace(ctx context.Context, action string) (TraceWrapper, contex
 }
 
 func wrapTrace(ctx context.Context, action string, actionType string) (TraceWrapper, context.Context) {
+	//nolint:spancheck
 	spanCtx, span := otel.Tracer("gql").Start(ctx, "GraphQL "+action, trace.WithAttributes(
 		attribute.String("action_type", "API.graphql."+actionType),
 	))
@@ -48,15 +48,6 @@ func (wrapper TraceWrapper) end() {
 	}
 }
 
-// SetStringINNOE sets target if value not nil or empty
-func SetStringINNOE(value *string, target *string) {
-	if value == nil || *value == "" {
-		return
-	}
-
-	*target = *value
-}
-
 // SetINN sets target if value not nil
 func SetINN[T any](v *T, target *T) {
 	if v != nil {
@@ -64,28 +55,38 @@ func SetINN[T any](v *T, target *T) {
 	}
 }
 
-func SetStabilityINN(value *generated.VersionStabilities, target *string) {
+func SetCompatibilityINNF[B any](value *generated.CompatibilityInfoInput, target func(*util.CompatibilityInfo) B) {
 	if value == nil {
 		return
 	}
-
-	*target = string(*value)
+	target(GenCompInfoToDBCompInfo(value))
 }
 
-func SetDateINN(value *string, target *time.Time) {
-	if value == nil {
-		return
+// SetINNF - Set if not null function
+func SetINNF[T any, B any](value *T, target func(T) B) {
+	if value != nil {
+		target(*value)
 	}
-
-	*target, _ = time.Parse(time.RFC3339Nano, *value)
 }
 
-func SetCompatibilityINN(value *generated.CompatibilityInfoInput, target **postgres.CompatibilityInfo) {
-	if value == nil {
-		return
+// SetINNOEF - Set if not null or empty function
+func SetINNOEF[T comparable, B any](value *T, target func(T) B) {
+	if value != nil && *value != *(new(T)) {
+		target(*value)
 	}
-	toDB := GenCompInfoToDBCompInfo(value)
-	*target = toDB
+}
+
+func SetStabilityINNF[B any](value *generated.VersionStabilities, target func(util.Stability) B) {
+	if value != nil {
+		target(util.Stability(*value))
+	}
+}
+
+func SetDateINNF[B any](value *string, target func(time.Time) B) {
+	if value != nil {
+		t, _ := time.Parse(time.RFC3339Nano, *value)
+		target(t)
+	}
 }
 
 func RealIP(ctx context.Context) string {

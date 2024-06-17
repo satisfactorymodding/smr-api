@@ -3,8 +3,8 @@ package consumers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/vmihailenco/taskq/v3"
 
 	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
@@ -20,7 +20,7 @@ func init() {
 func UpdateDBFromModVersionJSONFileConsumer(ctx context.Context, payload []byte) error {
 	var task tasks.UpdateDBFromModVersionFileData
 	if err := json.Unmarshal(payload, &task); err != nil {
-		return errors.Wrap(err, "failed to unmarshal task")
+		return fmt.Errorf("failed to unmarshal task: %w", err)
 	}
 	return UpdateModDataFromStorage(ctx, task.ModID, task.VersionID, false)
 }

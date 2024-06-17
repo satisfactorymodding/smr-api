@@ -1,15 +1,12 @@
 package nodes
 
 import (
-	"bytes"
 	"net/url"
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/oauth"
-	"github.com/satisfactorymodding/smr-api/storage"
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // @Summary Retrieve a list of OAuth methods
@@ -56,23 +53,12 @@ func getGithub(c echo.Context) (interface{}, *ErrorResponse) {
 
 	userAgent := c.Request().Header.Get("User-Agent")
 
-	avatarURL := user.Avatar
-	user.Avatar = ""
-
-	session, dbUser, newUser := postgres.GetUserSession(c.Request().Context(), user, userAgent)
-
-	if avatarURL != "" && newUser {
-		avatarData, err := util.LinkToWebp(c.Request().Context(), avatarURL)
-		if err != nil {
-			return nil, GenericUserError(err)
-		}
-
-		success, avatarKey := storage.UploadUserAvatar(c.Request().Context(), session.UserID, bytes.NewReader(avatarData))
-		if success {
-			dbUser.Avatar = storage.GenerateDownloadLink(avatarKey)
-			postgres.Save(c.Request().Context(), &dbUser)
-		}
+	token, err := db.CompleteOAuthFlow(c.Request().Context(), user, userAgent)
+	if err != nil {
+		return nil, GenericUserError(err)
 	}
 
-	return SessionToSession(session), nil
+	return &UserSession{
+		Token: *token,
+	}, nil
 }

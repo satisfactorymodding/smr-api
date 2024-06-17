@@ -1,12 +1,21 @@
 package nodes
 
 import (
+	"log/slog"
 	"strings"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
+	"github.com/Vilsol/slox"
 	"github.com/labstack/echo/v4"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/generated/conv"
+	mod2 "github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	version2 "github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
@@ -31,14 +40,27 @@ func getMods(c echo.Context) (interface{}, *ErrorResponse) {
 	order := util.OneOf(c, "order", []string{"asc", "desc"}, "desc")
 	search := c.QueryParam("search")
 
-	mods := postgres.GetMods(c.Request().Context(), limit, offset, orderBy, order, search, false)
+	modFilter := models.DefaultModFilter()
+	modFilter.Limit = &limit
+	modFilter.Offset = &offset
 
-	converted := make([]*Mod, len(mods))
-	for k, v := range mods {
-		converted[k] = ModToMod(&v, true)
+	orderByGen := generated.ModFields(orderBy)
+	modFilter.OrderBy = &orderByGen
+
+	orderGen := generated.Order(order)
+	modFilter.Order = &orderGen
+	modFilter.Search = &search
+
+	query := db.From(c.Request().Context()).Mod.Query()
+	query = db.ConvertModFilter(query, modFilter, false, false)
+
+	mods, err := query.All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed retrieving mods", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
 	}
 
-	return converted, nil
+	return (*conv.ModImpl)(nil).ConvertSlice(mods), nil
 }
 
 // @Summary Retrieve a count of Mods
@@ -51,7 +73,20 @@ func getMods(c echo.Context) (interface{}, *ErrorResponse) {
 // @Router /mods/count [get]
 func getModCount(c echo.Context) (interface{}, *ErrorResponse) {
 	search := c.QueryParam("search")
-	return postgres.GetModCount(c.Request().Context(), search, false), nil
+
+	modFilter := models.DefaultModFilter()
+	modFilter.Search = &search
+
+	query := db.From(c.Request().Context()).Mod.Query()
+	query = db.ConvertModFilter(query, modFilter, true, false)
+
+	count, err := query.Count(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed retrieving mod count", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
+	}
+
+	return count, nil
 }
 
 // @Summary Retrieve a Mod
@@ -65,7 +100,14 @@ func getModCount(c echo.Context) (interface{}, *ErrorResponse) {
 func getMod(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 
-	mod := postgres.GetModByID(c.Request().Context(), modID)
+	mod, err := db.From(c.Request().Context()).Mod.Query().
+		WithTags().
+		Where(mod2.ID(modID)).
+		First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mod", slog.Any("err", err))
+		return nil, &ErrorModNotFound
+	}
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
@@ -73,11 +115,11 @@ func getMod(c echo.Context) (interface{}, *ErrorResponse) {
 
 	if _, ok := c.QueryParams()["view"]; ok {
 		if redis.CanIncrement(c.RealIP(), "view", "mod:"+modID, time.Hour*4) {
-			postgres.IncrementModViews(c.Request().Context(), mod)
+			_ = mod.Update().AddViews(1).Exec(c.Request().Context())
 		}
 	}
 
-	return ModToMod(mod, false), nil
+	return (*conv.ModImpl)(nil).Convert(mod), nil
 }
 
 // @Summary Retrieve a list of Mods by ID
@@ -88,24 +130,26 @@ func getMod(c echo.Context) (interface{}, *ErrorResponse) {
 // @Param modIds path string true "Mod IDs"
 // @Success 200
 // @Router /mods/{modIds} [get]
-func getModsByIds(c echo.Context) (interface{}, *ErrorResponse) {
+func getModsByIDs(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modIds")
 	modIDSplit := strings.Split(modID, ",")
 
 	// TODO limit amount of users requestable
 
-	mods := postgres.GetModsByID(c.Request().Context(), modIDSplit)
+	mods, err := db.From(c.Request().Context()).Mod.Query().
+		WithTags().
+		Where(mod2.IDIn(modIDSplit...)).
+		All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mods", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
+	}
 
 	if mods == nil {
 		return nil, &ErrorModNotFound
 	}
 
-	converted := make([]*Mod, len(mods))
-	for k, v := range mods {
-		converted[k] = ModToMod(&v, true)
-	}
-
-	return converted, nil
+	return (*conv.ModImpl)(nil).ConvertSlice(mods), nil
 }
 
 // @Summary Retrieve a list of latest versions for a mod
@@ -119,16 +163,27 @@ func getModsByIds(c echo.Context) (interface{}, *ErrorResponse) {
 func getModLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 
-	versions := postgres.GetModsLatestVersions(c.Request().Context(), []string{modID}, false)
+	versions, err := db.From(c.Request().Context()).Version.Query().
+		WithTargets().
+		Modify(func(s *sql.Selector) {
+			s.SelectExpr(sql.ExprP("distinct on (mod_id, stability) *"))
+		}).
+		Where(version2.Approved(true), version2.Denied(false), version2.ModID(modID)).
+		Order(version2.ByStability(sql.OrderDesc()), version2.ByCreatedAt(sql.OrderDesc())).
+		All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
+	}
 
 	if versions == nil {
 		return nil, &ErrorVersionNotFound
 	}
 
-	result := make(map[string]*Version)
+	result := make(map[string]*generated.Version)
 
-	for _, v := range *versions {
-		result[v.Stability] = VersionToVersion(&v)
+	for _, v := range versions {
+		result[string(v.Stability)] = (*conv.VersionImpl)(nil).Convert(v)
 	}
 
 	return result, nil
@@ -148,19 +203,30 @@ func getModsLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
 
 	// TODO limit amount of mods requestable
 
-	versions := postgres.GetModsLatestVersions(c.Request().Context(), modIDSplit, false)
+	versions, err := db.From(c.Request().Context()).Version.Query().
+		WithTargets().
+		Modify(func(s *sql.Selector) {
+			s.SelectExpr(sql.ExprP("distinct on (mod_id, stability) *"))
+		}).
+		Where(version2.Approved(true), version2.Denied(false), version2.ModIDIn(modIDSplit...)).
+		Order(version2.ByStability(sql.OrderDesc()), version2.ByCreatedAt(sql.OrderDesc())).
+		All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
+	}
 
 	if versions == nil {
 		return nil, &ErrorVersionNotFound
 	}
 
-	result := make(map[string]map[string]*Version)
+	result := make(map[string]map[string]*generated.Version)
 
-	for _, v := range *versions {
+	for _, v := range versions {
 		if _, ok := result[v.ModID]; !ok {
-			result[v.ModID] = make(map[string]*Version)
+			result[v.ModID] = make(map[string]*generated.Version)
 		}
-		result[v.ModID][v.Stability] = VersionToVersion(&v)
+		result[v.ModID][string(v.Stability)] = (*conv.VersionImpl)(nil).Convert(v)
 	}
 
 	return result, nil
@@ -186,20 +252,33 @@ func getModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 
 	modID := c.Param("modId")
 
-	mod := postgres.GetModByID(c.Request().Context(), modID)
+	mod, err := db.From(c.Request().Context()).Mod.Query().
+		WithTags().
+		Where(mod2.ID(modID)).
+		First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mod", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
+	}
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
 	}
 
-	versions := postgres.GetModVersions(c.Request().Context(), mod.ID, limit, offset, orderBy, order, false)
-
-	converted := make([]*Version, len(versions))
-	for k, v := range versions {
-		converted[k] = VersionToVersion(&v)
+	versions, err := mod.QueryVersions().
+		WithDependencies().
+		WithTargets().
+		Limit(limit).
+		Offset(offset).
+		Order(sql.OrderByField(orderBy, db.OrderToOrder(order)).ToFunc()).
+		Where(version2.Approved(true), version2.Denied(false)).
+		All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
 	}
 
-	return converted, nil
+	return (*conv.VersionImpl)(nil).ConvertSlice(versions), nil
 }
 
 // @Summary Retrieve a Mod Authors
@@ -213,20 +292,26 @@ func getModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 func getModAuthors(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 
-	mod := postgres.GetModByID(c.Request().Context(), modID)
+	mod, err := db.From(c.Request().Context()).Mod.Query().
+		WithTags().
+		Where(mod2.ID(modID)).
+		First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mod", slog.Any("err", err))
+		return nil, &ErrorModNotFound
+	}
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
 	}
 
-	authors := postgres.GetModAuthors(c.Request().Context(), mod.ID)
-
-	converted := make([]*ModUser, len(authors))
-	for k, v := range authors {
-		converted[k] = ModUserToModUser(&v)
+	authors, err := mod.QueryUserMods().All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching authors", slog.Any("err", err))
+		return nil, &ErrorModNotFound
 	}
 
-	return converted, nil
+	return (*conv.UserModImpl)(nil).ConvertSlice(authors), nil
 }
 
 // @Summary Retrieve a Mod Version
@@ -242,19 +327,30 @@ func getModVersion(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 	versionID := c.Param("versionId")
 
-	mod := postgres.GetModByID(c.Request().Context(), modID)
+	mod, err := db.From(c.Request().Context()).Mod.Query().
+		WithTags().
+		Where(mod2.ID(modID)).
+		First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mod", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
+	}
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
 	}
 
-	version := postgres.GetModVersion(c.Request().Context(), mod.ID, versionID)
+	version, err := mod.QueryVersions().Where(version2.ID(versionID)).First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching version", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
+	}
 
 	if version == nil {
 		return nil, &ErrorVersionNotFound
 	}
 
-	return VersionToVersion(version), nil
+	return (*conv.VersionImpl)(nil).Convert(version), nil
 }
 
 // @Summary Download a Mod Version
@@ -270,20 +366,31 @@ func downloadModVersion(c echo.Context) error {
 	modID := c.Param("modId")
 	versionID := c.Param("versionId")
 
-	mod := postgres.GetModByID(c.Request().Context(), modID)
+	mod, err := db.From(c.Request().Context()).Mod.Query().
+		WithTags().
+		Where(mod2.ID(modID)).
+		First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mod", slog.Any("err", err))
+		return c.String(404, "mod not found, modID:"+modID)
+	}
 
 	if mod == nil {
 		return c.String(404, "mod not found, modID:"+modID)
 	}
 
-	version := postgres.GetModVersion(c.Request().Context(), mod.ID, versionID)
+	version, err := mod.QueryVersions().Where(version2.ID(versionID)).First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching version", slog.Any("err", err))
+		return c.String(404, "version not found, modID:"+modID+" versionID:"+versionID)
+	}
 
 	if version == nil {
 		return c.String(404, "version not found, modID:"+modID+" versionID:"+versionID)
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
-		postgres.IncrementVersionDownloads(c.Request().Context(), version)
+		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
 	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))
@@ -304,26 +411,41 @@ func downloadModVersionTarget(c echo.Context) error {
 	versionID := c.Param("versionId")
 	target := c.Param("target")
 
-	mod := postgres.GetModByID(c.Request().Context(), modID)
+	mod, err := db.From(c.Request().Context()).Mod.Query().
+		WithTags().
+		Where(mod2.ID(modID)).
+		First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mod", slog.Any("err", err))
+		return c.String(404, "mod not found, modID:"+modID)
+	}
 
 	if mod == nil {
 		return c.String(404, "mod not found, modID:"+modID)
 	}
 
-	version := postgres.GetModVersion(c.Request().Context(), mod.ID, versionID)
+	version, err := mod.QueryVersions().Where(version2.ID(versionID)).First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching version", slog.Any("err", err))
+		return err
+	}
 
 	if version == nil {
 		return c.String(404, "version not found, modID:"+modID+" versionID:"+versionID)
 	}
 
-	versionTarget := postgres.GetVersionTarget(c.Request().Context(), versionID, target)
+	versionTarget, err := version.QueryTargets().Where(versiontarget.TargetName(target)).First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching target", slog.Any("err", err))
+		return err
+	}
 
 	if versionTarget == nil {
 		return c.String(404, "target not found, modID:"+modID+" versionID:"+versionID+" target:"+target)
 	}
 
 	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
-		postgres.IncrementVersionDownloads(c.Request().Context(), version)
+		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
 	return c.Redirect(302, storage.GenerateDownloadLink(versionTarget.Key))
@@ -340,18 +462,29 @@ func downloadModVersionTarget(c echo.Context) error {
 func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modId")
 
-	mod := postgres.GetModByIDOrReference(c.Request().Context(), modID)
+	mod, err := db.From(c.Request().Context()).Mod.Query().
+		WithTags().
+		Where(mod2.Or(mod2.ID(modID), mod2.ModReference(modID))).
+		First(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching mod", slog.Any("err", err))
+		return nil, &ErrorModNotFound
+	}
 
 	if mod == nil {
 		return nil, &ErrorModNotFound
 	}
 
-	versions := postgres.GetAllModVersionsWithDependencies(c.Request().Context(), mod.ID)
-
-	converted := make([]*Version, len(versions))
-	for k, v := range versions {
-		converted[k] = TinyVersionToVersion(&v)
+	versions, err := mod.QueryVersions().
+		WithDependencies().
+		WithTargets().
+		Where(version2.Approved(true), version2.Denied(false)).
+		Select(version2.FieldHash, version2.FieldSize, version2.FieldSmlVersion, version2.FieldVersion).
+		All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
+		return nil, &ErrorVersionNotFound
 	}
 
-	return converted, nil
+	return (*conv.VersionImpl)(nil).ConvertSlice(versions), nil
 }

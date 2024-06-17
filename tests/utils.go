@@ -2,19 +2,29 @@ package tests
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
+	"log/slog"
 	"sync"
 
+	"github.com/Vilsol/slox"
 	"github.com/machinebox/graphql"
-	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 
-	"github.com/satisfactorymodding/smr-api"
+	smr "github.com/satisfactorymodding/smr-api/api"
 	"github.com/satisfactorymodding/smr-api/auth"
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
+	"github.com/satisfactorymodding/smr-api/validation"
+
+	// Import pgx
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func setup() (context.Context, *graphql.Client, func()) {
+	validation.StaticPath = "../static"
+
 	client := graphql.NewClient("http://localhost:5020/v2/query")
 
 	ctx := smr.Initialize(context.Background())
@@ -25,13 +35,39 @@ func setup() (context.Context, *graphql.Client, func()) {
 		TableName string
 	}
 
-	err := postgres.DBCtx(ctx).Raw(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`).Scan(&out).Error
+	connection, err := sql.Open("pgx", fmt.Sprintf(
+		"sslmode=disable host=%s port=%d user=%s dbname=%s password=%s",
+		viper.GetString("database.postgres.host"),
+		viper.GetInt("database.postgres.port"),
+		viper.GetString("database.postgres.user"),
+		viper.GetString("database.postgres.db"),
+		viper.GetString("database.postgres.pass"),
+	))
 	if err != nil {
 		panic(err)
 	}
 
+	query, err := connection.Query(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`)
+	if err != nil {
+		panic(err)
+	}
+	defer query.Close()
+
+	for query.Next() {
+		row := struct {
+			TableName string
+		}{}
+
+		err = query.Scan(&row.TableName)
+		if err != nil {
+			panic(err)
+		}
+
+		out = append(out, row)
+	}
+
 	for _, name := range out {
-		err := postgres.DBCtx(ctx).Exec(`DROP TABLE IF EXISTS ` + name.TableName + ` CASCADE`).Error
+		_, err = connection.Exec(`DROP TABLE IF EXISTS ` + name.TableName + ` CASCADE`)
 		if err != nil {
 			panic(err)
 		}
@@ -53,54 +89,32 @@ func setup() (context.Context, *graphql.Client, func()) {
 		}
 	}()
 
-	return context.Background(), client, func() {
+	return ctx, client, func() {
 		stopChannel <- true
 		wg.Wait()
 	}
 }
 
 func makeUser(ctx context.Context) (string, string, error) {
-	user := postgres.User{
-		SMRModel: postgres.SMRModel{
-			ID: util.GenerateUniqueID(),
-		},
-		Email:    "test_user@ficsit.app",
-		Username: "test_user",
-	}
+	user := db.From(ctx).User.
+		Create().
+		SetEmail("test_user@ficsit.app").
+		SetUsername("test_user").
+		SaveX(ctx)
 
-	err := postgres.DBCtx(ctx).Create(&user).Error
-	if err != nil {
-		return "", "", err
-	}
+	slox.Info(ctx, "created fake test_user", slog.String("id", user.ID))
 
-	log.Info().Str("id", user.ID).Msg("created fake test_user")
+	db.From(ctx).UserGroup.Create().SetUser(user).SetGroupID(auth.GroupAdmin.ID).SaveX(ctx)
 
-	userGroup := postgres.UserGroup{
-		UserID:  user.ID,
-		GroupID: auth.GroupAdmin.ID,
-	}
+	slox.Info(ctx, "created user admin group")
 
-	err = postgres.DBCtx(ctx).Create(&userGroup).Error
-	if err != nil {
-		return "", "", err
-	}
+	session := db.From(ctx).UserSession.
+		Create().
+		SetUser(user).
+		SetToken(util.GenerateUserToken()).
+		SaveX(ctx)
 
-	log.Info().Msg("created user admin group")
-
-	session := postgres.UserSession{
-		SMRModel: postgres.SMRModel{
-			ID: util.GenerateUniqueID(),
-		},
-		User:  user,
-		Token: util.GenerateUserToken(),
-	}
-
-	err = postgres.DBCtx(ctx).Create(&session).Error
-	if err != nil {
-		return "", "", err
-	}
-
-	log.Info().Str("token", session.Token).Msg("created fake user session")
+	slox.Info(ctx, "created fake user session", slog.String("token", session.Token))
 
 	return session.Token, user.ID, nil
 }

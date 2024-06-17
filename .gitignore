@@ -60,6 +60,7 @@ modules.xml
 
 config.json
 vendor/
-/docs/
 /paks/
 *.smod
+
+/.direnv

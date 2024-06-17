@@ -2,12 +2,14 @@ package db
 
 import (
 	"context"
+	"log/slog"
 	"regexp"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	"github.com/Vilsol/slox"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/redis"
 )
 
@@ -18,7 +20,7 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 		for {
 			start := time.Now()
 			keys := redis.GetAllKeys()
-			log.Info().Msgf("Fetched: %d keys in %s", len(keys), time.Since(start).String())
+			slox.Info(ctx, "statistics fetched", slog.Int("keys", len(keys)), slog.Duration("took", time.Since(start)))
 			resultMap := make(map[string]map[string]map[string]uint)
 			for _, key := range keys {
 				if matches := keyRegex.FindStringSubmatch(key); matches != nil {
@@ -41,68 +43,98 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 			for entityType, entityValue := range resultMap {
 				for action, actionValue := range entityValue {
 					for entityID, count := range actionValue {
-						updateTx := postgres.DBCtx(ctx).Begin()
-						ctxWithTx := postgres.ContextWithDB(ctx, updateTx)
-						switch entityType {
-						case "mod":
-							if action == "view" {
-								mod := postgres.GetModByID(ctxWithTx, entityID)
-								if mod != nil {
-									currentHotness := mod.Hotness
-									if currentHotness > 4 {
-										// Preserve some of the hotness
-										currentHotness /= 4
+						err := Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+							switch entityType {
+							case "mod":
+								if action == "view" {
+									mod, err := tx.Mod.Get(ctx, entityID)
+									if err != nil {
+										return err
 									}
-									updateTx.Model(&mod).UpdateColumns(postgres.Mod{Hotness: currentHotness + count})
+
+									if mod != nil {
+										currentHotness := mod.Hotness
+										if currentHotness > 4 {
+											// Preserve some of the hotness
+											currentHotness /= 4
+										}
+
+										return mod.Update().SetHotness(currentHotness + count).Exec(ctx)
+									}
+								}
+							case "version":
+								if action == "download" {
+									version, err := tx.Version.Get(ctx, entityID)
+									if err != nil {
+										return err
+									}
+
+									if version != nil {
+										currentHotness := version.Hotness
+										if currentHotness > 4 {
+											// Preserve some of the popularity
+											currentHotness /= 4
+										}
+										return version.Update().SetHotness(currentHotness + count).Exec(ctx)
+									}
 								}
 							}
-						case "version":
-							if action == "download" {
-								version := postgres.GetVersion(ctxWithTx, entityID)
-								if version != nil {
-									currentHotness := version.Hotness
-									if currentHotness > 4 {
-										// Preserve some of the popularity
-										currentHotness /= 4
-									}
-									updateTx.Model(&version).UpdateColumns(postgres.Version{Hotness: currentHotness + count})
-								}
-							}
+
+							return nil
+						}, nil)
+						if err != nil {
+							slox.From(ctx).Error("failed updating statistics", slog.Any("err", err))
 						}
-						updateTx.Commit()
 					}
 				}
 			}
 
 			type Result struct {
-				ModID     string
-				Hotness   uint
-				Downloads uint
+				ModID     string `json:"mod_id"`
+				Hotness   uint   `json:"hotness"`
+				Downloads uint   `json:"downloads"`
 			}
 
 			var resultRows []Result
 
-			postgres.DBCtx(ctx).Raw("SELECT mod_id, SUM(hotness) AS hotness, SUM(downloads) AS downloads FROM versions GROUP BY mod_id").Scan(&resultRows)
-
-			for _, row := range resultRows {
-				updateTx := postgres.DBCtx(ctx).Begin()
-				ctxWithTx := postgres.ContextWithDB(ctx, updateTx)
-				mod := postgres.GetModByID(ctxWithTx, row.ModID)
-				if mod != nil {
-					currentPopularity := mod.Popularity
-					if currentPopularity > 4 {
-						// Preserve some of the popularity
-						currentPopularity /= 4
-					}
-					updateTx.Model(&mod).UpdateColumns(postgres.Mod{
-						Popularity: currentPopularity + row.Hotness,
-						Downloads:  row.Downloads,
-					})
-				}
-				updateTx.Commit()
+			err := From(ctx).Version.
+				Query().
+				GroupBy("mod_id").
+				Aggregate(
+					ent.As(ent.Sum(version.FieldHotness), "hotness"),
+					ent.As(ent.Sum(version.FieldDownloads), "downloads"),
+				).
+				Scan(ctx, &resultRows)
+			if err != nil {
+				slox.From(ctx).Error("failed summing version data", slog.Any("err", err))
+				continue
 			}
 
-			log.Info().Msgf("Statistics Updated! Took %s", time.Since(start).String())
+			for _, row := range resultRows {
+				err := Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+					mod, err := tx.Mod.Get(ctx, row.ModID)
+					if err != nil {
+						return err
+					}
+
+					if mod != nil {
+						currentPopularity := mod.Popularity
+						if currentPopularity > 4 {
+							// Preserve some of the popularity
+							currentPopularity /= 4
+						}
+						return mod.Update().SetPopularity(currentPopularity + row.Hotness).SetDownloads(row.Downloads).Exec(ctx)
+					}
+
+					return nil
+				}, nil)
+				if err != nil {
+					slox.From(ctx).Error("failed updating mod data", slog.Any("err", err))
+					continue
+				}
+			}
+
+			slox.Info(ctx, "statistics updated", slog.Duration("took", time.Since(start)))
 			time.Sleep(time.Minute)
 		}
 	}()

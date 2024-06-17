@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"path"
 	"path/filepath"
 	"sort"
@@ -17,14 +18,15 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/Vilsol/slox"
+	"github.com/avast/retry-go"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/satisfactorymodding/smr-api/db/postgres"
+	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/proto/parser"
 	"github.com/satisfactorymodding/smr-api/storage"
 )
@@ -64,16 +66,17 @@ var (
 	uPluginJSONSchema gojsonschema.JSONLoader
 )
 
+var StaticPath = "static/"
+
 func InitializeValidator() {
-	absPath, err := filepath.Abs("static/data-json-schema.json")
+	absPath, err := filepath.Abs(filepath.Join(StaticPath, "data-json-schema.json"))
 	if err != nil {
 		panic(err)
 	}
 
 	dataJSONSchema = gojsonschema.NewReferenceLoader("file://" + strings.ReplaceAll(absPath, "\\", "/"))
 
-	absPath, err = filepath.Abs("static/uplugin-json-schema.json")
-
+	absPath, err = filepath.Abs(filepath.Join(StaticPath, "uplugin-json-schema.json"))
 	if err != nil {
 		panic(err)
 	}
@@ -135,17 +138,20 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 
 	if withMetadata {
 		// Extract all possible metadata
-		conn, err := grpc.Dial(viper.GetString("extractor_host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc.NewClient(viper.GetString("extractor_host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to connect to metadata server")
+			return nil, fmt.Errorf("failed to connect to metadata server: %w", err)
 		}
 		defer conn.Close()
 
 		engineVersion := "4.26"
 
 		//nolint
-		if postgres.DBCtx(nil) != nil {
-			smlVersions := postgres.GetSMLVersions(ctx, nil)
+		if db.From(ctx) != nil {
+			smlVersions, err := db.From(ctx).SmlVersion.Query().All(ctx)
+			if err != nil {
+				return nil, err
+			}
 
 			// Sort decrementing by version
 			sort.Slice(smlVersions, func(a, b int) bool {
@@ -155,7 +161,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			for _, version := range smlVersions {
 				constraint, err := semver.NewConstraint(modInfo.SMLVersion)
 				if err != nil {
-					return nil, errors.Wrap(err, "failed to create semver constraint")
+					return nil, fmt.Errorf("failed to create semver constraint: %w", err)
 				}
 
 				if constraint.Check(semver.MustParse(version.Version)) {
@@ -163,69 +169,86 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 					break
 				}
 			}
+		} else {
+			slox.Warn(ctx, "no database context provided to validator")
 		}
 
-		parserClient := parser.NewParserClient(conn)
-		stream, err := parserClient.Parse(ctx, &parser.ParseRequest{
-			ZipData:       body,
-			EngineVersion: engineVersion,
-		},
-			grpc.MaxCallSendMsgSize(1024*1024*1024), // 1GB
-			grpc.MaxCallRecvMsgSize(1024*1024*1024), // 1GB
-		)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse mod")
-		}
+		slox.Info(ctx, "decided engine version", slog.String("version", engineVersion))
 
-		defer func(stream parser.Parser_ParseClient) {
-			err := stream.CloseSend()
+		if err := retry.Do(func() error {
+			parserClient := parser.NewParserClient(conn)
+			stream, err := parserClient.Parse(ctx, &parser.ParseRequest{
+				ZipData:       body,
+				EngineVersion: engineVersion,
+			},
+				grpc.MaxCallSendMsgSize(1024*1024*1024), // 1GB
+				grpc.MaxCallRecvMsgSize(1024*1024*1024), // 1GB
+			)
 			if err != nil {
-				log.Ctx(ctx).Err(err).Msg("failed closing parser stream")
-			}
-		}(stream)
-
-		beforeUpload := time.Now().Add(-time.Minute)
-		for {
-			asset, err := stream.Recv()
-			if err != nil {
-				//nolint
-				if errors.Is(err, io.EOF) || err == io.EOF {
-					break
-				}
-				return nil, errors.Wrap(err, "failed reading parser stream")
+				return fmt.Errorf("failed to parse mod: %w", err)
 			}
 
-			log.Ctx(ctx).Info().Str("path", asset.GetPath()).Msg("received asset from parser")
-
-			if asset.Path == "metadata.json" {
-				out, err := ExtractMetadata(asset.Data)
+			defer func(stream parser.Parser_ParseClient) {
+				err := stream.CloseSend()
 				if err != nil {
-					return nil, err
+					slox.Error(ctx, "failed closing parser stream", slog.Any("err", err))
 				}
-				modInfo.Metadata = append(modInfo.Metadata, out)
+			}(stream)
+
+			beforeUpload := time.Now().Add(-time.Minute)
+			for {
+				asset, err := stream.Recv()
+				if err != nil {
+					//nolint
+					if errors.Is(err, io.EOF) || err == io.EOF {
+						break
+					}
+					return fmt.Errorf("failed reading parser stream: %w", err)
+				}
+
+				slox.Info(ctx, "received asset from parser", slog.String("path", asset.GetPath()))
+
+				if asset.Path == "metadata.json" {
+					out, err := ExtractMetadata(asset.Data)
+					if err != nil {
+						return err
+					}
+					modInfo.Metadata = append(modInfo.Metadata, out)
+				}
+
+				storage.UploadModAsset(ctx, modInfo.ModReference, asset.GetPath(), asset.GetData())
 			}
 
-			storage.UploadModAsset(ctx, modInfo.ModReference, asset.GetPath(), asset.GetData())
-		}
+			storage.DeleteOldModAssets(ctx, modInfo.ModReference, beforeUpload)
 
-		storage.DeleteOldModAssets(modInfo.ModReference, beforeUpload)
+			return nil
+		},
+			retry.Attempts(10),
+			retry.Delay(time.Second*10),
+			retry.DelayType(retry.FixedDelay),
+			retry.OnRetry(func(n uint, err error) {
+				if n > 0 {
+					slox.Info(ctx, "retrying to extract metadata", slog.Uint64("n", uint64(n)), slog.Any("err", err))
+				}
+			})); err != nil {
+			return nil, err //nolint
+		}
 	}
 
 	modInfo.Size = int64(len(body))
 
 	hash := sha256.New()
 	_, err = hash.Write(body)
-
 	if err != nil {
-		log.Err(err).Msg("error hashing pak")
+		slox.Error(ctx, "error hashing pak", slog.Any("err", err))
 	}
 
 	modInfo.Hash = hex.EncodeToString(hash.Sum(nil))
 
 	version, err := semver.StrictNewVersion(modInfo.Version)
 	if err != nil {
-		log.Err(err).Msg("error parsing semver")
-		return nil, errors.Wrap(err, "error parsing semver")
+		slox.Error(ctx, "error parsing semver", slog.Any("err", err))
+		return nil, fmt.Errorf("error parsing semver: %w", err)
 	}
 
 	modInfo.Semver = version
@@ -261,7 +284,6 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 
 	var modInfo ModInfo
 	err = json.Unmarshal(dataJSON, &modInfo)
-
 	if err != nil {
 		return nil, errors.New("invalid data.json")
 	}
@@ -360,7 +382,6 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 
 	var uPlugin UPlugin
 	err = json.Unmarshal(uPluginJSON, &uPlugin)
-
 	if err != nil {
 		return nil, errors.New("invalid " + uPluginFile.Name)
 	}
@@ -481,12 +502,12 @@ func validateMultiTargetPlugin(archive *zip.Reader, withValidation bool, modRefe
 		for _, uPluginFile := range uPluginFiles {
 			file, err := uPluginFile.Open()
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to open .uplugin file")
+				return nil, fmt.Errorf("failed to open .uplugin file: %w", err)
 			}
 			data, err := io.ReadAll(file)
 			file.Close()
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to read .uplugin file")
+				return nil, fmt.Errorf("failed to read .uplugin file: %w", err)
 			}
 
 			if lastData != nil && !bytes.Equal(lastData, data) {
@@ -499,7 +520,7 @@ func validateMultiTargetPlugin(archive *zip.Reader, withValidation bool, modRefe
 	// All the .uplugin files should be the same at this point (assuming validation is enabled)
 	modInfo, err := validateUPluginJSON(archive, uPluginFiles[0], withValidation, modReference)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to validate multi-target plugin")
+		return nil, fmt.Errorf("failed to validate multi-target plugin: %w", err)
 	}
 
 	modInfo.Targets = targets
