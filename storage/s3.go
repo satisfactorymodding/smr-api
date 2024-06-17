@@ -258,7 +258,7 @@ func (s3o *S3) List(prefix string) ([]Object, error) {
 	err := s3o.S3Client.ListObjectsPages(&s3.ListObjectsInput{
 		Bucket: aws.String(viper.GetString("storage.bucket")),
 		Prefix: aws.String(prefix),
-	}, func(output *s3.ListObjectsOutput, b bool) bool {
+	}, func(output *s3.ListObjectsOutput, _ bool) bool {
 		for _, obj := range output.Contents {
 			out = append(out, Object{
 				Key:          obj.Key,
