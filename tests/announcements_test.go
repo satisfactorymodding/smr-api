@@ -26,7 +26,7 @@ func TestAnnouncements(t *testing.T) {
 	testza.AssertNoError(t, err)
 
 	// Run Twice to detect any cache issues
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		t.Run("Loop"+strconv.Itoa(i), func(t *testing.T) {
 			var announcementID string
 

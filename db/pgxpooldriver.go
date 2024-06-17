@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -88,6 +89,8 @@ func (e *EntPgxpoolDriver) BeginTx(ctx context.Context, opts *sql.TxOptions) (di
 
 	pgxOpts, err := getPgxTxOptions(opts)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return nil, err
 	}
 	tx, err := e.pool.BeginTx(ctx, *pgxOpts)

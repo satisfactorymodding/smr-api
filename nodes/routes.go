@@ -25,7 +25,7 @@ func RegisterModsRoutes(router *echo.Group) {
 
 	router.GET("/count", dataWrapper(getModCount))
 
-	router.GET("/:modIds", dataWrapper(getModsByIds))
+	router.GET("/:modIds", dataWrapper(getModsByIDs))
 	router.GET("/:modIds/latest-versions", dataWrapper(getModsLatestVersions))
 }
 

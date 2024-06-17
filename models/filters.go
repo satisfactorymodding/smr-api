@@ -21,14 +21,14 @@ type VersionFilter struct {
 	OrderBy *generated.VersionFields `json:"order_by"`
 	Order   *generated.Order         `json:"order"`
 	Search  *string                  `json:"search" validate:"omitempty,min=3"`
-	Ids     []string                 `json:"ids" validate:"omitempty,max=100"`
+	IDs     []string                 `json:"ids" validate:"omitempty,max=100"`
 	Fields  []string                 `json:"-"`
 }
 
 func (f *VersionFilter) IsDefault(ignoreLimits bool) bool {
 	return ((f.Limit != nil && *f.Limit == 10) || ignoreLimits) &&
 		f.Offset != nil && *f.Offset == 0 &&
-		f.Ids == nil &&
+		f.IDs == nil &&
 		f.Order != nil && *f.Order == generated.OrderDesc &&
 		f.OrderBy != nil && *f.OrderBy == generated.VersionFieldsCreatedAt
 }
@@ -41,7 +41,7 @@ func DefaultVersionFilter() *VersionFilter {
 	return &VersionFilter{
 		Limit:   &limit,
 		Offset:  &offset,
-		Ids:     nil,
+		IDs:     nil,
 		Order:   &order,
 		OrderBy: &orderBy,
 		Fields:  nil,
@@ -101,7 +101,7 @@ type ModFilter struct {
 	OrderBy    *generated.ModFields `json:"order_by"`
 	Order      *generated.Order     `json:"order"`
 	Search     *string              `json:"search" validate:"omitempty,min=3"`
-	Ids        []string             `json:"ids" validate:"omitempty,max=100"`
+	IDs        []string             `json:"ids" validate:"omitempty,max=100"`
 	References []string             `json:"references" validate:"omitempty,max=100"`
 	Hidden     *bool                `json:"hidden"`
 	Fields     []string             `json:"-"`
@@ -116,7 +116,7 @@ func DefaultModFilter() *ModFilter {
 	return &ModFilter{
 		Limit:   &limit,
 		Offset:  &offset,
-		Ids:     nil,
+		IDs:     nil,
 		Order:   &order,
 		OrderBy: &orderBy,
 		Fields:  nil,
@@ -179,7 +179,7 @@ type GuideFilter struct {
 	OrderBy *generated.GuideFields `json:"order_by"`
 	Order   *generated.Order       `json:"order"`
 	Search  *string                `json:"search" validate:"omitempty,min=3"`
-	Ids     []string               `json:"ids" validate:"omitempty,max=100"`
+	IDs     []string               `json:"ids" validate:"omitempty,max=100"`
 	TagIDs  []string               `json:"tagIDs" validate:"omitempty,max=100"`
 }
 
@@ -199,7 +199,7 @@ func DefaultGuideFilter() *GuideFilter {
 	return &GuideFilter{
 		Limit:   &limit,
 		Offset:  &offset,
-		Ids:     nil,
+		IDs:     nil,
 		Order:   &order,
 		OrderBy: &orderBy,
 	}
@@ -229,7 +229,7 @@ type SMLVersionFilter struct {
 	OrderBy *generated.SMLVersionFields `json:"order_by"`
 	Order   *generated.Order            `json:"order"`
 	Search  *string                     `json:"search" validate:"omitempty,min=3"`
-	Ids     []string                    `json:"ids" validate:"omitempty,max=100"`
+	IDs     []string                    `json:"ids" validate:"omitempty,max=100"`
 }
 
 func DefaultSMLVersionFilter() *SMLVersionFilter {
@@ -240,7 +240,7 @@ func DefaultSMLVersionFilter() *SMLVersionFilter {
 	return &SMLVersionFilter{
 		Limit:   &limit,
 		Offset:  &offset,
-		Ids:     nil,
+		IDs:     nil,
 		Order:   &order,
 		OrderBy: &orderBy,
 	}
@@ -270,8 +270,8 @@ func ApplyChanges(changes interface{}, to interface{}) error {
 		TagName:     "json",
 		Result:      to,
 		ZeroFields:  true,
-		DecodeHook: func(a reflect.Type, b reflect.Type, v interface{}) (interface{}, error) {
-			if reflect.PtrTo(b).Implements(reflect.TypeOf((*graphql.Unmarshaler)(nil)).Elem()) {
+		DecodeHook: func(_ reflect.Type, b reflect.Type, v interface{}) (interface{}, error) {
+			if reflect.PointerTo(b).Implements(reflect.TypeOf((*graphql.Unmarshaler)(nil)).Elem()) {
 				resultType := reflect.New(b)
 				result := resultType.MethodByName("UnmarshalGQL").Call([]reflect.Value{reflect.ValueOf(v)})
 				err, _ := result[0].Interface().(error)

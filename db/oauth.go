@@ -32,7 +32,6 @@ func CompleteOAuthFlow(ctx context.Context, u *oauth.UserData, userAgent string)
 
 	newUser := false
 	if ent.IsNotFound(err) {
-		var err error
 		create := From(ctx).User.
 			Create().
 			SetEmail(u.Email).
@@ -67,7 +66,7 @@ func CompleteOAuthFlow(ctx context.Context, u *oauth.UserData, userAgent string)
 		}
 
 		if update != nil {
-			if err := update.Exec(ctx); err != nil {
+			if err = update.Exec(ctx); err != nil {
 				return nil, err
 			}
 		}

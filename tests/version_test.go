@@ -152,7 +152,7 @@ func TestVersions(t *testing.T) {
 		chunkSize := int64(1e+7)
 		chunkCount := int(math.Ceil(float64(stat.Size()) / float64(chunkSize))) // Split in 10MB chunks
 
-		for i := 0; i < chunkCount; i++ {
+		for i := range chunkCount {
 			t.Run("Part"+strconv.Itoa(i), func(t *testing.T) {
 				_, err = f.Seek(int64(i)*chunkSize, 0)
 				testza.AssertNoError(t, err)

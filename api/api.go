@@ -318,7 +318,7 @@ func installExportPipeline(ctx context.Context) func() {
 	client := otlptracehttp.NewClient()
 	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
-		slog.Error("creating OTLP trace exporter", slog.Any("err", err))
+		slog.ErrorContext(ctx, "creating OTLP trace exporter", slog.Any("err", err))
 		os.Exit(1)
 	}
 
@@ -331,7 +331,7 @@ func installExportPipeline(ctx context.Context) func() {
 
 	return func() {
 		if err := tracerProvider.Shutdown(ctx); err != nil {
-			slog.Error("stopping tracer provider", slog.Any("err", err))
+			slog.ErrorContext(ctx, "stopping tracer provider", slog.Any("err", err))
 			os.Exit(1)
 		}
 	}

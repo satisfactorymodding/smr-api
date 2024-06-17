@@ -18,12 +18,12 @@ import (
 
 func UserHas(ctx context.Context, role *auth.Role, usr *ent.User) bool {
 	groups := auth.GetRoleGroups(role)
-	groupIds := make([]string, len(groups))
+	groupIDs := make([]string, len(groups))
 	for i, group := range groups {
-		groupIds[i] = group.ID
+		groupIDs[i] = group.ID
 	}
 
-	exist, err := usr.QueryGroups().Where(usergroup.GroupIDIn(groupIds...)).Exist(ctx)
+	exist, err := usr.QueryGroups().Where(usergroup.GroupIDIn(groupIDs...)).Exist(ctx)
 	if err != nil {
 		slox.Error(ctx, "failed retrieving user groups", slog.Any("err", err))
 		return false

@@ -29,6 +29,7 @@ func WrapMutationTrace(ctx context.Context, action string) (TraceWrapper, contex
 }
 
 func wrapTrace(ctx context.Context, action string, actionType string) (TraceWrapper, context.Context) {
+	//nolint:spancheck
 	spanCtx, span := otel.Tracer("gql").Start(ctx, "GraphQL "+action, trace.WithAttributes(
 		attribute.String("action_type", "API.graphql."+actionType),
 	))

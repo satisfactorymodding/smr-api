@@ -387,7 +387,6 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 		}
 
 		err = copyModFileToArchZip(file, zipWriter, trimmedName)
-
 		if err != nil {
 			slox.Error(ctx, "failed to add file to archive", slog.Any("err", err), slog.String("target", target))
 			return false, "", "", 0
@@ -429,13 +428,11 @@ func copyModFileToArchZip(file *zip.File, zipWriter *zip.Writer, newName string)
 
 	buf := new(bytes.Buffer)
 	_, err = buf.ReadFrom(rawFile)
-
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
 
 	_, err = zipFile.Write(buf.Bytes())
-
 	if err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}

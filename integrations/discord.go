@@ -72,7 +72,7 @@ func NewMod(ctx context.Context, mod *ent.Mod) {
 	req, _ := http.NewRequest("POST", viper.GetString("discord.webhook_url"), bytes.NewReader(payloadJSON))
 
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("Cache-Control", "no-cache")
 
 	res, _ := http.DefaultClient.Do(req)
 
@@ -156,7 +156,7 @@ func NewVersion(ctx context.Context, version *ent.Version) {
 	req, _ := http.NewRequest("POST", viper.GetString("discord.webhook_url"), bytes.NewReader(payloadJSON))
 
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("Cache-Control", "no-cache")
 
 	res, _ := http.DefaultClient.Do(req)
 

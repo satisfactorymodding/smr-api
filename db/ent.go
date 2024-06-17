@@ -109,7 +109,7 @@ func Tx(ctx context.Context, f func(newCtx context.Context, tx *ent.Tx) error, o
 
 	newCtx := context.WithValue(ctx, txKey{}, tx)
 
-	if err := f(newCtx, tx); err != nil {
+	if err = f(newCtx, tx); err != nil {
 		finalError := err
 
 		func() {

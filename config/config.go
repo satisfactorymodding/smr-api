@@ -42,7 +42,7 @@ func InitializeConfig(baseCtx context.Context) context.Context {
 					Level:      slog.LevelDebug,
 					AddSource:  true,
 					TimeFormat: time.RFC3339Nano,
-					ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
+					ReplaceAttr: func(_ []string, attr slog.Attr) slog.Attr {
 						if attr.Key == slog.LevelKey {
 							level := attr.Value.Any().(slog.Level)
 							if level == slog.LevelDebug {
@@ -69,7 +69,7 @@ func InitializeConfig(baseCtx context.Context) context.Context {
 	}
 
 	if err != nil {
-		slog.Warn("config initialized using defaults and environment only!", slog.Any("err", err))
+		slog.WarnContext(baseCtx, "config initialized using defaults and environment only!", slog.Any("err", err))
 	}
 
 	slox.Info(baseCtx, "Config initialized")

@@ -90,7 +90,6 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 		}
 
 		logoData, err = converter.ConvertAnyImageToWebp(ctx, file)
-
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert logo file: %w", err)
 		}

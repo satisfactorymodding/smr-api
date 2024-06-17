@@ -15,8 +15,8 @@ import (
 func ConvertModFilter(query *ent.ModQuery, filter *models.ModFilter, count bool, unapproved bool) *ent.ModQuery {
 	query = query.WithTags()
 
-	if len(filter.Ids) > 0 {
-		query = query.Where(mod.IDIn(filter.Ids...))
+	if len(filter.IDs) > 0 {
+		query = query.Where(mod.IDIn(filter.IDs...))
 	} else if len(filter.References) > 0 {
 		query = query.Where(mod.ModReferenceIn(filter.References...))
 	} else if filter != nil {

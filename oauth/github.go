@@ -36,26 +36,22 @@ func GithubCallback(code string, state string) (*UserData, error) {
 
 	var userData map[string]interface{}
 	err = json.Unmarshal(bytes, &userData)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal user data: %w", err)
 	}
 
 	resp, err = client.Get("https://api.github.com/user/emails")
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user emails: %w", err)
 	}
 
 	bytes, err = io.ReadAll(resp.Body)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to read user emails: %w", err)
 	}
 
 	var userEmailsData []map[string]interface{}
 	err = json.Unmarshal(bytes, &userEmailsData)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal user emails: %w", err)
 	}

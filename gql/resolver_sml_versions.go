@@ -36,7 +36,7 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 
 	var result *ent.SmlVersion
 	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
-		result, err = db.From(ctx).SmlVersion.
+		result, err = tx.SmlVersion.
 			Create().
 			SetVersion(smlVersion.Version).
 			SetSatisfactoryVersion(smlVersion.SatisfactoryVersion).
@@ -51,16 +51,13 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 			return err
 		}
 
-		println(result.ID)
-
 		for _, smlVersionTarget := range smlVersion.Targets {
-			if _, err := db.From(ctx).SmlVersionTarget.
+			if _, err := tx.SmlVersionTarget.
 				Create().
 				SetVersionID(result.ID).
 				SetTargetName(string(smlVersionTarget.TargetName)).
 				SetLink(smlVersionTarget.Link).
 				Save(ctx); err != nil {
-				println("HERE")
 				return err
 			}
 		}
@@ -243,8 +240,8 @@ func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLV
 }
 
 func convertSMLVersionFilter(query *ent.SmlVersionQuery, filter *models.SMLVersionFilter) *ent.SmlVersionQuery {
-	if len(filter.Ids) > 0 {
-		query = query.Where(smlversion.IDIn(filter.Ids...))
+	if len(filter.IDs) > 0 {
+		query = query.Where(smlversion.IDIn(filter.IDs...))
 	} else if filter != nil {
 		query = query.
 			Limit(*filter.Limit).

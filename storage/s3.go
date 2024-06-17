@@ -170,7 +170,8 @@ func (s3o *S3) Rename(from string, to string) error {
 func (s3o *S3) Delete(key string) error {
 	cleanedKey := strings.TrimPrefix(key, "/")
 
-	for i := 0; i < 10; i++ {
+	// Check up to 10 object pages
+	for range 10 {
 		versions, err := s3o.S3Client.ListObjectVersions(&s3.ListObjectVersionsInput{
 			Bucket:    aws.String(viper.GetString("storage.bucket")),
 			KeyMarker: aws.String(cleanedKey),
@@ -182,7 +183,6 @@ func (s3o *S3) Delete(key string) error {
 					Bucket: aws.String(viper.GetString("storage.bucket")),
 					Key:    aws.String(cleanedKey),
 				})
-
 				if err != nil {
 					return fmt.Errorf("failed to delete objects: %w", err)
 				}
@@ -214,7 +214,6 @@ func (s3o *S3) Delete(key string) error {
 				Bucket: aws.String(viper.GetString("storage.bucket")),
 				Key:    aws.String(cleanedKey),
 			})
-
 			if err != nil {
 				return fmt.Errorf("failed to delete objects: %w", err)
 			}
@@ -228,7 +227,6 @@ func (s3o *S3) Delete(key string) error {
 				Objects: objects,
 			},
 		})
-
 		if err != nil {
 			return fmt.Errorf("failed to delete objects: %w", err)
 		}

@@ -33,13 +33,13 @@ type AnalysisResults struct {
 	} `json:"attributes,omitempty"`
 }
 
-func ScanFiles(_ context.Context, files []io.Reader, names []string) (bool, error) {
-	errs, gctx := errgroup.WithContext(context.Background())
+func ScanFiles(ctx context.Context, files []io.Reader, names []string) (bool, error) {
+	errs, gctx := errgroup.WithContext(ctx)
 	fileCount := len(files)
 
 	c := make(chan bool)
 
-	for i := 0; i < fileCount; i++ {
+	for i := range fileCount {
 		count := i
 		errs.Go(func() error {
 			ok, err := scanFile(gctx, files[count], names[count])
@@ -85,7 +85,6 @@ func scanFile(ctx context.Context, file io.Reader, name string) (bool, error) {
 
 		var target AnalysisResults
 		_, err = client.GetData(vt.URL("analyses/%s", analysisID), &target)
-
 		if err != nil {
 			return false, fmt.Errorf("failed to get analysis results: %w", err)
 		}

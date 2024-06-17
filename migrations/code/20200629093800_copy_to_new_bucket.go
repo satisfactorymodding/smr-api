@@ -12,7 +12,7 @@ import (
 
 func init() {
 	migration.NewCodeMigration(
-		func(executionContext interface{}) error {
+		func(_ interface{}) error {
 			ctx, err := db.WithDB(context.Background())
 			if err != nil {
 				return err

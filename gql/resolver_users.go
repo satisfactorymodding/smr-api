@@ -187,11 +187,11 @@ func (r *queryResolver) GetUser(ctx context.Context, userID string) (*generated.
 	return (*conv.UserImpl)(nil).Convert(result), nil
 }
 
-func (r *queryResolver) GetUsers(ctx context.Context, userIds []string) ([]*generated.User, error) {
+func (r *queryResolver) GetUsers(ctx context.Context, userIDs []string) ([]*generated.User, error) {
 	wrapper, ctx := WrapQueryTrace(ctx, "getUsers")
 	defer wrapper.end()
 
-	result, err := db.From(ctx).User.Query().Where(user.IDIn(userIds...)).All(ctx)
+	result, err := db.From(ctx).User.Query().Where(user.IDIn(userIDs...)).All(ctx)
 	if err != nil {
 		return nil, err
 	}

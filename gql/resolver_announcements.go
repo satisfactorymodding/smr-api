@@ -39,7 +39,7 @@ func (r *mutationResolver) DeleteAnnouncement(ctx context.Context, announcementI
 	wrapper, ctx := WrapMutationTrace(ctx, "deleteAnnouncement")
 	defer wrapper.end()
 
-	slog.Info("deleting announcement", slog.String("id", announcementID))
+	slog.InfoContext(ctx, "deleting announcement", slog.String("id", announcementID))
 
 	if err := db.From(ctx).Announcement.DeleteOneID(announcementID).Exec(ctx); err != nil {
 		return false, err

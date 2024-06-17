@@ -453,7 +453,6 @@ func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Versi
 	if dependencies == nil {
 		var err error
 		dependencies, err = dataloader.For(ctx).VersionDependenciesByVersionID.Load(ctx, obj.ID)()
-
 		if err != nil {
 			return nil, err
 		}
@@ -523,8 +522,8 @@ func (r *getMyVersionsResolver) Count(ctx context.Context, _ *generated.GetMyVer
 }
 
 func convertVersionFilter(query *ent.VersionQuery, filter *models.VersionFilter, unapproved bool) *ent.VersionQuery {
-	if len(filter.Ids) > 0 {
-		query = query.Where(version.IDIn(filter.Ids...))
+	if len(filter.IDs) > 0 {
+		query = query.Where(version.IDIn(filter.IDs...))
 	} else if filter != nil {
 		query = query.
 			Limit(*filter.Limit).

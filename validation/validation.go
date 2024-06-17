@@ -77,7 +77,6 @@ func InitializeValidator() {
 	dataJSONSchema = gojsonschema.NewReferenceLoader("file://" + strings.ReplaceAll(absPath, "\\", "/"))
 
 	absPath, err = filepath.Abs(filepath.Join(StaticPath, "uplugin-json-schema.json"))
-
 	if err != nil {
 		panic(err)
 	}
@@ -139,7 +138,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 
 	if withMetadata {
 		// Extract all possible metadata
-		conn, err := grpc.Dial(viper.GetString("extractor_host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc.NewClient(viper.GetString("extractor_host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect to metadata server: %w", err)
 		}
@@ -229,7 +228,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			retry.DelayType(retry.FixedDelay),
 			retry.OnRetry(func(n uint, err error) {
 				if n > 0 {
-					slox.Info(ctx, "retrying to extract metadata", slog.Uint64("n", uint64(n)))
+					slox.Info(ctx, "retrying to extract metadata", slog.Uint64("n", uint64(n)), slog.Any("err", err))
 				}
 			})); err != nil {
 			return nil, err //nolint
@@ -240,7 +239,6 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 
 	hash := sha256.New()
 	_, err = hash.Write(body)
-
 	if err != nil {
 		slox.Error(ctx, "error hashing pak", slog.Any("err", err))
 	}
@@ -286,7 +284,6 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 
 	var modInfo ModInfo
 	err = json.Unmarshal(dataJSON, &modInfo)
-
 	if err != nil {
 		return nil, errors.New("invalid data.json")
 	}
@@ -385,7 +382,6 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 
 	var uPlugin UPlugin
 	err = json.Unmarshal(uPluginJSON, &uPlugin)
-
 	if err != nil {
 		return nil, errors.New("invalid " + uPluginFile.Name)
 	}

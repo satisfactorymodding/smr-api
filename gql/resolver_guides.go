@@ -218,8 +218,8 @@ func (r *guideResolver) User(ctx context.Context, obj *generated.Guide) (*genera
 }
 
 func convertGuideFilter(query *ent.GuideQuery, filter *models.GuideFilter) *ent.GuideQuery {
-	if len(filter.Ids) > 0 {
-		query = query.Where(guide.IDIn(filter.Ids...))
+	if len(filter.IDs) > 0 {
+		query = query.Where(guide.IDIn(filter.IDs...))
 	} else if filter != nil {
 		query = query.
 			Limit(*filter.Limit).

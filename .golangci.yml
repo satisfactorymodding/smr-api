@@ -13,8 +13,6 @@ linters-settings:
       - github.com/satisfactorymodding/smr-api/*
 
   govet:
-    check-shadowing: true
-    enable-all: true
     disable:
       - shadow
 
@@ -31,14 +29,31 @@ linters-settings:
       - blank
       - dot
 
-run:
-  skip-files:
-    - ./generated/generated.go
-    - ./generated/models_gen.go
-  skip-dirs:
-    - ./generated/
+  sloglint:
+    attr-only: true
+    context: scope
+    forbidden-keys:
+      - time
+      - level
+      - msg
+      - source
+
+  spancheck:
+    checks:
+      - end
+      - record-error
+      - set-status
+    extra-start-span-signatures:
+      - github.com/satisfactorymodding/smr-api/gql.WrapQueryTrace:opentelemetry
+      - github.com/satisfactorymodding/smr-api/gql.WrapMutationTrace:opentelemetry
+
 
 issues:
+  exclude-files:
+    - ./generated/generated.go
+    - ./generated/models_gen.go
+  exclude-dirs:
+    - ./generated/
   exclude:
     - should pass the context parameter
 
@@ -66,3 +81,10 @@ linters:
     - gocritic
     - gofumpt
     - nonamedreturns
+    - inamedparam
+    - sloglint
+    - spancheck
+    - intrange
+    - copyloopvar
+    - fatcontext
+    - canonicalheader

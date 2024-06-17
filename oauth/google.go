@@ -37,7 +37,6 @@ func GoogleCallback(code string, state string) (*UserData, error) {
 
 	var userData map[string]interface{}
 	err = json.Unmarshal(bytes, &userData)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal user info: %w", err)
 	}

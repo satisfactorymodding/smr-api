@@ -67,10 +67,10 @@ func (d SoftDeleteMixin) Hooks() []ent.Hook {
 						return next.Mutate(ctx, m) // nolint
 					}
 					mx, ok := m.(interface {
-						SetOp(ent.Op)
+						SetOp(operation ent.Op)
 						Client() *gen.Client
-						SetDeletedAt(time.Time)
-						WhereP(...func(*sql.Selector))
+						SetDeletedAt(deleteTime time.Time)
+						WhereP(selectors ...func(*sql.Selector))
 					})
 					if !ok {
 						return nil, fmt.Errorf("unexpected mutation type %T", m)
@@ -87,7 +87,10 @@ func (d SoftDeleteMixin) Hooks() []ent.Hook {
 }
 
 // P adds a storage-level predicate to the queries and mutations.
-func (d SoftDeleteMixin) P(w interface{ WhereP(...func(*sql.Selector)) }) {
+func (d SoftDeleteMixin) P(w interface {
+	WhereP(selectors ...func(*sql.Selector))
+},
+) {
 	w.WhereP(
 		sql.FieldIsNull(d.Fields()[0].Descriptor().Name),
 	)

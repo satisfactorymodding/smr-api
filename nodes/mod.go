@@ -130,7 +130,7 @@ func getMod(c echo.Context) (interface{}, *ErrorResponse) {
 // @Param modIds path string true "Mod IDs"
 // @Success 200
 // @Router /mods/{modIds} [get]
-func getModsByIds(c echo.Context) (interface{}, *ErrorResponse) {
+func getModsByIDs(c echo.Context) (interface{}, *ErrorResponse) {
 	modID := c.Param("modIds")
 	modIDSplit := strings.Split(modID, ",")
 
