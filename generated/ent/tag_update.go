@@ -71,6 +71,20 @@ func (tu *TagUpdate) SetNillableName(s *string) *TagUpdate {
 	return tu
 }
 
+// SetDescription sets the "description" field.
+func (tu *TagUpdate) SetDescription(s string) *TagUpdate {
+	tu.mutation.SetDescription(s)
+	return tu
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (tu *TagUpdate) SetNillableDescription(s *string) *TagUpdate {
+	if s != nil {
+		tu.SetDescription(*s)
+	}
+	return tu
+}
+
 // AddModIDs adds the "mods" edge to the Mod entity by IDs.
 func (tu *TagUpdate) AddModIDs(ids ...string) *TagUpdate {
 	tu.mutation.AddModIDs(ids...)
@@ -197,6 +211,11 @@ func (tu *TagUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tag.name": %w`, err)}
 		}
 	}
+	if v, ok := tu.mutation.Description(); ok {
+		if err := tag.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Tag.description": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -229,6 +248,9 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := tu.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
+	}
+	if value, ok := tu.mutation.Description(); ok {
+		_spec.SetField(tag.FieldDescription, field.TypeString, value)
 	}
 	if tu.mutation.ModsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -382,6 +404,20 @@ func (tuo *TagUpdateOne) SetNillableName(s *string) *TagUpdateOne {
 	return tuo
 }
 
+// SetDescription sets the "description" field.
+func (tuo *TagUpdateOne) SetDescription(s string) *TagUpdateOne {
+	tuo.mutation.SetDescription(s)
+	return tuo
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (tuo *TagUpdateOne) SetNillableDescription(s *string) *TagUpdateOne {
+	if s != nil {
+		tuo.SetDescription(*s)
+	}
+	return tuo
+}
+
 // AddModIDs adds the "mods" edge to the Mod entity by IDs.
 func (tuo *TagUpdateOne) AddModIDs(ids ...string) *TagUpdateOne {
 	tuo.mutation.AddModIDs(ids...)
@@ -521,6 +557,11 @@ func (tuo *TagUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tag.name": %w`, err)}
 		}
 	}
+	if v, ok := tuo.mutation.Description(); ok {
+		if err := tag.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Tag.description": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -570,6 +611,9 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 	}
 	if value, ok := tuo.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
+	}
+	if value, ok := tuo.mutation.Description(); ok {
+		_spec.SetField(tag.FieldDescription, field.TypeString, value)
 	}
 	if tuo.mutation.ModsCleared() {
 		edge := &sqlgraph.EdgeSpec{

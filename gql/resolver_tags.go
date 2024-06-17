@@ -23,7 +23,7 @@ func (r *mutationResolver) CreateTag(ctx context.Context, tagName string, descri
 		return nil, err
 	}
 
-	result, err := db.From(ctx).Tag.Create().SetName(tagName).Save(ctx)
+	result, err := db.From(ctx).Tag.Create().SetName(tagName).SetDescription(description).Save(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +41,8 @@ func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tags []*gener
 		}
 	}
 
-	result, err := db.From(ctx).Tag.MapCreateBulk(tagNames, func(create *ent.TagCreate, i int) {
-		create.SetName(tagNames[i])
+	result, err := db.From(ctx).Tag.MapCreateBulk(tags, func(create *ent.TagCreate, i int) {
+		create.SetName(tags[i].Name).SetDescription(tags[i].Description)
 	}).Save(ctx)
 	if err != nil {
 		return nil, err
@@ -72,9 +72,7 @@ func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName str
 
 	update := db.From(ctx).Tag.UpdateOneID(id)
 
-	SetINNOEF(&newName, update.SetName)
-
-	result, err := update.SetName(newName).Save(ctx)
+	result, err := update.SetName(newName).SetDescription(description).Save(ctx)
 	if err != nil {
 		return nil, err
 	}

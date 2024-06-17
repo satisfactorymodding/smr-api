@@ -73,6 +73,12 @@ func (tc *TagCreate) SetName(s string) *TagCreate {
 	return tc
 }
 
+// SetDescription sets the "description" field.
+func (tc *TagCreate) SetDescription(s string) *TagCreate {
+	tc.mutation.SetDescription(s)
+	return tc
+}
+
 // SetID sets the "id" field.
 func (tc *TagCreate) SetID(s string) *TagCreate {
 	tc.mutation.SetID(s)
@@ -194,6 +200,14 @@ func (tc *TagCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tag.name": %w`, err)}
 		}
 	}
+	if _, ok := tc.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Tag.description"`)}
+	}
+	if v, ok := tc.mutation.Description(); ok {
+		if err := tag.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Tag.description": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -245,6 +259,10 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if value, ok := tc.mutation.Description(); ok {
+		_spec.SetField(tag.FieldDescription, field.TypeString, value)
+		_node.Description = value
 	}
 	if nodes := tc.mutation.ModsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -372,6 +390,18 @@ func (u *TagUpsert) UpdateName() *TagUpsert {
 	return u
 }
 
+// SetDescription sets the "description" field.
+func (u *TagUpsert) SetDescription(v string) *TagUpsert {
+	u.Set(tag.FieldDescription, v)
+	return u
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *TagUpsert) UpdateDescription() *TagUpsert {
+	u.SetExcluded(tag.FieldDescription)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -469,6 +499,20 @@ func (u *TagUpsertOne) SetName(v string) *TagUpsertOne {
 func (u *TagUpsertOne) UpdateName() *TagUpsertOne {
 	return u.Update(func(s *TagUpsert) {
 		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *TagUpsertOne) SetDescription(v string) *TagUpsertOne {
+	return u.Update(func(s *TagUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *TagUpsertOne) UpdateDescription() *TagUpsertOne {
+	return u.Update(func(s *TagUpsert) {
+		s.UpdateDescription()
 	})
 }
 
@@ -736,6 +780,20 @@ func (u *TagUpsertBulk) SetName(v string) *TagUpsertBulk {
 func (u *TagUpsertBulk) UpdateName() *TagUpsertBulk {
 	return u.Update(func(s *TagUpsert) {
 		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *TagUpsertBulk) SetDescription(v string) *TagUpsertBulk {
+	return u.Update(func(s *TagUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *TagUpsertBulk) UpdateDescription() *TagUpsertBulk {
+	return u.Update(func(s *TagUpsert) {
+		s.UpdateDescription()
 	})
 }
 

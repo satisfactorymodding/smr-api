@@ -51,6 +51,7 @@ func (c *GuideImpl) pEntTagToPGeneratedTag(source *ent.Tag) *generated.Tag {
 		var generatedTag generated.Tag
 		generatedTag.ID = (*source).ID
 		generatedTag.Name = (*source).Name
+		generatedTag.Description = (*source).Description
 		pGeneratedTag = &generatedTag
 	}
 	return pGeneratedTag

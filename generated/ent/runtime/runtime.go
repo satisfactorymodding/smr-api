@@ -224,6 +224,10 @@ func init() {
 	tagDescName := tagFields[0].Descriptor()
 	// tag.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	tag.NameValidator = tagDescName.Validators[0].(func(string) error)
+	// tagDescDescription is the schema descriptor for description field.
+	tagDescDescription := tagFields[1].Descriptor()
+	// tag.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	tag.DescriptionValidator = tagDescDescription.Validators[0].(func(string) error)
 	// tagDescID is the schema descriptor for id field.
 	tagDescID := tagMixinFields0[0].Descriptor()
 	// tag.DefaultID holds the default value on creation for the id field.

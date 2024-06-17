@@ -164,6 +164,11 @@ type NewSMLVersionTarget struct {
 	Link       string     `json:"link"`
 }
 
+type NewTag struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 type NewVersion struct {
 	Changelog string             `json:"changelog"`
 	Stability VersionStabilities `json:"stability"`
@@ -200,8 +205,9 @@ type SMLVersionTarget struct {
 }
 
 type Tag struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type TagFilter struct {

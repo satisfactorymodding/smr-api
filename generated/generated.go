@@ -184,9 +184,9 @@ type ComplexityRoot struct {
 		CreateAnnouncement               func(childComplexity int, announcement NewAnnouncement) int
 		CreateGuide                      func(childComplexity int, guide NewGuide) int
 		CreateMod                        func(childComplexity int, mod NewMod) int
-		CreateMultipleTags               func(childComplexity int, tagNames []string) int
+		CreateMultipleTags               func(childComplexity int, tagNames []*NewTag) int
 		CreateSMLVersion                 func(childComplexity int, smlVersion NewSMLVersion) int
-		CreateTag                        func(childComplexity int, tagName string) int
+		CreateTag                        func(childComplexity int, tagName string, description string) int
 		CreateVersion                    func(childComplexity int, modID string) int
 		DeleteAnnouncement               func(childComplexity int, announcementID string) int
 		DeleteGuide                      func(childComplexity int, guideID string) int
@@ -208,7 +208,7 @@ type ComplexityRoot struct {
 		UpdateModCompatibility           func(childComplexity int, modID string, compatibility CompatibilityInfoInput) int
 		UpdateMultipleModCompatibilities func(childComplexity int, modIDs []string, compatibility CompatibilityInfoInput) int
 		UpdateSMLVersion                 func(childComplexity int, smlVersionID string, smlVersion UpdateSMLVersion) int
-		UpdateTag                        func(childComplexity int, tagID string, newName string) int
+		UpdateTag                        func(childComplexity int, tagID string, newName string, description string) int
 		UpdateUser                       func(childComplexity int, userID string, input UpdateUser) int
 		UpdateVersion                    func(childComplexity int, versionID string, version UpdateVersion) int
 		UploadVersionPart                func(childComplexity int, modID string, versionID string, part int, file graphql.Upload) int
@@ -229,6 +229,7 @@ type ComplexityRoot struct {
 		GetGuides                    func(childComplexity int, filter map[string]interface{}) int
 		GetMe                        func(childComplexity int) int
 		GetMod                       func(childComplexity int, modID string) int
+		GetModAssetList              func(childComplexity int, modReference string) int
 		GetModByIDOrReference        func(childComplexity int, modIDOrReference string) int
 		GetModByReference            func(childComplexity int, modReference string) int
 		GetMods                      func(childComplexity int, filter map[string]interface{}) int
@@ -272,8 +273,9 @@ type ComplexityRoot struct {
 	}
 
 	Tag struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
 	}
 
 	User struct {
@@ -403,9 +405,9 @@ type MutationResolver interface {
 	CreateSMLVersion(ctx context.Context, smlVersion NewSMLVersion) (*SMLVersion, error)
 	UpdateSMLVersion(ctx context.Context, smlVersionID string, smlVersion UpdateSMLVersion) (*SMLVersion, error)
 	DeleteSMLVersion(ctx context.Context, smlVersionID string) (bool, error)
-	CreateTag(ctx context.Context, tagName string) (*Tag, error)
-	CreateMultipleTags(ctx context.Context, tagNames []string) ([]*Tag, error)
-	UpdateTag(ctx context.Context, tagID string, newName string) (*Tag, error)
+	CreateTag(ctx context.Context, tagName string, description string) (*Tag, error)
+	CreateMultipleTags(ctx context.Context, tagNames []*NewTag) ([]*Tag, error)
+	UpdateTag(ctx context.Context, tagID string, newName string, description string) (*Tag, error)
 	DeleteTag(ctx context.Context, tagID string) (bool, error)
 	UpdateUser(ctx context.Context, userID string, input UpdateUser) (*User, error)
 	Logout(ctx context.Context) (bool, error)
@@ -435,6 +437,7 @@ type QueryResolver interface {
 	GetMyMods(ctx context.Context, filter map[string]interface{}) (*GetMyMods, error)
 	GetMyUnapprovedMods(ctx context.Context, filter map[string]interface{}) (*GetMyMods, error)
 	ResolveModVersions(ctx context.Context, filter []*ModVersionConstraint) ([]*ModVersion, error)
+	GetModAssetList(ctx context.Context, modReference string) ([]string, error)
 	GetSMLVersion(ctx context.Context, smlVersionID string) (*SMLVersion, error)
 	GetSMLVersions(ctx context.Context, filter map[string]interface{}) (*GetSMLVersions, error)
 	GetTag(ctx context.Context, tagID string) (*Tag, error)
@@ -1004,7 +1007,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateMultipleTags(childComplexity, args["tagNames"].([]string)), true
+		return e.complexity.Mutation.CreateMultipleTags(childComplexity, args["tagNames"].([]*NewTag)), true
 
 	case "Mutation.createSMLVersion":
 		if e.complexity.Mutation.CreateSMLVersion == nil {
@@ -1028,7 +1031,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateTag(childComplexity, args["tagName"].(string)), true
+		return e.complexity.Mutation.CreateTag(childComplexity, args["tagName"].(string), args["description"].(string)), true
 
 	case "Mutation.createVersion":
 		if e.complexity.Mutation.CreateVersion == nil {
@@ -1287,7 +1290,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateTag(childComplexity, args["tagID"].(string), args["NewName"].(string)), true
+		return e.complexity.Mutation.UpdateTag(childComplexity, args["tagID"].(string), args["NewName"].(string), args["description"].(string)), true
 
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
@@ -1431,6 +1434,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetMod(childComplexity, args["modId"].(string)), true
+
+	case "Query.getModAssetList":
+		if e.complexity.Query.GetModAssetList == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getModAssetList_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetModAssetList(childComplexity, args["modReference"].(string)), true
 
 	case "Query.getModByIdOrReference":
 		if e.complexity.Query.GetModByIDOrReference == nil {
@@ -1764,6 +1779,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SMLVersionTarget.VersionID(childComplexity), true
+
+	case "Tag.description":
+		if e.complexity.Tag.Description == nil {
+			break
+		}
+
+		return e.complexity.Tag.Description(childComplexity), true
 
 	case "Tag.id":
 		if e.complexity.Tag.ID == nil {
@@ -2175,6 +2197,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNewMod,
 		ec.unmarshalInputNewSMLVersion,
 		ec.unmarshalInputNewSMLVersionTarget,
+		ec.unmarshalInputNewTag,
 		ec.unmarshalInputNewVersion,
 		ec.unmarshalInputSMLVersionFilter,
 		ec.unmarshalInputTagFilter,
@@ -2588,6 +2611,8 @@ extend type Query {
     getMyUnapprovedMods(filter: ModFilter): GetMyMods! @isLoggedIn
 
     resolveModVersions(filter: [ModVersionConstraint!]!): [ModVersion!]!
+
+    getModAssetList(modReference: ModID!): [String!]!
 }
 
 ### Mutations
@@ -2694,7 +2719,7 @@ extend type Query {
 ### Mutations
 
 extend type Mutation {
-    createSMLVersion(smlVersion: NewSMLVersion!): SMLVersion @isLoggedIn
+    createSMLVersion(smlVersion: NewSMLVersion!): SMLVersion @canEditSMLVersions @isLoggedIn
     updateSMLVersion(smlVersionId: SMLVersionID!, smlVersion: UpdateSMLVersion!): SMLVersion! @canEditSMLVersions @isLoggedIn
     deleteSMLVersion(smlVersionId: SMLVersionID!): Boolean! @canEditSMLVersions @isLoggedIn
 }
@@ -2705,6 +2730,12 @@ scalar TagName
 type Tag {
     id: TagID!
     name: TagName!
+    description: String!
+}
+
+input NewTag {
+    name: TagName!
+    description: String!
 }
 
 input TagFilter {
@@ -2723,9 +2754,9 @@ extend type Query {
 ### Mutations
 
 extend type Mutation {
-    createTag(tagName: TagName!): Tag @canManageTags @isLoggedIn
-    createMultipleTags(tagNames: [TagName!]!): [Tag!]! @canManageTags @isLoggedIn
-    updateTag(tagID: TagID!, NewName: TagName!): Tag! @canManageTags @isLoggedIn
+    createTag(tagName: TagName!, description: String!): Tag @canManageTags @isLoggedIn
+    createMultipleTags(tagNames: [NewTag!]!): [Tag!]! @canManageTags @isLoggedIn
+    updateTag(tagID: TagID!, NewName: TagName!, description: String!): Tag! @canManageTags @isLoggedIn
     deleteTag(tagID: TagID!): Boolean! @canManageTags @isLoggedIn
 }`, BuiltIn: false},
 	{Name: "../schemas/user.graphql", Input: `### Types
@@ -3132,10 +3163,10 @@ func (ec *executionContext) field_Mutation_createMod_args(ctx context.Context, r
 func (ec *executionContext) field_Mutation_createMultipleTags_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []string
+	var arg0 []*NewTag
 	if tmp, ok := rawArgs["tagNames"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagNames"))
-		arg0, err = ec.unmarshalNTagName2ᚕstringᚄ(ctx, tmp)
+		arg0, err = ec.unmarshalNNewTag2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTagᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3171,6 +3202,15 @@ func (ec *executionContext) field_Mutation_createTag_args(ctx context.Context, r
 		}
 	}
 	args["tagName"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["description"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["description"] = arg1
 	return args, nil
 }
 
@@ -3603,6 +3643,15 @@ func (ec *executionContext) field_Mutation_updateTag_args(ctx context.Context, r
 		}
 	}
 	args["NewName"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["description"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["description"] = arg2
 	return args, nil
 }
 
@@ -3792,6 +3841,21 @@ func (ec *executionContext) field_Query_getGuides_args(ctx context.Context, rawA
 		}
 	}
 	args["filter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getModAssetList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["modReference"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modReference"))
+		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["modReference"] = arg0
 	return args, nil
 }
 
@@ -5798,6 +5862,8 @@ func (ec *executionContext) fieldContext_Guide_tags(_ context.Context, field gra
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Tag_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Tag_description(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
@@ -6882,6 +6948,8 @@ func (ec *executionContext) fieldContext_Mod_tags(_ context.Context, field graph
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Tag_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Tag_description(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
@@ -8689,13 +8757,19 @@ func (ec *executionContext) _Mutation_createSMLVersion(ctx context.Context, fiel
 			return ec.resolvers.Mutation().CreateSMLVersion(rctx, fc.Args["smlVersion"].(NewSMLVersion))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.CanEditSMLVersions == nil {
+				return nil, errors.New("directive canEditSMLVersions is not implemented")
+			}
+			return ec.directives.CanEditSMLVersions(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsLoggedIn == nil {
 				return nil, errors.New("directive isLoggedIn is not implemented")
 			}
-			return ec.directives.IsLoggedIn(ctx, nil, directive0)
+			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
 
-		tmp, err := directive1(rctx)
+		tmp, err := directive2(rctx)
 		if err != nil {
 			return nil, graphql.ErrorOnPath(ctx, err)
 		}
@@ -8972,7 +9046,7 @@ func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graph
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateTag(rctx, fc.Args["tagName"].(string))
+			return ec.resolvers.Mutation().CreateTag(rctx, fc.Args["tagName"].(string), fc.Args["description"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.CanManageTags == nil {
@@ -9023,6 +9097,8 @@ func (ec *executionContext) fieldContext_Mutation_createTag(ctx context.Context,
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Tag_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Tag_description(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
@@ -9056,7 +9132,7 @@ func (ec *executionContext) _Mutation_createMultipleTags(ctx context.Context, fi
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateMultipleTags(rctx, fc.Args["tagNames"].([]string))
+			return ec.resolvers.Mutation().CreateMultipleTags(rctx, fc.Args["tagNames"].([]*NewTag))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.CanManageTags == nil {
@@ -9110,6 +9186,8 @@ func (ec *executionContext) fieldContext_Mutation_createMultipleTags(ctx context
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Tag_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Tag_description(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
@@ -9143,7 +9221,7 @@ func (ec *executionContext) _Mutation_updateTag(ctx context.Context, field graph
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdateTag(rctx, fc.Args["tagID"].(string), fc.Args["NewName"].(string))
+			return ec.resolvers.Mutation().UpdateTag(rctx, fc.Args["tagID"].(string), fc.Args["NewName"].(string), fc.Args["description"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.CanManageTags == nil {
@@ -9197,6 +9275,8 @@ func (ec *executionContext) fieldContext_Mutation_updateTag(ctx context.Context,
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Tag_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Tag_description(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
@@ -11504,6 +11584,61 @@ func (ec *executionContext) fieldContext_Query_resolveModVersions(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getModAssetList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getModAssetList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetModAssetList(rctx, fc.Args["modReference"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getModAssetList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getModAssetList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getSMLVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getSMLVersion(ctx, field)
 	if err != nil {
@@ -11683,6 +11818,8 @@ func (ec *executionContext) fieldContext_Query_getTag(ctx context.Context, field
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Tag_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Tag_description(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
@@ -11744,6 +11881,8 @@ func (ec *executionContext) fieldContext_Query_getTags(ctx context.Context, fiel
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Tag_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Tag_description(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
@@ -13371,6 +13510,50 @@ func (ec *executionContext) fieldContext_Tag_name(_ context.Context, field graph
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type TagName does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tag_description(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tag_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tag_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tag",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -18512,6 +18695,40 @@ func (ec *executionContext) unmarshalInputNewSMLVersionTarget(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewTag(ctx context.Context, obj interface{}) (NewTag, error) {
+	var it NewTag
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "description"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNTagName2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewVersion(ctx context.Context, obj interface{}) (NewVersion, error) {
 	var it NewVersion
 	asMap := map[string]interface{}{}
@@ -21070,6 +21287,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getModAssetList":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getModAssetList(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getSMLVersion":
 			field := field
 
@@ -21527,6 +21766,11 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 			}
 		case "name":
 			out.Values[i] = ec._Tag_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._Tag_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -23344,6 +23588,28 @@ func (ec *executionContext) unmarshalNNewSMLVersionTarget2ᚖgithubᚗcomᚋsati
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNNewTag2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTagᚄ(ctx context.Context, v interface{}) ([]*NewTag, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*NewTag, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNNewTag2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTag(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNNewTag2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTag(ctx context.Context, v interface{}) (*NewTag, error) {
+	res, err := ec.unmarshalInputNewTag(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNNewVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewVersion(ctx context.Context, v interface{}) (NewVersion, error) {
 	res, err := ec.unmarshalInputNewVersion(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -23489,6 +23755,38 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNTag2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTag(ctx context.Context, sel ast.SelectionSet, v Tag) graphql.Marshaler {
 	return ec._Tag(ctx, sel, &v)
 }
@@ -23575,38 +23873,6 @@ func (ec *executionContext) marshalNTagName2string(ctx context.Context, sel ast.
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNTagName2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNTagName2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNTagName2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNTagName2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx context.Context, v interface{}) (TargetName, error) {
