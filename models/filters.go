@@ -2,10 +2,8 @@ package models
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/mitchellh/mapstructure"
 	"gopkg.in/go-playground/validator.v9"
@@ -270,16 +268,6 @@ func ApplyChanges(changes interface{}, to interface{}) error {
 		TagName:     "json",
 		Result:      to,
 		ZeroFields:  true,
-		DecodeHook: func(_ reflect.Type, b reflect.Type, v interface{}) (interface{}, error) {
-			if reflect.PointerTo(b).Implements(reflect.TypeOf((*graphql.Unmarshaler)(nil)).Elem()) {
-				resultType := reflect.New(b)
-				result := resultType.MethodByName("UnmarshalGQL").Call([]reflect.Value{reflect.ValueOf(v)})
-				err, _ := result[0].Interface().(error)
-				return resultType.Elem().Interface(), err
-			}
-
-			return v, nil
-		},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create decoder: %w", err)
