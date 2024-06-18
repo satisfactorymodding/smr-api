@@ -69,12 +69,12 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return nil
 }
 
-func Initialize(baseCtx context.Context) context.Context {
+func Initialize(baseCtx context.Context) (context.Context, func()) {
 	ctx := config.InitializeConfig(baseCtx)
 
+	var cleanup func()
 	if os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != "" {
-		cleanup := installExportPipeline(ctx)
-		defer cleanup()
+		cleanup = installExportPipeline(ctx)
 	}
 
 	redis.InitializeRedis(ctx)
@@ -93,7 +93,7 @@ func Initialize(baseCtx context.Context) context.Context {
 	validation.InitializeVirusTotal()
 	util.PrintFeatureFlags(ctx)
 
-	return ctx
+	return ctx, cleanup
 }
 
 func Migrate(ctx context.Context) {
@@ -350,7 +350,13 @@ func newResource() *resource.Resource {
 }
 
 func Start() {
-	ctx := Initialize(context.Background())
+	ctx, cleanup := Initialize(context.Background())
+	defer func() {
+		if cleanup != nil {
+			cleanup()
+		}
+	}()
+
 	Migrate(ctx)
 	Setup(ctx)
 	Serve()

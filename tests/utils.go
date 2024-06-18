@@ -27,7 +27,7 @@ func setup() (context.Context, *graphql.Client, func()) {
 
 	client := graphql.NewClient("http://localhost:5020/v2/query")
 
-	ctx := smr.Initialize(context.Background())
+	ctx, _ := smr.Initialize(context.Background())
 
 	redis.FlushRedis()
 
