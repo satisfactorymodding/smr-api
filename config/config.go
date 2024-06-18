@@ -2,24 +2,14 @@ package config
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
-	"os"
-	"time"
 
 	"github.com/Vilsol/slox"
-	"github.com/lmittmann/tint"
+	"github.com/satisfactorymodding/smr-api/logging"
 	"github.com/spf13/viper"
 )
 
 var configDir = "."
-
-const (
-	ansiReset         = "\033[0m"
-	ansiBold          = "\033[1m"
-	ansiWhite         = "\033[38m"
-	ansiBrightMagenta = "\033[95m"
-)
 
 func SetConfigDir(newConfigDir string) {
 	configDir = newConfigDir
@@ -35,33 +25,8 @@ func InitializeConfig(baseCtx context.Context) context.Context {
 
 	err := viper.ReadInConfig() //nolint:ifshort
 
-	if !viper.GetBool("production") {
-		slog.SetDefault(slog.New(
-			StackRewriter{
-				Upstream: tint.NewHandler(os.Stderr, &tint.Options{
-					Level:      slog.LevelDebug,
-					AddSource:  true,
-					TimeFormat: time.RFC3339Nano,
-					ReplaceAttr: func(_ []string, attr slog.Attr) slog.Attr {
-						if attr.Key == slog.LevelKey {
-							level := attr.Value.Any().(slog.Level)
-							if level == slog.LevelDebug {
-								attr.Value = slog.StringValue(ansiBrightMagenta + "DBG" + ansiReset)
-							}
-						} else if attr.Key == slog.MessageKey {
-							attr.Value = slog.StringValue(ansiBold + ansiWhite + fmt.Sprint(attr.Value.Any()) + ansiReset)
-						}
-						return attr
-					},
-				}).WithAttrs([]slog.Attr{slog.String("service", "api")}),
-			},
-		))
-	} else {
-		slog.SetDefault(slog.New(StackRewriter{
-			Upstream: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-				AddSource: true,
-			}),
-		}))
+	if err := logging.SetupLogger(); err != nil {
+		panic(err)
 	}
 
 	if baseCtx == nil {

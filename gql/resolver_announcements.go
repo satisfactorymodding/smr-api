@@ -15,9 +15,6 @@ import (
 )
 
 func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement generated.NewAnnouncement) (*generated.Announcement, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "createAnnouncement")
-	defer wrapper.end()
-
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&announcement); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -36,9 +33,6 @@ func (r *mutationResolver) CreateAnnouncement(ctx context.Context, announcement 
 }
 
 func (r *mutationResolver) DeleteAnnouncement(ctx context.Context, announcementID string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "deleteAnnouncement")
-	defer wrapper.end()
-
 	slog.InfoContext(ctx, "deleting announcement", slog.String("id", announcementID))
 
 	if err := db.From(ctx).Announcement.DeleteOneID(announcementID).Exec(ctx); err != nil {
@@ -49,9 +43,6 @@ func (r *mutationResolver) DeleteAnnouncement(ctx context.Context, announcementI
 }
 
 func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementID string, announcement generated.UpdateAnnouncement) (*generated.Announcement, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "updateAnnouncement")
-	defer wrapper.end()
-
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&announcement); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -70,9 +61,6 @@ func (r *mutationResolver) UpdateAnnouncement(ctx context.Context, announcementI
 }
 
 func (r *queryResolver) GetAnnouncement(ctx context.Context, announcementID string) (*generated.Announcement, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getAnnouncement")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).Announcement.Get(ctx, announcementID)
 	if err != nil {
 		return nil, err
@@ -82,9 +70,6 @@ func (r *queryResolver) GetAnnouncement(ctx context.Context, announcementID stri
 }
 
 func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]*generated.Announcement, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getAnnouncements")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).Announcement.Query().All(ctx)
 	if err != nil {
 		return nil, err
@@ -94,9 +79,6 @@ func (r *queryResolver) GetAnnouncements(ctx context.Context) ([]*generated.Anno
 }
 
 func (r *queryResolver) GetAnnouncementsByImportance(ctx context.Context, importance generated.AnnouncementImportance) ([]*generated.Announcement, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getAnnouncementsByImportance")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).Announcement.
 		Query().
 		Where(announcement.ImportanceEQ(string(importance))).

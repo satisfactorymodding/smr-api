@@ -7,6 +7,7 @@ import (
 
 	"ariga.io/entcache"
 	"github.com/Vilsol/slox"
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
 
@@ -42,6 +43,8 @@ func WithDB(ctx context.Context) (context.Context, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse database connection string: %w", err)
 	}
+
+	poolConfig.ConnConfig.Tracer = otelpgx.NewTracer()
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {

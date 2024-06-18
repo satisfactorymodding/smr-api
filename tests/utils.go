@@ -74,8 +74,8 @@ func setup() (context.Context, *graphql.Client, func()) {
 	}
 
 	smr.Migrate(ctx)
-	smr.Setup(ctx)
-	go smr.Serve()
+	e := smr.Setup(ctx)
+	go smr.Serve(e)
 
 	stopChannel := make(chan bool)
 	var wg sync.WaitGroup
@@ -84,7 +84,7 @@ func setup() (context.Context, *graphql.Client, func()) {
 		defer wg.Done()
 
 		<-stopChannel
-		if err := smr.Stop(); err != nil {
+		if err := smr.Stop(e); err != nil {
 			panic(err)
 		}
 	}()

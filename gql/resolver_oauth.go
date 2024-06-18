@@ -15,9 +15,6 @@ import (
 )
 
 func (r *queryResolver) GetOAuthOptions(ctx context.Context, callbackURL string) (*generated.OAuthOptions, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getOAuthOptions")
-	defer wrapper.end()
-
 	unescapedURL, err := url.PathUnescape(callbackURL)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unescape callback url: %w", err)
@@ -33,9 +30,6 @@ func (r *queryResolver) GetOAuthOptions(ctx context.Context, callbackURL string)
 }
 
 func (r *mutationResolver) OAuthGithub(ctx context.Context, code string, state string) (*generated.UserSession, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "oAuthGithub")
-	defer wrapper.end()
-
 	if code == "" {
 		return nil, errors.New("invalid oauth code")
 	}
@@ -59,9 +53,6 @@ func (r *mutationResolver) OAuthGithub(ctx context.Context, code string, state s
 }
 
 func (r *mutationResolver) OAuthGoogle(ctx context.Context, code string, state string) (*generated.UserSession, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "oAuthGoogle")
-	defer wrapper.end()
-
 	if code == "" {
 		return nil, errors.New("invalid oauth code")
 	}
@@ -85,9 +76,6 @@ func (r *mutationResolver) OAuthGoogle(ctx context.Context, code string, state s
 }
 
 func (r *mutationResolver) OAuthFacebook(ctx context.Context, code string, state string) (*generated.UserSession, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "oAuthFacebook")
-	defer wrapper.end()
-
 	if code == "" {
 		return nil, errors.New("invalid oauth code")
 	}

@@ -26,9 +26,6 @@ import (
 )
 
 func (r *mutationResolver) CreateGuide(ctx context.Context, g generated.NewGuide) (*generated.Guide, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "createGuide")
-	defer wrapper.end()
-
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&g); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -80,9 +77,6 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, g generated.NewGuide
 }
 
 func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, g generated.UpdateGuide) (*generated.Guide, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "updateGuide")
-	defer wrapper.end()
-
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&g); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -122,9 +116,6 @@ func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, g ge
 }
 
 func (r *mutationResolver) DeleteGuide(ctx context.Context, guideID string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "deleteGuide")
-	defer wrapper.end()
-
 	if err := db.From(ctx).Guide.DeleteOneID(guideID).Exec(ctx); err != nil {
 		return false, err
 	}
@@ -133,9 +124,6 @@ func (r *mutationResolver) DeleteGuide(ctx context.Context, guideID string) (boo
 }
 
 func (r *queryResolver) GetGuide(ctx context.Context, guideID string) (*generated.Guide, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getGuide")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).Guide.Get(ctx, guideID)
 	if err != nil {
 		return nil, err
@@ -154,17 +142,12 @@ func (r *queryResolver) GetGuide(ctx context.Context, guideID string) (*generate
 }
 
 func (r *queryResolver) GetGuides(ctx context.Context, _ map[string]interface{}) (*generated.GetGuides, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getGuides")
-	defer wrapper.end()
 	return &generated.GetGuides{}, nil
 }
 
 type getGuidesResolver struct{ *Resolver }
 
 func (r *getGuidesResolver) Guides(ctx context.Context, _ *generated.GetGuides) ([]*generated.Guide, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetGuides.guides")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	guideFilter, err := models.ProcessGuideFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -183,9 +166,6 @@ func (r *getGuidesResolver) Guides(ctx context.Context, _ *generated.GetGuides) 
 }
 
 func (r *getGuidesResolver) Count(ctx context.Context, _ *generated.GetGuides) (int, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetGuides.count")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	guideFilter, err := models.ProcessGuideFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -206,9 +186,6 @@ func (r *getGuidesResolver) Count(ctx context.Context, _ *generated.GetGuides) (
 type guideResolver struct{ *Resolver }
 
 func (r *guideResolver) User(ctx context.Context, obj *generated.Guide) (*generated.User, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "Guide.user")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).User.Get(ctx, obj.UserID)
 	if err != nil {
 		return nil, err

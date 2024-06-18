@@ -19,11 +19,14 @@ require (
 	github.com/cespare/xxhash v1.1.0
 	github.com/chai2010/webp v1.1.1
 	github.com/dgraph-io/ristretto v0.1.1
+	github.com/exaring/otelpgx v0.6.1
 	github.com/felixge/fgprof v0.9.4
 	github.com/finnbear/moderation v0.11.4
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-migrate/migrate/v4 v4.17.1
+	github.com/grafana/otel-profiling-go v0.5.1
+	github.com/grafana/pyroscope-go v1.1.1
 	github.com/graph-gophers/dataloader/v7 v7.1.0
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/lab259/go-migration v1.3.1
@@ -36,7 +39,9 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/o1egl/paseto v1.0.0
 	github.com/pkg/errors v0.9.1
+	github.com/ravilushqa/otelgqlgen v0.16.0
 	github.com/russross/blackfriday v1.6.0
+	github.com/samber/slog-multi v1.1.0
 	github.com/sizeofint/gif-to-webp v0.0.0-20210224202734-e9d7ed071591
 	github.com/spf13/viper v1.19.0
 	github.com/swaggo/echo-swagger v1.4.1
@@ -108,6 +113,7 @@ require (
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/grafana/pyroscope-go/godeltaprof v0.1.6 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -120,7 +126,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.2 // indirect
+	github.com/klauspost/compress v1.17.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
@@ -140,6 +146,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
+	github.com/samber/lo v1.38.1 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sizeofint/webp-animation v0.0.0-20190207194838-b631dc900de9 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
@@ -160,6 +167,7 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect
 	github.com/zclconf/go-cty v1.8.0 // indirect
+	go.opentelemetry.io/contrib v1.27.0 // indirect
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.2.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect

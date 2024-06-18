@@ -57,5 +57,9 @@
 
   "feature_flags": {
     "allow_multi_target_upload": false
-  }
+  },
+
+  "loki_endpoint": "http://localhost:3100/loki/api/v1/push",
+  "opentelemetry_endpoint": "http://localhost:4318",
+  "pyroscope_endpoint": "http://localhost:4040"
 }

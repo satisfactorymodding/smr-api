@@ -34,9 +34,6 @@ import (
 )
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input generated.UpdateUser) (*generated.User, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "updateUser")
-	defer wrapper.end()
-
 	u, err := db.From(ctx).User.Get(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -150,9 +147,6 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 }
 
 func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "logout")
-	defer wrapper.end()
-
 	header := ctx.Value(util.ContextHeader{}).(http.Header)
 
 	// TODO Archive old deleted sessions to cold storage
@@ -164,9 +158,6 @@ func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
 }
 
 func (r *queryResolver) GetMe(ctx context.Context) (*generated.User, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getMe")
-	defer wrapper.end()
-
 	result, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
@@ -176,9 +167,6 @@ func (r *queryResolver) GetMe(ctx context.Context) (*generated.User, error) {
 }
 
 func (r *queryResolver) GetUser(ctx context.Context, userID string) (*generated.User, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getUser")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).User.Get(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -188,9 +176,6 @@ func (r *queryResolver) GetUser(ctx context.Context, userID string) (*generated.
 }
 
 func (r *queryResolver) GetUsers(ctx context.Context, userIDs []string) ([]*generated.User, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getUsers")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).User.Query().Where(user.IDIn(userIDs...)).All(ctx)
 	if err != nil {
 		return nil, err
@@ -202,9 +187,6 @@ func (r *queryResolver) GetUsers(ctx context.Context, userIDs []string) ([]*gene
 type userResolver struct{ *Resolver }
 
 func (r *userResolver) Mods(ctx context.Context, obj *generated.User) ([]*generated.UserMod, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "User.mods")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).UserMod.
 		Query().
 		Where(usermod.UserID(obj.ID)).
@@ -218,9 +200,6 @@ func (r *userResolver) Mods(ctx context.Context, obj *generated.User) ([]*genera
 }
 
 func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]*generated.Guide, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).Guide.Query().Where(guide.UserID(obj.ID)).WithTags().All(ctx)
 	if err != nil {
 		return nil, err
@@ -230,9 +209,6 @@ func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]*gene
 }
 
 func (r *userResolver) Groups(ctx context.Context, _ *generated.User) ([]*generated.Group, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
-	defer wrapper.end()
-
 	u, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
@@ -256,9 +232,6 @@ func (r *userResolver) Groups(ctx context.Context, _ *generated.User) ([]*genera
 }
 
 func (r *userResolver) Roles(ctx context.Context, _ *generated.User) (*generated.UserRoles, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "User.guides")
-	defer wrapper.end()
-
 	u, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
@@ -318,9 +291,6 @@ func (r *userResolver) Roles(ctx context.Context, _ *generated.User) (*generated
 type userModResolver struct{ *Resolver }
 
 func (r *userModResolver) User(ctx context.Context, obj *generated.UserMod) (*generated.User, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "UserMod.user")
-	defer wrapper.end()
-
 	result, err := dataloader.For(ctx).UserByID.Load(ctx, obj.UserID)()
 	if err != nil {
 		return nil, err
@@ -330,9 +300,6 @@ func (r *userModResolver) User(ctx context.Context, obj *generated.UserMod) (*ge
 }
 
 func (r *userModResolver) Mod(ctx context.Context, obj *generated.UserMod) (*generated.Mod, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "UserMod.mod")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).Mod.Get(ctx, obj.ModID)
 	if err != nil {
 		return nil, err
@@ -342,9 +309,6 @@ func (r *userModResolver) Mod(ctx context.Context, obj *generated.UserMod) (*gen
 }
 
 func (r *mutationResolver) DiscourseSso(ctx context.Context, sso string, sig string) (*string, error) {
-	wrapper, _ := WrapMutationTrace(ctx, "discourseSSO")
-	defer wrapper.end()
-
 	h := hmac.New(sha256.New, []byte(viper.GetString("discourse.sso_secret")))
 	h.Write([]byte(sso))
 

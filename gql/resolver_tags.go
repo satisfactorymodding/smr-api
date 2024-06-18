@@ -16,9 +16,6 @@ import (
 )
 
 func (r *mutationResolver) CreateTag(ctx context.Context, tagName string, description string) (*generated.Tag, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "createTag")
-	defer wrapper.end()
-
 	if err := ValidateTagName(tagName); err != nil {
 		return nil, err
 	}
@@ -32,9 +29,6 @@ func (r *mutationResolver) CreateTag(ctx context.Context, tagName string, descri
 }
 
 func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tags []*generated.NewTag) ([]*generated.Tag, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "createMultipleTags")
-	defer wrapper.end()
-
 	for _, t := range tags {
 		if err := ValidateTagName(t.Name); err != nil {
 			return nil, err
@@ -52,9 +46,6 @@ func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tags []*gener
 }
 
 func (r *mutationResolver) DeleteTag(ctx context.Context, id string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "deleteTag")
-	defer wrapper.end()
-
 	if err := db.From(ctx).Tag.DeleteOneID(id).Exec(ctx); err != nil {
 		return false, err
 	}
@@ -63,9 +54,6 @@ func (r *mutationResolver) DeleteTag(ctx context.Context, id string) (bool, erro
 }
 
 func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName string, description string) (*generated.Tag, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "updateTag")
-	defer wrapper.end()
-
 	if err := ValidateTagName(newName); err != nil {
 		return nil, err
 	}
@@ -81,9 +69,6 @@ func (r *mutationResolver) UpdateTag(ctx context.Context, id string, newName str
 }
 
 func (r *queryResolver) GetTag(ctx context.Context, id string) (*generated.Tag, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getTag")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).Tag.Get(ctx, id)
 	if err != nil {
 		return nil, err
@@ -93,9 +78,6 @@ func (r *queryResolver) GetTag(ctx context.Context, id string) (*generated.Tag, 
 }
 
 func (r *queryResolver) GetTags(ctx context.Context, filter *generated.TagFilter) ([]*generated.Tag, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getTags")
-	defer wrapper.end()
-
 	insertFilterDefaults(&filter)
 
 	query := db.From(ctx).Tag.Query()

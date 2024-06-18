@@ -30,9 +30,6 @@ import (
 )
 
 func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (string, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "createVersion")
-	defer wrapper.end()
-
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return "", err
@@ -58,9 +55,6 @@ func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (str
 }
 
 func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, versionID string, part int, file graphql.Upload) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "createVersion")
-	defer wrapper.end()
-
 	if part > 100 {
 		return false, errors.New("files can consist of max 41 chunks")
 	}
@@ -94,9 +88,6 @@ func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, 
 }
 
 func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID string, versionID string, version generated.NewVersion) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "finalizeCreateVersion")
-	defer wrapper.end()
-
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return false, err
@@ -150,9 +141,6 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 }
 
 func (r *mutationResolver) UpdateVersion(ctx context.Context, versionID string, version generated.UpdateVersion) (*generated.Version, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "updateVersion")
-	defer wrapper.end()
-
 	dbVersion, get := db.From(ctx).Version.Get(ctx, versionID)
 	if get != nil {
 		return nil, get
@@ -176,9 +164,6 @@ func (r *mutationResolver) UpdateVersion(ctx context.Context, versionID string, 
 }
 
 func (r *mutationResolver) DeleteVersion(ctx context.Context, versionID string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "deleteVersion")
-	defer wrapper.end()
-
 	if err := db.From(ctx).Version.DeleteOneID(versionID).Exec(ctx); err != nil {
 		return false, err
 	}
@@ -187,9 +172,6 @@ func (r *mutationResolver) DeleteVersion(ctx context.Context, versionID string) 
 }
 
 func (r *mutationResolver) ApproveVersion(ctx context.Context, versionID string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "approveVersion")
-	defer wrapper.end()
-
 	dbVersion, err := db.From(ctx).Version.Get(ctx, versionID)
 	if err != nil {
 		return false, err
@@ -213,9 +195,6 @@ func (r *mutationResolver) ApproveVersion(ctx context.Context, versionID string)
 }
 
 func (r *mutationResolver) DenyVersion(ctx context.Context, versionID string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "denyVersion")
-	defer wrapper.end()
-
 	dbVersion, err := db.From(ctx).Version.Get(ctx, versionID)
 	if err != nil {
 		return false, err
@@ -239,9 +218,6 @@ func (r *mutationResolver) DenyVersion(ctx context.Context, versionID string) (b
 }
 
 func (r *queryResolver) GetVersion(ctx context.Context, versionID string) (*generated.Version, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getVersion")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).Version.Query().WithTargets().Where(version.ID(versionID)).First(ctx)
 	if err != nil {
 		return nil, err
@@ -251,33 +227,22 @@ func (r *queryResolver) GetVersion(ctx context.Context, versionID string) (*gene
 }
 
 func (r *queryResolver) GetVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getVersions")
-	defer wrapper.end()
 	return &generated.GetVersions{}, nil
 }
 
 func (r *queryResolver) GetUnapprovedVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getUnapprovedVersions")
-	defer wrapper.end()
 	return &generated.GetVersions{}, nil
 }
 
 func (r *queryResolver) GetMyVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetMyVersions, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getMyVersions")
-	defer wrapper.end()
 	return &generated.GetMyVersions{}, nil
 }
 
 func (r *queryResolver) GetMyUnapprovedVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetMyVersions, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getMyUnapprovedVersions")
-	defer wrapper.end()
 	return &generated.GetMyVersions{}, nil
 }
 
 func (r *queryResolver) CheckVersionUploadState(ctx context.Context, modID string, versionID string) (*generated.CreateVersionResponse, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "checkVersionUploadState")
-	defer wrapper.end()
-
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return nil, err
@@ -301,9 +266,6 @@ func (r *queryResolver) CheckVersionUploadState(ctx context.Context, modID strin
 type getVersionsResolver struct{ *Resolver }
 
 func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVersions) ([]*generated.Version, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetVersions.versions")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedVersions"
 
@@ -328,9 +290,6 @@ func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVers
 }
 
 func (r *getVersionsResolver) Count(ctx context.Context, _ *generated.GetVersions) (int, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetVersions.count")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedVersions"
 
@@ -364,9 +323,6 @@ func findWindowsTarget(obj *generated.Version) *generated.VersionTarget {
 }
 
 func (r *versionResolver) Link(ctx context.Context, obj *generated.Version) (string, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "Version.link")
-	defer wrapper.end()
-
 	windowsTarget := findWindowsTarget(obj)
 	if windowsTarget != nil {
 		link, _ := r.VersionTarget().Link(ctx, windowsTarget)
@@ -377,9 +333,6 @@ func (r *versionResolver) Link(ctx context.Context, obj *generated.Version) (str
 }
 
 func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*generated.Mod, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "Version.mod")
-	defer wrapper.end()
-
 	mod, err := db.From(ctx).Mod.Get(ctx, obj.ModID)
 	if err != nil {
 		return nil, err
@@ -389,9 +342,6 @@ func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*gen
 }
 
 func (r *versionResolver) Hash(ctx context.Context, obj *generated.Version) (*string, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "Version.hash")
-	defer wrapper.end()
-
 	hash := ""
 
 	windowsTarget := findWindowsTarget(obj)
@@ -411,9 +361,6 @@ func (r *versionResolver) Hash(ctx context.Context, obj *generated.Version) (*st
 }
 
 func (r *versionResolver) Size(ctx context.Context, obj *generated.Version) (*int, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "Version.size")
-	defer wrapper.end()
-
 	size := 0
 
 	windowsTarget := findWindowsTarget(obj)
@@ -441,9 +388,6 @@ var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config{
 const versionDependencyCacheTTL = time.Minute * 10
 
 func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Version) ([]*generated.VersionDependency, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "Version.dependencies")
-	defer wrapper.end()
-
 	var dependencies []*ent.VersionDependency
 
 	if cacheVersions, ok := versionDependencyCache.Get(obj.ID); ok {
@@ -472,9 +416,6 @@ func (r *versionTargetResolver) Link(_ context.Context, obj *generated.VersionTa
 type getMyVersionsResolver struct{ *Resolver }
 
 func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMyVersions) ([]*generated.Version, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetMyVersions.versions")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedVersions"
 
@@ -499,9 +440,6 @@ func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMy
 }
 
 func (r *getMyVersionsResolver) Count(ctx context.Context, _ *generated.GetMyVersions) (int, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetMyVersions.count")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedVersions"
 

@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/satisfactorymodding/smr-api/generated"
@@ -18,25 +16,6 @@ import (
 
 type TraceWrapper struct {
 	Span trace.Span
-}
-
-func WrapQueryTrace(ctx context.Context, action string) (TraceWrapper, context.Context) {
-	return wrapTrace(ctx, action, "query")
-}
-
-func WrapMutationTrace(ctx context.Context, action string) (TraceWrapper, context.Context) {
-	return wrapTrace(ctx, action, "mutation")
-}
-
-func wrapTrace(ctx context.Context, action string, actionType string) (TraceWrapper, context.Context) {
-	//nolint:spancheck
-	spanCtx, span := otel.Tracer("gql").Start(ctx, "GraphQL "+action, trace.WithAttributes(
-		attribute.String("action_type", "API.graphql."+actionType),
-	))
-
-	return TraceWrapper{
-		Span: span,
-	}, spanCtx
 }
 
 func (wrapper TraceWrapper) end() {

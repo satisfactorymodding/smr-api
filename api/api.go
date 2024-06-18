@@ -22,6 +22,8 @@ import (
 	"github.com/labstack/echo-contrib/pprof"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/ravilushqa/otelgqlgen"
+	"github.com/satisfactorymodding/smr-api/profiling"
 	"github.com/spf13/viper"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -72,10 +74,19 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 func Initialize(baseCtx context.Context) (context.Context, func()) {
 	ctx := config.InitializeConfig(baseCtx)
 
+	if viper.IsSet("opentelemetry_endpoint") {
+		err := os.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", viper.GetString("opentelemetry_endpoint"))
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	var cleanup func()
 	if os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != "" {
 		cleanup = installExportPipeline(ctx)
 	}
+
+	profiling.SetupProfiling()
 
 	redis.InitializeRedis(ctx)
 
@@ -100,9 +111,7 @@ func Migrate(ctx context.Context) {
 	migrations.RunMigrations(ctx)
 }
 
-var e *echo.Echo
-
-func Setup(ctx context.Context) {
+func Setup(ctx context.Context) *echo.Echo {
 	if viper.GetBool("profiler") {
 		go func() {
 			debugServer := echo.New()
@@ -120,7 +129,7 @@ func Setup(ctx context.Context) {
 
 	dataValidator := validator.New()
 
-	e = echo.New()
+	e := echo.New()
 	e.HideBanner = true
 	e.Validator = &CustomValidator{validator: dataValidator}
 
@@ -194,6 +203,7 @@ func Setup(ctx context.Context) {
 
 	gqlHandler.SetQueryCache(lru.New(5000))
 
+	gqlHandler.Use(otelgqlgen.Middleware())
 	gqlHandler.Use(extension.Introspection{})
 	gqlHandler.Use(extension.AutomaticPersistedQuery{
 		Cache: lru.New(5000),
@@ -304,9 +314,11 @@ func Setup(ctx context.Context) {
 		<-signals
 		_ = e.Close()
 	}()
+
+	return e
 }
 
-func Serve() {
+func Serve(e *echo.Echo) {
 	address := fmt.Sprintf(":%d", viper.GetInt("port"))
 	slog.Info("starting server", slog.String("address", address))
 
@@ -358,11 +370,11 @@ func Start() {
 	}()
 
 	Migrate(ctx)
-	Setup(ctx)
-	Serve()
+	e := Setup(ctx)
+	Serve(e)
 }
 
-func Stop() error {
+func Stop(e *echo.Echo) error {
 	if err := e.Close(); err != nil {
 		return fmt.Errorf("failed to stop http server: %w", err)
 	}

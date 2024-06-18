@@ -21,9 +21,6 @@ import (
 )
 
 func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion generated.NewSMLVersion) (*generated.SMLVersion, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "createSMLVersion")
-	defer wrapper.end()
-
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&smlVersion); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -80,9 +77,6 @@ func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion gene
 }
 
 func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID string, smlVersion generated.UpdateSMLVersion) (*generated.SMLVersion, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "updateSMLVersion")
-	defer wrapper.end()
-
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&smlVersion); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -156,9 +150,6 @@ func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID st
 }
 
 func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "deleteSMLVersion")
-	defer wrapper.end()
-
 	err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
 		if _, err := tx.SmlVersionTarget.Delete().Where(smlversiontarget.VersionID(smlVersionID)).Exec(ctx); err != nil {
 			return err
@@ -174,9 +165,6 @@ func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID st
 }
 
 func (r *queryResolver) GetSMLVersion(ctx context.Context, smlVersionID string) (*generated.SMLVersion, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getSMLVersion")
-	defer wrapper.end()
-
 	result, err := db.From(ctx).SmlVersion.
 		Query().
 		WithTargets().
@@ -190,17 +178,12 @@ func (r *queryResolver) GetSMLVersion(ctx context.Context, smlVersionID string) 
 }
 
 func (r *queryResolver) GetSMLVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetSMLVersions, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getSMLVersions")
-	defer wrapper.end()
 	return &generated.GetSMLVersions{}, nil
 }
 
 type getSMLVersionsResolver struct{ *Resolver }
 
 func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, _ *generated.GetSMLVersions) ([]*generated.SMLVersion, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetSMLVersions.smlVersions")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	smlVersionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -219,9 +202,6 @@ func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, _ *generated.G
 }
 
 func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLVersions) (int, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetSMLVersions.count")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	smlVersionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {

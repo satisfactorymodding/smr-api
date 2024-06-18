@@ -43,9 +43,6 @@ var DisallowedModReferences = map[string]bool{
 }
 
 func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMod) (*generated.Mod, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "createMod")
-	defer wrapper.end()
-
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&newMod); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -163,9 +160,6 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 }
 
 func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMod generated.UpdateMod) (*generated.Mod, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "updateMod")
-	defer wrapper.end()
-
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&updateMod); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -285,9 +279,6 @@ func (r *mutationResolver) UpdateMultipleModCompatibilities(ctx context.Context,
 }
 
 func (r *mutationResolver) DeleteMod(ctx context.Context, modID string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "deleteMod")
-	defer wrapper.end()
-
 	if err := db.From(ctx).Mod.DeleteOneID(modID).Exec(ctx); err != nil {
 		return false, err
 	}
@@ -296,9 +287,6 @@ func (r *mutationResolver) DeleteMod(ctx context.Context, modID string) (bool, e
 }
 
 func (r *mutationResolver) ApproveMod(ctx context.Context, modID string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "approveMod")
-	defer wrapper.end()
-
 	dbMod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return false, err
@@ -318,9 +306,6 @@ func (r *mutationResolver) ApproveMod(ctx context.Context, modID string) (bool, 
 }
 
 func (r *mutationResolver) DenyMod(ctx context.Context, modID string) (bool, error) {
-	wrapper, ctx := WrapMutationTrace(ctx, "denyMod")
-	defer wrapper.end()
-
 	dbMod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return false, err
@@ -342,9 +327,6 @@ func (r *mutationResolver) DenyMod(ctx context.Context, modID string) (bool, err
 }
 
 func (r *queryResolver) GetMod(ctx context.Context, modID string) (*generated.Mod, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getMod")
-	defer wrapper.end()
-
 	dbMod, err := db.From(ctx).Mod.Query().Where(mod.ID(modID)).WithTags().First(ctx)
 	if err != nil {
 		return nil, err
@@ -362,9 +344,6 @@ func (r *queryResolver) GetMod(ctx context.Context, modID string) (*generated.Mo
 }
 
 func (r *queryResolver) GetModByReference(ctx context.Context, modReference string) (*generated.Mod, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getModByReference")
-	defer wrapper.end()
-
 	dbMod, err := db.From(ctx).Mod.Query().Where(mod.ModReference(modReference)).WithTags().First(ctx)
 	if err != nil {
 		return nil, err
@@ -382,35 +361,24 @@ func (r *queryResolver) GetModByReference(ctx context.Context, modReference stri
 }
 
 func (r *queryResolver) GetMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getMods")
-	defer wrapper.end()
 	return &generated.GetMods{}, nil
 }
 
 func (r *queryResolver) GetUnapprovedMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getUnapprovedMods")
-	defer wrapper.end()
 	return &generated.GetMods{}, nil
 }
 
 func (r *queryResolver) GetMyMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getMyMods")
-	defer wrapper.end()
 	return &generated.GetMyMods{}, nil
 }
 
 func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getMyUnapprovedMods")
-	defer wrapper.end()
 	return &generated.GetMyMods{}, nil
 }
 
 type getModsResolver struct{ *Resolver }
 
 func (r *getModsResolver) Mods(ctx context.Context, _ *generated.GetMods) ([]*generated.Mod, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetMods.mods")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedMods"
 
@@ -435,9 +403,6 @@ func (r *getModsResolver) Mods(ctx context.Context, _ *generated.GetMods) ([]*ge
 }
 
 func (r *getModsResolver) Count(ctx context.Context, _ *generated.GetMods) (int, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetMods.count")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedMods"
 
@@ -460,9 +425,6 @@ func (r *getModsResolver) Count(ctx context.Context, _ *generated.GetMods) (int,
 type getMyModsResolver struct{ *Resolver }
 
 func (r *getMyModsResolver) Mods(ctx context.Context, _ *generated.GetMyMods) ([]*generated.Mod, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetMyMods.mods")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedMods"
 
@@ -487,9 +449,6 @@ func (r *getMyModsResolver) Mods(ctx context.Context, _ *generated.GetMyMods) ([
 }
 
 func (r *getMyModsResolver) Count(ctx context.Context, _ *generated.GetMyMods) (int, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "GetMyMods.count")
-	defer wrapper.end()
-
 	resolverContext := graphql.GetFieldContext(ctx)
 	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedMods"
 
@@ -512,9 +471,6 @@ func (r *getMyModsResolver) Count(ctx context.Context, _ *generated.GetMyMods) (
 type modResolver struct{ *Resolver }
 
 func (r *modResolver) Authors(ctx context.Context, obj *generated.Mod) ([]*generated.UserMod, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "Mod.authors")
-	defer wrapper.end()
-
 	authors, err := dataloader.For(ctx).UserModsByModID.Load(ctx, obj.ID)()
 	if err != nil {
 		return nil, err
@@ -537,9 +493,6 @@ func (r *modResolver) Authors(ctx context.Context, obj *generated.Mod) ([]*gener
 }
 
 func (r *modResolver) Version(ctx context.Context, obj *generated.Mod, versionName string) (*generated.Version, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "Mod.version")
-	defer wrapper.end()
-
 	dbVersion, err := db.From(ctx).Version.Query().
 		WithTargets().
 		Where(version.Version(versionName), version.ModID(obj.ID)).
@@ -560,9 +513,6 @@ var versionNoMetaCache, _ = ristretto.NewCache(&ristretto.Config{
 const versionNoMetaCacheTTL = time.Second * 30
 
 func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter map[string]interface{}) ([]*generated.Version, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "Mod.versions")
-	defer wrapper.end()
-
 	versionFilter, err := models.ProcessVersionFilter(filter)
 	if err != nil {
 		return nil, err
@@ -632,9 +582,6 @@ func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter m
 }
 
 func (r *modResolver) LatestVersions(ctx context.Context, obj *generated.Mod) (*generated.LatestVersions, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "Mod.latestVersions")
-	defer wrapper.end()
-
 	versions, err := db.From(ctx).Version.
 		Query().
 		WithTargets().
@@ -672,9 +619,6 @@ func (r *modResolver) LatestVersions(ctx context.Context, obj *generated.Mod) (*
 }
 
 func (r *queryResolver) GetModByIDOrReference(ctx context.Context, modIDOrReference string) (*generated.Mod, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "getModByIdOrReference")
-	defer wrapper.end()
-
 	m, err := db.From(ctx).Mod.Query().WithTags().Where(mod.Or(
 		mod.ID(modIDOrReference),
 		mod.ModReference(modIDOrReference),
@@ -695,9 +639,6 @@ func (r *queryResolver) GetModByIDOrReference(ctx context.Context, modIDOrRefere
 }
 
 func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []*generated.ModVersionConstraint) ([]*generated.ModVersion, error) {
-	wrapper, ctx := WrapQueryTrace(ctx, "resolveModVersions")
-	defer wrapper.end()
-
 	constraintMapping := make(map[string]string)
 	modIDOrReferences := make([]string, len(filter))
 	for i, constraint := range filter {
@@ -736,9 +677,6 @@ func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []*genera
 }
 
 func (r *queryResolver) GetModAssetList(ctx context.Context, modReference string) ([]string, error) {
-	wrapper, _ := WrapQueryTrace(ctx, "getModAssetList")
-	defer wrapper.end()
-
 	list := redis.GetModAssetList(modReference)
 	if list != nil {
 		return list, nil
