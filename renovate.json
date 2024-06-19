@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "ignorePaths": ["generated/**"],
+  "extends": [
+    "config:recommended",
+    "mergeConfidence:all-badges"
+  ],
+  "osvVulnerabilityAlerts": true,
+  "rangeStrategy": "bump",
+  "dependencyDashboardOSVVulnerabilitySummary": "all",
+  "vulnerabilityAlerts": {
+    "labels": ["security"]
+  },
+  "labels": ["dependency"]
+}
