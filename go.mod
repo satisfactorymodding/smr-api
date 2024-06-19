@@ -14,7 +14,7 @@ require (
 	github.com/VirusTotal/vt-go v1.0.1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/avast/retry-go/v3 v3.1.1
-	github.com/aws/aws-sdk-go v1.54.2
+	github.com/aws/aws-sdk-go v1.54.4
 	github.com/btcsuite/btcd/btcutil v1.1.5
 	github.com/cespare/xxhash v1.1.0
 	github.com/chai2010/webp v1.1.1
