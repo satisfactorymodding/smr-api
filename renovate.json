@@ -26,5 +26,6 @@
       "versionCompatibility": "^(?<version>.*)-(?<compatibility>.*)$",
       "versioning": "semver"
     }
-  ]
+  ],
+  "prHourlyLimit": 10
 }
