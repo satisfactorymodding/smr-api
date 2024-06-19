@@ -22,7 +22,9 @@
   "packageRules": [
     {
       "matchDatasources": ["docker"],
-      "versioning": "loose"
+      "matchPackageNames": ["golang"],
+      "versionCompatibility": "^(?<version>.*)-(?<compatibility>.*)$",
+      "versioning": "semver"
     }
   ]
 }
