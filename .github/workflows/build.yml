@@ -98,4 +98,4 @@ jobs:
           REPO_FEATURE_FLAGS.ALLOW_MULTI_TARGET_UPLOAD: "true"
 
       - name: Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
