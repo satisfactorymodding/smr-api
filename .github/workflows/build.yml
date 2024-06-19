@@ -51,7 +51,7 @@ jobs:
         run: go generate -tags tools -x ./...
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
           version: v1.59.1
           skip-pkg-cache: true
