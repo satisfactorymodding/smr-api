@@ -18,5 +18,11 @@
   "gitAuthor": "Renovate Bot <bot@renovateapp.com>",
   "postUpdateOptions": [
     "gomodTidy"
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "versioning": "loose"
+    }
   ]
 }
