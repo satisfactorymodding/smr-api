@@ -18,7 +18,7 @@ RUN go generate -tags tools -x ./...
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -v -a -installsuffix cgo -o /go/bin/api cmd/api/serve.go
 
 
-FROM golang:alpine
+FROM golang:1.22.3-alpine3.18
 RUN apk add --no-cache libstdc++ libpng
 COPY --from=builder /go/bin/api /api
 WORKDIR /app
