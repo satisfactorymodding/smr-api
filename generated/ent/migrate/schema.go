@@ -169,69 +169,30 @@ var (
 			},
 		},
 	}
-	// SmlVersionsColumns holds the columns for the "sml_versions" table.
-	SmlVersionsColumns = []*schema.Column{
+	// SatisfactoryVersionsColumns holds the columns for the "satisfactory_versions" table.
+	SatisfactoryVersionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "version", Type: field.TypeString, Unique: true, Size: 32},
-		{Name: "satisfactory_version", Type: field.TypeInt},
-		{Name: "stability", Type: field.TypeEnum, Enums: []string{"release", "beta", "alpha"}},
-		{Name: "date", Type: field.TypeTime},
-		{Name: "link", Type: field.TypeString},
-		{Name: "changelog", Type: field.TypeString},
-		{Name: "bootstrap_version", Type: field.TypeString, Nullable: true, Size: 14},
+		{Name: "version", Type: field.TypeInt, Unique: true},
 		{Name: "engine_version", Type: field.TypeString, Size: 16, Default: "4.26"},
 	}
-	// SmlVersionsTable holds the schema information for the "sml_versions" table.
-	SmlVersionsTable = &schema.Table{
-		Name:       "sml_versions",
-		Columns:    SmlVersionsColumns,
-		PrimaryKey: []*schema.Column{SmlVersionsColumns[0]},
+	// SatisfactoryVersionsTable holds the schema information for the "satisfactory_versions" table.
+	SatisfactoryVersionsTable = &schema.Table{
+		Name:       "satisfactory_versions",
+		Columns:    SatisfactoryVersionsColumns,
+		PrimaryKey: []*schema.Column{SatisfactoryVersionsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "smlversion_id",
+				Name:    "satisfactoryversion_id",
 				Unique:  false,
-				Columns: []*schema.Column{SmlVersionsColumns[0]},
+				Columns: []*schema.Column{SatisfactoryVersionsColumns[0]},
 			},
 			{
-				Name:    "smlversion_deleted_at",
+				Name:    "satisfactoryversion_deleted_at",
 				Unique:  false,
-				Columns: []*schema.Column{SmlVersionsColumns[3]},
-			},
-		},
-	}
-	// SmlVersionTargetsColumns holds the columns for the "sml_version_targets" table.
-	SmlVersionTargetsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString},
-		{Name: "target_name", Type: field.TypeString},
-		{Name: "link", Type: field.TypeString},
-		{Name: "version_id", Type: field.TypeString},
-	}
-	// SmlVersionTargetsTable holds the schema information for the "sml_version_targets" table.
-	SmlVersionTargetsTable = &schema.Table{
-		Name:       "sml_version_targets",
-		Columns:    SmlVersionTargetsColumns,
-		PrimaryKey: []*schema.Column{SmlVersionTargetsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "sml_version_targets_sml_versions_targets",
-				Columns:    []*schema.Column{SmlVersionTargetsColumns[3]},
-				RefColumns: []*schema.Column{SmlVersionsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "smlversiontarget_id",
-				Unique:  false,
-				Columns: []*schema.Column{SmlVersionTargetsColumns[0]},
-			},
-			{
-				Name:    "smlversiontarget_version_id_target_name",
-				Unique:  true,
-				Columns: []*schema.Column{SmlVersionTargetsColumns[3], SmlVersionTargetsColumns[1]},
+				Columns: []*schema.Column{SatisfactoryVersionsColumns[3]},
 			},
 		},
 	}
@@ -547,8 +508,7 @@ var (
 		GuideTagsTable,
 		ModsTable,
 		ModTagsTable,
-		SmlVersionsTable,
-		SmlVersionTargetsTable,
+		SatisfactoryVersionsTable,
 		TagsTable,
 		UsersTable,
 		UserGroupsTable,
@@ -566,7 +526,6 @@ func init() {
 	GuideTagsTable.ForeignKeys[1].RefTable = TagsTable
 	ModTagsTable.ForeignKeys[0].RefTable = ModsTable
 	ModTagsTable.ForeignKeys[1].RefTable = TagsTable
-	SmlVersionTargetsTable.ForeignKeys[0].RefTable = SmlVersionsTable
 	UserGroupsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[1].RefTable = ModsTable

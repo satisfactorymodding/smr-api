@@ -78,6 +78,22 @@ models:
       link:
         resolver: true
 
+  SMLVersion:
+    fields:
+      satisfactory_version:
+        resolver: true
+      bootstrap_version:
+        resolver: true
+      engine_version:
+        resolver: true
+      link:
+        resolver: true
+
+  SMLVersionTarget:
+    fields:
+      link:
+        resolver: true
+
   GetMods:
     fields:
       mods:
@@ -142,6 +158,13 @@ models:
   GetBootstrapVersions:
     fields:
       bootstrap_versions:
+        resolver: true
+      count:
+        resolver: true
+
+  GetSatisfactoryVersions:
+    fields:
+      satisfactory_versions:
         resolver: true
       count:
         resolver: true

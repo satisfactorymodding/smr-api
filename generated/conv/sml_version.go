@@ -11,35 +11,36 @@ import (
 
 type SMLVersionImpl struct{}
 
-func (c *SMLVersionImpl) Convert(source *ent.SmlVersion) *generated.SMLVersion {
+func (c *SMLVersionImpl) Convert(source *ent.Version) *generated.SMLVersion {
 	var pGeneratedSMLVersion *generated.SMLVersion
 	if source != nil {
 		var generatedSMLVersion generated.SMLVersion
 		generatedSMLVersion.ID = (*source).ID
 		generatedSMLVersion.Version = (*source).Version
-		generatedSMLVersion.SatisfactoryVersion = (*source).SatisfactoryVersion
 		generatedSMLVersion.Stability = generated.VersionStabilities((*source).Stability)
-		generatedSMLVersion.Link = (*source).Link
 		var pGeneratedSMLVersionTargetList []*generated.SMLVersionTarget
 		if (*source).Edges.Targets != nil {
 			pGeneratedSMLVersionTargetList = make([]*generated.SMLVersionTarget, len((*source).Edges.Targets))
 			for i := 0; i < len((*source).Edges.Targets); i++ {
-				pGeneratedSMLVersionTargetList[i] = c.pEntSmlVersionTargetToPGeneratedSMLVersionTarget((*source).Edges.Targets[i])
+				pGeneratedSMLVersionTargetList[i] = c.pEntVersionTargetToPGeneratedSMLVersionTarget((*source).Edges.Targets[i])
 			}
 		}
 		generatedSMLVersion.Targets = pGeneratedSMLVersionTargetList
 		generatedSMLVersion.Changelog = (*source).Changelog
-		generatedSMLVersion.Date = conversion.TimeToString((*source).Date)
-		pString := (*source).BootstrapVersion
-		generatedSMLVersion.BootstrapVersion = &pString
-		generatedSMLVersion.EngineVersion = (*source).EngineVersion
+		generatedSMLVersion.Date = conversion.TimeToString((*source).CreatedAt)
 		generatedSMLVersion.UpdatedAt = conversion.TimeToString((*source).UpdatedAt)
 		generatedSMLVersion.CreatedAt = conversion.TimeToString((*source).CreatedAt)
 		pGeneratedSMLVersion = &generatedSMLVersion
 	}
 	return pGeneratedSMLVersion
 }
-func (c *SMLVersionImpl) ConvertSlice(source []*ent.SmlVersion) []*generated.SMLVersion {
+func (c *SMLVersionImpl) ConvertNested(source ent.VersionTarget) generated.SMLVersionTarget {
+	var generatedSMLVersionTarget generated.SMLVersionTarget
+	generatedSMLVersionTarget.VersionID = source.VersionID
+	generatedSMLVersionTarget.TargetName = generated.TargetName(source.TargetName)
+	return generatedSMLVersionTarget
+}
+func (c *SMLVersionImpl) ConvertSlice(source []*ent.Version) []*generated.SMLVersion {
 	var pGeneratedSMLVersionList []*generated.SMLVersion
 	if source != nil {
 		pGeneratedSMLVersionList = make([]*generated.SMLVersion, len(source))
@@ -49,13 +50,10 @@ func (c *SMLVersionImpl) ConvertSlice(source []*ent.SmlVersion) []*generated.SML
 	}
 	return pGeneratedSMLVersionList
 }
-func (c *SMLVersionImpl) pEntSmlVersionTargetToPGeneratedSMLVersionTarget(source *ent.SmlVersionTarget) *generated.SMLVersionTarget {
+func (c *SMLVersionImpl) pEntVersionTargetToPGeneratedSMLVersionTarget(source *ent.VersionTarget) *generated.SMLVersionTarget {
 	var pGeneratedSMLVersionTarget *generated.SMLVersionTarget
 	if source != nil {
-		var generatedSMLVersionTarget generated.SMLVersionTarget
-		generatedSMLVersionTarget.VersionID = (*source).VersionID
-		generatedSMLVersionTarget.TargetName = generated.TargetName((*source).TargetName)
-		generatedSMLVersionTarget.Link = (*source).Link
+		generatedSMLVersionTarget := c.ConvertNested((*source))
 		pGeneratedSMLVersionTarget = &generatedSMLVersionTarget
 	}
 	return pGeneratedSMLVersionTarget

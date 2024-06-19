@@ -69,28 +69,16 @@ func (f ModTagFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModTagMutation", m)
 }
 
-// The SmlVersionFunc type is an adapter to allow the use of ordinary
-// function as SmlVersion mutator.
-type SmlVersionFunc func(context.Context, *ent.SmlVersionMutation) (ent.Value, error)
+// The SatisfactoryVersionFunc type is an adapter to allow the use of ordinary
+// function as SatisfactoryVersion mutator.
+type SatisfactoryVersionFunc func(context.Context, *ent.SatisfactoryVersionMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f SmlVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.SmlVersionMutation); ok {
+func (f SatisfactoryVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SatisfactoryVersionMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SmlVersionMutation", m)
-}
-
-// The SmlVersionTargetFunc type is an adapter to allow the use of ordinary
-// function as SmlVersionTarget mutator.
-type SmlVersionTargetFunc func(context.Context, *ent.SmlVersionTargetMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f SmlVersionTargetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.SmlVersionTargetMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SmlVersionTargetMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SatisfactoryVersionMutation", m)
 }
 
 // The TagFunc type is an adapter to allow the use of ordinary

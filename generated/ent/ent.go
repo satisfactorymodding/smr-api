@@ -17,8 +17,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/guidetag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modtag"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
@@ -87,21 +86,20 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			announcement.Table:      announcement.ValidColumn,
-			guide.Table:             guide.ValidColumn,
-			guidetag.Table:          guidetag.ValidColumn,
-			mod.Table:               mod.ValidColumn,
-			modtag.Table:            modtag.ValidColumn,
-			smlversion.Table:        smlversion.ValidColumn,
-			smlversiontarget.Table:  smlversiontarget.ValidColumn,
-			tag.Table:               tag.ValidColumn,
-			user.Table:              user.ValidColumn,
-			usergroup.Table:         usergroup.ValidColumn,
-			usermod.Table:           usermod.ValidColumn,
-			usersession.Table:       usersession.ValidColumn,
-			version.Table:           version.ValidColumn,
-			versiondependency.Table: versiondependency.ValidColumn,
-			versiontarget.Table:     versiontarget.ValidColumn,
+			announcement.Table:        announcement.ValidColumn,
+			guide.Table:               guide.ValidColumn,
+			guidetag.Table:            guidetag.ValidColumn,
+			mod.Table:                 mod.ValidColumn,
+			modtag.Table:              modtag.ValidColumn,
+			satisfactoryversion.Table: satisfactoryversion.ValidColumn,
+			tag.Table:                 tag.ValidColumn,
+			user.Table:                user.ValidColumn,
+			usergroup.Table:           usergroup.ValidColumn,
+			usermod.Table:             usermod.ValidColumn,
+			usersession.Table:         usersession.ValidColumn,
+			version.Table:             version.ValidColumn,
+			versiondependency.Table:   versiondependency.ValidColumn,
+			versiontarget.Table:       versiontarget.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

@@ -340,19 +340,6 @@ paths:
       summary: Callback URL for github OAuth
       tags:
       - OAuth
-  /sml/latest-versions:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a list of latest versions for sml
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-      summary: Retrieve a list of latest versions for sml
-      tags:
-      - SML
   /user/{userId}:
     get:
       consumes:

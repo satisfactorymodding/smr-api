@@ -8,7 +8,7 @@ type UserRoles {
     deleteContent: Boolean!
     editContent: Boolean!
     editUsers: Boolean!
-    editSMLVersions: Boolean!
+    editSatisfactoryVersions: Boolean!
     editBootstrapVersions: Boolean!
     editAnyModCompatibility: Boolean!
 }

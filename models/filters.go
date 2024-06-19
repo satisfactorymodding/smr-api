@@ -221,31 +221,8 @@ func ProcessGuideFilter(filter map[string]interface{}) (*GuideFilter, error) {
 	return base, nil
 }
 
-type SMLVersionFilter struct {
-	Limit   *int                        `json:"limit" validate:"omitempty,min=1,max=100"`
-	Offset  *int                        `json:"offset" validate:"omitempty,min=0"`
-	OrderBy *generated.SMLVersionFields `json:"order_by"`
-	Order   *generated.Order            `json:"order"`
-	Search  *string                     `json:"search" validate:"omitempty,min=3"`
-	IDs     []string                    `json:"ids" validate:"omitempty,max=100"`
-}
-
-func DefaultSMLVersionFilter() *SMLVersionFilter {
-	limit := 10
-	offset := 0
-	order := generated.OrderDesc
-	orderBy := generated.SMLVersionFieldsCreatedAt
-	return &SMLVersionFilter{
-		Limit:   &limit,
-		Offset:  &offset,
-		IDs:     nil,
-		Order:   &order,
-		OrderBy: &orderBy,
-	}
-}
-
-func ProcessSMLVersionFilter(filter map[string]interface{}) (*SMLVersionFilter, error) {
-	base := DefaultSMLVersionFilter()
+func ProcessSMLVersionFilter(filter map[string]interface{}) (*VersionFilter, error) {
+	base := DefaultVersionFilter()
 
 	if filter == nil {
 		return base, nil

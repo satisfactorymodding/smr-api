@@ -22,8 +22,21 @@ type Announcement interface {
 // goverter:extend TimeToString
 type SMLVersion interface {
 	// goverter:map Edges.Targets Targets
-	Convert(source *ent.SmlVersion) *generated.SMLVersion
-	ConvertSlice(source []*ent.SmlVersion) []*generated.SMLVersion
+	// goverter:map CreatedAt Date
+	// goverter:ignore SatisfactoryVersion EngineVersion BootstrapVersion Link
+	Convert(source *ent.Version) *generated.SMLVersion
+	ConvertSlice(source []*ent.Version) []*generated.SMLVersion
+	// goverter:ignore Link
+	ConvertTarget(source ent.VersionTarget) generated.SMLVersionTarget
+}
+
+// goverter:converter
+// goverter:output:file ../generated/conv/satisfactory_version.go
+// goverter:output:package conv
+// goverter:extend TimeToString
+type SatisfactoryVersion interface {
+	Convert(source *ent.SatisfactoryVersion) *generated.SatisfactoryVersion
+	ConvertSlice(source []*ent.SatisfactoryVersion) []*generated.SatisfactoryVersion
 }
 
 // goverter:converter

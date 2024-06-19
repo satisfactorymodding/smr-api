@@ -24,10 +24,8 @@ type Tx struct {
 	Mod *ModClient
 	// ModTag is the client for interacting with the ModTag builders.
 	ModTag *ModTagClient
-	// SmlVersion is the client for interacting with the SmlVersion builders.
-	SmlVersion *SmlVersionClient
-	// SmlVersionTarget is the client for interacting with the SmlVersionTarget builders.
-	SmlVersionTarget *SmlVersionTargetClient
+	// SatisfactoryVersion is the client for interacting with the SatisfactoryVersion builders.
+	SatisfactoryVersion *SatisfactoryVersionClient
 	// Tag is the client for interacting with the Tag builders.
 	Tag *TagClient
 	// User is the client for interacting with the User builders.
@@ -180,8 +178,7 @@ func (tx *Tx) init() {
 	tx.GuideTag = NewGuideTagClient(tx.config)
 	tx.Mod = NewModClient(tx.config)
 	tx.ModTag = NewModTagClient(tx.config)
-	tx.SmlVersion = NewSmlVersionClient(tx.config)
-	tx.SmlVersionTarget = NewSmlVersionTargetClient(tx.config)
+	tx.SatisfactoryVersion = NewSatisfactoryVersionClient(tx.config)
 	tx.Tag = NewTagClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserGroup = NewUserGroupClient(tx.config)

@@ -14,20 +14,19 @@ import (
 
 func MakeDirective() generated.DirectiveRoot {
 	return generated.DirectiveRoot{
-		CanEditGuide:             canEditGuide,
-		CanEditMod:               canEditMod,
-		CanEditVersion:           canEditVersion,
-		IsLoggedIn:               isLoggedIn,
-		IsNotLoggedIn:            isNotLoggedIn,
-		CanEditUser:              canEditUser,
-		CanApproveMods:           canApproveMods,
-		CanApproveVersions:       canApproveVersions,
-		CanEditUsers:             canEditUsers,
-		CanEditSMLVersions:       canEditSMLVersions,
-		CanEditBootstrapVersions: canEditBootstrapVersions,
-		CanEditAnnouncements:     canEditAnnouncements,
-		CanManageTags:            canManageTags,
-		CanEditModCompatibility:  canEditModCompatibility,
+		CanEditGuide:                canEditGuide,
+		CanEditMod:                  canEditMod,
+		CanEditVersion:              canEditVersion,
+		IsLoggedIn:                  isLoggedIn,
+		IsNotLoggedIn:               isNotLoggedIn,
+		CanEditUser:                 canEditUser,
+		CanApproveMods:              canApproveMods,
+		CanApproveVersions:          canApproveVersions,
+		CanEditUsers:                canEditUsers,
+		CanEditAnnouncements:        canEditAnnouncements,
+		CanManageTags:               canManageTags,
+		CanEditModCompatibility:     canEditModCompatibility,
+		CanEditSatisfactoryVersions: canEditSatisfactoryVersions,
 	}
 }
 
@@ -205,26 +204,13 @@ func canEditUsers(ctx context.Context, _ interface{}, next graphql.Resolver) (in
 	return nil, errors.New("user not authorized to perform this action")
 }
 
-func canEditSMLVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
+func canEditSatisfactoryVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if db.UserHas(ctx, auth.RoleEditSMLVersions, user) {
-		return next(ctx)
-	}
-
-	return nil, errors.New("user not authorized to perform this action")
-}
-
-func canEditBootstrapVersions(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
-	user, _, err := db.UserFromGQLContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if db.UserHas(ctx, auth.RoleEditBootstrapVersions, user) {
+	if db.UserHas(ctx, auth.RoleEditSatisfactoryVersions, user) {
 		return next(ctx)
 	}
 

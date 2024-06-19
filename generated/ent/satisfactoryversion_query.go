@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,92 +11,68 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
 )
 
-// SmlVersionQuery is the builder for querying SmlVersion entities.
-type SmlVersionQuery struct {
+// SatisfactoryVersionQuery is the builder for querying SatisfactoryVersion entities.
+type SatisfactoryVersionQuery struct {
 	config
-	ctx         *QueryContext
-	order       []smlversion.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.SmlVersion
-	withTargets *SmlVersionTargetQuery
-	modifiers   []func(*sql.Selector)
+	ctx        *QueryContext
+	order      []satisfactoryversion.OrderOption
+	inters     []Interceptor
+	predicates []predicate.SatisfactoryVersion
+	modifiers  []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the SmlVersionQuery builder.
-func (svq *SmlVersionQuery) Where(ps ...predicate.SmlVersion) *SmlVersionQuery {
+// Where adds a new predicate for the SatisfactoryVersionQuery builder.
+func (svq *SatisfactoryVersionQuery) Where(ps ...predicate.SatisfactoryVersion) *SatisfactoryVersionQuery {
 	svq.predicates = append(svq.predicates, ps...)
 	return svq
 }
 
 // Limit the number of records to be returned by this query.
-func (svq *SmlVersionQuery) Limit(limit int) *SmlVersionQuery {
+func (svq *SatisfactoryVersionQuery) Limit(limit int) *SatisfactoryVersionQuery {
 	svq.ctx.Limit = &limit
 	return svq
 }
 
 // Offset to start from.
-func (svq *SmlVersionQuery) Offset(offset int) *SmlVersionQuery {
+func (svq *SatisfactoryVersionQuery) Offset(offset int) *SatisfactoryVersionQuery {
 	svq.ctx.Offset = &offset
 	return svq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (svq *SmlVersionQuery) Unique(unique bool) *SmlVersionQuery {
+func (svq *SatisfactoryVersionQuery) Unique(unique bool) *SatisfactoryVersionQuery {
 	svq.ctx.Unique = &unique
 	return svq
 }
 
 // Order specifies how the records should be ordered.
-func (svq *SmlVersionQuery) Order(o ...smlversion.OrderOption) *SmlVersionQuery {
+func (svq *SatisfactoryVersionQuery) Order(o ...satisfactoryversion.OrderOption) *SatisfactoryVersionQuery {
 	svq.order = append(svq.order, o...)
 	return svq
 }
 
-// QueryTargets chains the current query on the "targets" edge.
-func (svq *SmlVersionQuery) QueryTargets() *SmlVersionTargetQuery {
-	query := (&SmlVersionTargetClient{config: svq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := svq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := svq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(smlversion.Table, smlversion.FieldID, selector),
-			sqlgraph.To(smlversiontarget.Table, smlversiontarget.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, smlversion.TargetsTable, smlversion.TargetsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(svq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// First returns the first SmlVersion entity from the query.
-// Returns a *NotFoundError when no SmlVersion was found.
-func (svq *SmlVersionQuery) First(ctx context.Context) (*SmlVersion, error) {
+// First returns the first SatisfactoryVersion entity from the query.
+// Returns a *NotFoundError when no SatisfactoryVersion was found.
+func (svq *SatisfactoryVersionQuery) First(ctx context.Context) (*SatisfactoryVersion, error) {
 	nodes, err := svq.Limit(1).All(setContextOp(ctx, svq.ctx, "First"))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{smlversion.Label}
+		return nil, &NotFoundError{satisfactoryversion.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (svq *SmlVersionQuery) FirstX(ctx context.Context) *SmlVersion {
+func (svq *SatisfactoryVersionQuery) FirstX(ctx context.Context) *SatisfactoryVersion {
 	node, err := svq.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -105,22 +80,22 @@ func (svq *SmlVersionQuery) FirstX(ctx context.Context) *SmlVersion {
 	return node
 }
 
-// FirstID returns the first SmlVersion ID from the query.
-// Returns a *NotFoundError when no SmlVersion ID was found.
-func (svq *SmlVersionQuery) FirstID(ctx context.Context) (id string, err error) {
+// FirstID returns the first SatisfactoryVersion ID from the query.
+// Returns a *NotFoundError when no SatisfactoryVersion ID was found.
+func (svq *SatisfactoryVersionQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
 	if ids, err = svq.Limit(1).IDs(setContextOp(ctx, svq.ctx, "FirstID")); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{smlversion.Label}
+		err = &NotFoundError{satisfactoryversion.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (svq *SmlVersionQuery) FirstIDX(ctx context.Context) string {
+func (svq *SatisfactoryVersionQuery) FirstIDX(ctx context.Context) string {
 	id, err := svq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -128,10 +103,10 @@ func (svq *SmlVersionQuery) FirstIDX(ctx context.Context) string {
 	return id
 }
 
-// Only returns a single SmlVersion entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one SmlVersion entity is found.
-// Returns a *NotFoundError when no SmlVersion entities are found.
-func (svq *SmlVersionQuery) Only(ctx context.Context) (*SmlVersion, error) {
+// Only returns a single SatisfactoryVersion entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one SatisfactoryVersion entity is found.
+// Returns a *NotFoundError when no SatisfactoryVersion entities are found.
+func (svq *SatisfactoryVersionQuery) Only(ctx context.Context) (*SatisfactoryVersion, error) {
 	nodes, err := svq.Limit(2).All(setContextOp(ctx, svq.ctx, "Only"))
 	if err != nil {
 		return nil, err
@@ -140,14 +115,14 @@ func (svq *SmlVersionQuery) Only(ctx context.Context) (*SmlVersion, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{smlversion.Label}
+		return nil, &NotFoundError{satisfactoryversion.Label}
 	default:
-		return nil, &NotSingularError{smlversion.Label}
+		return nil, &NotSingularError{satisfactoryversion.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (svq *SmlVersionQuery) OnlyX(ctx context.Context) *SmlVersion {
+func (svq *SatisfactoryVersionQuery) OnlyX(ctx context.Context) *SatisfactoryVersion {
 	node, err := svq.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -155,10 +130,10 @@ func (svq *SmlVersionQuery) OnlyX(ctx context.Context) *SmlVersion {
 	return node
 }
 
-// OnlyID is like Only, but returns the only SmlVersion ID in the query.
-// Returns a *NotSingularError when more than one SmlVersion ID is found.
+// OnlyID is like Only, but returns the only SatisfactoryVersion ID in the query.
+// Returns a *NotSingularError when more than one SatisfactoryVersion ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (svq *SmlVersionQuery) OnlyID(ctx context.Context) (id string, err error) {
+func (svq *SatisfactoryVersionQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
 	if ids, err = svq.Limit(2).IDs(setContextOp(ctx, svq.ctx, "OnlyID")); err != nil {
 		return
@@ -167,15 +142,15 @@ func (svq *SmlVersionQuery) OnlyID(ctx context.Context) (id string, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{smlversion.Label}
+		err = &NotFoundError{satisfactoryversion.Label}
 	default:
-		err = &NotSingularError{smlversion.Label}
+		err = &NotSingularError{satisfactoryversion.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (svq *SmlVersionQuery) OnlyIDX(ctx context.Context) string {
+func (svq *SatisfactoryVersionQuery) OnlyIDX(ctx context.Context) string {
 	id, err := svq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -183,18 +158,18 @@ func (svq *SmlVersionQuery) OnlyIDX(ctx context.Context) string {
 	return id
 }
 
-// All executes the query and returns a list of SmlVersions.
-func (svq *SmlVersionQuery) All(ctx context.Context) ([]*SmlVersion, error) {
+// All executes the query and returns a list of SatisfactoryVersions.
+func (svq *SatisfactoryVersionQuery) All(ctx context.Context) ([]*SatisfactoryVersion, error) {
 	ctx = setContextOp(ctx, svq.ctx, "All")
 	if err := svq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*SmlVersion, *SmlVersionQuery]()
-	return withInterceptors[[]*SmlVersion](ctx, svq, qr, svq.inters)
+	qr := querierAll[[]*SatisfactoryVersion, *SatisfactoryVersionQuery]()
+	return withInterceptors[[]*SatisfactoryVersion](ctx, svq, qr, svq.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (svq *SmlVersionQuery) AllX(ctx context.Context) []*SmlVersion {
+func (svq *SatisfactoryVersionQuery) AllX(ctx context.Context) []*SatisfactoryVersion {
 	nodes, err := svq.All(ctx)
 	if err != nil {
 		panic(err)
@@ -202,20 +177,20 @@ func (svq *SmlVersionQuery) AllX(ctx context.Context) []*SmlVersion {
 	return nodes
 }
 
-// IDs executes the query and returns a list of SmlVersion IDs.
-func (svq *SmlVersionQuery) IDs(ctx context.Context) (ids []string, err error) {
+// IDs executes the query and returns a list of SatisfactoryVersion IDs.
+func (svq *SatisfactoryVersionQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if svq.ctx.Unique == nil && svq.path != nil {
 		svq.Unique(true)
 	}
 	ctx = setContextOp(ctx, svq.ctx, "IDs")
-	if err = svq.Select(smlversion.FieldID).Scan(ctx, &ids); err != nil {
+	if err = svq.Select(satisfactoryversion.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (svq *SmlVersionQuery) IDsX(ctx context.Context) []string {
+func (svq *SatisfactoryVersionQuery) IDsX(ctx context.Context) []string {
 	ids, err := svq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -224,16 +199,16 @@ func (svq *SmlVersionQuery) IDsX(ctx context.Context) []string {
 }
 
 // Count returns the count of the given query.
-func (svq *SmlVersionQuery) Count(ctx context.Context) (int, error) {
+func (svq *SatisfactoryVersionQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, svq.ctx, "Count")
 	if err := svq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, svq, querierCount[*SmlVersionQuery](), svq.inters)
+	return withInterceptors[int](ctx, svq, querierCount[*SatisfactoryVersionQuery](), svq.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (svq *SmlVersionQuery) CountX(ctx context.Context) int {
+func (svq *SatisfactoryVersionQuery) CountX(ctx context.Context) int {
 	count, err := svq.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -242,7 +217,7 @@ func (svq *SmlVersionQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (svq *SmlVersionQuery) Exist(ctx context.Context) (bool, error) {
+func (svq *SatisfactoryVersionQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, svq.ctx, "Exist")
 	switch _, err := svq.FirstID(ctx); {
 	case IsNotFound(err):
@@ -255,7 +230,7 @@ func (svq *SmlVersionQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (svq *SmlVersionQuery) ExistX(ctx context.Context) bool {
+func (svq *SatisfactoryVersionQuery) ExistX(ctx context.Context) bool {
 	exist, err := svq.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -263,34 +238,22 @@ func (svq *SmlVersionQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the SmlVersionQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the SatisfactoryVersionQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (svq *SmlVersionQuery) Clone() *SmlVersionQuery {
+func (svq *SatisfactoryVersionQuery) Clone() *SatisfactoryVersionQuery {
 	if svq == nil {
 		return nil
 	}
-	return &SmlVersionQuery{
-		config:      svq.config,
-		ctx:         svq.ctx.Clone(),
-		order:       append([]smlversion.OrderOption{}, svq.order...),
-		inters:      append([]Interceptor{}, svq.inters...),
-		predicates:  append([]predicate.SmlVersion{}, svq.predicates...),
-		withTargets: svq.withTargets.Clone(),
+	return &SatisfactoryVersionQuery{
+		config:     svq.config,
+		ctx:        svq.ctx.Clone(),
+		order:      append([]satisfactoryversion.OrderOption{}, svq.order...),
+		inters:     append([]Interceptor{}, svq.inters...),
+		predicates: append([]predicate.SatisfactoryVersion{}, svq.predicates...),
 		// clone intermediate query.
 		sql:  svq.sql.Clone(),
 		path: svq.path,
 	}
-}
-
-// WithTargets tells the query-builder to eager-load the nodes that are connected to
-// the "targets" edge. The optional arguments are used to configure the query builder of the edge.
-func (svq *SmlVersionQuery) WithTargets(opts ...func(*SmlVersionTargetQuery)) *SmlVersionQuery {
-	query := (&SmlVersionTargetClient{config: svq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	svq.withTargets = query
-	return svq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -303,15 +266,15 @@ func (svq *SmlVersionQuery) WithTargets(opts ...func(*SmlVersionTargetQuery)) *S
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.SmlVersion.Query().
-//		GroupBy(smlversion.FieldCreatedAt).
+//	client.SatisfactoryVersion.Query().
+//		GroupBy(satisfactoryversion.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (svq *SmlVersionQuery) GroupBy(field string, fields ...string) *SmlVersionGroupBy {
+func (svq *SatisfactoryVersionQuery) GroupBy(field string, fields ...string) *SatisfactoryVersionGroupBy {
 	svq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &SmlVersionGroupBy{build: svq}
+	grbuild := &SatisfactoryVersionGroupBy{build: svq}
 	grbuild.flds = &svq.ctx.Fields
-	grbuild.label = smlversion.Label
+	grbuild.label = satisfactoryversion.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -325,23 +288,23 @@ func (svq *SmlVersionQuery) GroupBy(field string, fields ...string) *SmlVersionG
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.SmlVersion.Query().
-//		Select(smlversion.FieldCreatedAt).
+//	client.SatisfactoryVersion.Query().
+//		Select(satisfactoryversion.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (svq *SmlVersionQuery) Select(fields ...string) *SmlVersionSelect {
+func (svq *SatisfactoryVersionQuery) Select(fields ...string) *SatisfactoryVersionSelect {
 	svq.ctx.Fields = append(svq.ctx.Fields, fields...)
-	sbuild := &SmlVersionSelect{SmlVersionQuery: svq}
-	sbuild.label = smlversion.Label
+	sbuild := &SatisfactoryVersionSelect{SatisfactoryVersionQuery: svq}
+	sbuild.label = satisfactoryversion.Label
 	sbuild.flds, sbuild.scan = &svq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a SmlVersionSelect configured with the given aggregations.
-func (svq *SmlVersionQuery) Aggregate(fns ...AggregateFunc) *SmlVersionSelect {
+// Aggregate returns a SatisfactoryVersionSelect configured with the given aggregations.
+func (svq *SatisfactoryVersionQuery) Aggregate(fns ...AggregateFunc) *SatisfactoryVersionSelect {
 	return svq.Select().Aggregate(fns...)
 }
 
-func (svq *SmlVersionQuery) prepareQuery(ctx context.Context) error {
+func (svq *SatisfactoryVersionQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range svq.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -353,7 +316,7 @@ func (svq *SmlVersionQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range svq.ctx.Fields {
-		if !smlversion.ValidColumn(f) {
+		if !satisfactoryversion.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -367,21 +330,17 @@ func (svq *SmlVersionQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (svq *SmlVersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SmlVersion, error) {
+func (svq *SatisfactoryVersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SatisfactoryVersion, error) {
 	var (
-		nodes       = []*SmlVersion{}
-		_spec       = svq.querySpec()
-		loadedTypes = [1]bool{
-			svq.withTargets != nil,
-		}
+		nodes = []*SatisfactoryVersion{}
+		_spec = svq.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*SmlVersion).scanValues(nil, columns)
+		return (*SatisfactoryVersion).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &SmlVersion{config: svq.config}
+		node := &SatisfactoryVersion{config: svq.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if len(svq.modifiers) > 0 {
@@ -396,48 +355,10 @@ func (svq *SmlVersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := svq.withTargets; query != nil {
-		if err := svq.loadTargets(ctx, query, nodes,
-			func(n *SmlVersion) { n.Edges.Targets = []*SmlVersionTarget{} },
-			func(n *SmlVersion, e *SmlVersionTarget) { n.Edges.Targets = append(n.Edges.Targets, e) }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
-func (svq *SmlVersionQuery) loadTargets(ctx context.Context, query *SmlVersionTargetQuery, nodes []*SmlVersion, init func(*SmlVersion), assign func(*SmlVersion, *SmlVersionTarget)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*SmlVersion)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(smlversiontarget.FieldVersionID)
-	}
-	query.Where(predicate.SmlVersionTarget(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(smlversion.TargetsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.VersionID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "version_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-
-func (svq *SmlVersionQuery) sqlCount(ctx context.Context) (int, error) {
+func (svq *SatisfactoryVersionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := svq.querySpec()
 	if len(svq.modifiers) > 0 {
 		_spec.Modifiers = svq.modifiers
@@ -449,8 +370,8 @@ func (svq *SmlVersionQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, svq.driver, _spec)
 }
 
-func (svq *SmlVersionQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(smlversion.Table, smlversion.Columns, sqlgraph.NewFieldSpec(smlversion.FieldID, field.TypeString))
+func (svq *SatisfactoryVersionQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(satisfactoryversion.Table, satisfactoryversion.Columns, sqlgraph.NewFieldSpec(satisfactoryversion.FieldID, field.TypeString))
 	_spec.From = svq.sql
 	if unique := svq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -459,9 +380,9 @@ func (svq *SmlVersionQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := svq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, smlversion.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, satisfactoryversion.FieldID)
 		for i := range fields {
-			if fields[i] != smlversion.FieldID {
+			if fields[i] != satisfactoryversion.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
@@ -489,12 +410,12 @@ func (svq *SmlVersionQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (svq *SmlVersionQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (svq *SatisfactoryVersionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(svq.driver.Dialect())
-	t1 := builder.Table(smlversion.Table)
+	t1 := builder.Table(satisfactoryversion.Table)
 	columns := svq.ctx.Fields
 	if len(columns) == 0 {
-		columns = smlversion.Columns
+		columns = satisfactoryversion.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if svq.sql != nil {
@@ -525,33 +446,33 @@ func (svq *SmlVersionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 }
 
 // Modify adds a query modifier for attaching custom logic to queries.
-func (svq *SmlVersionQuery) Modify(modifiers ...func(s *sql.Selector)) *SmlVersionSelect {
+func (svq *SatisfactoryVersionQuery) Modify(modifiers ...func(s *sql.Selector)) *SatisfactoryVersionSelect {
 	svq.modifiers = append(svq.modifiers, modifiers...)
 	return svq.Select()
 }
 
-// SmlVersionGroupBy is the group-by builder for SmlVersion entities.
-type SmlVersionGroupBy struct {
+// SatisfactoryVersionGroupBy is the group-by builder for SatisfactoryVersion entities.
+type SatisfactoryVersionGroupBy struct {
 	selector
-	build *SmlVersionQuery
+	build *SatisfactoryVersionQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (svgb *SmlVersionGroupBy) Aggregate(fns ...AggregateFunc) *SmlVersionGroupBy {
+func (svgb *SatisfactoryVersionGroupBy) Aggregate(fns ...AggregateFunc) *SatisfactoryVersionGroupBy {
 	svgb.fns = append(svgb.fns, fns...)
 	return svgb
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (svgb *SmlVersionGroupBy) Scan(ctx context.Context, v any) error {
+func (svgb *SatisfactoryVersionGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, svgb.build.ctx, "GroupBy")
 	if err := svgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SmlVersionQuery, *SmlVersionGroupBy](ctx, svgb.build, svgb, svgb.build.inters, v)
+	return scanWithInterceptors[*SatisfactoryVersionQuery, *SatisfactoryVersionGroupBy](ctx, svgb.build, svgb, svgb.build.inters, v)
 }
 
-func (svgb *SmlVersionGroupBy) sqlScan(ctx context.Context, root *SmlVersionQuery, v any) error {
+func (svgb *SatisfactoryVersionGroupBy) sqlScan(ctx context.Context, root *SatisfactoryVersionQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(svgb.fns))
 	for _, fn := range svgb.fns {
@@ -578,28 +499,28 @@ func (svgb *SmlVersionGroupBy) sqlScan(ctx context.Context, root *SmlVersionQuer
 	return sql.ScanSlice(rows, v)
 }
 
-// SmlVersionSelect is the builder for selecting fields of SmlVersion entities.
-type SmlVersionSelect struct {
-	*SmlVersionQuery
+// SatisfactoryVersionSelect is the builder for selecting fields of SatisfactoryVersion entities.
+type SatisfactoryVersionSelect struct {
+	*SatisfactoryVersionQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (svs *SmlVersionSelect) Aggregate(fns ...AggregateFunc) *SmlVersionSelect {
+func (svs *SatisfactoryVersionSelect) Aggregate(fns ...AggregateFunc) *SatisfactoryVersionSelect {
 	svs.fns = append(svs.fns, fns...)
 	return svs
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (svs *SmlVersionSelect) Scan(ctx context.Context, v any) error {
+func (svs *SatisfactoryVersionSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, svs.ctx, "Select")
 	if err := svs.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SmlVersionQuery, *SmlVersionSelect](ctx, svs.SmlVersionQuery, svs, svs.inters, v)
+	return scanWithInterceptors[*SatisfactoryVersionQuery, *SatisfactoryVersionSelect](ctx, svs.SatisfactoryVersionQuery, svs, svs.inters, v)
 }
 
-func (svs *SmlVersionSelect) sqlScan(ctx context.Context, root *SmlVersionQuery, v any) error {
+func (svs *SatisfactoryVersionSelect) sqlScan(ctx context.Context, root *SatisfactoryVersionQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(svs.fns))
 	for _, fn := range svs.fns {
@@ -621,7 +542,7 @@ func (svs *SmlVersionSelect) sqlScan(ctx context.Context, root *SmlVersionQuery,
 }
 
 // Modify adds a query modifier for attaching custom logic to queries.
-func (svs *SmlVersionSelect) Modify(modifiers ...func(s *sql.Selector)) *SmlVersionSelect {
+func (svs *SatisfactoryVersionSelect) Modify(modifiers ...func(s *sql.Selector)) *SatisfactoryVersionSelect {
 	svs.modifiers = append(svs.modifiers, modifiers...)
 	return svs
 }

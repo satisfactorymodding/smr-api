@@ -4,7 +4,8 @@
   "required": [
     "FileVersion",
     "Version",
-    "Plugins"
+    "Plugins",
+    "GameVersion"
   ],
   "properties": {
     "CanContainContent": {
@@ -32,6 +33,9 @@
           }
         }
       ]
+    },
+    "GameVersion": {
+      "type": "string"
     },
     "Plugins": {
       "type": "array",

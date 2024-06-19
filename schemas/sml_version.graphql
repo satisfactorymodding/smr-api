@@ -39,40 +39,6 @@ enum SMLVersionFields {
 
 ### Inputs
 
-input NewSMLVersion {
-    version: String!
-    satisfactory_version: Int!
-    stability: VersionStabilities!
-    link: String!
-    targets: [NewSMLVersionTarget!]!
-    changelog: String!
-    date: Date!
-    bootstrap_version: String
-    engine_version: String!
-}
-
-input UpdateSMLVersion {
-    version: String
-    satisfactory_version: Int
-    stability: VersionStabilities
-    link: String
-    targets: [UpdateSMLVersionTarget]!
-    changelog: String
-    date: Date
-    bootstrap_version: String
-    engine_version: String
-}
-
-input NewSMLVersionTarget {
-    targetName: TargetName!
-    link: String!
-}
-
-input UpdateSMLVersionTarget {
-    targetName: TargetName!
-    link: String!
-}
-
 input SMLVersionFilter {
     limit: Int
     offset: Int
@@ -85,14 +51,9 @@ input SMLVersionFilter {
 ### Queries
 
 extend type Query {
-    getSMLVersion(smlVersionID: SMLVersionID!): SMLVersion
-    getSMLVersions(filter: SMLVersionFilter): GetSMLVersions!
+    getSMLVersion(smlVersionID: SMLVersionID!): SMLVersion @deprecated(reason: "SML is now a mod")
+    getSMLVersions(filter: SMLVersionFilter): GetSMLVersions! @deprecated(reason: "SML is now a mod")
 }
 
 ### Mutations
 
-extend type Mutation {
-    createSMLVersion(smlVersion: NewSMLVersion!): SMLVersion @canEditSMLVersions @isLoggedIn
-    updateSMLVersion(smlVersionId: SMLVersionID!, smlVersion: UpdateSMLVersion!): SMLVersion! @canEditSMLVersions @isLoggedIn
-    deleteSMLVersion(smlVersionId: SMLVersionID!): Boolean! @canEditSMLVersions @isLoggedIn
-}

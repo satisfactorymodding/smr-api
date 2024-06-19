@@ -3,172 +3,24 @@ package gql
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
+	"strconv"
 
-	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
-	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/generated/conv"
-	"github.com/satisfactorymodding/smr-api/generated/ent"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/models"
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func (r *mutationResolver) CreateSMLVersion(ctx context.Context, smlVersion generated.NewSMLVersion) (*generated.SMLVersion, error) {
-	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
-	if err := val.Struct(&smlVersion); err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
-	}
-
-	date, err := time.Parse(time.RFC3339Nano, smlVersion.Date)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse date: %w", err)
-	}
-
-	var result *ent.SmlVersion
-	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
-		result, err = tx.SmlVersion.
-			Create().
-			SetVersion(smlVersion.Version).
-			SetSatisfactoryVersion(smlVersion.SatisfactoryVersion).
-			SetNillableBootstrapVersion(smlVersion.BootstrapVersion).
-			SetStability(util.Stability(smlVersion.Stability)).
-			SetLink(smlVersion.Link).
-			SetChangelog(smlVersion.Changelog).
-			SetDate(date).
-			SetEngineVersion(smlVersion.EngineVersion).
-			Save(ctx)
-		if err != nil {
-			return err
-		}
-
-		for _, smlVersionTarget := range smlVersion.Targets {
-			if _, err := tx.SmlVersionTarget.
-				Create().
-				SetVersionID(result.ID).
-				SetTargetName(string(smlVersionTarget.TargetName)).
-				SetLink(smlVersionTarget.Link).
-				Save(ctx); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}, nil); err != nil {
-		return nil, err
-	}
-
-	result, err = db.From(ctx).SmlVersion.
-		Query().
-		WithTargets().
-		Where(smlversion.ID(result.ID)).
-		First(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return (*conv.SMLVersionImpl)(nil).Convert(result), nil
-}
-
-func (r *mutationResolver) UpdateSMLVersion(ctx context.Context, smlVersionID string, smlVersion generated.UpdateSMLVersion) (*generated.SMLVersion, error) {
-	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
-	if err := val.Struct(&smlVersion); err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
-	}
-
-	err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
-		dbSMLVersion, err := tx.SmlVersion.Get(ctx, smlVersionID)
-		if err != nil {
-			return err
-		}
-
-		update := dbSMLVersion.Update()
-
-		SetINNOEF(smlVersion.Version, update.SetVersion)
-		SetINNF(smlVersion.SatisfactoryVersion, update.SetSatisfactoryVersion)
-		SetINNOEF(smlVersion.BootstrapVersion, update.SetBootstrapVersion)
-		SetStabilityINNF(smlVersion.Stability, update.SetStability)
-		SetINNOEF(smlVersion.Link, update.SetLink)
-		SetINNOEF(smlVersion.Changelog, update.SetChangelog)
-		SetDateINNF(smlVersion.Date, update.SetDate)
-		SetINNOEF(smlVersion.EngineVersion, update.SetEngineVersion)
-
-		if err := update.Exec(ctx); err != nil {
-			return err
-		}
-
-		dbSMLTargets, err := dbSMLVersion.QueryTargets().All(ctx)
-		if err != nil {
-			return err
-		}
-
-		for _, dbSMLTarget := range dbSMLTargets {
-			found := false
-
-			for _, smlTarget := range smlVersion.Targets {
-				if dbSMLTarget.TargetName == string(smlTarget.TargetName) {
-					found = true
-				}
-			}
-
-			if !found {
-				tx.SmlVersionTarget.DeleteOneID(dbSMLTarget.ID)
-			}
-		}
-
-		for _, smlTarget := range smlVersion.Targets {
-			if err := tx.SmlVersionTarget.Update().Where(
-				smlversiontarget.VersionID(dbSMLVersion.ID),
-				smlversiontarget.TargetName(string(smlTarget.TargetName)),
-			).SetLink(smlTarget.Link).Exec(ctx); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := db.From(ctx).SmlVersion.
-		Query().
-		WithTargets().
-		Where(smlversion.ID(smlVersionID)).
-		First(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return (*conv.SMLVersionImpl)(nil).Convert(result), nil
-}
-
-func (r *mutationResolver) DeleteSMLVersion(ctx context.Context, smlVersionID string) (bool, error) {
-	err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
-		if _, err := tx.SmlVersionTarget.Delete().Where(smlversiontarget.VersionID(smlVersionID)).Exec(ctx); err != nil {
-			return err
-		}
-
-		return tx.SmlVersion.DeleteOneID(smlVersionID).Exec(ctx)
-	}, nil)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
 func (r *queryResolver) GetSMLVersion(ctx context.Context, smlVersionID string) (*generated.SMLVersion, error) {
-	result, err := db.From(ctx).SmlVersion.
+	result, err := db.From(ctx).Version.
 		Query().
 		WithTargets().
-		Where(smlversion.ID(smlVersionID)).
+		Where(version.ID(smlVersionID)).
 		First(ctx)
 	if err != nil {
 		return nil, err
@@ -185,17 +37,23 @@ type getSMLVersionsResolver struct{ *Resolver }
 
 func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, _ *generated.GetSMLVersions) ([]*generated.SMLVersion, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	smlVersionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
+	versionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to process version filter: %w", err)
 	}
 
-	query := db.From(ctx).SmlVersion.Query().WithTargets()
-	query = convertSMLVersionFilter(query, smlVersionFilter)
+	smlModQuery := db.From(ctx).Mod.Query().Where(mod.ModReference("SML"))
+	smlMod, err := smlModQuery.First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SML mod: %w", err)
+	}
+
+	query := db.From(ctx).Version.Query().WithTargets().Where(version.ModID(smlMod.ID))
+	query = convertVersionFilter(query, versionFilter, false)
 
 	result, err := query.All(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get versions: %w", err)
 	}
 
 	return (*conv.SMLVersionImpl)(nil).ConvertSlice(result), nil
@@ -203,13 +61,19 @@ func (r *getSMLVersionsResolver) SmlVersions(ctx context.Context, _ *generated.G
 
 func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLVersions) (int, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	smlVersionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
+	versionFilter, err := models.ProcessSMLVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
 		return 0, err
 	}
 
-	query := db.From(ctx).SmlVersion.Query().WithTargets()
-	query = convertSMLVersionFilter(query, smlVersionFilter)
+	smlModQuery := db.From(ctx).Mod.Query().Where(mod.ModReference("SML"))
+	smlMod, err := smlModQuery.First(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get SML mod: %w", err)
+	}
+
+	query := db.From(ctx).Version.Query().WithTargets().Where(version.ModID(smlMod.ID))
+	query = convertVersionFilter(query, versionFilter, false)
 
 	result, err := query.Count(ctx)
 	if err != nil {
@@ -219,27 +83,67 @@ func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLV
 	return result, nil
 }
 
-func convertSMLVersionFilter(query *ent.SmlVersionQuery, filter *models.SMLVersionFilter) *ent.SmlVersionQuery {
-	if len(filter.IDs) > 0 {
-		query = query.Where(smlversion.IDIn(filter.IDs...))
-	} else if filter != nil {
-		query = query.
-			Limit(*filter.Limit).
-			Offset(*filter.Offset).
-			Order(sql.OrderByField(
-				filter.OrderBy.String(),
-				db.OrderToOrder(filter.Order.String()),
-			).ToFunc())
+type smlVersionResolver struct{ *Resolver }
 
-		if filter.Search != nil && *filter.Search != "" {
-			cleanedSearch := strings.ReplaceAll(*filter.Search, " ", " & ")
-
-			query = query.Modify(func(s *sql.Selector) {
-				s.Where(sql.P(func(builder *sql.Builder) {
-					builder.WriteString("to_tsvector(version) @@ to_tsquery(").Arg(cleanedSearch).WriteString(")")
-				}))
-			}).SmlVersionQuery
+func (s *smlVersionResolver) SatisfactoryVersion(ctx context.Context, obj *generated.SMLVersion) (int, error) {
+	query := db.From(ctx).VersionDependency.Query().Where(versiondependency.HasVersionWith(version.ID(obj.ID)))
+	dependencies, err := query.All(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get dependencies: %w", err)
+	}
+	for _, dep := range dependencies {
+		if dep.ModID == "FactoryGame" {
+			ver := dep.Condition[2:] // Strip the >=
+			versionNum, err := strconv.Atoi(ver)
+			if err != nil {
+				return 0, fmt.Errorf("failed to parse version number: %w", err)
+			}
+			return versionNum, nil
 		}
 	}
-	return query
+	return 0, fmt.Errorf("no satisfactory version found for SML version")
+}
+
+func (s *smlVersionResolver) Link(_ context.Context, obj *generated.SMLVersion) (string, error) {
+	return "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/tag/v" + obj.Version, nil
+}
+
+func (s *smlVersionResolver) BootstrapVersion(ctx context.Context, obj *generated.SMLVersion) (*string, error) {
+	query := db.From(ctx).VersionDependency.Query().Where(versiondependency.HasVersionWith(version.ID(obj.ID)))
+	dependencies, err := query.All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dependencies: %w", err)
+	}
+	for _, dep := range dependencies {
+		if dep.ModID == "bootstrap" {
+			return &dep.Condition, nil
+		}
+	}
+	return nil, nil
+}
+
+func (s *smlVersionResolver) EngineVersion(ctx context.Context, obj *generated.SMLVersion) (string, error) {
+	satisfactoryVersion, err := s.SatisfactoryVersion(ctx, obj)
+	if err != nil {
+		return "", fmt.Errorf("failed to get satisfactory version: %w", err)
+	}
+	v, err := db.GetEngineVersionForSatisfactoryVersion(ctx, satisfactoryVersion)
+	if err != nil {
+		return "", fmt.Errorf("failed to get engine version: %w", err)
+	}
+	return v, nil
+}
+
+type smlVersionTargetResolver struct{ *Resolver }
+
+func (s *smlVersionTargetResolver) Link(ctx context.Context, obj *generated.SMLVersionTarget) (string, error) {
+	query := db.From(ctx).Version.Query().WithTargets().Where(version.ID(obj.VersionID))
+	v, err := query.First(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get version: %w", err)
+	}
+	if len(v.Edges.Targets) > 1 {
+		return fmt.Sprintf("https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v%s/SML-%s.zip", v.Version, obj.TargetName), nil
+	}
+	return fmt.Sprintf("https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v%s/SML.zip", v.Version), nil
 }

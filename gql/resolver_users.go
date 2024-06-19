@@ -273,8 +273,8 @@ func (r *userResolver) Roles(ctx context.Context, _ *generated.User) (*generated
 		userRoles.EditUsers = true
 	}
 
-	if hasRole, ok := roles[auth.RoleEditSMLVersions]; ok && hasRole {
-		userRoles.EditSMLVersions = true
+	if hasRole, ok := roles[auth.RoleEditSatisfactoryVersions]; ok && hasRole {
+		userRoles.EditSatisfactoryVersions = true
 	}
 
 	if hasRole, ok := roles[auth.RoleEditBootstrapVersions]; ok && hasRole {
