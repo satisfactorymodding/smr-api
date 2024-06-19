@@ -2,30 +2,14 @@ package gql
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/util"
 )
-
-type TraceWrapper struct {
-	Span trace.Span
-}
-
-func (wrapper TraceWrapper) end() {
-	defer wrapper.Span.End()
-
-	if err := recover(); err != nil {
-		wrapper.Span.RecordError(fmt.Errorf("panic: %v", err))
-		panic(err)
-	}
-}
 
 // SetINN sets target if value not nil
 func SetINN[T any](v *T, target *T) {

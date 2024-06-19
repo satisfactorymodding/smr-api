@@ -177,7 +177,7 @@ func (r *queryResolver) GetSMLVersion(ctx context.Context, smlVersionID string) 
 	return (*conv.SMLVersionImpl)(nil).Convert(result), nil
 }
 
-func (r *queryResolver) GetSMLVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetSMLVersions, error) {
+func (r *queryResolver) GetSMLVersions(_ context.Context, _ map[string]interface{}) (*generated.GetSMLVersions, error) {
 	return &generated.GetSMLVersions{}, nil
 }
 

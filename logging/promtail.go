@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var _ io.Writer = (*clientJson)(nil)
+var _ io.Writer = (*ClientJSON)(nil)
 
 type promtailStream struct {
 	Labels map[string]string `json:"stream"`
@@ -19,7 +19,7 @@ type promtailMsg struct {
 	Streams []promtailStream `json:"streams"`
 }
 
-type clientJson struct {
+type ClientJSON struct {
 	config    *ClientConfig
 	quit      chan struct{}
 	entries   chan []string
@@ -27,11 +27,11 @@ type clientJson struct {
 	client    httpClient
 }
 
-func NewClientProto(conf ClientConfig) (*clientJson, error) {
-	client := clientJson{
+func NewClientProto(conf ClientConfig) (*ClientJSON, error) {
+	client := ClientJSON{
 		config:  &conf,
 		quit:    make(chan struct{}),
-		entries: make(chan []string, LOG_ENTRIES_CHAN_SIZE),
+		entries: make(chan []string, LogEntriesChanSize),
 		client:  httpClient{},
 	}
 
@@ -41,24 +41,24 @@ func NewClientProto(conf ClientConfig) (*clientJson, error) {
 	return &client, nil
 }
 
-func (c *clientJson) Write(p []byte) (n int, err error) {
+func (c *ClientJSON) Write(p []byte) (int, error) {
 	c.Log(string(p))
 	return len(p), nil
 }
 
-func (c *clientJson) Log(line string) {
+func (c *ClientJSON) Log(line string) {
 	c.entries <- []string{
 		strconv.FormatInt(time.Now().UnixNano(), 10),
 		line,
 	}
 }
 
-func (c *clientJson) Shutdown() {
+func (c *ClientJSON) Shutdown() {
 	close(c.quit)
 	c.waitGroup.Wait()
 }
 
-func (c *clientJson) run() {
+func (c *ClientJSON) run() {
 	var batch [][]string
 	batchSize := 0
 	maxWait := time.NewTimer(c.config.BatchWait)
@@ -95,7 +95,7 @@ func (c *clientJson) run() {
 	}
 }
 
-func (c *clientJson) send(entries [][]string) {
+func (c *ClientJSON) send(entries [][]string) {
 	var streams []promtailStream
 	streams = append(streams, promtailStream{
 		Labels: c.config.Labels,
@@ -108,7 +108,7 @@ func (c *clientJson) send(entries [][]string) {
 		return
 	}
 
-	resp, _, err := c.client.sendJsonReq("POST", c.config.PushURL, "application/json", jsonMsg)
+	resp, _, err := c.client.sendJSONReq("POST", c.config.PushURL, "application/json", jsonMsg)
 	if err != nil {
 		return
 	}

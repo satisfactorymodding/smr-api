@@ -5,8 +5,9 @@ import (
 	"log/slog"
 
 	"github.com/Vilsol/slox"
-	"github.com/satisfactorymodding/smr-api/logging"
 	"github.com/spf13/viper"
+
+	"github.com/satisfactorymodding/smr-api/logging"
 )
 
 var configDir = "."

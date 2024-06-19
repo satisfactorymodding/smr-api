@@ -141,7 +141,7 @@ func (r *queryResolver) GetGuide(ctx context.Context, guideID string) (*generate
 	return (*conv.GuideImpl)(nil).Convert(result), nil
 }
 
-func (r *queryResolver) GetGuides(ctx context.Context, _ map[string]interface{}) (*generated.GetGuides, error) {
+func (r *queryResolver) GetGuides(_ context.Context, _ map[string]interface{}) (*generated.GetGuides, error) {
 	return &generated.GetGuides{}, nil
 }
 

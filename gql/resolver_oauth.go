@@ -14,7 +14,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func (r *queryResolver) GetOAuthOptions(ctx context.Context, callbackURL string) (*generated.OAuthOptions, error) {
+func (r *queryResolver) GetOAuthOptions(_ context.Context, callbackURL string) (*generated.OAuthOptions, error) {
 	unescapedURL, err := url.PathUnescape(callbackURL)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unescape callback url: %w", err)

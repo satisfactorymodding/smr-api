@@ -360,19 +360,19 @@ func (r *queryResolver) GetModByReference(ctx context.Context, modReference stri
 	return (*conv.ModImpl)(nil).Convert(dbMod), nil
 }
 
-func (r *queryResolver) GetMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
+func (r *queryResolver) GetMods(_ context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
 	return &generated.GetMods{}, nil
 }
 
-func (r *queryResolver) GetUnapprovedMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
+func (r *queryResolver) GetUnapprovedMods(_ context.Context, _ map[string]interface{}) (*generated.GetMods, error) {
 	return &generated.GetMods{}, nil
 }
 
-func (r *queryResolver) GetMyMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
+func (r *queryResolver) GetMyMods(_ context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
 	return &generated.GetMyMods{}, nil
 }
 
-func (r *queryResolver) GetMyUnapprovedMods(ctx context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
+func (r *queryResolver) GetMyUnapprovedMods(_ context.Context, _ map[string]interface{}) (*generated.GetMyMods, error) {
 	return &generated.GetMyMods{}, nil
 }
 
@@ -676,7 +676,7 @@ func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []*genera
 	return modVersions, nil
 }
 
-func (r *queryResolver) GetModAssetList(ctx context.Context, modReference string) ([]string, error) {
+func (r *queryResolver) GetModAssetList(_ context.Context, modReference string) ([]string, error) {
 	list := redis.GetModAssetList(modReference)
 	if list != nil {
 		return list, nil

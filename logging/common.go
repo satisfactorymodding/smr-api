@@ -2,14 +2,15 @@ package logging
 
 import (
 	"bytes"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/spf13/viper"
 )
 
-const LOG_ENTRIES_CHAN_SIZE = 5000
+const LogEntriesChanSize = 5000
 
 type ClientConfig struct {
 	PushURL            string
@@ -27,29 +28,29 @@ func NewClientConfig(labels map[string]string) ClientConfig {
 	}
 }
 
-// http.Client wrapper for adding new methods, particularly sendJsonReq
+// http.Client wrapper for adding new methods, particularly sendJSONReq
 type httpClient struct {
 	parent http.Client
 }
 
 // A bit more convenient method for sending requests to the HTTP server
-func (client *httpClient) sendJsonReq(method, url string, ctype string, reqBody []byte) (resp *http.Response, resBody []byte, err error) {
+func (client *httpClient) sendJSONReq(method, url string, ctype string, reqBody []byte) (*http.Response, []byte, error) {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(reqBody))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to create http request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", ctype)
 
-	resp, err = client.parent.Do(req)
+	resp, err := client.parent.Do(req)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to send http request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	resBody, err = ioutil.ReadAll(resp.Body)
+	resBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to read response body: %w", err)
 	}
 
 	return resp, resBody, nil

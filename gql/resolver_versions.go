@@ -226,19 +226,19 @@ func (r *queryResolver) GetVersion(ctx context.Context, versionID string) (*gene
 	return (*conv.VersionImpl)(nil).Convert(result), nil
 }
 
-func (r *queryResolver) GetVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
+func (r *queryResolver) GetVersions(_ context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
 	return &generated.GetVersions{}, nil
 }
 
-func (r *queryResolver) GetUnapprovedVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
+func (r *queryResolver) GetUnapprovedVersions(_ context.Context, _ map[string]interface{}) (*generated.GetVersions, error) {
 	return &generated.GetVersions{}, nil
 }
 
-func (r *queryResolver) GetMyVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetMyVersions, error) {
+func (r *queryResolver) GetMyVersions(_ context.Context, _ map[string]interface{}) (*generated.GetMyVersions, error) {
 	return &generated.GetMyVersions{}, nil
 }
 
-func (r *queryResolver) GetMyUnapprovedVersions(ctx context.Context, _ map[string]interface{}) (*generated.GetMyVersions, error) {
+func (r *queryResolver) GetMyUnapprovedVersions(_ context.Context, _ map[string]interface{}) (*generated.GetMyVersions, error) {
 	return &generated.GetMyVersions{}, nil
 }
 
@@ -341,7 +341,7 @@ func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*gen
 	return (*conv.ModImpl)(nil).Convert(mod), nil
 }
 
-func (r *versionResolver) Hash(ctx context.Context, obj *generated.Version) (*string, error) {
+func (r *versionResolver) Hash(_ context.Context, obj *generated.Version) (*string, error) {
 	hash := ""
 
 	windowsTarget := findWindowsTarget(obj)
@@ -360,7 +360,7 @@ func (r *versionResolver) Hash(ctx context.Context, obj *generated.Version) (*st
 	return &hash, nil
 }
 
-func (r *versionResolver) Size(ctx context.Context, obj *generated.Version) (*int, error) {
+func (r *versionResolver) Size(_ context.Context, obj *generated.Version) (*int, error) {
 	size := 0
 
 	windowsTarget := findWindowsTarget(obj)
