@@ -11,5 +11,9 @@
   "vulnerabilityAlerts": {
     "labels": ["security"]
   },
-  "labels": ["dependency"]
+  "labels": ["dependency"],
+  "repositories": [
+    "satisfactorymodding/smr-api"
+  ],
+  "gitAuthor": "Renovate Bot <bot@renovateapp.com>"
 }
