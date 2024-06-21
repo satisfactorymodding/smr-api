@@ -20,11 +20,13 @@ func ConvertModFilter(query *ent.ModQuery, filter *models.ModFilter, count bool,
 	} else if len(filter.References) > 0 {
 		query = query.Where(mod.ModReferenceIn(filter.References...))
 	} else if filter != nil {
-		query = query.
-			Limit(*filter.Limit).
-			Offset(*filter.Offset)
+		if !count {
+			query = query.
+				Limit(*filter.Limit).
+				Offset(*filter.Offset)
+		}
 
-		if *filter.OrderBy != generated.ModFieldsSearch {
+		if filter.OrderBy != nil && *filter.OrderBy != generated.ModFieldsSearch {
 			if string(*filter.OrderBy) == "last_version_date" {
 				query = query.Modify(func(s *sql.Selector) {
 					s.OrderExpr(sql.ExprP("case when last_version_date is null then 1 else 0 end, last_version_date"))

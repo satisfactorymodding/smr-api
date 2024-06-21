@@ -103,13 +103,13 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 		return nil, err
 	}
 
-	currentAvailable := float64(4)
+	currentAvailable := float64(util.ModsPer24h)
 	lastModTime := time.Now()
 	for _, mod := range existingMods {
 		currentAvailable--
 		if mod.CreatedAt.After(lastModTime) {
 			diff := mod.CreatedAt.Sub(lastModTime)
-			currentAvailable = math.Min(4, currentAvailable+diff.Hours()/6)
+			currentAvailable = math.Min(float64(util.ModsPer24h), currentAvailable+diff.Hours()/6)
 		}
 		lastModTime = mod.CreatedAt
 	}
@@ -396,6 +396,7 @@ func (r *getModsResolver) Mods(ctx context.Context, _ *generated.GetMods) ([]*ge
 
 	result, err := query.All(ctx)
 	if err != nil {
+		slox.Error(ctx, "failed querying mods", slog.Any("err", err))
 		return nil, err
 	}
 
@@ -412,10 +413,11 @@ func (r *getModsResolver) Count(ctx context.Context, _ *generated.GetMods) (int,
 	}
 
 	query := db.From(ctx).Mod.Query()
-	query = db.ConvertModFilter(query, modFilter, false, unapproved)
+	query = db.ConvertModFilter(query, modFilter, true, unapproved)
 
 	result, err := query.Count(ctx)
 	if err != nil {
+		slox.Error(ctx, "failed querying mod count", slog.Any("err", err))
 		return 0, err
 	}
 
