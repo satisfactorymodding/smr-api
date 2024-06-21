@@ -39,13 +39,11 @@
     },
     "Plugins": {
       "type": "array",
-      "minItems": 1,
       "items": [
         {
           "type": "object",
           "required": [
-            "Name",
-            "SemVersion"
+            "Name"
           ],
           "properties": {
             "Name": {
@@ -55,12 +53,22 @@
               "type": "string",
               "pattern": "^(<=|<|>|>=|\\^)?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
             },
-            "bIsOptional": {
+            "Optional": {
               "type": "boolean"
             },
-            "bIsBasePlugin": {
+            "BasePlugin": {
               "type": "boolean"
             }
+          },
+          "if": {
+            "properties": {
+              "BasePlugin": { "const": false }
+            }
+          },
+          "then": {
+            "required": [
+              "SemVersion"
+            ]
           }
         }
       ]
