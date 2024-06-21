@@ -6,11 +6,12 @@ import (
 
 	"github.com/MarvinJWendt/testza"
 	"github.com/machinebox/graphql"
+
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
-func seedTags(t *testing.T, ctx context.Context, token string, client *graphql.Client) []string {
+func seedTags(ctx context.Context, t *testing.T, token string, client *graphql.Client) []string {
 	tags := []string{
 		"hello",
 		"foo",
@@ -45,7 +46,7 @@ type testMod struct {
 	TagIDs           []string `json:"tagIDs"`
 }
 
-func seedMods(t *testing.T, ctx context.Context, token string, client *graphql.Client, tagID string) []string {
+func seedMods(ctx context.Context, t *testing.T, token string, client *graphql.Client, tagID string) []string {
 	mods := []testMod{
 		{
 			Name:             "Advanced Robotics",

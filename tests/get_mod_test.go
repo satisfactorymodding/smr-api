@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/MarvinJWendt/testza"
+
 	"github.com/satisfactorymodding/smr-api/generated"
 )
 
@@ -28,8 +29,8 @@ func TestGetModLimitOffset(t *testing.T) {
 	token, _, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
 
-	tags := seedTags(t, ctx, token, client)
-	seedMods(t, ctx, token, client, tags[0])
+	tags := seedTags(ctx, t, token, client)
+	seedMods(ctx, t, token, client, tags[0])
 
 	getRequest := authRequest(getQuery, token)
 
