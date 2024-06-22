@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -26,32 +25,6 @@ type SatisfactoryVersionUpdate struct {
 // Where appends a list predicates to the SatisfactoryVersionUpdate builder.
 func (svu *SatisfactoryVersionUpdate) Where(ps ...predicate.SatisfactoryVersion) *SatisfactoryVersionUpdate {
 	svu.mutation.Where(ps...)
-	return svu
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (svu *SatisfactoryVersionUpdate) SetUpdatedAt(t time.Time) *SatisfactoryVersionUpdate {
-	svu.mutation.SetUpdatedAt(t)
-	return svu
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (svu *SatisfactoryVersionUpdate) SetDeletedAt(t time.Time) *SatisfactoryVersionUpdate {
-	svu.mutation.SetDeletedAt(t)
-	return svu
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (svu *SatisfactoryVersionUpdate) SetNillableDeletedAt(t *time.Time) *SatisfactoryVersionUpdate {
-	if t != nil {
-		svu.SetDeletedAt(*t)
-	}
-	return svu
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (svu *SatisfactoryVersionUpdate) ClearDeletedAt() *SatisfactoryVersionUpdate {
-	svu.mutation.ClearDeletedAt()
 	return svu
 }
 
@@ -97,9 +70,6 @@ func (svu *SatisfactoryVersionUpdate) Mutation() *SatisfactoryVersionMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (svu *SatisfactoryVersionUpdate) Save(ctx context.Context) (int, error) {
-	if err := svu.defaults(); err != nil {
-		return 0, err
-	}
 	return withHooks(ctx, svu.sqlSave, svu.mutation, svu.hooks)
 }
 
@@ -123,18 +93,6 @@ func (svu *SatisfactoryVersionUpdate) ExecX(ctx context.Context) {
 	if err := svu.Exec(ctx); err != nil {
 		panic(err)
 	}
-}
-
-// defaults sets the default values of the builder before save.
-func (svu *SatisfactoryVersionUpdate) defaults() error {
-	if _, ok := svu.mutation.UpdatedAt(); !ok {
-		if satisfactoryversion.UpdateDefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized satisfactoryversion.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
-		v := satisfactoryversion.UpdateDefaultUpdatedAt()
-		svu.mutation.SetUpdatedAt(v)
-	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -165,15 +123,6 @@ func (svu *SatisfactoryVersionUpdate) sqlSave(ctx context.Context) (n int, err e
 			}
 		}
 	}
-	if value, ok := svu.mutation.UpdatedAt(); ok {
-		_spec.SetField(satisfactoryversion.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := svu.mutation.DeletedAt(); ok {
-		_spec.SetField(satisfactoryversion.FieldDeletedAt, field.TypeTime, value)
-	}
-	if svu.mutation.DeletedAtCleared() {
-		_spec.ClearField(satisfactoryversion.FieldDeletedAt, field.TypeTime)
-	}
 	if value, ok := svu.mutation.Version(); ok {
 		_spec.SetField(satisfactoryversion.FieldVersion, field.TypeInt, value)
 	}
@@ -203,32 +152,6 @@ type SatisfactoryVersionUpdateOne struct {
 	hooks     []Hook
 	mutation  *SatisfactoryVersionMutation
 	modifiers []func(*sql.UpdateBuilder)
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (svuo *SatisfactoryVersionUpdateOne) SetUpdatedAt(t time.Time) *SatisfactoryVersionUpdateOne {
-	svuo.mutation.SetUpdatedAt(t)
-	return svuo
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (svuo *SatisfactoryVersionUpdateOne) SetDeletedAt(t time.Time) *SatisfactoryVersionUpdateOne {
-	svuo.mutation.SetDeletedAt(t)
-	return svuo
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (svuo *SatisfactoryVersionUpdateOne) SetNillableDeletedAt(t *time.Time) *SatisfactoryVersionUpdateOne {
-	if t != nil {
-		svuo.SetDeletedAt(*t)
-	}
-	return svuo
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (svuo *SatisfactoryVersionUpdateOne) ClearDeletedAt() *SatisfactoryVersionUpdateOne {
-	svuo.mutation.ClearDeletedAt()
-	return svuo
 }
 
 // SetVersion sets the "version" field.
@@ -286,9 +209,6 @@ func (svuo *SatisfactoryVersionUpdateOne) Select(field string, fields ...string)
 
 // Save executes the query and returns the updated SatisfactoryVersion entity.
 func (svuo *SatisfactoryVersionUpdateOne) Save(ctx context.Context) (*SatisfactoryVersion, error) {
-	if err := svuo.defaults(); err != nil {
-		return nil, err
-	}
 	return withHooks(ctx, svuo.sqlSave, svuo.mutation, svuo.hooks)
 }
 
@@ -312,18 +232,6 @@ func (svuo *SatisfactoryVersionUpdateOne) ExecX(ctx context.Context) {
 	if err := svuo.Exec(ctx); err != nil {
 		panic(err)
 	}
-}
-
-// defaults sets the default values of the builder before save.
-func (svuo *SatisfactoryVersionUpdateOne) defaults() error {
-	if _, ok := svuo.mutation.UpdatedAt(); !ok {
-		if satisfactoryversion.UpdateDefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized satisfactoryversion.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
-		v := satisfactoryversion.UpdateDefaultUpdatedAt()
-		svuo.mutation.SetUpdatedAt(v)
-	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -370,15 +278,6 @@ func (svuo *SatisfactoryVersionUpdateOne) sqlSave(ctx context.Context) (_node *S
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := svuo.mutation.UpdatedAt(); ok {
-		_spec.SetField(satisfactoryversion.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := svuo.mutation.DeletedAt(); ok {
-		_spec.SetField(satisfactoryversion.FieldDeletedAt, field.TypeTime, value)
-	}
-	if svuo.mutation.DeletedAtCleared() {
-		_spec.ClearField(satisfactoryversion.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := svuo.mutation.Version(); ok {
 		_spec.SetField(satisfactoryversion.FieldVersion, field.TypeInt, value)

@@ -172,9 +172,6 @@ var (
 	// SatisfactoryVersionsColumns holds the columns for the "satisfactory_versions" table.
 	SatisfactoryVersionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "version", Type: field.TypeInt, Unique: true},
 		{Name: "engine_version", Type: field.TypeString, Size: 16, Default: "4.26"},
 	}
@@ -188,11 +185,6 @@ var (
 				Name:    "satisfactoryversion_id",
 				Unique:  false,
 				Columns: []*schema.Column{SatisfactoryVersionsColumns[0]},
-			},
-			{
-				Name:    "satisfactoryversion_deleted_at",
-				Unique:  false,
-				Columns: []*schema.Column{SatisfactoryVersionsColumns[3]},
 			},
 		},
 	}

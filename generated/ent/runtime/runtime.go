@@ -151,26 +151,10 @@ func init() {
 	// mod.DefaultID holds the default value on creation for the id field.
 	mod.DefaultID = modDescID.Default.(func() string)
 	satisfactoryversionMixin := schema.SatisfactoryVersion{}.Mixin()
-	satisfactoryversionMixinHooks2 := satisfactoryversionMixin[2].Hooks()
-	satisfactoryversion.Hooks[0] = satisfactoryversionMixinHooks2[0]
-	satisfactoryversionMixinInters2 := satisfactoryversionMixin[2].Interceptors()
-	satisfactoryversion.Interceptors[0] = satisfactoryversionMixinInters2[0]
 	satisfactoryversionMixinFields0 := satisfactoryversionMixin[0].Fields()
 	_ = satisfactoryversionMixinFields0
-	satisfactoryversionMixinFields1 := satisfactoryversionMixin[1].Fields()
-	_ = satisfactoryversionMixinFields1
 	satisfactoryversionFields := schema.SatisfactoryVersion{}.Fields()
 	_ = satisfactoryversionFields
-	// satisfactoryversionDescCreatedAt is the schema descriptor for created_at field.
-	satisfactoryversionDescCreatedAt := satisfactoryversionMixinFields1[0].Descriptor()
-	// satisfactoryversion.DefaultCreatedAt holds the default value on creation for the created_at field.
-	satisfactoryversion.DefaultCreatedAt = satisfactoryversionDescCreatedAt.Default.(func() time.Time)
-	// satisfactoryversionDescUpdatedAt is the schema descriptor for updated_at field.
-	satisfactoryversionDescUpdatedAt := satisfactoryversionMixinFields1[1].Descriptor()
-	// satisfactoryversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	satisfactoryversion.DefaultUpdatedAt = satisfactoryversionDescUpdatedAt.Default.(func() time.Time)
-	// satisfactoryversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	satisfactoryversion.UpdateDefaultUpdatedAt = satisfactoryversionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// satisfactoryversionDescEngineVersion is the schema descriptor for engine_version field.
 	satisfactoryversionDescEngineVersion := satisfactoryversionFields[1].Descriptor()
 	// satisfactoryversion.DefaultEngineVersion holds the default value on creation for the engine_version field.

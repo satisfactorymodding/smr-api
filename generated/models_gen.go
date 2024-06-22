@@ -196,8 +196,6 @@ type SatisfactoryVersion struct {
 	ID            string `json:"id"`
 	Version       int    `json:"version"`
 	EngineVersion string `json:"engine_version"`
-	UpdatedAt     string `json:"updated_at"`
-	CreatedAt     string `json:"created_at"`
 }
 
 type Tag struct {

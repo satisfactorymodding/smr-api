@@ -262,12 +262,12 @@ func (svq *SatisfactoryVersionQuery) Clone() *SatisfactoryVersionQuery {
 // Example:
 //
 //	var v []struct {
-//		CreatedAt time.Time `json:"created_at,omitempty"`
+//		Version int `json:"version,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.SatisfactoryVersion.Query().
-//		GroupBy(satisfactoryversion.FieldCreatedAt).
+//		GroupBy(satisfactoryversion.FieldVersion).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (svq *SatisfactoryVersionQuery) GroupBy(field string, fields ...string) *SatisfactoryVersionGroupBy {
@@ -285,11 +285,11 @@ func (svq *SatisfactoryVersionQuery) GroupBy(field string, fields ...string) *Sa
 // Example:
 //
 //	var v []struct {
-//		CreatedAt time.Time `json:"created_at,omitempty"`
+//		Version int `json:"version,omitempty"`
 //	}
 //
 //	client.SatisfactoryVersion.Query().
-//		Select(satisfactoryversion.FieldCreatedAt).
+//		Select(satisfactoryversion.FieldVersion).
 //		Scan(ctx, &v)
 func (svq *SatisfactoryVersionQuery) Select(fields ...string) *SatisfactoryVersionSelect {
 	svq.ctx.Fields = append(svq.ctx.Fields, fields...)

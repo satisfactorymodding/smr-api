@@ -2,16 +2,13 @@
 -- Game engine versions
 CREATE TABLE IF NOT EXISTS satisfactory_versions (
     id              varchar(14) PRIMARY KEY,
-    created_at      timestamp with time zone,
-    updated_at      timestamp with time zone,
-    deleted_at      timestamp with time zone,
-    version         int NOT NULL,
+    version         int NOT NULL UNIQUE,
     engine_version  varchar(16) default '4.26'
 );
 
 
-INSERT INTO satisfactory_versions (id, created_at, version, engine_version)
-SELECT generate_random_id(14), created_at, satisfactory_version, engine_version FROM sml_versions;
+INSERT INTO satisfactory_versions (id, version, engine_version)
+SELECT generate_random_id(14), satisfactory_version, engine_version FROM sml_versions ON CONFLICT DO NOTHING;
 
 -- SML mod
 INSERT INTO mods (id, mod_reference, name, created_at, approved)

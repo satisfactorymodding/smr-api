@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -17,12 +16,6 @@ type SatisfactoryVersion struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// DeletedAt holds the value of the "deleted_at" field.
-	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Version holds the value of the "version" field.
 	Version int `json:"version,omitempty"`
 	// EngineVersion holds the value of the "engine_version" field.
@@ -39,8 +32,6 @@ func (*SatisfactoryVersion) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case satisfactoryversion.FieldID, satisfactoryversion.FieldEngineVersion:
 			values[i] = new(sql.NullString)
-		case satisfactoryversion.FieldCreatedAt, satisfactoryversion.FieldUpdatedAt, satisfactoryversion.FieldDeletedAt:
-			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -61,24 +52,6 @@ func (sv *SatisfactoryVersion) assignValues(columns []string, values []any) erro
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				sv.ID = value.String
-			}
-		case satisfactoryversion.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				sv.CreatedAt = value.Time
-			}
-		case satisfactoryversion.FieldUpdatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
-			} else if value.Valid {
-				sv.UpdatedAt = value.Time
-			}
-		case satisfactoryversion.FieldDeletedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
-			} else if value.Valid {
-				sv.DeletedAt = value.Time
 			}
 		case satisfactoryversion.FieldVersion:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -128,15 +101,6 @@ func (sv *SatisfactoryVersion) String() string {
 	var builder strings.Builder
 	builder.WriteString("SatisfactoryVersion(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", sv.ID))
-	builder.WriteString("created_at=")
-	builder.WriteString(sv.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("updated_at=")
-	builder.WriteString(sv.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("deleted_at=")
-	builder.WriteString(sv.DeletedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
 	builder.WriteString("version=")
 	builder.WriteString(fmt.Sprintf("%v", sv.Version))
 	builder.WriteString(", ")

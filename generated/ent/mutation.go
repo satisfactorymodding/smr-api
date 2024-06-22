@@ -4174,9 +4174,6 @@ type SatisfactoryVersionMutation struct {
 	op             Op
 	typ            string
 	id             *string
-	created_at     *time.Time
-	updated_at     *time.Time
-	deleted_at     *time.Time
 	version        *int
 	addversion     *int
 	engine_version *string
@@ -4288,127 +4285,6 @@ func (m *SatisfactoryVersionMutation) IDs(ctx context.Context) ([]string, error)
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (m *SatisfactoryVersionMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
-}
-
-// CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *SatisfactoryVersionMutation) CreatedAt() (r time.Time, exists bool) {
-	v := m.created_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCreatedAt returns the old "created_at" field's value of the SatisfactoryVersion entity.
-// If the SatisfactoryVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SatisfactoryVersionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
-	}
-	return oldValue.CreatedAt, nil
-}
-
-// ResetCreatedAt resets all changes to the "created_at" field.
-func (m *SatisfactoryVersionMutation) ResetCreatedAt() {
-	m.created_at = nil
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (m *SatisfactoryVersionMutation) SetUpdatedAt(t time.Time) {
-	m.updated_at = &t
-}
-
-// UpdatedAt returns the value of the "updated_at" field in the mutation.
-func (m *SatisfactoryVersionMutation) UpdatedAt() (r time.Time, exists bool) {
-	v := m.updated_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldUpdatedAt returns the old "updated_at" field's value of the SatisfactoryVersion entity.
-// If the SatisfactoryVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SatisfactoryVersionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
-	}
-	return oldValue.UpdatedAt, nil
-}
-
-// ResetUpdatedAt resets all changes to the "updated_at" field.
-func (m *SatisfactoryVersionMutation) ResetUpdatedAt() {
-	m.updated_at = nil
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (m *SatisfactoryVersionMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *SatisfactoryVersionMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the SatisfactoryVersion entity.
-// If the SatisfactoryVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SatisfactoryVersionMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *SatisfactoryVersionMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[satisfactoryversion.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *SatisfactoryVersionMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[satisfactoryversion.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *SatisfactoryVersionMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, satisfactoryversion.FieldDeletedAt)
 }
 
 // SetVersion sets the "version" field.
@@ -4537,16 +4413,7 @@ func (m *SatisfactoryVersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SatisfactoryVersionMutation) Fields() []string {
-	fields := make([]string, 0, 5)
-	if m.created_at != nil {
-		fields = append(fields, satisfactoryversion.FieldCreatedAt)
-	}
-	if m.updated_at != nil {
-		fields = append(fields, satisfactoryversion.FieldUpdatedAt)
-	}
-	if m.deleted_at != nil {
-		fields = append(fields, satisfactoryversion.FieldDeletedAt)
-	}
+	fields := make([]string, 0, 2)
 	if m.version != nil {
 		fields = append(fields, satisfactoryversion.FieldVersion)
 	}
@@ -4561,12 +4428,6 @@ func (m *SatisfactoryVersionMutation) Fields() []string {
 // schema.
 func (m *SatisfactoryVersionMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case satisfactoryversion.FieldCreatedAt:
-		return m.CreatedAt()
-	case satisfactoryversion.FieldUpdatedAt:
-		return m.UpdatedAt()
-	case satisfactoryversion.FieldDeletedAt:
-		return m.DeletedAt()
 	case satisfactoryversion.FieldVersion:
 		return m.Version()
 	case satisfactoryversion.FieldEngineVersion:
@@ -4580,12 +4441,6 @@ func (m *SatisfactoryVersionMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *SatisfactoryVersionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case satisfactoryversion.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
-	case satisfactoryversion.FieldUpdatedAt:
-		return m.OldUpdatedAt(ctx)
-	case satisfactoryversion.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	case satisfactoryversion.FieldVersion:
 		return m.OldVersion(ctx)
 	case satisfactoryversion.FieldEngineVersion:
@@ -4599,27 +4454,6 @@ func (m *SatisfactoryVersionMutation) OldField(ctx context.Context, name string)
 // type.
 func (m *SatisfactoryVersionMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case satisfactoryversion.FieldCreatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatedAt(v)
-		return nil
-	case satisfactoryversion.FieldUpdatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetUpdatedAt(v)
-		return nil
-	case satisfactoryversion.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
-		return nil
 	case satisfactoryversion.FieldVersion:
 		v, ok := value.(int)
 		if !ok {
@@ -4678,11 +4512,7 @@ func (m *SatisfactoryVersionMutation) AddField(name string, value ent.Value) err
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *SatisfactoryVersionMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(satisfactoryversion.FieldDeletedAt) {
-		fields = append(fields, satisfactoryversion.FieldDeletedAt)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -4695,11 +4525,6 @@ func (m *SatisfactoryVersionMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *SatisfactoryVersionMutation) ClearField(name string) error {
-	switch name {
-	case satisfactoryversion.FieldDeletedAt:
-		m.ClearDeletedAt()
-		return nil
-	}
 	return fmt.Errorf("unknown SatisfactoryVersion nullable field %s", name)
 }
 
@@ -4707,15 +4532,6 @@ func (m *SatisfactoryVersionMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *SatisfactoryVersionMutation) ResetField(name string) error {
 	switch name {
-	case satisfactoryversion.FieldCreatedAt:
-		m.ResetCreatedAt()
-		return nil
-	case satisfactoryversion.FieldUpdatedAt:
-		m.ResetUpdatedAt()
-		return nil
-	case satisfactoryversion.FieldDeletedAt:
-		m.ResetDeletedAt()
-		return nil
 	case satisfactoryversion.FieldVersion:
 		m.ResetVersion()
 		return nil

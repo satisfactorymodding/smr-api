@@ -1222,14 +1222,12 @@ func (c *SatisfactoryVersionClient) GetX(ctx context.Context, id string) *Satisf
 
 // Hooks returns the client hooks.
 func (c *SatisfactoryVersionClient) Hooks() []Hook {
-	hooks := c.hooks.SatisfactoryVersion
-	return append(hooks[:len(hooks):len(hooks)], satisfactoryversion.Hooks[:]...)
+	return c.hooks.SatisfactoryVersion
 }
 
 // Interceptors returns the client interceptors.
 func (c *SatisfactoryVersionClient) Interceptors() []Interceptor {
-	inters := c.inters.SatisfactoryVersion
-	return append(inters[:len(inters):len(inters)], satisfactoryversion.Interceptors[:]...)
+	return c.inters.SatisfactoryVersion
 }
 
 func (c *SatisfactoryVersionClient) mutate(ctx context.Context, m *SatisfactoryVersionMutation) (Value, error) {

@@ -12,8 +12,6 @@ type SatisfactoryVersion struct {
 func (SatisfactoryVersion) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		IDMixin{},
-		TimeMixin{},
-		SoftDeleteMixin{},
 	}
 }
 

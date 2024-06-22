@@ -276,10 +276,8 @@ type ComplexityRoot struct {
 	}
 
 	SatisfactoryVersion struct {
-		CreatedAt     func(childComplexity int) int
 		EngineVersion func(childComplexity int) int
 		ID            func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
 		Version       func(childComplexity int) int
 	}
 
@@ -1823,13 +1821,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SMLVersionTarget.VersionID(childComplexity), true
 
-	case "SatisfactoryVersion.created_at":
-		if e.complexity.SatisfactoryVersion.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.SatisfactoryVersion.CreatedAt(childComplexity), true
-
 	case "SatisfactoryVersion.engine_version":
 		if e.complexity.SatisfactoryVersion.EngineVersion == nil {
 			break
@@ -1843,13 +1834,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SatisfactoryVersion.ID(childComplexity), true
-
-	case "SatisfactoryVersion.updated_at":
-		if e.complexity.SatisfactoryVersion.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.SatisfactoryVersion.UpdatedAt(childComplexity), true
 
 	case "SatisfactoryVersion.version":
 		if e.complexity.SatisfactoryVersion.Version == nil {
@@ -2709,9 +2693,6 @@ type SatisfactoryVersion {
     id: SatisfactoryVersionID!
     version: Int!
     engine_version: String!
-
-    updated_at: Date!
-    created_at: Date!
 }
 
 ### Inputs
@@ -8902,10 +8883,6 @@ func (ec *executionContext) fieldContext_Mutation_createSatisfactoryVersion(ctx 
 				return ec.fieldContext_SatisfactoryVersion_version(ctx, field)
 			case "engine_version":
 				return ec.fieldContext_SatisfactoryVersion_engine_version(ctx, field)
-			case "updated_at":
-				return ec.fieldContext_SatisfactoryVersion_updated_at(ctx, field)
-			case "created_at":
-				return ec.fieldContext_SatisfactoryVersion_created_at(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatisfactoryVersion", field.Name)
 		},
@@ -8995,10 +8972,6 @@ func (ec *executionContext) fieldContext_Mutation_updateSatisfactoryVersion(ctx 
 				return ec.fieldContext_SatisfactoryVersion_version(ctx, field)
 			case "engine_version":
 				return ec.fieldContext_SatisfactoryVersion_engine_version(ctx, field)
-			case "updated_at":
-				return ec.fieldContext_SatisfactoryVersion_updated_at(ctx, field)
-			case "created_at":
-				return ec.fieldContext_SatisfactoryVersion_created_at(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatisfactoryVersion", field.Name)
 		},
@@ -11751,10 +11724,6 @@ func (ec *executionContext) fieldContext_Query_getSatisfactoryVersions(_ context
 				return ec.fieldContext_SatisfactoryVersion_version(ctx, field)
 			case "engine_version":
 				return ec.fieldContext_SatisfactoryVersion_engine_version(ctx, field)
-			case "updated_at":
-				return ec.fieldContext_SatisfactoryVersion_updated_at(ctx, field)
-			case "created_at":
-				return ec.fieldContext_SatisfactoryVersion_created_at(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatisfactoryVersion", field.Name)
 		},
@@ -11804,10 +11773,6 @@ func (ec *executionContext) fieldContext_Query_getSatisfactoryVersion(ctx contex
 				return ec.fieldContext_SatisfactoryVersion_version(ctx, field)
 			case "engine_version":
 				return ec.fieldContext_SatisfactoryVersion_engine_version(ctx, field)
-			case "updated_at":
-				return ec.fieldContext_SatisfactoryVersion_updated_at(ctx, field)
-			case "created_at":
-				return ec.fieldContext_SatisfactoryVersion_created_at(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatisfactoryVersion", field.Name)
 		},
@@ -13741,94 +13706,6 @@ func (ec *executionContext) fieldContext_SatisfactoryVersion_engine_version(_ co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SatisfactoryVersion_updated_at(ctx context.Context, field graphql.CollectedField, obj *SatisfactoryVersion) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SatisfactoryVersion_updated_at(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNDate2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SatisfactoryVersion_updated_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SatisfactoryVersion",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Date does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SatisfactoryVersion_created_at(ctx context.Context, field graphql.CollectedField, obj *SatisfactoryVersion) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SatisfactoryVersion_created_at(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNDate2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SatisfactoryVersion_created_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SatisfactoryVersion",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Date does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22211,16 +22088,6 @@ func (ec *executionContext) _SatisfactoryVersion(ctx context.Context, sel ast.Se
 			}
 		case "engine_version":
 			out.Values[i] = ec._SatisfactoryVersion_engine_version(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updated_at":
-			out.Values[i] = ec._SatisfactoryVersion_updated_at(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "created_at":
-			out.Values[i] = ec._SatisfactoryVersion_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

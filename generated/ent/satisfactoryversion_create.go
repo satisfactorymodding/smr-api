@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -21,48 +20,6 @@ type SatisfactoryVersionCreate struct {
 	mutation *SatisfactoryVersionMutation
 	hooks    []Hook
 	conflict []sql.ConflictOption
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (svc *SatisfactoryVersionCreate) SetCreatedAt(t time.Time) *SatisfactoryVersionCreate {
-	svc.mutation.SetCreatedAt(t)
-	return svc
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (svc *SatisfactoryVersionCreate) SetNillableCreatedAt(t *time.Time) *SatisfactoryVersionCreate {
-	if t != nil {
-		svc.SetCreatedAt(*t)
-	}
-	return svc
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (svc *SatisfactoryVersionCreate) SetUpdatedAt(t time.Time) *SatisfactoryVersionCreate {
-	svc.mutation.SetUpdatedAt(t)
-	return svc
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (svc *SatisfactoryVersionCreate) SetNillableUpdatedAt(t *time.Time) *SatisfactoryVersionCreate {
-	if t != nil {
-		svc.SetUpdatedAt(*t)
-	}
-	return svc
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (svc *SatisfactoryVersionCreate) SetDeletedAt(t time.Time) *SatisfactoryVersionCreate {
-	svc.mutation.SetDeletedAt(t)
-	return svc
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (svc *SatisfactoryVersionCreate) SetNillableDeletedAt(t *time.Time) *SatisfactoryVersionCreate {
-	if t != nil {
-		svc.SetDeletedAt(*t)
-	}
-	return svc
 }
 
 // SetVersion sets the "version" field.
@@ -106,9 +63,7 @@ func (svc *SatisfactoryVersionCreate) Mutation() *SatisfactoryVersionMutation {
 
 // Save creates the SatisfactoryVersion in the database.
 func (svc *SatisfactoryVersionCreate) Save(ctx context.Context) (*SatisfactoryVersion, error) {
-	if err := svc.defaults(); err != nil {
-		return nil, err
-	}
+	svc.defaults()
 	return withHooks(ctx, svc.sqlSave, svc.mutation, svc.hooks)
 }
 
@@ -135,43 +90,19 @@ func (svc *SatisfactoryVersionCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (svc *SatisfactoryVersionCreate) defaults() error {
-	if _, ok := svc.mutation.CreatedAt(); !ok {
-		if satisfactoryversion.DefaultCreatedAt == nil {
-			return fmt.Errorf("ent: uninitialized satisfactoryversion.DefaultCreatedAt (forgotten import ent/runtime?)")
-		}
-		v := satisfactoryversion.DefaultCreatedAt()
-		svc.mutation.SetCreatedAt(v)
-	}
-	if _, ok := svc.mutation.UpdatedAt(); !ok {
-		if satisfactoryversion.DefaultUpdatedAt == nil {
-			return fmt.Errorf("ent: uninitialized satisfactoryversion.DefaultUpdatedAt (forgotten import ent/runtime?)")
-		}
-		v := satisfactoryversion.DefaultUpdatedAt()
-		svc.mutation.SetUpdatedAt(v)
-	}
+func (svc *SatisfactoryVersionCreate) defaults() {
 	if _, ok := svc.mutation.EngineVersion(); !ok {
 		v := satisfactoryversion.DefaultEngineVersion
 		svc.mutation.SetEngineVersion(v)
 	}
 	if _, ok := svc.mutation.ID(); !ok {
-		if satisfactoryversion.DefaultID == nil {
-			return fmt.Errorf("ent: uninitialized satisfactoryversion.DefaultID (forgotten import ent/runtime?)")
-		}
 		v := satisfactoryversion.DefaultID()
 		svc.mutation.SetID(v)
 	}
-	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (svc *SatisfactoryVersionCreate) check() error {
-	if _, ok := svc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "SatisfactoryVersion.created_at"`)}
-	}
-	if _, ok := svc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "SatisfactoryVersion.updated_at"`)}
-	}
 	if _, ok := svc.mutation.Version(); !ok {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "SatisfactoryVersion.version"`)}
 	}
@@ -219,18 +150,6 @@ func (svc *SatisfactoryVersionCreate) createSpec() (*SatisfactoryVersion, *sqlgr
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := svc.mutation.CreatedAt(); ok {
-		_spec.SetField(satisfactoryversion.FieldCreatedAt, field.TypeTime, value)
-		_node.CreatedAt = value
-	}
-	if value, ok := svc.mutation.UpdatedAt(); ok {
-		_spec.SetField(satisfactoryversion.FieldUpdatedAt, field.TypeTime, value)
-		_node.UpdatedAt = value
-	}
-	if value, ok := svc.mutation.DeletedAt(); ok {
-		_spec.SetField(satisfactoryversion.FieldDeletedAt, field.TypeTime, value)
-		_node.DeletedAt = value
-	}
 	if value, ok := svc.mutation.Version(); ok {
 		_spec.SetField(satisfactoryversion.FieldVersion, field.TypeInt, value)
 		_node.Version = value
@@ -246,7 +165,7 @@ func (svc *SatisfactoryVersionCreate) createSpec() (*SatisfactoryVersion, *sqlgr
 // of the `INSERT` statement. For example:
 //
 //	client.SatisfactoryVersion.Create().
-//		SetCreatedAt(v).
+//		SetVersion(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -255,7 +174,7 @@ func (svc *SatisfactoryVersionCreate) createSpec() (*SatisfactoryVersion, *sqlgr
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.SatisfactoryVersionUpsert) {
-//			SetCreatedAt(v+v).
+//			SetVersion(v+v).
 //		}).
 //		Exec(ctx)
 func (svc *SatisfactoryVersionCreate) OnConflict(opts ...sql.ConflictOption) *SatisfactoryVersionUpsertOne {
@@ -290,36 +209,6 @@ type (
 		*sql.UpdateSet
 	}
 )
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *SatisfactoryVersionUpsert) SetUpdatedAt(v time.Time) *SatisfactoryVersionUpsert {
-	u.Set(satisfactoryversion.FieldUpdatedAt, v)
-	return u
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *SatisfactoryVersionUpsert) UpdateUpdatedAt() *SatisfactoryVersionUpsert {
-	u.SetExcluded(satisfactoryversion.FieldUpdatedAt)
-	return u
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *SatisfactoryVersionUpsert) SetDeletedAt(v time.Time) *SatisfactoryVersionUpsert {
-	u.Set(satisfactoryversion.FieldDeletedAt, v)
-	return u
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *SatisfactoryVersionUpsert) UpdateDeletedAt() *SatisfactoryVersionUpsert {
-	u.SetExcluded(satisfactoryversion.FieldDeletedAt)
-	return u
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *SatisfactoryVersionUpsert) ClearDeletedAt() *SatisfactoryVersionUpsert {
-	u.SetNull(satisfactoryversion.FieldDeletedAt)
-	return u
-}
 
 // SetVersion sets the "version" field.
 func (u *SatisfactoryVersionUpsert) SetVersion(v int) *SatisfactoryVersionUpsert {
@@ -368,9 +257,6 @@ func (u *SatisfactoryVersionUpsertOne) UpdateNewValues() *SatisfactoryVersionUps
 		if _, exists := u.create.mutation.ID(); exists {
 			s.SetIgnore(satisfactoryversion.FieldID)
 		}
-		if _, exists := u.create.mutation.CreatedAt(); exists {
-			s.SetIgnore(satisfactoryversion.FieldCreatedAt)
-		}
 	}))
 	return u
 }
@@ -400,41 +286,6 @@ func (u *SatisfactoryVersionUpsertOne) Update(set func(*SatisfactoryVersionUpser
 		set(&SatisfactoryVersionUpsert{UpdateSet: update})
 	}))
 	return u
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *SatisfactoryVersionUpsertOne) SetUpdatedAt(v time.Time) *SatisfactoryVersionUpsertOne {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.SetUpdatedAt(v)
-	})
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *SatisfactoryVersionUpsertOne) UpdateUpdatedAt() *SatisfactoryVersionUpsertOne {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *SatisfactoryVersionUpsertOne) SetDeletedAt(v time.Time) *SatisfactoryVersionUpsertOne {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *SatisfactoryVersionUpsertOne) UpdateDeletedAt() *SatisfactoryVersionUpsertOne {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *SatisfactoryVersionUpsertOne) ClearDeletedAt() *SatisfactoryVersionUpsertOne {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.ClearDeletedAt()
-	})
 }
 
 // SetVersion sets the "version" field.
@@ -608,7 +459,7 @@ func (svcb *SatisfactoryVersionCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.SatisfactoryVersionUpsert) {
-//			SetCreatedAt(v+v).
+//			SetVersion(v+v).
 //		}).
 //		Exec(ctx)
 func (svcb *SatisfactoryVersionCreateBulk) OnConflict(opts ...sql.ConflictOption) *SatisfactoryVersionUpsertBulk {
@@ -655,9 +506,6 @@ func (u *SatisfactoryVersionUpsertBulk) UpdateNewValues() *SatisfactoryVersionUp
 			if _, exists := b.mutation.ID(); exists {
 				s.SetIgnore(satisfactoryversion.FieldID)
 			}
-			if _, exists := b.mutation.CreatedAt(); exists {
-				s.SetIgnore(satisfactoryversion.FieldCreatedAt)
-			}
 		}
 	}))
 	return u
@@ -688,41 +536,6 @@ func (u *SatisfactoryVersionUpsertBulk) Update(set func(*SatisfactoryVersionUpse
 		set(&SatisfactoryVersionUpsert{UpdateSet: update})
 	}))
 	return u
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (u *SatisfactoryVersionUpsertBulk) SetUpdatedAt(v time.Time) *SatisfactoryVersionUpsertBulk {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.SetUpdatedAt(v)
-	})
-}
-
-// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
-func (u *SatisfactoryVersionUpsertBulk) UpdateUpdatedAt() *SatisfactoryVersionUpsertBulk {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *SatisfactoryVersionUpsertBulk) SetDeletedAt(v time.Time) *SatisfactoryVersionUpsertBulk {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *SatisfactoryVersionUpsertBulk) UpdateDeletedAt() *SatisfactoryVersionUpsertBulk {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *SatisfactoryVersionUpsertBulk) ClearDeletedAt() *SatisfactoryVersionUpsertBulk {
-	return u.Update(func(s *SatisfactoryVersionUpsert) {
-		s.ClearDeletedAt()
-	})
 }
 
 // SetVersion sets the "version" field.

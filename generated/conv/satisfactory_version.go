@@ -4,7 +4,6 @@
 package conv
 
 import (
-	conversion "github.com/satisfactorymodding/smr-api/conversion"
 	generated "github.com/satisfactorymodding/smr-api/generated"
 	ent "github.com/satisfactorymodding/smr-api/generated/ent"
 )
@@ -18,8 +17,6 @@ func (c *SatisfactoryVersionImpl) Convert(source *ent.SatisfactoryVersion) *gene
 		generatedSatisfactoryVersion.ID = (*source).ID
 		generatedSatisfactoryVersion.Version = (*source).Version
 		generatedSatisfactoryVersion.EngineVersion = (*source).EngineVersion
-		generatedSatisfactoryVersion.UpdatedAt = conversion.TimeToString((*source).UpdatedAt)
-		generatedSatisfactoryVersion.CreatedAt = conversion.TimeToString((*source).CreatedAt)
 		pGeneratedSatisfactoryVersion = &generatedSatisfactoryVersion
 	}
 	return pGeneratedSatisfactoryVersion
