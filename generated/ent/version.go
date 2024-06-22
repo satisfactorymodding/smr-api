@@ -31,6 +31,8 @@ type Version struct {
 	Version string `json:"version,omitempty"`
 	// SmlVersion holds the value of the "sml_version" field.
 	SmlVersion string `json:"sml_version,omitempty"`
+	// GameVersion holds the value of the "game_version" field.
+	GameVersion string `json:"game_version,omitempty"`
 	// Changelog holds the value of the "changelog" field.
 	Changelog string `json:"changelog,omitempty"`
 	// Downloads holds the value of the "downloads" field.
@@ -127,7 +129,7 @@ func (*Version) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case version.FieldDownloads, version.FieldHotness, version.FieldVersionMajor, version.FieldVersionMinor, version.FieldVersionPatch, version.FieldSize:
 			values[i] = new(sql.NullInt64)
-		case version.FieldID, version.FieldModID, version.FieldVersion, version.FieldSmlVersion, version.FieldChangelog, version.FieldKey, version.FieldStability, version.FieldMetadata, version.FieldModReference, version.FieldHash:
+		case version.FieldID, version.FieldModID, version.FieldVersion, version.FieldSmlVersion, version.FieldGameVersion, version.FieldChangelog, version.FieldKey, version.FieldStability, version.FieldMetadata, version.FieldModReference, version.FieldHash:
 			values[i] = new(sql.NullString)
 		case version.FieldCreatedAt, version.FieldUpdatedAt, version.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -187,6 +189,12 @@ func (v *Version) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field sml_version", values[i])
 			} else if value.Valid {
 				v.SmlVersion = value.String
+			}
+		case version.FieldGameVersion:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field game_version", values[i])
+			} else if value.Valid {
+				v.GameVersion = value.String
 			}
 		case version.FieldChangelog:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -345,6 +353,9 @@ func (v *Version) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("sml_version=")
 	builder.WriteString(v.SmlVersion)
+	builder.WriteString(", ")
+	builder.WriteString("game_version=")
+	builder.WriteString(v.GameVersion)
 	builder.WriteString(", ")
 	builder.WriteString("changelog=")
 	builder.WriteString(v.Changelog)

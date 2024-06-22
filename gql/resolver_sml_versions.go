@@ -3,8 +3,6 @@ package gql
 import (
 	"context"
 	"fmt"
-	"strconv"
-
 	"github.com/99designs/gqlgen/graphql"
 
 	"github.com/satisfactorymodding/smr-api/db"
@@ -12,7 +10,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/conv"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
-	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/models"
 )
 
@@ -85,49 +82,17 @@ func (r *getSMLVersionsResolver) Count(ctx context.Context, _ *generated.GetSMLV
 
 type smlVersionResolver struct{ *Resolver }
 
-func (s *smlVersionResolver) SatisfactoryVersion(ctx context.Context, obj *generated.SMLVersion) (int, error) {
-	query := db.From(ctx).VersionDependency.Query().Where(versiondependency.HasVersionWith(version.ID(obj.ID)))
-	dependencies, err := query.All(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get dependencies: %w", err)
-	}
-	for _, dep := range dependencies {
-		if dep.ModID == "FactoryGame" {
-			ver := dep.Condition[2:] // Strip the >=
-			versionNum, err := strconv.Atoi(ver)
-			if err != nil {
-				return 0, fmt.Errorf("failed to parse version number: %w", err)
-			}
-			return versionNum, nil
-		}
-	}
-	return 0, fmt.Errorf("no satisfactory version found for SML version")
-}
-
 func (s *smlVersionResolver) Link(_ context.Context, obj *generated.SMLVersion) (string, error) {
 	return "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/tag/v" + obj.Version, nil
 }
 
-func (s *smlVersionResolver) BootstrapVersion(ctx context.Context, obj *generated.SMLVersion) (*string, error) {
-	query := db.From(ctx).VersionDependency.Query().Where(versiondependency.HasVersionWith(version.ID(obj.ID)))
-	dependencies, err := query.All(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get dependencies: %w", err)
-	}
-	for _, dep := range dependencies {
-		if dep.ModID == "bootstrap" {
-			return &dep.Condition, nil
-		}
-	}
+func (s *smlVersionResolver) BootstrapVersion(_ context.Context, _ *generated.SMLVersion) (*string, error) {
+	// Still queried by SMM2
 	return nil, nil
 }
 
 func (s *smlVersionResolver) EngineVersion(ctx context.Context, obj *generated.SMLVersion) (string, error) {
-	satisfactoryVersion, err := s.SatisfactoryVersion(ctx, obj)
-	if err != nil {
-		return "", fmt.Errorf("failed to get satisfactory version: %w", err)
-	}
-	v, err := db.GetEngineVersionForSatisfactoryVersion(ctx, satisfactoryVersion)
+	v, err := db.GetEngineVersionForSatisfactoryVersion(ctx, obj.SatisfactoryVersion)
 	if err != nil {
 		return "", fmt.Errorf("failed to get engine version: %w", err)
 	}

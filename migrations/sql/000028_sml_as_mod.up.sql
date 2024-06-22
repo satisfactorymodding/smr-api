@@ -22,12 +22,16 @@ VALUES (
 ON CONFLICT (mod_reference) DO
     UPDATE SET name = EXCLUDED.name, created_at = EXCLUDED.created_at, approved = EXCLUDED.approved;
 
+-- version game version
+ALTER TABLE versions ADD COLUMN game_version varchar; -- allow null for now, needs to be filled in by the code migration
+
 -- SML mod versions
-INSERT INTO versions (id, mod_id, version, created_at, updated_at, deleted_at, stability, changelog, mod_reference, approved)
+INSERT INTO versions (id, mod_id, version, created_at, updated_at, deleted_at, stability, changelog, game_version, mod_reference, approved)
 SELECT
     id,
     (SELECT id FROM mods WHERE mod_reference = 'SML' LIMIT 1),
     version, date, updated_at, deleted_at, stability, changelog,
+    '>=' || satisfactory_version,
     'SML',
     true
 FROM sml_versions;
@@ -39,24 +43,6 @@ SELECT
     target_name,
     link -- Store the version link here for now, it will be replaced with a storage key by the code migration
 FROM sml_version_targets;
-
-
--- SML satisfactory version
-INSERT INTO version_dependencies (version_id, mod_id, condition)
-SELECT
-    id,
-    'FactoryGame',
-    '>=' || satisfactory_version
-FROM sml_versions;
-
--- SML bootstrap version
-INSERT INTO version_dependencies (version_id, mod_id, condition)
-SELECT
-    id,
-    'bootstrap',
-    '>=' || bootstrap_version
-FROM sml_versions
-WHERE bootstrap_version != '0.0.0' AND bootstrap_version IS NOT NULL;
 
 -- SML devs
 INSERT INTO user_mods (user_id, mod_id, role)

@@ -80,8 +80,6 @@ models:
 
   SMLVersion:
     fields:
-      satisfactory_version:
-        resolver: true
       bootstrap_version:
         resolver: true
       engine_version:

@@ -27,7 +27,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/proto/parser"
 	"github.com/satisfactorymodding/smr-api/storage"
@@ -55,7 +54,7 @@ type ModInfo struct {
 	ModReference         string                                `json:"mod_reference"`
 	Version              string                                `json:"version"`
 	Hash                 string                                `json:"-"`
-	SMLVersion           string                                `json:"sml_version"`
+	SMLVersion           *string                               `json:"sml_version"`
 	GameVersion          int                                   `json:"-"`
 	Objects              []ModObject                           `json:"objects"`
 	Metadata             []map[string]map[string][]interface{} `json:"-"`
@@ -280,13 +279,11 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 		}
 	}
 
-	for key, val := range modInfo.Dependencies {
-		if key == "SML" {
-			modInfo.SMLVersion = val
-		}
+	if smlDep, ok := modInfo.Dependencies["SML"]; ok {
+		modInfo.SMLVersion = &smlDep
 	}
 
-	if modInfo.SMLVersion == "" {
+	if modInfo.SMLVersion == nil {
 		return nil, errors.New("data.json doesn't contain SML as a dependency.") //nolint:revive
 	}
 
@@ -421,21 +418,17 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 		}
 	}
 
-	for key, val := range modInfo.Dependencies {
-		if key == "SML" {
-			modInfo.SMLVersion = val
-		}
+	if smlDep, ok := modInfo.Dependencies["SML"]; ok {
+		modInfo.SMLVersion = &smlDep
 	}
 
-	var gameVersion int
-
 	if uPlugin.GameVersion != nil {
-		gameVersion, err = strconv.Atoi(*uPlugin.GameVersion)
+		modInfo.GameVersion, err = strconv.Atoi(*uPlugin.GameVersion)
 		if err != nil {
 			return nil, errors.New("invalid GameVersion")
 		}
-	} else if modInfo.SMLVersion != "" {
-		gameVersion, err = getFactoryGameVersionFromSMLVersion(ctx, modInfo.SMLVersion)
+	} else if modInfo.SMLVersion != nil {
+		modInfo.GameVersion, err = getFactoryGameVersionFromSMLVersion(ctx, *modInfo.SMLVersion)
 		if err != nil {
 			return nil, fmt.Errorf("failed to infer FactoryGame version: %w", err)
 		}
@@ -443,18 +436,13 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 		return nil, fmt.Errorf("infering FactoryGame version: %s doesn't contain SML as a dependency", uPluginFile.Name)
 	}
 
-	modInfo.Dependencies["FactoryGame"] = fmt.Sprintf(">=%d", gameVersion)
-
 	modInfo.Type = UEPlugin
 
 	return &modInfo, nil
 }
 
 func getFactoryGameVersionFromSMLVersion(ctx context.Context, smlVersion string) (int, error) {
-	smlQuery := db.From(ctx).Mod.Query().Where(mod.ModReferenceEQ("SML"))
-	smlQuery = smlQuery.WithVersions(func(versionQuery *ent.VersionQuery) {
-		versionQuery.WithVersionDependencies()
-	})
+	smlQuery := db.From(ctx).Mod.Query().Where(mod.ModReferenceEQ("SML")).WithVersions()
 	smlMod, err := smlQuery.First(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get SML mod: %w", err)
@@ -474,15 +462,11 @@ func getFactoryGameVersionFromSMLVersion(ctx context.Context, smlVersion string)
 
 	for _, version := range smlVersions {
 		if constraint.Check(semver.MustParse(version.Version)) {
-			for _, dependency := range version.Edges.VersionDependencies {
-				if dependency.ModID == "FactoryGame" {
-					v, err := strconv.Atoi(dependency.Condition[2:]) // Strip >=
-					if err != nil {
-						return 0, fmt.Errorf("failed to parse FactoryGame version: %w", err)
-					}
-					return v, nil
-				}
+			v, err := strconv.Atoi(version.GameVersion[2:]) // Strip >=
+			if err != nil {
+				return 0, fmt.Errorf("failed to parse FactoryGame version: %w", err)
 			}
+			return v, nil
 		}
 	}
 

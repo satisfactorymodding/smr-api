@@ -23,18 +23,15 @@ CREATE TABLE sml_versions
     engine_version       varchar(16) default '4.26'::character varying
 );
 
-INSERT INTO sml_versions (id, version, link, satisfactory_version, bootstrap_version, date, created_at, updated_at, deleted_at, stability, changelog)
+INSERT INTO sml_versions (id, version, link, satisfactory_version, date, created_at, updated_at, deleted_at, stability, changelog)
 SELECT
     id,
     version,
     'https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/tag/v' || version,
-    (SELECT substring(condition, 3) FROM version_dependencies WHERE version_id = id AND mod_id = 'FactoryGame' LIMIT 1)::int,
-    (SELECT substring(condition, 3) FROM version_dependencies WHERE version_id = id AND mod_id = 'bootstrap' LIMIT 1),
+    substring(game_version, 3),
     created_at, created_at, updated_at, deleted_at, stability, changelog
 FROM versions
 WHERE mod_id = (SELECT id FROM mods WHERE mod_reference = 'SML' LIMIT 1);
-
-DELETE FROM version_dependencies WHERE version_id IN (SELECT id FROM versions WHERE mod_id = (SELECT id FROM mods WHERE mod_reference = 'SML' LIMIT 1));
 
 -- SML version targets
 CREATE TABLE sml_version_targets
@@ -62,6 +59,7 @@ WHERE version_id IN (SELECT id FROM versions WHERE mod_id = (SELECT id FROM mods
 DELETE FROM version_targets WHERE version_id IN (SELECT id FROM versions WHERE mod_id = (SELECT id FROM mods WHERE mod_reference = 'SML' LIMIT 1));
 
 -- SML versions
+DELETE FROM version_dependencies WHERE version_id IN (SELECT id FROM versions WHERE mod_id = (SELECT id FROM mods WHERE mod_reference = 'SML' LIMIT 1));
 DELETE FROM versions WHERE mod_id = (SELECT id FROM mods WHERE mod_reference = 'SML' LIMIT 1);
 
 -- SML mod
@@ -75,6 +73,6 @@ UPDATE sml_versions SET engine_version = (
     WHERE satisfactory_versions.version <= sml_versions.satisfactory_version
     ORDER BY satisfactory_versions.version DESC
     LIMIT 1
-) WHERE engine_version = '4.26';
+) WHERE engine_version = '4.26'; -- WHERE to avoid update-all warning
 
 DROP TABLE satisfactory_versions;

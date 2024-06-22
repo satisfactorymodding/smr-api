@@ -17,6 +17,7 @@ func (c *SMLVersionImpl) Convert(source *ent.Version) *generated.SMLVersion {
 		var generatedSMLVersion generated.SMLVersion
 		generatedSMLVersion.ID = (*source).ID
 		generatedSMLVersion.Version = (*source).Version
+		generatedSMLVersion.SatisfactoryVersion = conversion.SMLSatisfactoryVersion((*source).GameVersion)
 		generatedSMLVersion.Stability = generated.VersionStabilities((*source).Stability)
 		var pGeneratedSMLVersionTargetList []*generated.SMLVersionTarget
 		if (*source).Edges.Targets != nil {

@@ -464,8 +464,6 @@ type QueryResolver interface {
 	GetMyUnapprovedVersions(ctx context.Context, filter map[string]interface{}) (*GetMyVersions, error)
 }
 type SMLVersionResolver interface {
-	SatisfactoryVersion(ctx context.Context, obj *SMLVersion) (int, error)
-
 	Link(ctx context.Context, obj *SMLVersion) (string, error)
 
 	BootstrapVersion(ctx context.Context, obj *SMLVersion) (*string, error)
@@ -13016,7 +13014,7 @@ func (ec *executionContext) _SMLVersion_satisfactory_version(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.SMLVersion().SatisfactoryVersion(rctx, obj)
+		return obj.SatisfactoryVersion, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13037,8 +13035,8 @@ func (ec *executionContext) fieldContext_SMLVersion_satisfactory_version(_ conte
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -21792,41 +21790,10 @@ func (ec *executionContext) _SMLVersion(ctx context.Context, sel ast.SelectionSe
 				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "satisfactory_version":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._SMLVersion_satisfactory_version(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
+			out.Values[i] = ec._SMLVersion_satisfactory_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
 			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "stability":
 			out.Values[i] = ec._SMLVersion_stability(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

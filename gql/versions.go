@@ -121,7 +121,8 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *ent.Mod, versionID str
 
 	dbVersion, err := db.From(ctx).Version.Create().
 		SetVersion(modInfo.Version).
-		SetSmlVersion(modInfo.SMLVersion).
+		SetNillableSmlVersion(modInfo.SMLVersion).
+		SetGameVersion(fmt.Sprintf(">=%d", modInfo.GameVersion)).
 		SetChangelog(version.Changelog).
 		SetModID(mod.ID).
 		SetStability(util.Stability(version.Stability)).

@@ -1,6 +1,7 @@
 package conversion
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/satisfactorymodding/smr-api/generated"
@@ -23,7 +24,8 @@ type Announcement interface {
 type SMLVersion interface {
 	// goverter:map Edges.Targets Targets
 	// goverter:map CreatedAt Date
-	// goverter:ignore SatisfactoryVersion EngineVersion BootstrapVersion Link
+	// goverter:map GameVersion SatisfactoryVersion | SMLSatisfactoryVersion
+	// goverter:ignore EngineVersion BootstrapVersion Link
 	Convert(source *ent.Version) *generated.SMLVersion
 	ConvertSlice(source []*ent.Version) []*generated.SMLVersion
 	// goverter:ignore Link
@@ -124,4 +126,12 @@ func UIntToInt(i uint) int {
 
 func Int64ToInt(i int64) int {
 	return int(i)
+}
+
+func SMLSatisfactoryVersion(gameVersion string) int {
+	res, err := strconv.Atoi(gameVersion[2:]) // Strip the >=
+	if err != nil {
+		return 0
+	}
+	return res
 }

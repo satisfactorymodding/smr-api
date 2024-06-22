@@ -36,7 +36,7 @@ func init() {
 				return fmt.Errorf("failed to upload all SML versions: %w", err)
 			}
 
-			// Add new FactoryGame dependency
+			// Add the game version
 			err = utils.ReindexAllModFiles(ctx, false, nil, nil)
 			if err != nil {
 				return fmt.Errorf("failed to reindex all mod files: %w", err)
@@ -50,7 +50,7 @@ func init() {
 func uploadAllSMLVersions(ctx context.Context) error {
 	smlModQuery := db.From(ctx).Mod.Query().Where(mod.ModReference("SML"))
 	smlModQuery = smlModQuery.WithVersions(func(q *ent.VersionQuery) {
-		q.WithTargets().WithVersionDependencies()
+		q.WithTargets()
 	})
 
 	smlMod, err := smlModQuery.First(ctx)
@@ -59,17 +59,7 @@ func uploadAllSMLVersions(ctx context.Context) error {
 	}
 
 	for _, version := range smlMod.Edges.Versions {
-		factoryGameVersion := ""
-		for _, dep := range version.Edges.VersionDependencies {
-			if dep.ModID == "FactoryGame" {
-				factoryGameVersion = dep.Condition[2:]
-				break
-			}
-		}
-
-		if factoryGameVersion == "" {
-			return fmt.Errorf("FactoryGame dependency not found for SML version %s", version.Version)
-		}
+		factoryGameVersion := version.GameVersion[2:] // Strip the >=
 
 		var archive []byte
 		extractInfo := true
