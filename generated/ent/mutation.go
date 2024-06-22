@@ -8824,9 +8824,22 @@ func (m *VersionMutation) OldSmlVersion(ctx context.Context) (v string, err erro
 	return oldValue.SmlVersion, nil
 }
 
+// ClearSmlVersion clears the value of the "sml_version" field.
+func (m *VersionMutation) ClearSmlVersion() {
+	m.sml_version = nil
+	m.clearedFields[version.FieldSmlVersion] = struct{}{}
+}
+
+// SmlVersionCleared returns if the "sml_version" field was cleared in this mutation.
+func (m *VersionMutation) SmlVersionCleared() bool {
+	_, ok := m.clearedFields[version.FieldSmlVersion]
+	return ok
+}
+
 // ResetSmlVersion resets all changes to the "sml_version" field.
 func (m *VersionMutation) ResetSmlVersion() {
 	m.sml_version = nil
+	delete(m.clearedFields, version.FieldSmlVersion)
 }
 
 // SetChangelog sets the "changelog" field.
@@ -10145,6 +10158,9 @@ func (m *VersionMutation) ClearedFields() []string {
 	if m.FieldCleared(version.FieldDeletedAt) {
 		fields = append(fields, version.FieldDeletedAt)
 	}
+	if m.FieldCleared(version.FieldSmlVersion) {
+		fields = append(fields, version.FieldSmlVersion)
+	}
 	if m.FieldCleared(version.FieldChangelog) {
 		fields = append(fields, version.FieldChangelog)
 	}
@@ -10185,6 +10201,9 @@ func (m *VersionMutation) ClearField(name string) error {
 	switch name {
 	case version.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case version.FieldSmlVersion:
+		m.ClearSmlVersion()
 		return nil
 	case version.FieldChangelog:
 		m.ClearChangelog()

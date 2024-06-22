@@ -476,6 +476,16 @@ func SmlVersionHasSuffix(v string) predicate.Version {
 	return predicate.Version(sql.FieldHasSuffix(FieldSmlVersion, v))
 }
 
+// SmlVersionIsNil applies the IsNil predicate on the "sml_version" field.
+func SmlVersionIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldSmlVersion))
+}
+
+// SmlVersionNotNil applies the NotNil predicate on the "sml_version" field.
+func SmlVersionNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldSmlVersion))
+}
+
 // SmlVersionEqualFold applies the EqualFold predicate on the "sml_version" field.
 func SmlVersionEqualFold(v string) predicate.Version {
 	return predicate.Version(sql.FieldEqualFold(FieldSmlVersion, v))

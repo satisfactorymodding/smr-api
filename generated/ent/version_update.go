@@ -100,6 +100,12 @@ func (vu *VersionUpdate) SetNillableSmlVersion(s *string) *VersionUpdate {
 	return vu
 }
 
+// ClearSmlVersion clears the value of the "sml_version" field.
+func (vu *VersionUpdate) ClearSmlVersion() *VersionUpdate {
+	vu.mutation.ClearSmlVersion()
+	return vu
+}
+
 // SetChangelog sets the "changelog" field.
 func (vu *VersionUpdate) SetChangelog(s string) *VersionUpdate {
 	vu.mutation.SetChangelog(s)
@@ -582,6 +588,9 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.SmlVersion(); ok {
 		_spec.SetField(version.FieldSmlVersion, field.TypeString, value)
 	}
+	if vu.mutation.SmlVersionCleared() {
+		_spec.ClearField(version.FieldSmlVersion, field.TypeString)
+	}
 	if value, ok := vu.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)
 	}
@@ -884,6 +893,12 @@ func (vuo *VersionUpdateOne) SetNillableSmlVersion(s *string) *VersionUpdateOne 
 	if s != nil {
 		vuo.SetSmlVersion(*s)
 	}
+	return vuo
+}
+
+// ClearSmlVersion clears the value of the "sml_version" field.
+func (vuo *VersionUpdateOne) ClearSmlVersion() *VersionUpdateOne {
+	vuo.mutation.ClearSmlVersion()
 	return vuo
 }
 
@@ -1398,6 +1413,9 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	}
 	if value, ok := vuo.mutation.SmlVersion(); ok {
 		_spec.SetField(version.FieldSmlVersion, field.TypeString, value)
+	}
+	if vuo.mutation.SmlVersionCleared() {
+		_spec.ClearField(version.FieldSmlVersion, field.TypeString)
 	}
 	if value, ok := vuo.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)

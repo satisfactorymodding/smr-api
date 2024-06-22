@@ -86,6 +86,14 @@ func (vc *VersionCreate) SetSmlVersion(s string) *VersionCreate {
 	return vc
 }
 
+// SetNillableSmlVersion sets the "sml_version" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableSmlVersion(s *string) *VersionCreate {
+	if s != nil {
+		vc.SetSmlVersion(*s)
+	}
+	return vc
+}
+
 // SetChangelog sets the "changelog" field.
 func (vc *VersionCreate) SetChangelog(s string) *VersionCreate {
 	vc.mutation.SetChangelog(s)
@@ -411,9 +419,6 @@ func (vc *VersionCreate) check() error {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Version.version": %w`, err)}
 		}
 	}
-	if _, ok := vc.mutation.SmlVersion(); !ok {
-		return &ValidationError{Name: "sml_version", err: errors.New(`ent: missing required field "Version.sml_version"`)}
-	}
 	if v, ok := vc.mutation.SmlVersion(); ok {
 		if err := version.SmlVersionValidator(v); err != nil {
 			return &ValidationError{Name: "sml_version", err: fmt.Errorf(`ent: validator failed for field "Version.sml_version": %w`, err)}
@@ -735,6 +740,12 @@ func (u *VersionUpsert) SetSmlVersion(v string) *VersionUpsert {
 // UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
 func (u *VersionUpsert) UpdateSmlVersion() *VersionUpsert {
 	u.SetExcluded(version.FieldSmlVersion)
+	return u
+}
+
+// ClearSmlVersion clears the value of the "sml_version" field.
+func (u *VersionUpsert) ClearSmlVersion() *VersionUpsert {
+	u.SetNull(version.FieldSmlVersion)
 	return u
 }
 
@@ -1115,6 +1126,13 @@ func (u *VersionUpsertOne) SetSmlVersion(v string) *VersionUpsertOne {
 func (u *VersionUpsertOne) UpdateSmlVersion() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateSmlVersion()
+	})
+}
+
+// ClearSmlVersion clears the value of the "sml_version" field.
+func (u *VersionUpsertOne) ClearSmlVersion() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearSmlVersion()
 	})
 }
 
@@ -1704,6 +1722,13 @@ func (u *VersionUpsertBulk) SetSmlVersion(v string) *VersionUpsertBulk {
 func (u *VersionUpsertBulk) UpdateSmlVersion() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateSmlVersion()
+	})
+}
+
+// ClearSmlVersion clears the value of the "sml_version" field.
+func (u *VersionUpsertBulk) ClearSmlVersion() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearSmlVersion()
 	})
 }
 

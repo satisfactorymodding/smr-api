@@ -34,12 +34,6 @@ func (c *SMLVersionImpl) Convert(source *ent.Version) *generated.SMLVersion {
 	}
 	return pGeneratedSMLVersion
 }
-func (c *SMLVersionImpl) ConvertNested(source ent.VersionTarget) generated.SMLVersionTarget {
-	var generatedSMLVersionTarget generated.SMLVersionTarget
-	generatedSMLVersionTarget.VersionID = source.VersionID
-	generatedSMLVersionTarget.TargetName = generated.TargetName(source.TargetName)
-	return generatedSMLVersionTarget
-}
 func (c *SMLVersionImpl) ConvertSlice(source []*ent.Version) []*generated.SMLVersion {
 	var pGeneratedSMLVersionList []*generated.SMLVersion
 	if source != nil {
@@ -50,10 +44,16 @@ func (c *SMLVersionImpl) ConvertSlice(source []*ent.Version) []*generated.SMLVer
 	}
 	return pGeneratedSMLVersionList
 }
+func (c *SMLVersionImpl) ConvertTarget(source ent.VersionTarget) generated.SMLVersionTarget {
+	var generatedSMLVersionTarget generated.SMLVersionTarget
+	generatedSMLVersionTarget.VersionID = source.VersionID
+	generatedSMLVersionTarget.TargetName = generated.TargetName(source.TargetName)
+	return generatedSMLVersionTarget
+}
 func (c *SMLVersionImpl) pEntVersionTargetToPGeneratedSMLVersionTarget(source *ent.VersionTarget) *generated.SMLVersionTarget {
 	var pGeneratedSMLVersionTarget *generated.SMLVersionTarget
 	if source != nil {
-		generatedSMLVersionTarget := c.ConvertNested((*source))
+		generatedSMLVersionTarget := c.ConvertTarget((*source))
 		pGeneratedSMLVersionTarget = &generatedSMLVersionTarget
 	}
 	return pGeneratedSMLVersionTarget
