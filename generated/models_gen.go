@@ -288,6 +288,7 @@ type Version struct {
 	ModID        string               `json:"mod_id"`
 	Version      string               `json:"version"`
 	SmlVersion   string               `json:"sml_version"`
+	GameVersion  string               `json:"game_version"`
 	Changelog    string               `json:"changelog"`
 	Downloads    int                  `json:"downloads"`
 	Stability    VersionStabilities   `json:"stability"`

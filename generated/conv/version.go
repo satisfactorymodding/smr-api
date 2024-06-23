@@ -19,6 +19,7 @@ func (c *VersionImpl) Convert(source *ent.Version) *generated.Version {
 		generatedVersion.ModID = (*source).ModID
 		generatedVersion.Version = (*source).Version
 		generatedVersion.SmlVersion = (*source).SmlVersion
+		generatedVersion.GameVersion = (*source).GameVersion
 		generatedVersion.Changelog = (*source).Changelog
 		generatedVersion.Downloads = conversion.UIntToInt((*source).Downloads)
 		generatedVersion.Stability = generated.VersionStabilities((*source).Stability)

@@ -331,6 +331,7 @@ type ComplexityRoot struct {
 		CreatedAt    func(childComplexity int) int
 		Dependencies func(childComplexity int) int
 		Downloads    func(childComplexity int) int
+		GameVersion  func(childComplexity int) int
 		Hash         func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Link         func(childComplexity int) int
@@ -2078,6 +2079,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Version.Downloads(childComplexity), true
 
+	case "Version.game_version":
+		if e.complexity.Version.GameVersion == nil {
+			break
+		}
+
+		return e.complexity.Version.GameVersion(childComplexity), true
+
 	case "Version.hash":
 		if e.complexity.Version.Hash == nil {
 			break
@@ -2919,6 +2927,7 @@ type Version {
     mod_id: ModID!
     version: String!
     sml_version: String!
+    game_version: String!
     changelog: String!
     downloads: Int!
     stability: VersionStabilities!
@@ -4673,6 +4682,8 @@ func (ec *executionContext) fieldContext_CreateVersionResponse_version(_ context
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -5135,6 +5146,8 @@ func (ec *executionContext) fieldContext_GetMyVersions_versions(_ context.Contex
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -5373,6 +5386,8 @@ func (ec *executionContext) fieldContext_GetVersions_versions(_ context.Context,
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -6056,6 +6071,8 @@ func (ec *executionContext) fieldContext_LatestVersions_alpha(_ context.Context,
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -6133,6 +6150,8 @@ func (ec *executionContext) fieldContext_LatestVersions_beta(_ context.Context, 
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -6210,6 +6229,8 @@ func (ec *executionContext) fieldContext_LatestVersions_release(_ context.Contex
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -7175,6 +7196,8 @@ func (ec *executionContext) fieldContext_Mod_version(ctx context.Context, field 
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -7266,6 +7289,8 @@ func (ec *executionContext) fieldContext_Mod_versions(ctx context.Context, field
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -7497,6 +7522,8 @@ func (ec *executionContext) fieldContext_ModVersion_versions(_ context.Context, 
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -10153,6 +10180,8 @@ func (ec *executionContext) fieldContext_Mutation_updateVersion(ctx context.Cont
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -12341,6 +12370,8 @@ func (ec *executionContext) fieldContext_Query_getVersion(ctx context.Context, f
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -15482,6 +15513,50 @@ func (ec *executionContext) fieldContext_Version_sml_version(_ context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Version_game_version(ctx context.Context, field graphql.CollectedField, obj *Version) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Version_game_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GameVersion, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Version_game_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Version",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Version_changelog(ctx context.Context, field graphql.CollectedField, obj *Version) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Version_changelog(ctx, field)
 	if err != nil {
@@ -16428,6 +16503,8 @@ func (ec *executionContext) fieldContext_VersionDependency_version(_ context.Con
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -22595,6 +22672,11 @@ func (ec *executionContext) _Version(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "sml_version":
 			out.Values[i] = ec._Version_sml_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "game_version":
+			out.Values[i] = ec._Version_game_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

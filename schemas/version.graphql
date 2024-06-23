@@ -25,6 +25,7 @@ type Version {
     mod_id: ModID!
     version: String!
     sml_version: String!
+    game_version: String!
     changelog: String!
     downloads: Int!
     stability: VersionStabilities!
