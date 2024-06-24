@@ -472,9 +472,13 @@ func convertVersionFilter(query *ent.VersionQuery, filter *models.VersionFilter,
 			).ToFunc())
 
 		if filter.Search != nil && *filter.Search != "" {
+			cleanedSearch := strings.ReplaceAll(*filter.Search, " ", " & ")
+
 			query = query.Modify(func(s *sql.Selector) {
-				s.Where(sql.ExprP("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & ")))
-			}).Clone()
+				s.Where(sql.P(func(builder *sql.Builder) {
+					builder.WriteString("to_tsvector(version) @@ to_tsquery(").Arg(cleanedSearch).WriteString(")")
+				}))
+			}).VersionQuery
 		}
 	}
 

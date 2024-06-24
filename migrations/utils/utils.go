@@ -16,7 +16,7 @@ func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(*
 	offset := 0
 
 	for {
-		mods, err := db.From(ctx).Mod.Query().Limit(100).Offset(100).Order(mod.ByCreatedAt(sql.OrderDesc())).All(ctx)
+		mods, err := db.From(ctx).Mod.Query().Limit(100).Offset(offset).Order(mod.ByCreatedAt(sql.OrderDesc())).All(ctx)
 		if err != nil {
 			return err
 		}

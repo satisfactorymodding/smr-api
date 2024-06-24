@@ -9,6 +9,7 @@ import (
 
 	"github.com/Vilsol/slox"
 	"github.com/chai2010/webp"
+
 	// GIF Support
 	_ "image/gif"
 	// JPEG Support

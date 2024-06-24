@@ -95,9 +95,10 @@ func (r *queryResolver) GetTags(ctx context.Context, filter *generated.TagFilter
 			cleanSearch := strings.ReplaceAll(strings.TrimSpace(*filter.Search), " ", " & ")
 
 			query = query.Modify(func(s *sql.Selector) {
-				s.AppendSelectExpr(sql.Expr("similarity(name, ?) as s", cleanSearch))
-				s.Where(sql.ExprP("s > 0.2"))
-			}).Clone()
+				s.Where(sql.P(func(builder *sql.Builder) {
+					builder.WriteString("similarity(name, ").Arg(cleanSearch).WriteString(") > 0.2")
+				}))
+			}).TagQuery
 		}
 
 		if filter.Ids != nil && len(filter.Ids) > 0 {

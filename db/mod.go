@@ -28,22 +28,31 @@ func ConvertModFilter(query *ent.ModQuery, filter *models.ModFilter, count bool,
 
 		if filter.OrderBy != nil && *filter.OrderBy != generated.ModFieldsSearch {
 			if string(*filter.OrderBy) == "last_version_date" {
-				query = query.Modify(func(s *sql.Selector) {
-					s.OrderExpr(sql.ExprP("case when last_version_date is null then 1 else 0 end, last_version_date"))
-				}).Clone()
-			} else {
-				query = query.Order(sql.OrderByField(
-					filter.OrderBy.String(),
-					OrderToOrder(filter.Order.String()),
-				).ToFunc())
+				query = query.Order(func(s *sql.Selector) {
+					s.OrderExpr(sql.ExprP("case when last_version_date is null then 1 else 0 end"))
+				})
 			}
+			query = query.Order(sql.OrderByField(
+				filter.OrderBy.String(),
+				OrderToOrder(filter.Order.String()),
+			).ToFunc())
 		}
 
 		if filter.Search != nil && *filter.Search != "" {
 			cleanSearch := strings.ReplaceAll(strings.TrimSpace(*filter.Search), " ", " & ")
 
 			query = query.Where(func(s *sql.Selector) {
-				join := sql.SelectExpr(sql.ExprP("id, (similarity(name, ?) * 2 + similarity(short_description, ?) + similarity(full_description, ?) * 0.5) as s", cleanSearch, cleanSearch, cleanSearch))
+				join := sql.Select("id")
+				join = join.AppendSelectExprAs(
+					sql.P(func(builder *sql.Builder) {
+						builder.WriteString("similarity(name, ").Arg(cleanSearch).WriteString(") * 2").
+							WriteString(" + ").
+							WriteString("similarity(short_description, ").Arg(cleanSearch).WriteString(")").
+							WriteString(" + ").
+							WriteString("similarity(full_description, ").Arg(cleanSearch).WriteString(") * 0.5")
+					}),
+					"s",
+				)
 				join.From(sql.Table(mod.Table)).As("t1")
 				s.Join(join).On(s.C(mod.FieldID), join.C("id"))
 			})
@@ -64,10 +73,7 @@ func ConvertModFilter(query *ent.ModQuery, filter *models.ModFilter, count bool,
 		}
 
 		if filter.TagIDs != nil && len(filter.TagIDs) > 0 {
-			query = query.Where(func(s *sql.Selector) {
-				t := sql.Table(modtag.Table)
-				s.Join(t).OnP(sql.ExprP("mod_tags.tag_id in ? AND mod_tags.mod_id = mods.id", filter.TagIDs))
-			})
+			query = query.Where(mod.HasModTagsWith(modtag.TagIDIn(filter.TagIDs...)))
 		}
 	}
 
