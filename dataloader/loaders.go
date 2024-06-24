@@ -47,7 +47,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 						if u, ok := byID[id]; ok {
 							results[i] = &dataloader.Result[[]*ent.VersionDependency]{Data: u}
 						} else {
-							results[i] = &dataloader.Result[[]*ent.VersionDependency]{Error: errors.New("version not found")}
+							results[i] = &dataloader.Result[[]*ent.VersionDependency]{Data: []*ent.VersionDependency{}}
 						}
 					}
 
@@ -70,7 +70,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 						if u, ok := byID[id]; ok {
 							results[i] = &dataloader.Result[[]*ent.UserMod]{Data: u}
 						} else {
-							results[i] = &dataloader.Result[[]*ent.UserMod]{Error: errors.New("version not found")}
+							results[i] = &dataloader.Result[[]*ent.UserMod]{Error: errors.New("mod not found")}
 						}
 					}
 
@@ -97,7 +97,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 						if u, ok := byID[id]; ok {
 							results[i] = &dataloader.Result[[]*ent.Version]{Data: u}
 						} else {
-							results[i] = &dataloader.Result[[]*ent.Version]{Error: errors.New("version not found")}
+							results[i] = &dataloader.Result[[]*ent.Version]{Data: []*ent.Version{}}
 						}
 					}
 
@@ -145,7 +145,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 						if u, ok := byID[id]; ok {
 							results[i] = &dataloader.Result[[]*ent.Version]{Data: u}
 						} else {
-							results[i] = &dataloader.Result[[]*ent.Version]{Error: errors.New("version not found")}
+							results[i] = &dataloader.Result[[]*ent.Version]{Data: []*ent.Version{}}
 						}
 					}
 
