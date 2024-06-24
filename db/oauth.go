@@ -3,6 +3,7 @@ package db
 import (
 	"bytes"
 	"context"
+	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
@@ -15,15 +16,17 @@ func CompleteOAuthFlow(ctx context.Context, u *oauth.UserData, userAgent string)
 	avatarURL := u.Avatar
 	u.Avatar = ""
 
-	find := From(ctx).User.Query().Where(user.Email(u.Email))
+	var oauthPredicate predicate.User
 
 	if u.Site == oauth.SiteGithub {
-		find = find.Where(user.GithubID(u.ID))
+		oauthPredicate = user.GithubID(u.ID)
 	} else if u.Site == oauth.SiteGoogle {
-		find = find.Where(user.GoogleID(u.ID))
+		oauthPredicate = user.GoogleID(u.ID)
 	} else if u.Site == oauth.SiteFacebook {
-		find = find.Where(user.FacebookID(u.ID))
+		oauthPredicate = user.FacebookID(u.ID)
 	}
+
+	find := From(ctx).User.Query().Where(user.Or(user.Email(u.Email), oauthPredicate))
 
 	found, err := find.First(ctx)
 	if err != nil && !ent.IsNotFound(err) {
