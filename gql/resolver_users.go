@@ -300,7 +300,7 @@ func (r *userModResolver) User(ctx context.Context, obj *generated.UserMod) (*ge
 }
 
 func (r *userModResolver) Mod(ctx context.Context, obj *generated.UserMod) (*generated.Mod, error) {
-	result, err := db.From(ctx).Mod.Get(ctx, obj.ModID)
+	result, err := db.From(ctx).Mod.Query().WithTags().Where(mod.ID(obj.ModID)).Only(ctx)
 	if err != nil {
 		return nil, err
 	}
