@@ -244,12 +244,28 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 				role = "editor"
 			}
 
-			if err := db.From(ctx).UserMod.Create().
-				SetUserID(userMod.UserID).
-				SetModID(modID).
-				SetRole(role).
-				Exec(ctx); err != nil {
-				return nil, err
+			var existing *ent.UserMod
+			for _, author := range authors {
+				if author.UserID == userMod.UserID {
+					existing = author
+					break
+				}
+			}
+
+			if existing != nil {
+				if err := db.From(ctx).UserMod.UpdateOne(existing).
+					SetRole(role).
+					Exec(ctx); err != nil {
+					return nil, err
+				}
+			} else {
+				if err := db.From(ctx).UserMod.Create().
+					SetUserID(userMod.UserID).
+					SetModID(modID).
+					SetRole(role).
+					Exec(ctx); err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
