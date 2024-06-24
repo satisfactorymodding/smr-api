@@ -98,7 +98,7 @@ func (r *queryResolver) GetTags(ctx context.Context, filter *generated.TagFilter
 				s.Where(sql.P(func(builder *sql.Builder) {
 					builder.WriteString("similarity(name, ").Arg(cleanSearch).WriteString(") > 0.2")
 				}))
-			}).Clone()
+			}).TagQuery
 		}
 
 		if filter.Ids != nil && len(filter.Ids) > 0 {

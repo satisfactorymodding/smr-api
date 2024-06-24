@@ -213,7 +213,7 @@ func convertGuideFilter(query *ent.GuideQuery, filter *models.GuideFilter) *ent.
 				s.Where(sql.P(func(builder *sql.Builder) {
 					builder.WriteString("to_tsvector(name) @@ to_tsquery(").Arg(cleanedSearch).WriteString(")")
 				}))
-			}).Clone()
+			}).GuideQuery
 		}
 
 		if filter.TagIDs != nil && len(filter.TagIDs) > 0 {

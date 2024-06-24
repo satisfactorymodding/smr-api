@@ -238,7 +238,7 @@ func convertSMLVersionFilter(query *ent.SmlVersionQuery, filter *models.SMLVersi
 				s.Where(sql.P(func(builder *sql.Builder) {
 					builder.WriteString("to_tsvector(version) @@ to_tsquery(").Arg(cleanedSearch).WriteString(")")
 				}))
-			}).Clone()
+			}).SmlVersionQuery
 		}
 	}
 	return query
