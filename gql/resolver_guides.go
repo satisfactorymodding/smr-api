@@ -207,8 +207,12 @@ func convertGuideFilter(query *ent.GuideQuery, filter *models.GuideFilter) *ent.
 			).ToFunc())
 
 		if filter.Search != nil && *filter.Search != "" {
+			cleanedSearch := strings.ReplaceAll(*filter.Search, " ", " & ")
+
 			query = query.Modify(func(s *sql.Selector) {
-				s.Where(sql.ExprP("to_tsvector(name) @@ to_tsquery(?)", strings.ReplaceAll(*filter.Search, " ", " & ")))
+				s.Where(sql.P(func(builder *sql.Builder) {
+					builder.WriteString("to_tsvector(name) @@ to_tsquery(").Arg(cleanedSearch).WriteString(")")
+				}))
 			}).Clone()
 		}
 
