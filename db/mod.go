@@ -28,15 +28,14 @@ func ConvertModFilter(query *ent.ModQuery, filter *models.ModFilter, count bool,
 
 		if filter.OrderBy != nil && *filter.OrderBy != generated.ModFieldsSearch {
 			if string(*filter.OrderBy) == "last_version_date" {
-				query = query.Modify(func(s *sql.Selector) {
-					s.OrderExpr(sql.ExprP("case when last_version_date is null then 1 else 0 end, last_version_date"))
-				}).Clone()
-			} else {
-				query = query.Order(sql.OrderByField(
-					filter.OrderBy.String(),
-					OrderToOrder(filter.Order.String()),
-				).ToFunc())
+				query = query.Order(func(s *sql.Selector) {
+					s.OrderExpr(sql.ExprP("case when last_version_date is null then 1 else 0 end"))
+				})
 			}
+			query = query.Order(sql.OrderByField(
+				filter.OrderBy.String(),
+				OrderToOrder(filter.Order.String()),
+			).ToFunc())
 		}
 
 		if filter.Search != nil && *filter.Search != "" {
