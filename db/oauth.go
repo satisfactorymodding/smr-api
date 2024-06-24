@@ -3,9 +3,9 @@ package db
 import (
 	"bytes"
 	"context"
-	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 
 	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/oauth"
 	"github.com/satisfactorymodding/smr-api/storage"
