@@ -17,7 +17,7 @@ require (
 	github.com/cespare/xxhash v1.1.0
 	github.com/chai2010/webp v1.1.1
 	github.com/dgraph-io/ristretto v0.1.1
-	github.com/exaring/otelpgx v0.6.1
+	github.com/exaring/otelpgx v0.6.2
 	github.com/felixge/fgprof v0.9.4
 	github.com/finnbear/moderation v0.11.4
 	github.com/go-redis/redis v6.15.9+incompatible
