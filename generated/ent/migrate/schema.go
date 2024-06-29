@@ -388,7 +388,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "token", Type: field.TypeString, Unique: true, Size: 256},
+		{Name: "token", Type: field.TypeString, Unique: true, Size: 512},
 		{Name: "user_agent", Type: field.TypeString, Nullable: true},
 		{Name: "user_id", Type: field.TypeString},
 	}

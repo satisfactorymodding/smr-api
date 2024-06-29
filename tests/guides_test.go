@@ -18,7 +18,6 @@ func init() {
 	db.EnableDebug()
 }
 
-// TODO Add guide tag test
 // TODO Add rate limit test
 
 func TestGuides(t *testing.T) {
@@ -28,21 +27,25 @@ func TestGuides(t *testing.T) {
 	token, userID, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
 
+	tags := seedTags(ctx, t, token, client)
+
 	// Run Twice to detect any cache issues
 	for i := range 2 {
 		t.Run("Loop"+strconv.Itoa(i), func(t *testing.T) {
 			var guideID string
 
 			t.Run("Create", func(t *testing.T) {
-				createGuide := authRequest(`mutation {
+				createGuide := authRequest(`mutation ($tags: [TagID!]) {
 					createGuide(guide: {
 						name: "Hello World",
 						short_description: "Short description about the guide",
-						guide: "The full guide text goes here."
+						guide: "The full guide text goes here.",
+						tagIDs: $tags
 					}) {
 						id
 					}
 				}`, token)
+				createGuide.Var("tags", tags)
 
 				var createGuideResponse struct {
 					CreateGuide generated.Guide
@@ -79,17 +82,19 @@ func TestGuides(t *testing.T) {
 			})
 
 			t.Run("Update", func(t *testing.T) {
-				updateGuide := authRequest(`mutation ($id: GuideID!) {
+				updateGuide := authRequest(`mutation ($id: GuideID!, $tags: [TagID!]) {
 					updateGuide(
 						guideId: $id,
 						guide: {
-							name: "Foo Bar"
+							name: "Foo Bar",
+							tagIDs: $tags
 						}
 					) {
 						id
 					}
 				}`, token)
 				updateGuide.Var("id", guideID)
+				updateGuide.Var("tags", tags)
 
 				var updateGuideResponse struct {
 					UpdateGuide generated.Guide
@@ -117,6 +122,39 @@ func TestGuides(t *testing.T) {
 					GetGuides generated.GetGuides
 				}
 				testza.AssertNoError(t, client.Run(ctx, queryGuides, &queryGuidesResponse))
+				testza.AssertEqual(t, 1, queryGuidesResponse.GetGuides.Count)
+				testza.AssertEqual(t, 1, len(queryGuidesResponse.GetGuides.Guides))
+				testza.AssertEqual(t, guideID, queryGuidesResponse.GetGuides.Guides[0].ID)
+				testza.AssertEqual(t, "Foo Bar", queryGuidesResponse.GetGuides.Guides[0].Name)
+				testza.AssertEqual(t, "Short description about the guide", queryGuidesResponse.GetGuides.Guides[0].ShortDescription)
+				testza.AssertEqual(t, "The full guide text goes here.", queryGuidesResponse.GetGuides.Guides[0].Guide)
+				testza.AssertEqual(t, userID, queryGuidesResponse.GetGuides.Guides[0].User.ID)
+			})
+
+			t.Run("Search", func(t *testing.T) {
+				searchGuides := authRequest(`query ($tags: [TagID!]) {
+					getGuides (filter: {
+							search: "Bar",
+							tagIDs: $tags
+						}){
+						count
+						guides {
+							id
+							name
+							short_description
+							guide
+							user {
+								id
+							}				
+						}
+					}
+				}`, token)
+				searchGuides.Var("tags", tags[:1])
+
+				var queryGuidesResponse struct {
+					GetGuides generated.GetGuides
+				}
+				testza.AssertNoError(t, client.Run(ctx, searchGuides, &queryGuidesResponse))
 				testza.AssertEqual(t, 1, queryGuidesResponse.GetGuides.Count)
 				testza.AssertEqual(t, 1, len(queryGuidesResponse.GetGuides.Guides))
 				testza.AssertEqual(t, guideID, queryGuidesResponse.GetGuides.Guides[0].ID)

@@ -27,6 +27,9 @@ func InitializeSecurity() {
 func GenerateUserToken() string {
 	jsonToken := paseto.JSONToken{
 		Expiration: time.Now().Add(time.Hour * 24 * 30),
+		IssuedAt:   time.Now(),
+		NotBefore:  time.Now(),
+		Jti:        RandomString(32),
 	}
 
 	token, err := pasetoV2.Sign(privateKey, jsonToken, nil)

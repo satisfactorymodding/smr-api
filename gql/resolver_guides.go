@@ -102,7 +102,7 @@ func (r *mutationResolver) UpdateGuide(ctx context.Context, guideID string, g ge
 
 		return tx.GuideTag.MapCreateBulk(g.TagIDs, func(create *ent.GuideTagCreate, i int) {
 			create.SetGuideID(guideID).SetTagID(g.TagIDs[i])
-		}).Exec(ctx)
+		}).OnConflict(sql.DoNothing()).Exec(ctx)
 	}, nil); err != nil {
 		return nil, err
 	}
