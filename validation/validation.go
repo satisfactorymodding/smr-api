@@ -55,7 +55,7 @@ type ModInfo struct {
 	Version              string                                `json:"version"`
 	Hash                 string                                `json:"-"`
 	SMLVersion           *string                               `json:"sml_version"`
-	GameVersion          int                                   `json:"-"`
+	GameVersion          string                                `json:"-"`
 	Objects              []ModObject                           `json:"objects"`
 	Metadata             []map[string]map[string][]interface{} `json:"-"`
 	Targets              []string                              `json:"-"`
@@ -328,7 +328,7 @@ type UPlugin struct {
 	SemVersion  *string  `json:"SemVersion"`
 	Plugins     []Plugin `json:"Plugins"`
 	Version     int64    `json:"Version"`
-	GameVersion *string  `json:"GameVersion"`
+	GameVersion string   `json:"GameVersion"`
 }
 
 type Plugin struct {
@@ -422,16 +422,14 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 		modInfo.SMLVersion = &smlDep
 	}
 
-	if uPlugin.GameVersion != nil {
-		modInfo.GameVersion, err = strconv.Atoi(*uPlugin.GameVersion)
-		if err != nil {
-			return nil, errors.New("invalid GameVersion")
-		}
+	if uPlugin.GameVersion != "" {
+		modInfo.GameVersion = uPlugin.GameVersion
 	} else if modInfo.SMLVersion != nil {
-		modInfo.GameVersion, err = getFactoryGameVersionFromSMLVersion(ctx, *modInfo.SMLVersion)
+		gameVersion, err := getGameVersionFromSMLVersion(ctx, *modInfo.SMLVersion)
 		if err != nil {
 			return nil, fmt.Errorf("failed to infer FactoryGame version: %w", err)
 		}
+		modInfo.GameVersion = gameVersion
 	} else {
 		return nil, fmt.Errorf("infering FactoryGame version: %s doesn't contain SML as a dependency", uPluginFile.Name)
 	}
@@ -441,11 +439,11 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 	return &modInfo, nil
 }
 
-func getFactoryGameVersionFromSMLVersion(ctx context.Context, smlVersion string) (int, error) {
+func getGameVersionFromSMLVersion(ctx context.Context, smlVersion string) (string, error) {
 	smlQuery := db.From(ctx).Mod.Query().Where(mod.ModReferenceEQ("SML")).WithVersions()
 	smlMod, err := smlQuery.First(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get SML mod: %w", err)
+		return "", fmt.Errorf("failed to get SML mod: %w", err)
 	}
 
 	smlVersions := smlMod.Edges.Versions
@@ -457,20 +455,16 @@ func getFactoryGameVersionFromSMLVersion(ctx context.Context, smlVersion string)
 
 	constraint, err := semver.NewConstraint(smlVersion)
 	if err != nil {
-		return 0, fmt.Errorf("failed to create semver constraint: %w", err)
+		return "", fmt.Errorf("failed to create semver constraint: %w", err)
 	}
 
 	for _, version := range smlVersions {
 		if constraint.Check(semver.MustParse(version.Version)) {
-			v, err := strconv.Atoi(version.GameVersion[2:]) // Strip >=
-			if err != nil {
-				return 0, fmt.Errorf("failed to parse FactoryGame version: %w", err)
-			}
-			return v, nil
+			return version.GameVersion, nil
 		}
 	}
 
-	return 0, nil
+	return "", fmt.Errorf("no SML version matches constraint: %s", smlVersion)
 }
 
 func validateMultiTargetPlugin(ctx context.Context, archive *zip.Reader, withValidation bool, modReference string) (*ModInfo, error) {

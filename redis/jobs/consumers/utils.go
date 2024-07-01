@@ -99,6 +99,6 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 		SetVersionPatch(versionPatch).
 		SetModReference(info.ModReference).
 		SetNillableSmlVersion(info.SMLVersion).
-		SetGameVersion(fmt.Sprintf(">=%d", info.GameVersion)).
+		SetGameVersion(info.GameVersion).
 		Exec(ctx)
 }

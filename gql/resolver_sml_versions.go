@@ -3,6 +3,7 @@ package gql
 import (
 	"context"
 	"fmt"
+
 	"github.com/99designs/gqlgen/graphql"
 
 	"github.com/satisfactorymodding/smr-api/db"
@@ -92,7 +93,7 @@ func (s *smlVersionResolver) BootstrapVersion(_ context.Context, _ *generated.SM
 }
 
 func (s *smlVersionResolver) EngineVersion(ctx context.Context, obj *generated.SMLVersion) (string, error) {
-	v, err := db.GetEngineVersionForSatisfactoryVersion(ctx, obj.SatisfactoryVersion)
+	v, err := db.GetEngineVersionForSatisfactoryVersion(ctx, fmt.Sprintf(">=%d", obj.SatisfactoryVersion))
 	if err != nil {
 		return "", fmt.Errorf("failed to get engine version: %w", err)
 	}

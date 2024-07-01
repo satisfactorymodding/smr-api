@@ -2,6 +2,7 @@ package conversion
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/satisfactorymodding/smr-api/generated"
@@ -129,6 +130,11 @@ func Int64ToInt(i int64) int {
 }
 
 func SMLSatisfactoryVersion(gameVersion string) int {
+	if !strings.HasPrefix(gameVersion, ">=") {
+		// the semver library doesn't have a constraint.MinVersion(),
+		// so we only handle >= for now, which is what will be used 99% of the time
+		return 0
+	}
 	res, err := strconv.Atoi(gameVersion[2:]) // Strip the >=
 	if err != nil {
 		return 0
