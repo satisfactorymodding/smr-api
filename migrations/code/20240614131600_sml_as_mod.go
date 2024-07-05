@@ -333,7 +333,7 @@ func processSMLUplugin(factoryGameVersion string) func(string, io.Reader) (io.Re
 			}
 		}
 
-		upluginBytes, err = json.Marshal(uplugin)
+		upluginBytes, err = json.MarshalIndent(uplugin, "", "\t")
 		if err != nil {
 			return nil, fmt.Errorf("failed to serialize uplugin: %w", err)
 		}
