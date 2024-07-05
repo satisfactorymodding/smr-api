@@ -59,7 +59,7 @@ func uploadAllSMLVersions(ctx context.Context) error {
 	}
 
 	for _, version := range smlMod.Edges.Versions {
-		factoryGameVersion := version.GameVersion[2:] // Strip the >=
+		factoryGameVersion := version.GameVersion
 
 		var archive []byte
 		extractInfo := true
@@ -333,11 +333,15 @@ func processSMLUplugin(factoryGameVersion string) func(string, io.Reader) (io.Re
 			}
 		}
 
-		upluginBytes, err = json.MarshalIndent(uplugin, "", "\t")
+		newUplugin := bytes.NewBuffer([]byte{})
+		enc := json.NewEncoder(newUplugin)
+		enc.SetEscapeHTML(false)
+		enc.SetIndent("", "\t")
+		err = enc.Encode(uplugin)
 		if err != nil {
 			return nil, fmt.Errorf("failed to serialize uplugin: %w", err)
 		}
 
-		return bytes.NewReader(upluginBytes), nil
+		return bytes.NewReader(newUplugin.Bytes()), nil
 	}
 }
