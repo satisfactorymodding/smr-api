@@ -24,12 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.11.0
+      - uses: jetify-com/devbox-install-action@v0.11.0
         with:
           enable-cache: true
 
-      - name: Hash migrations
+      - name: Run generation tasks
         run: devbox run generate
 
       - name: Ensure no changes
