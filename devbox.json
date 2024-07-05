@@ -28,7 +28,8 @@
       ],
       "migrate:hash": [
         "atlas migrate hash --dir \"file://migrations/sql?format=golang-migrate\""
-      ]
+      ],
+      "generate": "go generate -tags tools -x ./..."
     }
   }
 }

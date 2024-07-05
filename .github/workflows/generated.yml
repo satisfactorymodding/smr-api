@@ -24,13 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - name: Install devbox
+        uses: jetify-com/devbox-install-action@v0.11.0
         with:
-          go-version-file: go.mod
+          enable-cache: true
 
       - name: Hash migrations
-        run: go generate -tags tools -x ./...
+        run: devbox run generate
 
       - name: Ensure no changes
         run: git diff --exit-code
