@@ -136,6 +136,13 @@ func uploadSMLVersion(ctx context.Context, version *ent.Version, archive []byte,
 		return errors.New("failed to rename version")
 	}
 
+	err := db.From(ctx).Version.UpdateOneID(version.ID).
+		SetKey(key).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to update version key: %w", err)
+	}
+
 	if !extractInfo {
 		return nil
 	}
@@ -146,12 +153,11 @@ func uploadSMLVersion(ctx context.Context, version *ent.Version, archive []byte,
 	}
 
 	err = db.From(ctx).Version.UpdateOneID(version.ID).
-		SetKey(key).
 		SetHash(modInfo.Hash).
 		SetSize(modInfo.Size).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to update version: %w", err)
+		return fmt.Errorf("failed to update version metadata: %w", err)
 	}
 
 	return nil
