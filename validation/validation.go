@@ -181,6 +181,8 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			}(stream)
 
 			beforeUpload := time.Now().Add(-time.Minute)
+
+			count := 0
 			for {
 				asset, err := stream.Recv()
 				if err != nil {
@@ -202,7 +204,10 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 				}
 
 				storage.UploadModAsset(ctx, modInfo.ModReference, asset.GetPath(), asset.GetData())
+				count++
 			}
+
+			slox.Info(ctx, "all assets received", slog.Int("count", count))
 
 			storage.DeleteOldModAssets(ctx, modInfo.ModReference, beforeUpload)
 

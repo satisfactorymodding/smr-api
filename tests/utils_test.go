@@ -12,19 +12,21 @@ import (
 )
 
 func seedTags(ctx context.Context, t *testing.T, token string, client *graphql.Client) []string {
-	tags := []string{
-		"hello",
-		"foo",
+	tags := map[string]string{
+		"hello": "hello N/A",
+		"foo":   "foo N/A",
 	}
 
 	ids := make([]string, len(tags))
-	for i, tag := range tags {
-		createRequest := authRequest(`mutation CreateTag($name: TagName!) {
-		  createTag(tagName: $name, description: "N/A") {
+	i := 0
+	for tag, desc := range tags {
+		createRequest := authRequest(`mutation CreateTag($name: TagName!, $description: String!) {
+		  createTag(tagName: $name, description: $description) {
 			id
 		  }
 		}`, token)
 		createRequest.Var("name", tag)
+		createRequest.Var("description", desc)
 
 		var createResponse struct {
 			CreateTag generated.Tag
@@ -33,6 +35,7 @@ func seedTags(ctx context.Context, t *testing.T, token string, client *graphql.C
 		testza.AssertNotEqual(t, "", createResponse.CreateTag.ID)
 
 		ids[i] = createResponse.CreateTag.ID
+		i++
 	}
 
 	return ids

@@ -18,15 +18,43 @@ func (t StackRewriter) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (t StackRewriter) Handle(ctx context.Context, record slog.Record) error {
-	if record.PC != 0 {
-		fs := runtime.CallersFrames([]uintptr{record.PC})
-		f, _ := fs.Next()
-		if strings.HasPrefix(f.Function, "github.com/Vilsol/slox") {
-			// skip one more
-			var pcs [1]uintptr
-			runtime.Callers(5, pcs[:])
-			record.PC = pcs[0]
+	fs := runtime.CallersFrames([]uintptr{record.PC})
+	f, _ := fs.Next()
+
+	valid := func(file string, _ string) bool {
+		return !strings.Contains(file, "vilsol/slox") &&
+			!strings.Contains(file, "entlogger") &&
+			!strings.Contains(file, "/generated/") &&
+			!strings.Contains(file, "entgo.io")
+	}
+
+	// Early exit
+	if valid(f.File, f.Function) {
+		//nolint
+		return t.Upstream.Handle(ctx, record)
+	}
+
+	var pcs [25]uintptr
+	runtime.Callers(0, pcs[:])
+
+	start := 0
+	for i, pc := range pcs {
+		if pc == record.PC {
+			start = i
 		}
+	}
+
+	fs = runtime.CallersFrames(pcs[start:])
+
+	f, _ = fs.Next()
+	for f.PC != 0 {
+		if !valid(f.File, f.Function) {
+			f, _ = fs.Next()
+			continue
+		}
+
+		record.PC = f.PC
+		break
 	}
 
 	//nolint
@@ -34,9 +62,9 @@ func (t StackRewriter) Handle(ctx context.Context, record slog.Record) error {
 }
 
 func (t StackRewriter) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return t.Upstream.WithAttrs(attrs)
+	return StackRewriter{Upstream: t.Upstream.WithAttrs(attrs)}
 }
 
 func (t StackRewriter) WithGroup(name string) slog.Handler {
-	return t.Upstream.WithGroup(name)
+	return StackRewriter{Upstream: t.Upstream.WithGroup(name)}
 }

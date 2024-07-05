@@ -2,6 +2,7 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"time"
@@ -18,12 +19,16 @@ const (
 	ansiBrightMagenta = "\033[95m"
 )
 
-func SetupLogger() error {
+func SetupLogger(out io.Writer) error {
 	var terminalHandler slog.Handler
 
 	if !viper.GetBool("production") {
+		if out == nil {
+			out = os.Stderr
+		}
+
 		terminalHandler = StackRewriter{
-			Upstream: tint.NewHandler(os.Stderr, &tint.Options{
+			Upstream: tint.NewHandler(out, &tint.Options{
 				Level:      slog.LevelDebug,
 				AddSource:  true,
 				TimeFormat: time.RFC3339Nano,
@@ -41,8 +46,12 @@ func SetupLogger() error {
 			}).WithAttrs([]slog.Attr{slog.String("service", "api")}),
 		}
 	} else {
+		if out == nil {
+			out = os.Stdout
+		}
+
 		terminalHandler = StackRewriter{
-			Upstream: slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Upstream: slog.NewJSONHandler(out, &slog.HandlerOptions{
 				AddSource: true,
 			}),
 		}

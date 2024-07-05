@@ -394,12 +394,6 @@ func (vc *VersionCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (vc *VersionCreate) check() error {
-	if _, ok := vc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Version.created_at"`)}
-	}
-	if _, ok := vc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Version.updated_at"`)}
-	}
 	if _, ok := vc.mutation.ModID(); !ok {
 		return &ValidationError{Name: "mod_id", err: errors.New(`ent: missing required field "Version.mod_id"`)}
 	}
@@ -676,6 +670,12 @@ func (u *VersionUpsert) SetUpdatedAt(v time.Time) *VersionUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *VersionUpsert) UpdateUpdatedAt() *VersionUpsert {
 	u.SetExcluded(version.FieldUpdatedAt)
+	return u
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *VersionUpsert) ClearUpdatedAt() *VersionUpsert {
+	u.SetNull(version.FieldUpdatedAt)
 	return u
 }
 
@@ -1047,6 +1047,13 @@ func (u *VersionUpsertOne) SetUpdatedAt(v time.Time) *VersionUpsertOne {
 func (u *VersionUpsertOne) UpdateUpdatedAt() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *VersionUpsertOne) ClearUpdatedAt() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearUpdatedAt()
 	})
 }
 
@@ -1636,6 +1643,13 @@ func (u *VersionUpsertBulk) SetUpdatedAt(v time.Time) *VersionUpsertBulk {
 func (u *VersionUpsertBulk) UpdateUpdatedAt() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *VersionUpsertBulk) ClearUpdatedAt() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.ClearUpdatedAt()
 	})
 }
 

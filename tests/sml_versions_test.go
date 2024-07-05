@@ -20,13 +20,11 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/satisfactorymodding/smr-api/migrations"
 
 	_ "embed"
 )
 
 func init() {
-	migrations.SetMigrationDir("../migrations")
 	config.SetConfigDir("../")
 	db.EnableDebug()
 }

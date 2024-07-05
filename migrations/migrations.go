@@ -3,6 +3,7 @@ package migrations
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"errors"
 	"fmt"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/spf13/viper"
 
 	// Import migrations
@@ -18,16 +20,13 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+//go:embed sql/*.sql
+var sqlMigrations embed.FS
+
 func RunMigrations(ctx context.Context) {
 	databaseMigrations(ctx)
 	codeMigrations(ctx)
 	slox.Info(ctx, "Migrations Complete")
-}
-
-var migrationDir = "./migrations"
-
-func SetMigrationDir(newMigrationDir string) {
-	migrationDir = newMigrationDir
 }
 
 func databaseMigrations(ctx context.Context) {
@@ -48,7 +47,12 @@ func databaseMigrations(ctx context.Context) {
 		panic(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://"+migrationDir+"/sql", "postgres", driver)
+	d, err := iofs.New(sqlMigrations, "sql")
+	if err != nil {
+		panic(err)
+	}
+
+	m, err := migrate.NewWithInstance("iofs", d, "postgres", driver)
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +62,6 @@ func databaseMigrations(ctx context.Context) {
 	}
 
 	err = m.Up()
-
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		panic(err)
 	}

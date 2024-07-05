@@ -38,6 +38,12 @@ func (vu *VersionUpdate) SetUpdatedAt(t time.Time) *VersionUpdate {
 	return vu
 }
 
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (vu *VersionUpdate) ClearUpdatedAt() *VersionUpdate {
+	vu.mutation.ClearUpdatedAt()
+	return vu
+}
+
 // SetDeletedAt sets the "deleted_at" field.
 func (vu *VersionUpdate) SetDeletedAt(t time.Time) *VersionUpdate {
 	vu.mutation.SetDeletedAt(t)
@@ -506,7 +512,7 @@ func (vu *VersionUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (vu *VersionUpdate) defaults() error {
-	if _, ok := vu.mutation.UpdatedAt(); !ok {
+	if _, ok := vu.mutation.UpdatedAt(); !ok && !vu.mutation.UpdatedAtCleared() {
 		if version.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized version.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -562,8 +568,14 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if vu.mutation.CreatedAtCleared() {
+		_spec.ClearField(version.FieldCreatedAt, field.TypeTime)
+	}
 	if value, ok := vu.mutation.UpdatedAt(); ok {
 		_spec.SetField(version.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if vu.mutation.UpdatedAtCleared() {
+		_spec.ClearField(version.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := vu.mutation.DeletedAt(); ok {
 		_spec.SetField(version.FieldDeletedAt, field.TypeTime, value)
@@ -817,6 +829,12 @@ type VersionUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (vuo *VersionUpdateOne) SetUpdatedAt(t time.Time) *VersionUpdateOne {
 	vuo.mutation.SetUpdatedAt(t)
+	return vuo
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (vuo *VersionUpdateOne) ClearUpdatedAt() *VersionUpdateOne {
+	vuo.mutation.ClearUpdatedAt()
 	return vuo
 }
 
@@ -1301,7 +1319,7 @@ func (vuo *VersionUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (vuo *VersionUpdateOne) defaults() error {
-	if _, ok := vuo.mutation.UpdatedAt(); !ok {
+	if _, ok := vuo.mutation.UpdatedAt(); !ok && !vuo.mutation.UpdatedAtCleared() {
 		if version.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized version.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -1374,8 +1392,14 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 			}
 		}
 	}
+	if vuo.mutation.CreatedAtCleared() {
+		_spec.ClearField(version.FieldCreatedAt, field.TypeTime)
+	}
 	if value, ok := vuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(version.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if vuo.mutation.UpdatedAtCleared() {
+		_spec.ClearField(version.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := vuo.mutation.DeletedAt(); ok {
 		_spec.SetField(version.FieldDeletedAt, field.TypeTime, value)

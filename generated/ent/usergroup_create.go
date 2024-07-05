@@ -160,12 +160,6 @@ func (ugc *UserGroupCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (ugc *UserGroupCreate) check() error {
-	if _, ok := ugc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "UserGroup.created_at"`)}
-	}
-	if _, ok := ugc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "UserGroup.updated_at"`)}
-	}
 	if _, ok := ugc.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "UserGroup.user_id"`)}
 	}
@@ -318,6 +312,12 @@ func (u *UserGroupUpsert) UpdateUpdatedAt() *UserGroupUpsert {
 	return u
 }
 
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *UserGroupUpsert) ClearUpdatedAt() *UserGroupUpsert {
+	u.SetNull(usergroup.FieldUpdatedAt)
+	return u
+}
+
 // SetDeletedAt sets the "deleted_at" field.
 func (u *UserGroupUpsert) SetDeletedAt(v time.Time) *UserGroupUpsert {
 	u.Set(usergroup.FieldDeletedAt, v)
@@ -422,6 +422,13 @@ func (u *UserGroupUpsertOne) SetUpdatedAt(v time.Time) *UserGroupUpsertOne {
 func (u *UserGroupUpsertOne) UpdateUpdatedAt() *UserGroupUpsertOne {
 	return u.Update(func(s *UserGroupUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *UserGroupUpsertOne) ClearUpdatedAt() *UserGroupUpsertOne {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.ClearUpdatedAt()
 	})
 }
 
@@ -703,6 +710,13 @@ func (u *UserGroupUpsertBulk) SetUpdatedAt(v time.Time) *UserGroupUpsertBulk {
 func (u *UserGroupUpsertBulk) UpdateUpdatedAt() *UserGroupUpsertBulk {
 	return u.Update(func(s *UserGroupUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *UserGroupUpsertBulk) ClearUpdatedAt() *UserGroupUpsertBulk {
+	return u.Update(func(s *UserGroupUpsert) {
+		s.ClearUpdatedAt()
 	})
 }
 

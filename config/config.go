@@ -26,7 +26,7 @@ func InitializeConfig(baseCtx context.Context) context.Context {
 
 	err := viper.ReadInConfig() //nolint:ifshort
 
-	if err := logging.SetupLogger(); err != nil {
+	if err := logging.SetupLogger(nil); err != nil {
 		panic(err)
 	}
 

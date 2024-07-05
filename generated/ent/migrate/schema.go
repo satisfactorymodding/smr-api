@@ -11,8 +11,8 @@ var (
 	// AnnouncementsColumns holds the columns for the "announcements" table.
 	AnnouncementsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "message", Type: field.TypeString},
 		{Name: "importance", Type: field.TypeString},
@@ -25,7 +25,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "announcement_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{AnnouncementsColumns[0]},
 			},
 			{
@@ -38,8 +38,8 @@ var (
 	// GuidesColumns holds the columns for the "guides" table.
 	GuidesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 32},
 		{Name: "short_description", Type: field.TypeString, Size: 128},
@@ -63,7 +63,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "guide_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{GuidesColumns[0]},
 			},
 			{
@@ -101,8 +101,8 @@ var (
 	// ModsColumns holds the columns for the "mods" table.
 	ModsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 32},
 		{Name: "short_description", Type: field.TypeString, Size: 128},
@@ -117,7 +117,7 @@ var (
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
 		{Name: "denied", Type: field.TypeBool, Default: false},
 		{Name: "last_version_date", Type: field.TypeTime, Nullable: true},
-		{Name: "mod_reference", Type: field.TypeString, Unique: true, Size: 32},
+		{Name: "mod_reference", Type: field.TypeString, Size: 32},
 		{Name: "hidden", Type: field.TypeBool, Default: false},
 		{Name: "compatibility", Type: field.TypeJSON, Nullable: true},
 	}
@@ -129,7 +129,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "mod_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{ModsColumns[0]},
 			},
 			{
@@ -138,9 +138,14 @@ var (
 				Columns: []*schema.Column{ModsColumns[3]},
 			},
 			{
-				Name:    "mod_last_version_date",
+				Name:    "idx_mods_last_version_date",
 				Unique:  false,
 				Columns: []*schema.Column{ModsColumns[16]},
+			},
+			{
+				Name:    "idx_mods_mod_reference",
+				Unique:  true,
+				Columns: []*schema.Column{ModsColumns[17]},
 			},
 		},
 	}
@@ -169,30 +174,77 @@ var (
 			},
 		},
 	}
-	// SatisfactoryVersionsColumns holds the columns for the "satisfactory_versions" table.
-	SatisfactoryVersionsColumns = []*schema.Column{
+	// SmlVersionsColumns holds the columns for the "sml_versions" table.
+	SmlVersionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "version", Type: field.TypeInt, Unique: true},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "version", Type: field.TypeString, Unique: true, Size: 32},
+		{Name: "satisfactory_version", Type: field.TypeInt},
+		{Name: "stability", Type: field.TypeEnum, Enums: []string{"release", "beta", "alpha"}},
+		{Name: "date", Type: field.TypeTime},
+		{Name: "link", Type: field.TypeString},
+		{Name: "changelog", Type: field.TypeString},
+		{Name: "bootstrap_version", Type: field.TypeString, Nullable: true, Size: 14},
 		{Name: "engine_version", Type: field.TypeString, Size: 16, Default: "4.26"},
 	}
-	// SatisfactoryVersionsTable holds the schema information for the "satisfactory_versions" table.
-	SatisfactoryVersionsTable = &schema.Table{
-		Name:       "satisfactory_versions",
-		Columns:    SatisfactoryVersionsColumns,
-		PrimaryKey: []*schema.Column{SatisfactoryVersionsColumns[0]},
+	// SmlVersionsTable holds the schema information for the "sml_versions" table.
+	SmlVersionsTable = &schema.Table{
+		Name:       "sml_versions",
+		Columns:    SmlVersionsColumns,
+		PrimaryKey: []*schema.Column{SmlVersionsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "satisfactoryversion_id",
+				Name:    "smlversion_id",
+				Unique:  true,
+				Columns: []*schema.Column{SmlVersionsColumns[0]},
+			},
+			{
+				Name:    "smlversion_deleted_at",
 				Unique:  false,
-				Columns: []*schema.Column{SatisfactoryVersionsColumns[0]},
+				Columns: []*schema.Column{SmlVersionsColumns[3]},
+			},
+		},
+	}
+	// SmlVersionTargetsColumns holds the columns for the "sml_version_targets" table.
+	SmlVersionTargetsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "target_name", Type: field.TypeString},
+		{Name: "link", Type: field.TypeString},
+		{Name: "version_id", Type: field.TypeString},
+	}
+	// SmlVersionTargetsTable holds the schema information for the "sml_version_targets" table.
+	SmlVersionTargetsTable = &schema.Table{
+		Name:       "sml_version_targets",
+		Columns:    SmlVersionTargetsColumns,
+		PrimaryKey: []*schema.Column{SmlVersionTargetsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sml_version_targets_sml_versions_targets",
+				Columns:    []*schema.Column{SmlVersionTargetsColumns[3]},
+				RefColumns: []*schema.Column{SmlVersionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "smlversiontarget_id",
+				Unique:  true,
+				Columns: []*schema.Column{SmlVersionTargetsColumns[0]},
+			},
+			{
+				Name:    "smlversiontarget_version_id_target_name",
+				Unique:  true,
+				Columns: []*schema.Column{SmlVersionTargetsColumns[3], SmlVersionTargetsColumns[1]},
 			},
 		},
 	}
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Unique: true, Size: 24},
 		{Name: "description", Type: field.TypeString, Unique: true, Size: 512},
@@ -205,7 +257,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "tag_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{TagsColumns[0]},
 			},
 			{
@@ -218,8 +270,8 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "email", Type: field.TypeString, Unique: true, Size: 256},
 		{Name: "username", Type: field.TypeString, Size: 32},
@@ -227,9 +279,9 @@ var (
 		{Name: "joined_from", Type: field.TypeString, Nullable: true},
 		{Name: "banned", Type: field.TypeBool, Default: false},
 		{Name: "rank", Type: field.TypeInt, Default: 1},
-		{Name: "github_id", Type: field.TypeString, Unique: true, Nullable: true, Size: 16},
-		{Name: "google_id", Type: field.TypeString, Unique: true, Nullable: true, Size: 16},
-		{Name: "facebook_id", Type: field.TypeString, Unique: true, Nullable: true, Size: 16},
+		{Name: "github_id", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "google_id", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "facebook_id", Type: field.TypeString, Nullable: true, Size: 16},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -239,7 +291,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "user_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[0]},
 			},
 			{
@@ -248,22 +300,22 @@ var (
 				Columns: []*schema.Column{UsersColumns[3]},
 			},
 			{
-				Name:    "user_email",
-				Unique:  false,
+				Name:    "uix_users_email",
+				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[4]},
 			},
 			{
-				Name:    "user_github_id",
+				Name:    "idx_users_github_id",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[10]},
 			},
 			{
-				Name:    "user_google_id",
+				Name:    "idx_users_google_id",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[11]},
 			},
 			{
-				Name:    "user_facebook_id",
+				Name:    "idx_users_facebook_id",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[12]},
 			},
@@ -272,8 +324,8 @@ var (
 	// UserGroupsColumns holds the columns for the "user_groups" table.
 	UserGroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "group_id", Type: field.TypeString, Size: 14},
 		{Name: "user_id", Type: field.TypeString},
@@ -294,7 +346,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "usergroup_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UserGroupsColumns[0]},
 			},
 			{
@@ -338,8 +390,8 @@ var (
 	// UserSessionsColumns holds the columns for the "user_sessions" table.
 	UserSessionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "token", Type: field.TypeString, Unique: true, Size: 512},
 		{Name: "user_agent", Type: field.TypeString, Nullable: true},
@@ -361,7 +413,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "usersession_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UserSessionsColumns[0]},
 			},
 			{
@@ -369,16 +421,21 @@ var (
 				Unique:  false,
 				Columns: []*schema.Column{UserSessionsColumns[3]},
 			},
+			{
+				Name:    "uix_user_sessions_token",
+				Unique:  true,
+				Columns: []*schema.Column{UserSessionsColumns[4]},
+			},
 		},
 	}
 	// VersionsColumns holds the columns for the "versions" table.
 	VersionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "version", Type: field.TypeString, Size: 16},
-		{Name: "game_version", Type: field.TypeString},
+		{Name: "sml_version", Type: field.TypeString, Size: 16},
 		{Name: "changelog", Type: field.TypeString, Nullable: true},
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
 		{Name: "key", Type: field.TypeString, Nullable: true},
@@ -411,7 +468,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "version_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{VersionsColumns[0]},
 			},
 			{
@@ -419,12 +476,27 @@ var (
 				Unique:  false,
 				Columns: []*schema.Column{VersionsColumns[3]},
 			},
+			{
+				Name:    "idx_versions_approved",
+				Unique:  false,
+				Columns: []*schema.Column{VersionsColumns[10]},
+			},
+			{
+				Name:    "idx_versions_denied",
+				Unique:  false,
+				Columns: []*schema.Column{VersionsColumns[12]},
+			},
+			{
+				Name:    "idx_versions_mod_id",
+				Unique:  false,
+				Columns: []*schema.Column{VersionsColumns[20]},
+			},
 		},
 	}
 	// VersionDependenciesColumns holds the columns for the "version_dependencies" table.
 	VersionDependenciesColumns = []*schema.Column{
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "condition", Type: field.TypeString, Size: 64},
 		{Name: "optional", Type: field.TypeBool},
@@ -483,7 +555,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "versiontarget_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{VersionTargetsColumns[0]},
 			},
 			{
@@ -500,7 +572,8 @@ var (
 		GuideTagsTable,
 		ModsTable,
 		ModTagsTable,
-		SatisfactoryVersionsTable,
+		SmlVersionsTable,
+		SmlVersionTargetsTable,
 		TagsTable,
 		UsersTable,
 		UserGroupsTable,
@@ -518,6 +591,7 @@ func init() {
 	GuideTagsTable.ForeignKeys[1].RefTable = TagsTable
 	ModTagsTable.ForeignKeys[0].RefTable = ModsTable
 	ModTagsTable.ForeignKeys[1].RefTable = TagsTable
+	SmlVersionTargetsTable.ForeignKeys[0].RefTable = SmlVersionsTable
 	UserGroupsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[1].RefTable = ModsTable

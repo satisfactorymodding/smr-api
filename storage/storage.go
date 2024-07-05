@@ -483,6 +483,8 @@ func UploadModAsset(ctx context.Context, modReference string, path string, data 
 		return
 	}
 
+	slox.Info(ctx, "uploading asset", slog.String("mod_reference", modReference), slog.String("asset", path), slog.Int("size", len(data)))
+
 	key := fmt.Sprintf("/assets/mods/%s/%s", modReference, strings.TrimPrefix(path, "/"))
 
 	_, err := storage.Put(ctx, key, bytes.NewReader(data))
@@ -491,10 +493,12 @@ func UploadModAsset(ctx context.Context, modReference string, path string, data 
 	}
 }
 
-func ListModAssets(modReference string) ([]string, error) {
+func ListModAssets(ctx context.Context, modReference string) ([]string, error) {
 	if storage == nil {
 		return nil, errors.New("no storage defined")
 	}
+
+	slox.Info(ctx, "listing assets", slog.String("mod_reference", modReference))
 
 	list, err := storage.List(fmt.Sprintf("assets/mods/%s", modReference))
 	if err != nil {

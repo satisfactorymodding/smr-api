@@ -324,12 +324,6 @@ func (uc *UserCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
-	if _, ok := uc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "User.created_at"`)}
-	}
-	if _, ok := uc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "User.updated_at"`)}
-	}
 	if _, ok := uc.mutation.Email(); !ok {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
 	}
@@ -579,6 +573,12 @@ func (u *UserUpsert) UpdateUpdatedAt() *UserUpsert {
 	return u
 }
 
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *UserUpsert) ClearUpdatedAt() *UserUpsert {
+	u.SetNull(user.FieldUpdatedAt)
+	return u
+}
+
 // SetDeletedAt sets the "deleted_at" field.
 func (u *UserUpsert) SetDeletedAt(v time.Time) *UserUpsert {
 	u.Set(user.FieldDeletedAt, v)
@@ -803,6 +803,13 @@ func (u *UserUpsertOne) SetUpdatedAt(v time.Time) *UserUpsertOne {
 func (u *UserUpsertOne) UpdateUpdatedAt() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *UserUpsertOne) ClearUpdatedAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearUpdatedAt()
 	})
 }
 
@@ -1224,6 +1231,13 @@ func (u *UserUpsertBulk) SetUpdatedAt(v time.Time) *UserUpsertBulk {
 func (u *UserUpsertBulk) UpdateUpdatedAt() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (u *UserUpsertBulk) ClearUpdatedAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearUpdatedAt()
 	})
 }
 

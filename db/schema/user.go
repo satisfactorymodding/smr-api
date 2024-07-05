@@ -27,18 +27,18 @@ func (User) Fields() []ent.Field {
 		field.String("joined_from").Optional(),
 		field.Bool("banned").Default(false),
 		field.Int("rank").Default(1),
-		field.String("github_id").MaxLen(16).Unique().Optional(),
-		field.String("google_id").MaxLen(16).Unique().Optional(),
-		field.String("facebook_id").MaxLen(16).Unique().Optional(),
+		field.String("github_id").MaxLen(16).Optional(),
+		field.String("google_id").MaxLen(16).Optional(),
+		field.String("facebook_id").MaxLen(16).Optional(),
 	}
 }
 
 func (User) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("email"),
-		index.Fields("github_id"),
-		index.Fields("google_id"),
-		index.Fields("facebook_id"),
+		index.Fields("email").Unique().StorageKey("uix_users_email"),
+		index.Fields("github_id").StorageKey("idx_users_github_id"),
+		index.Fields("google_id").StorageKey("idx_users_google_id"),
+		index.Fields("facebook_id").StorageKey("idx_users_facebook_id"),
 	}
 }
 

@@ -168,3 +168,8 @@ models:
         resolver: true
       count:
         resolver: true
+
+  VersionDependency:
+    fields:
+      mod:
+        resolver: true

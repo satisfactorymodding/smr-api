@@ -21,6 +21,6 @@ func (IDMixin) Fields() []ent.Field {
 
 func (IDMixin) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("id"),
+		index.Fields("id").Unique(),
 	}
 }

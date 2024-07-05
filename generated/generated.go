@@ -52,6 +52,7 @@ type ResolverRoot interface {
 	User() UserResolver
 	UserMod() UserModResolver
 	Version() VersionResolver
+	VersionDependency() VersionDependencyResolver
 	VersionTarget() VersionTargetResolver
 }
 
@@ -492,6 +493,9 @@ type VersionResolver interface {
 	Hash(ctx context.Context, obj *Version) (*string, error)
 	Mod(ctx context.Context, obj *Version) (*Mod, error)
 	Dependencies(ctx context.Context, obj *Version) ([]*VersionDependency, error)
+}
+type VersionDependencyResolver interface {
+	Mod(ctx context.Context, obj *VersionDependency) (*Mod, error)
 }
 type VersionTargetResolver interface {
 	Link(ctx context.Context, obj *VersionTarget) (string, error)
@@ -16386,7 +16390,7 @@ func (ec *executionContext) _VersionDependency_mod(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Mod, nil
+		return ec.resolvers.VersionDependency().Mod(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -16404,8 +16408,8 @@ func (ec *executionContext) fieldContext_VersionDependency_mod(_ context.Context
 	fc = &graphql.FieldContext{
 		Object:     "VersionDependency",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -22961,25 +22965,56 @@ func (ec *executionContext) _VersionDependency(ctx context.Context, sel ast.Sele
 		case "version_id":
 			out.Values[i] = ec._VersionDependency_version_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "mod_id":
 			out.Values[i] = ec._VersionDependency_mod_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "condition":
 			out.Values[i] = ec._VersionDependency_condition(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "optional":
 			out.Values[i] = ec._VersionDependency_optional(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "mod":
-			out.Values[i] = ec._VersionDependency_mod(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._VersionDependency_mod(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "version":
 			out.Values[i] = ec._VersionDependency_version(ctx, field, obj)
 		default:
