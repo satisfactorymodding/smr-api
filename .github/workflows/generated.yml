@@ -1,0 +1,36 @@
+name: generated
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  atlas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install atlas CLI
+        run: curl -sSL https://atlasgo.io/install | sh
+
+      - name: Hash migrations
+        run: atlas migrate hash --dir "file://migrations/sql?format=golang-migrate"
+
+      - name: Ensure no changes
+        run: git diff --exit-code
+
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Hash migrations
+        run: go generate -tags tools -x ./...
+
+      - name: Ensure no changes
+        run: git diff --exit-code
