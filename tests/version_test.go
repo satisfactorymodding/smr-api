@@ -31,7 +31,7 @@ func init() {
 	db.EnableDebug()
 }
 
-const testModURL = "https://storage-staging.ficsit.app/file/smr-staging-s3/mods/4ha9SfdXaHAq4q/FicsitRemoteMonitoring-0.10.3.smod"
+const testModPath = "testdata/FicsitRemoteMonitoring-0.10.3.smod"
 
 // TODO Add rate limit test
 
@@ -47,24 +47,6 @@ func TestVersions(t *testing.T) {
 	var modID string
 
 	modReference := "FicsitRemoteMonitoring"
-
-	u, err := url.Parse(testModURL)
-	testza.AssertNoError(t, err)
-
-	modPath := filepath.Join(t.TempDir(), path.Base(u.Path))
-
-	t.Run("Download Test Mod", func(t *testing.T) {
-		response, err := http.Get(testModURL)
-		testza.AssertNoError(t, err)
-
-		defer response.Body.Close()
-
-		file, err := os.OpenFile(modPath, os.O_CREATE|os.O_WRONLY, 0o644)
-		testza.AssertNoError(t, err)
-
-		_, err = io.Copy(file, response.Body)
-		testza.AssertNoError(t, err)
-	})
 
 	t.Run("Create SML Version", func(t *testing.T) {
 		createRequest := authRequest(`mutation {
@@ -143,7 +125,7 @@ func TestVersions(t *testing.T) {
 	})
 
 	t.Run("Upload Parts", func(t *testing.T) {
-		f, err := os.Open(modPath)
+		f, err := os.Open(testModPath)
 		testza.AssertNoError(t, err)
 
 		stat, err := f.Stat()
@@ -200,7 +182,7 @@ func TestVersions(t *testing.T) {
 				_, err = mapField.Write(mapBody)
 				testza.AssertNoError(t, err)
 
-				part, err := writer.CreateFormFile("0", filepath.Base(path.Base(u.Path)))
+				part, err := writer.CreateFormFile("0", path.Base(testModPath))
 				testza.AssertNoError(t, err)
 
 				_, err = io.Copy(part, bytes.NewReader(chunk))
