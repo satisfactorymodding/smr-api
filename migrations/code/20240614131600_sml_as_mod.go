@@ -59,6 +59,10 @@ func uploadAllSMLVersions(ctx context.Context) error {
 	}
 
 	for _, version := range smlMod.Edges.Versions {
+		if version.Key != "" {
+			// Skip any versions that were not imported from the sml_versions table
+			continue
+		}
 		factoryGameVersion := version.GameVersion
 
 		var archive []byte
