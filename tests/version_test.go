@@ -8,10 +8,8 @@ import (
 	"math"
 	"mime/multipart"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
-	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
@@ -48,30 +46,10 @@ func TestVersions(t *testing.T) {
 
 	modReference := "FicsitRemoteMonitoring"
 
-	t.Run("Create SML Version", func(t *testing.T) {
+	t.Run("Create Satisfactory Version", func(t *testing.T) {
 		createRequest := authRequest(`mutation {
-		  createSMLVersion(smlVersion: {
-			version: "1.2.3",
-			satisfactory_version: 123,
-			stability: release,
-			link: "https://google.com",
-			targets: [
-			  {
-				targetName: Windows,
-				link: "https://this-is-windows.com"
-			  },
-			  {
-				targetName: WindowsServer,
-				link: "https://this-is-windows-server.com"
-			  },
-			  {
-				targetName: LinuxServer,
-				link: "https://this-is-linux-server.com"
-			  }
-			],
-			changelog: "Hello World",
-			date: "2023-10-27T01:00:51+00:00",
-			bootstrap_version: "0.0.0",
+		  createSatisfactoryVersion(input: {
+			version: 123456,
 			engine_version: "5.2"
 		  }) {
 			id
@@ -79,10 +57,10 @@ func TestVersions(t *testing.T) {
 		}`, token)
 
 		var createResponse struct {
-			CreateSMLVersion generated.SMLVersion
+			CreateSatisfactoryVersion generated.SatisfactoryVersion
 		}
 		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-		testza.AssertNotEqual(t, "", createResponse.CreateSMLVersion.ID)
+		testza.AssertNotEqual(t, "", createResponse.CreateSatisfactoryVersion.ID)
 	})
 
 	t.Run("Create Mod", func(t *testing.T) {
