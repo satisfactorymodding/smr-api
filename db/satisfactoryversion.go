@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/Masterminds/semver/v3"
 
 	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
@@ -15,19 +16,24 @@ func GetEngineVersionForSatisfactoryVersion(ctx context.Context, satisfactoryVer
 		return "", fmt.Errorf("failed to parse version range: %w", err)
 	}
 
-	query := From(ctx).SatisfactoryVersion.Query().
-		Order(satisfactoryversion.ByVersion())
-	versions, err := query.All(ctx)
+	// Each entry's engine version represents that
+	// the engine version was in use for satisfactory versions
+	// >= (entry version) < (next entry version)
+	// So we need to find the first version where this range intersects with the given range,
+	// which is equivalent to finding the highest version that is <= the min version of the given range
+
+	minSatisfactoryVersion, err := r.MinVersion()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get min version: %w", err)
 	}
 
-	for _, v := range versions {
-		versionSemver := semver.New(uint64(v.Version), 0, 0, "", "")
-		if r.Check(versionSemver) {
-			return v.EngineVersion, nil
-		}
+	query := From(ctx).SatisfactoryVersion.Query().
+		Where(satisfactoryversion.VersionLTE(int(minSatisfactoryVersion.Major()))).
+		Order(satisfactoryversion.ByVersion(sql.OrderDesc()))
+	v, err := query.First(ctx)
+	if err != nil {
+		return "", fmt.Errorf("no engine version found for game version range %s: %w", satisfactoryVersionRange, err)
 	}
 
-	return "", fmt.Errorf("no engine version found for game version range %s", satisfactoryVersionRange)
+	return v.EngineVersion, nil
 }

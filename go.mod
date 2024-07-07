@@ -63,6 +63,9 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )
 
+// v3.2.1, with range.MinVersion()
+replace github.com/Masterminds/semver/v3 => github.com/taeold/semver/v3 v3.0.0-20231216173955-4bf051545b5e
+
 require (
 	ariga.io/atlas v0.19.1-0.20240203083654-5948b60a8e43 // indirect
 	atomicgo.dev/assert v0.0.2 // indirect
