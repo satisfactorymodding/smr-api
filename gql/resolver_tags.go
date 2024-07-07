@@ -35,10 +35,17 @@ func (r *mutationResolver) CreateMultipleTags(ctx context.Context, tags []*gener
 		}
 	}
 
-	result, err := db.From(ctx).Tag.MapCreateBulk(tags, func(create *ent.TagCreate, i int) {
-		create.SetName(tags[i].Name).SetDescription(tags[i].Description)
-	}).Save(ctx)
-	if err != nil {
+	var result []*ent.Tag
+	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+		for _, newTag := range tags {
+			t, err := tx.Tag.Create().SetName(newTag.Name).SetDescription(newTag.Description).Save(ctx)
+			if err != nil {
+				return err
+			}
+			result = append(result, t)
+		}
+		return nil
+	}, nil); err != nil {
 		return nil, err
 	}
 

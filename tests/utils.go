@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/Vilsol/slox"
+	"github.com/google/uuid"
 	"github.com/machinebox/graphql"
 	"github.com/spf13/viper"
 
@@ -96,10 +97,12 @@ func setup() (context.Context, *graphql.Client, func()) {
 }
 
 func makeUser(ctx context.Context) (string, string, error) {
+	u := uuid.New().String()
+
 	user := db.From(ctx).User.
 		Create().
-		SetEmail("test_user@ficsit.app").
-		SetUsername("test_user").
+		SetEmail(u + "@ficsit.app").
+		SetUsername(u[:32]).
 		SaveX(ctx)
 
 	slox.Info(ctx, "created fake test_user", slog.String("id", user.ID))
