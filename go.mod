@@ -21,7 +21,7 @@ require (
 	github.com/felixge/fgprof v0.9.4
 	github.com/finnbear/moderation v0.11.4
 	github.com/go-redis/redis v6.15.9+incompatible
-	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-redis/redis/v9 v9.6.1
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/grafana/otel-profiling-go v0.5.1
 	github.com/grafana/pyroscope-go v1.1.1
