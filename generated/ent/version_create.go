@@ -80,20 +80,6 @@ func (vc *VersionCreate) SetVersion(s string) *VersionCreate {
 	return vc
 }
 
-// SetSmlVersion sets the "sml_version" field.
-func (vc *VersionCreate) SetSmlVersion(s string) *VersionCreate {
-	vc.mutation.SetSmlVersion(s)
-	return vc
-}
-
-// SetNillableSmlVersion sets the "sml_version" field if the given value is not nil.
-func (vc *VersionCreate) SetNillableSmlVersion(s *string) *VersionCreate {
-	if s != nil {
-		vc.SetSmlVersion(*s)
-	}
-	return vc
-}
-
 // SetGameVersion sets the "game_version" field.
 func (vc *VersionCreate) SetGameVersion(s string) *VersionCreate {
 	vc.mutation.SetGameVersion(s)
@@ -425,11 +411,6 @@ func (vc *VersionCreate) check() error {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Version.version": %w`, err)}
 		}
 	}
-	if v, ok := vc.mutation.SmlVersion(); ok {
-		if err := version.SmlVersionValidator(v); err != nil {
-			return &ValidationError{Name: "sml_version", err: fmt.Errorf(`ent: validator failed for field "Version.sml_version": %w`, err)}
-		}
-	}
 	if _, ok := vc.mutation.GameVersion(); !ok {
 		return &ValidationError{Name: "game_version", err: errors.New(`ent: missing required field "Version.game_version"`)}
 	}
@@ -520,10 +501,6 @@ func (vc *VersionCreate) createSpec() (*Version, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.Version(); ok {
 		_spec.SetField(version.FieldVersion, field.TypeString, value)
 		_node.Version = value
-	}
-	if value, ok := vc.mutation.SmlVersion(); ok {
-		_spec.SetField(version.FieldSmlVersion, field.TypeString, value)
-		_node.SmlVersion = value
 	}
 	if value, ok := vc.mutation.GameVersion(); ok {
 		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
@@ -741,24 +718,6 @@ func (u *VersionUpsert) SetVersion(v string) *VersionUpsert {
 // UpdateVersion sets the "version" field to the value that was provided on create.
 func (u *VersionUpsert) UpdateVersion() *VersionUpsert {
 	u.SetExcluded(version.FieldVersion)
-	return u
-}
-
-// SetSmlVersion sets the "sml_version" field.
-func (u *VersionUpsert) SetSmlVersion(v string) *VersionUpsert {
-	u.Set(version.FieldSmlVersion, v)
-	return u
-}
-
-// UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
-func (u *VersionUpsert) UpdateSmlVersion() *VersionUpsert {
-	u.SetExcluded(version.FieldSmlVersion)
-	return u
-}
-
-// ClearSmlVersion clears the value of the "sml_version" field.
-func (u *VersionUpsert) ClearSmlVersion() *VersionUpsert {
-	u.SetNull(version.FieldSmlVersion)
 	return u
 }
 
@@ -1137,27 +1096,6 @@ func (u *VersionUpsertOne) SetVersion(v string) *VersionUpsertOne {
 func (u *VersionUpsertOne) UpdateVersion() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateVersion()
-	})
-}
-
-// SetSmlVersion sets the "sml_version" field.
-func (u *VersionUpsertOne) SetSmlVersion(v string) *VersionUpsertOne {
-	return u.Update(func(s *VersionUpsert) {
-		s.SetSmlVersion(v)
-	})
-}
-
-// UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
-func (u *VersionUpsertOne) UpdateSmlVersion() *VersionUpsertOne {
-	return u.Update(func(s *VersionUpsert) {
-		s.UpdateSmlVersion()
-	})
-}
-
-// ClearSmlVersion clears the value of the "sml_version" field.
-func (u *VersionUpsertOne) ClearSmlVersion() *VersionUpsertOne {
-	return u.Update(func(s *VersionUpsert) {
-		s.ClearSmlVersion()
 	})
 }
 
@@ -1747,27 +1685,6 @@ func (u *VersionUpsertBulk) SetVersion(v string) *VersionUpsertBulk {
 func (u *VersionUpsertBulk) UpdateVersion() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateVersion()
-	})
-}
-
-// SetSmlVersion sets the "sml_version" field.
-func (u *VersionUpsertBulk) SetSmlVersion(v string) *VersionUpsertBulk {
-	return u.Update(func(s *VersionUpsert) {
-		s.SetSmlVersion(v)
-	})
-}
-
-// UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
-func (u *VersionUpsertBulk) UpdateSmlVersion() *VersionUpsertBulk {
-	return u.Update(func(s *VersionUpsert) {
-		s.UpdateSmlVersion()
-	})
-}
-
-// ClearSmlVersion clears the value of the "sml_version" field.
-func (u *VersionUpsertBulk) ClearSmlVersion() *VersionUpsertBulk {
-	return u.Update(func(s *VersionUpsert) {
-		s.ClearSmlVersion()
 	})
 }
 

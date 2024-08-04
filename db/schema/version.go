@@ -24,7 +24,6 @@ func (Version) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("mod_id"),
 		field.String("version").MaxLen(16),
-		field.String("sml_version").MaxLen(16).Optional(),
 		field.String("game_version"),
 		field.String("changelog").Optional(),
 		field.Uint("downloads").Default(0),

@@ -236,6 +236,7 @@ func TestVersions(t *testing.T) {
 			}
 
 			if response.CheckVersionUploadState.Version.ID != "" {
+				versionID = response.CheckVersionUploadState.Version.ID
 				break
 			}
 
@@ -245,5 +246,31 @@ func TestVersions(t *testing.T) {
 		if time.Now().After(end) {
 			testza.AssertNoError(t, errors.New("failed finishing mod"))
 		}
+	})
+
+	t.Run("Check uploaded data", func(t *testing.T) {
+		getModVersion := authRequest(`query GetModVersion($version_id: VersionID!) {
+		  	getVersion(versionId: $version_id) {
+				id
+				version
+				sml_version
+				dependencies {
+				  	condition
+				  	mod_id
+				}
+		  	}
+		}`, token)
+		getModVersion.Var("version_id", versionID)
+
+		var getModVersionResponse struct {
+			GetVersion generated.Version
+		}
+		testza.AssertNoError(t, client.Run(ctx, getModVersion, &getModVersionResponse))
+		testza.AssertEqual(t, versionID, getModVersionResponse.GetVersion.ID)
+		testza.AssertEqual(t, "0.10.3", getModVersionResponse.GetVersion.Version)
+		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.SmlVersion)
+		testza.AssertEqual(t, 1, len(getModVersionResponse.GetVersion.Dependencies))
+		testza.AssertEqual(t, "SML", getModVersionResponse.GetVersion.Dependencies[0].ModID)
+		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.Dependencies[0].Condition)
 	})
 }

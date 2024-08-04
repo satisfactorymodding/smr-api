@@ -72,6 +72,8 @@ models:
         resolver: true
       hash:
         resolver: true
+      sml_version:
+        resolver: true
 
   VersionTarget:
     fields:

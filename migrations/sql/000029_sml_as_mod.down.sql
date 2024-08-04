@@ -76,3 +76,12 @@ UPDATE sml_versions SET engine_version = (
 ) WHERE engine_version = '4.26'; -- WHERE to avoid update-all warning
 
 DROP TABLE satisfactory_versions;
+
+ALTER TABLE versions ADD COLUMN sml_version varchar(16);
+
+UPDATE versions SET sml_version = (
+    SELECT condition
+    FROM version_dependencies
+    WHERE version_dependencies.version_id = versions.id
+      AND version_dependencies.mod_id = 'SML'
+) WHERE sml_version IS NULL;

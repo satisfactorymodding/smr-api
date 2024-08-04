@@ -8461,7 +8461,6 @@ type VersionMutation struct {
 	updated_at          *time.Time
 	deleted_at          *time.Time
 	version             *string
-	sml_version         *string
 	game_version        *string
 	changelog           *string
 	downloads           *uint
@@ -8792,55 +8791,6 @@ func (m *VersionMutation) OldVersion(ctx context.Context) (v string, err error) 
 // ResetVersion resets all changes to the "version" field.
 func (m *VersionMutation) ResetVersion() {
 	m.version = nil
-}
-
-// SetSmlVersion sets the "sml_version" field.
-func (m *VersionMutation) SetSmlVersion(s string) {
-	m.sml_version = &s
-}
-
-// SmlVersion returns the value of the "sml_version" field in the mutation.
-func (m *VersionMutation) SmlVersion() (r string, exists bool) {
-	v := m.sml_version
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSmlVersion returns the old "sml_version" field's value of the Version entity.
-// If the Version object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *VersionMutation) OldSmlVersion(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSmlVersion is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSmlVersion requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSmlVersion: %w", err)
-	}
-	return oldValue.SmlVersion, nil
-}
-
-// ClearSmlVersion clears the value of the "sml_version" field.
-func (m *VersionMutation) ClearSmlVersion() {
-	m.sml_version = nil
-	m.clearedFields[version.FieldSmlVersion] = struct{}{}
-}
-
-// SmlVersionCleared returns if the "sml_version" field was cleared in this mutation.
-func (m *VersionMutation) SmlVersionCleared() bool {
-	_, ok := m.clearedFields[version.FieldSmlVersion]
-	return ok
-}
-
-// ResetSmlVersion resets all changes to the "sml_version" field.
-func (m *VersionMutation) ResetSmlVersion() {
-	m.sml_version = nil
-	delete(m.clearedFields, version.FieldSmlVersion)
 }
 
 // SetGameVersion sets the "game_version" field.
@@ -9780,7 +9730,7 @@ func (m *VersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VersionMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 20)
 	if m.created_at != nil {
 		fields = append(fields, version.FieldCreatedAt)
 	}
@@ -9795,9 +9745,6 @@ func (m *VersionMutation) Fields() []string {
 	}
 	if m.version != nil {
 		fields = append(fields, version.FieldVersion)
-	}
-	if m.sml_version != nil {
-		fields = append(fields, version.FieldSmlVersion)
 	}
 	if m.game_version != nil {
 		fields = append(fields, version.FieldGameVersion)
@@ -9862,8 +9809,6 @@ func (m *VersionMutation) Field(name string) (ent.Value, bool) {
 		return m.ModID()
 	case version.FieldVersion:
 		return m.Version()
-	case version.FieldSmlVersion:
-		return m.SmlVersion()
 	case version.FieldGameVersion:
 		return m.GameVersion()
 	case version.FieldChangelog:
@@ -9913,8 +9858,6 @@ func (m *VersionMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldModID(ctx)
 	case version.FieldVersion:
 		return m.OldVersion(ctx)
-	case version.FieldSmlVersion:
-		return m.OldSmlVersion(ctx)
 	case version.FieldGameVersion:
 		return m.OldGameVersion(ctx)
 	case version.FieldChangelog:
@@ -9988,13 +9931,6 @@ func (m *VersionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVersion(v)
-		return nil
-	case version.FieldSmlVersion:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSmlVersion(v)
 		return nil
 	case version.FieldGameVersion:
 		v, ok := value.(string)
@@ -10209,9 +10145,6 @@ func (m *VersionMutation) ClearedFields() []string {
 	if m.FieldCleared(version.FieldDeletedAt) {
 		fields = append(fields, version.FieldDeletedAt)
 	}
-	if m.FieldCleared(version.FieldSmlVersion) {
-		fields = append(fields, version.FieldSmlVersion)
-	}
 	if m.FieldCleared(version.FieldChangelog) {
 		fields = append(fields, version.FieldChangelog)
 	}
@@ -10252,9 +10185,6 @@ func (m *VersionMutation) ClearField(name string) error {
 	switch name {
 	case version.FieldDeletedAt:
 		m.ClearDeletedAt()
-		return nil
-	case version.FieldSmlVersion:
-		m.ClearSmlVersion()
 		return nil
 	case version.FieldChangelog:
 		m.ClearChangelog()
@@ -10302,9 +10232,6 @@ func (m *VersionMutation) ResetField(name string) error {
 		return nil
 	case version.FieldVersion:
 		m.ResetVersion()
-		return nil
-	case version.FieldSmlVersion:
-		m.ResetSmlVersion()
 		return nil
 	case version.FieldGameVersion:
 		m.ResetGameVersion()

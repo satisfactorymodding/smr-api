@@ -62,3 +62,10 @@ SELECT user_id, (SELECT id FROM mods WHERE mod_reference = 'SML' LIMIT 1), 'edit
 -- Drop table
 DROP TABLE sml_version_targets;
 DROP TABLE sml_versions;
+
+-- SML mod dependency
+INSERT INTO version_dependencies (version_id, mod_id, condition, created_at, updated_at)
+SELECT id, 'SML', sml_version, created_at, updated_at FROM versions WHERE sml_version IS NOT NULL
+ON CONFLICT DO NOTHING;
+
+ALTER TABLE versions DROP COLUMN sml_version;

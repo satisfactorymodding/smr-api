@@ -99,7 +99,7 @@ type Mod interface {
 // goverter:extend TimeToString UIntToInt Int64ToInt
 type Version interface {
 	// goverter:map Edges.Targets Targets
-	// goverter:ignore Link Mod Dependencies
+	// goverter:ignore Link Mod Dependencies SmlVersion
 	Convert(source *ent.Version) *generated.Version
 	ConvertSlice(source []*ent.Version) []*generated.Version
 

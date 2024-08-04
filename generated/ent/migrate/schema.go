@@ -378,7 +378,6 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "version", Type: field.TypeString, Size: 16},
-		{Name: "sml_version", Type: field.TypeString, Nullable: true, Size: 16},
 		{Name: "game_version", Type: field.TypeString},
 		{Name: "changelog", Type: field.TypeString, Nullable: true},
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
@@ -404,7 +403,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "versions_mods_versions",
-				Columns:    []*schema.Column{VersionsColumns[21]},
+				Columns:    []*schema.Column{VersionsColumns[20]},
 				RefColumns: []*schema.Column{ModsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

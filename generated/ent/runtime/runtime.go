@@ -338,32 +338,28 @@ func init() {
 	versionDescVersion := versionFields[1].Descriptor()
 	// version.VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	version.VersionValidator = versionDescVersion.Validators[0].(func(string) error)
-	// versionDescSmlVersion is the schema descriptor for sml_version field.
-	versionDescSmlVersion := versionFields[2].Descriptor()
-	// version.SmlVersionValidator is a validator for the "sml_version" field. It is called by the builders before save.
-	version.SmlVersionValidator = versionDescSmlVersion.Validators[0].(func(string) error)
 	// versionDescDownloads is the schema descriptor for downloads field.
-	versionDescDownloads := versionFields[5].Descriptor()
+	versionDescDownloads := versionFields[4].Descriptor()
 	// version.DefaultDownloads holds the default value on creation for the downloads field.
 	version.DefaultDownloads = versionDescDownloads.Default.(uint)
 	// versionDescApproved is the schema descriptor for approved field.
-	versionDescApproved := versionFields[8].Descriptor()
+	versionDescApproved := versionFields[7].Descriptor()
 	// version.DefaultApproved holds the default value on creation for the approved field.
 	version.DefaultApproved = versionDescApproved.Default.(bool)
 	// versionDescHotness is the schema descriptor for hotness field.
-	versionDescHotness := versionFields[9].Descriptor()
+	versionDescHotness := versionFields[8].Descriptor()
 	// version.DefaultHotness holds the default value on creation for the hotness field.
 	version.DefaultHotness = versionDescHotness.Default.(uint)
 	// versionDescDenied is the schema descriptor for denied field.
-	versionDescDenied := versionFields[10].Descriptor()
+	versionDescDenied := versionFields[9].Descriptor()
 	// version.DefaultDenied holds the default value on creation for the denied field.
 	version.DefaultDenied = versionDescDenied.Default.(bool)
 	// versionDescModReference is the schema descriptor for mod_reference field.
-	versionDescModReference := versionFields[12].Descriptor()
+	versionDescModReference := versionFields[11].Descriptor()
 	// version.ModReferenceValidator is a validator for the "mod_reference" field. It is called by the builders before save.
 	version.ModReferenceValidator = versionDescModReference.Validators[0].(func(string) error)
 	// versionDescHash is the schema descriptor for hash field.
-	versionDescHash := versionFields[17].Descriptor()
+	versionDescHash := versionFields[16].Descriptor()
 	// version.HashValidator is a validator for the "hash" field. It is called by the builders before save.
 	version.HashValidator = func() func(string) error {
 		validators := versionDescHash.Validators
