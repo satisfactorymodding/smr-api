@@ -27,8 +27,8 @@ const (
 	FieldModID = "mod_id"
 	// FieldVersion holds the string denoting the version field in the database.
 	FieldVersion = "version"
-	// FieldSmlVersion holds the string denoting the sml_version field in the database.
-	FieldSmlVersion = "sml_version"
+	// FieldGameVersion holds the string denoting the game_version field in the database.
+	FieldGameVersion = "game_version"
 	// FieldChangelog holds the string denoting the changelog field in the database.
 	FieldChangelog = "changelog"
 	// FieldDownloads holds the string denoting the downloads field in the database.
@@ -103,7 +103,7 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldModID,
 	FieldVersion,
-	FieldSmlVersion,
+	FieldGameVersion,
 	FieldChangelog,
 	FieldDownloads,
 	FieldKey,
@@ -152,8 +152,6 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	VersionValidator func(string) error
-	// SmlVersionValidator is a validator for the "sml_version" field. It is called by the builders before save.
-	SmlVersionValidator func(string) error
 	// DefaultDownloads holds the default value on creation for the "downloads" field.
 	DefaultDownloads uint
 	// DefaultApproved holds the default value on creation for the "approved" field.
@@ -213,9 +211,9 @@ func ByVersion(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVersion, opts...).ToFunc()
 }
 
-// BySmlVersion orders the results by the sml_version field.
-func BySmlVersion(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSmlVersion, opts...).ToFunc()
+// ByGameVersion orders the results by the game_version field.
+func ByGameVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGameVersion, opts...).ToFunc()
 }
 
 // ByChangelog orders the results by the changelog field.

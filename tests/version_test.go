@@ -8,10 +8,8 @@ import (
 	"math"
 	"mime/multipart"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
-	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
@@ -31,7 +29,7 @@ func init() {
 	db.EnableDebug()
 }
 
-const testModURL = "https://storage-staging.ficsit.app/file/smr-staging-s3/mods/4ha9SfdXaHAq4q/FicsitRemoteMonitoring-0.10.3.smod"
+const testModPath = "testdata/FicsitRemoteMonitoring-0.10.3.smod"
 
 // TODO Add rate limit test
 
@@ -48,48 +46,10 @@ func TestVersions(t *testing.T) {
 
 	modReference := "FicsitRemoteMonitoring"
 
-	u, err := url.Parse(testModURL)
-	testza.AssertNoError(t, err)
-
-	modPath := filepath.Join(t.TempDir(), path.Base(u.Path))
-
-	t.Run("Download Test Mod", func(t *testing.T) {
-		response, err := http.Get(testModURL)
-		testza.AssertNoError(t, err)
-
-		defer response.Body.Close()
-
-		file, err := os.OpenFile(modPath, os.O_CREATE|os.O_WRONLY, 0o644)
-		testza.AssertNoError(t, err)
-
-		_, err = io.Copy(file, response.Body)
-		testza.AssertNoError(t, err)
-	})
-
-	t.Run("Create SML Version", func(t *testing.T) {
+	t.Run("Create Satisfactory Version", func(t *testing.T) {
 		createRequest := authRequest(`mutation {
-		  createSMLVersion(smlVersion: {
-			version: "1.2.3",
-			satisfactory_version: 123,
-			stability: release,
-			link: "https://google.com",
-			targets: [
-			  {
-				targetName: Windows,
-				link: "https://this-is-windows.com"
-			  },
-			  {
-				targetName: WindowsServer,
-				link: "https://this-is-windows-server.com"
-			  },
-			  {
-				targetName: LinuxServer,
-				link: "https://this-is-linux-server.com"
-			  }
-			],
-			changelog: "Hello World",
-			date: "2023-10-27T01:00:51+00:00",
-			bootstrap_version: "0.0.0",
+		  createSatisfactoryVersion(input: {
+			version: 123456,
 			engine_version: "5.2"
 		  }) {
 			id
@@ -97,10 +57,10 @@ func TestVersions(t *testing.T) {
 		}`, token)
 
 		var createResponse struct {
-			CreateSMLVersion generated.SMLVersion
+			CreateSatisfactoryVersion generated.SatisfactoryVersion
 		}
 		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-		testza.AssertNotEqual(t, "", createResponse.CreateSMLVersion.ID)
+		testza.AssertNotEqual(t, "", createResponse.CreateSatisfactoryVersion.ID)
 	})
 
 	t.Run("Create Mod", func(t *testing.T) {
@@ -143,7 +103,7 @@ func TestVersions(t *testing.T) {
 	})
 
 	t.Run("Upload Parts", func(t *testing.T) {
-		f, err := os.Open(modPath)
+		f, err := os.Open(testModPath)
 		testza.AssertNoError(t, err)
 
 		stat, err := f.Stat()
@@ -200,7 +160,7 @@ func TestVersions(t *testing.T) {
 				_, err = mapField.Write(mapBody)
 				testza.AssertNoError(t, err)
 
-				part, err := writer.CreateFormFile("0", filepath.Base(path.Base(u.Path)))
+				part, err := writer.CreateFormFile("0", path.Base(testModPath))
 				testza.AssertNoError(t, err)
 
 				_, err = io.Copy(part, bytes.NewReader(chunk))
@@ -276,6 +236,7 @@ func TestVersions(t *testing.T) {
 			}
 
 			if response.CheckVersionUploadState.Version.ID != "" {
+				versionID = response.CheckVersionUploadState.Version.ID
 				break
 			}
 
@@ -285,5 +246,31 @@ func TestVersions(t *testing.T) {
 		if time.Now().After(end) {
 			testza.AssertNoError(t, errors.New("failed finishing mod"))
 		}
+	})
+
+	t.Run("Check uploaded data", func(t *testing.T) {
+		getModVersion := authRequest(`query GetModVersion($version_id: VersionID!) {
+		  	getVersion(versionId: $version_id) {
+				id
+				version
+				sml_version
+				dependencies {
+				  	condition
+				  	mod_id
+				}
+		  	}
+		}`, token)
+		getModVersion.Var("version_id", versionID)
+
+		var getModVersionResponse struct {
+			GetVersion generated.Version
+		}
+		testza.AssertNoError(t, client.Run(ctx, getModVersion, &getModVersionResponse))
+		testza.AssertEqual(t, versionID, getModVersionResponse.GetVersion.ID)
+		testza.AssertEqual(t, "0.10.3", getModVersionResponse.GetVersion.Version)
+		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.SmlVersion)
+		testza.AssertEqual(t, 1, len(getModVersionResponse.GetVersion.Dependencies))
+		testza.AssertEqual(t, "SML", getModVersionResponse.GetVersion.Dependencies[0].ModID)
+		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.Dependencies[0].Condition)
 	})
 }

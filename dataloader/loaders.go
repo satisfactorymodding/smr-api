@@ -112,7 +112,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 						version.FieldDeletedAt,
 						version.FieldModID,
 						version.FieldVersion,
-						version.FieldSmlVersion,
+						version.FieldGameVersion,
 						version.FieldChangelog,
 						version.FieldDownloads,
 						version.FieldKey,

@@ -52,7 +52,3 @@ func RegisterVersionRoutes(router *echo.Group) {
 	router.GET("/:versionId/download", downloadVersion)
 	router.GET("/:versionId/:target/download", downloadModTarget)
 }
-
-func RegisterSMLRoutes(router *echo.Group) {
-	router.GET("/latest-versions", dataWrapper(getSMLLatestVersions))
-}

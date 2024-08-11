@@ -248,15 +248,15 @@ func TestMods(t *testing.T) {
 					GetMods generated.GetMods
 				}
 				testza.AssertNoError(t, client.Run(ctx, queryRequest, &queryResponse))
-				testza.AssertEqual(t, 1, queryResponse.GetMods.Count)
-				testza.AssertEqual(t, 1, len(queryResponse.GetMods.Mods))
-				testza.AssertEqual(t, objID, queryResponse.GetMods.Mods[0].ID)
-				testza.AssertEqual(t, "Foo Bar", queryResponse.GetMods.Mods[0].Name)
-				testza.AssertEqual(t, "Foo Bar 123 Foo Bar 123", queryResponse.GetMods.Mods[0].ShortDescription)
+				testza.AssertEqual(t, 2, queryResponse.GetMods.Count)
+				testza.AssertEqual(t, 2, len(queryResponse.GetMods.Mods))
+				testza.AssertEqual(t, objID, queryResponse.GetMods.Mods[1].ID)
+				testza.AssertEqual(t, "Foo Bar", queryResponse.GetMods.Mods[1].Name)
+				testza.AssertEqual(t, "Foo Bar 123 Foo Bar 123", queryResponse.GetMods.Mods[1].ShortDescription)
 				fullDescription := "Lorem ipsum dolor sit amet"
-				testza.AssertEqual(t, &fullDescription, queryResponse.GetMods.Mods[0].FullDescription)
-				testza.AssertEqual(t, modReference, queryResponse.GetMods.Mods[0].ModReference)
-				testza.AssertEqual(t, userID, queryResponse.GetMods.Mods[0].CreatorID)
+				testza.AssertEqual(t, &fullDescription, queryResponse.GetMods.Mods[1].FullDescription)
+				testza.AssertEqual(t, modReference, queryResponse.GetMods.Mods[1].ModReference)
+				testza.AssertEqual(t, userID, queryResponse.GetMods.Mods[1].CreatorID)
 			})
 
 			t.Run("Query My Mods", func(t *testing.T) {
@@ -278,15 +278,15 @@ func TestMods(t *testing.T) {
 					GetMyMods generated.GetMyMods
 				}
 				testza.AssertNoError(t, client.Run(ctx, queryRequest, &queryResponse))
-				testza.AssertEqual(t, 1, queryResponse.GetMyMods.Count)
-				testza.AssertEqual(t, 1, len(queryResponse.GetMyMods.Mods))
-				testza.AssertEqual(t, objID, queryResponse.GetMyMods.Mods[0].ID)
-				testza.AssertEqual(t, "Foo Bar", queryResponse.GetMyMods.Mods[0].Name)
-				testza.AssertEqual(t, "Foo Bar 123 Foo Bar 123", queryResponse.GetMyMods.Mods[0].ShortDescription)
+				testza.AssertEqual(t, 2, queryResponse.GetMyMods.Count)
+				testza.AssertEqual(t, 2, len(queryResponse.GetMyMods.Mods))
+				testza.AssertEqual(t, objID, queryResponse.GetMyMods.Mods[1].ID)
+				testza.AssertEqual(t, "Foo Bar", queryResponse.GetMyMods.Mods[1].Name)
+				testza.AssertEqual(t, "Foo Bar 123 Foo Bar 123", queryResponse.GetMyMods.Mods[1].ShortDescription)
 				fullDescription := "Lorem ipsum dolor sit amet"
-				testza.AssertEqual(t, &fullDescription, queryResponse.GetMyMods.Mods[0].FullDescription)
-				testza.AssertEqual(t, modReference, queryResponse.GetMyMods.Mods[0].ModReference)
-				testza.AssertEqual(t, userID, queryResponse.GetMyMods.Mods[0].CreatorID)
+				testza.AssertEqual(t, &fullDescription, queryResponse.GetMyMods.Mods[1].FullDescription)
+				testza.AssertEqual(t, modReference, queryResponse.GetMyMods.Mods[1].ModReference)
+				testza.AssertEqual(t, userID, queryResponse.GetMyMods.Mods[1].CreatorID)
 			})
 
 			if i == 0 {

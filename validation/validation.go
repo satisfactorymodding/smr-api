@@ -27,6 +27,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/proto/parser"
 	"github.com/satisfactorymodding/smr-api/storage"
 )
@@ -53,7 +54,8 @@ type ModInfo struct {
 	ModReference         string                                `json:"mod_reference"`
 	Version              string                                `json:"version"`
 	Hash                 string                                `json:"-"`
-	SMLVersion           string                                `json:"sml_version"`
+	SMLVersion           *string                               `json:"sml_version"`
+	GameVersion          string                                `json:"-"`
 	Objects              []ModObject                           `json:"objects"`
 	Metadata             []map[string]map[string][]interface{} `json:"-"`
 	Targets              []string                              `json:"-"`
@@ -118,7 +120,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	}
 
 	if uPlugin != nil {
-		modInfo, err = validateUPluginJSON(archive, uPlugin, withValidation, modReference)
+		modInfo, err = validateUPluginJSON(ctx, archive, uPlugin, withValidation, modReference)
 		if err != nil {
 			return nil, err
 		}
@@ -126,7 +128,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 
 	if modInfo == nil {
 		// Neither data.json nor .uplugin found, try multi-target .uplugin
-		modInfo, err = validateMultiTargetPlugin(archive, withValidation, modReference)
+		modInfo, err = validateMultiTargetPlugin(ctx, archive, withValidation, modReference)
 		if err != nil {
 			return nil, err
 		}
@@ -148,26 +150,9 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 
 		//nolint
 		if db.From(ctx) != nil {
-			smlVersions, err := db.From(ctx).SmlVersion.Query().All(ctx)
+			engineVersion, err = db.GetEngineVersionForSatisfactoryVersion(ctx, modInfo.GameVersion)
 			if err != nil {
-				return nil, err
-			}
-
-			// Sort decrementing by version
-			sort.Slice(smlVersions, func(a, b int) bool {
-				return semver.MustParse(smlVersions[a].Version).Compare(semver.MustParse(smlVersions[b].Version)) > 0
-			})
-
-			for _, version := range smlVersions {
-				constraint, err := semver.NewConstraint(modInfo.SMLVersion)
-				if err != nil {
-					return nil, fmt.Errorf("failed to create semver constraint: %w", err)
-				}
-
-				if constraint.Check(semver.MustParse(version.Version)) {
-					engineVersion = version.EngineVersion
-					break
-				}
+				slox.Warn(ctx, "failed to get engine version", slog.Any("err", err))
 			}
 		} else {
 			slox.Warn(ctx, "no database context provided to validator")
@@ -294,13 +279,11 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 		}
 	}
 
-	for key, val := range modInfo.Dependencies {
-		if key == "SML" {
-			modInfo.SMLVersion = val
-		}
+	if smlDep, ok := modInfo.Dependencies["SML"]; ok {
+		modInfo.SMLVersion = &smlDep
 	}
 
-	if modInfo.SMLVersion == "" {
+	if modInfo.SMLVersion == nil {
 		return nil, errors.New("data.json doesn't contain SML as a dependency.") //nolint:revive
 	}
 
@@ -342,9 +325,10 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 }
 
 type UPlugin struct {
-	SemVersion *string  `json:"SemVersion"`
-	Plugins    []Plugin `json:"Plugins"`
-	Version    int64    `json:"Version"`
+	SemVersion  *string  `json:"SemVersion"`
+	Plugins     []Plugin `json:"Plugins"`
+	Version     int64    `json:"Version"`
+	GameVersion string   `json:"GameVersion"`
 }
 
 type Plugin struct {
@@ -354,7 +338,7 @@ type Plugin struct {
 	SemVersion string `json:"SemVersion"`
 }
 
-func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidation bool, modReference string) (*ModInfo, error) {
+func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *zip.File, withValidation bool, modReference string) (*ModInfo, error) {
 	rc, err := uPluginFile.Open()
 	defer func(rc io.ReadCloser) {
 		_ = rc.Close()
@@ -434,20 +418,20 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 		}
 	}
 
-	if withValidation {
-		if len(modInfo.Dependencies) == 0 {
-			return nil, errors.New(uPluginFile.Name + " doesn't contain SML as a dependency.")
-		}
+	if smlDep, ok := modInfo.Dependencies["SML"]; ok {
+		modInfo.SMLVersion = &smlDep
 	}
 
-	for key, val := range modInfo.Dependencies {
-		if key == "SML" {
-			modInfo.SMLVersion = val
+	if uPlugin.GameVersion != "" {
+		modInfo.GameVersion = uPlugin.GameVersion
+	} else if modInfo.SMLVersion != nil {
+		gameVersion, err := getGameVersionFromSMLVersion(ctx, *modInfo.SMLVersion)
+		if err != nil {
+			return nil, fmt.Errorf("failed to infer FactoryGame version: %w", err)
 		}
-	}
-
-	if modInfo.SMLVersion == "" {
-		return nil, errors.New(uPluginFile.Name + " doesn't contain SML as a dependency.")
+		modInfo.GameVersion = gameVersion
+	} else {
+		return nil, fmt.Errorf("infering FactoryGame version: %s doesn't contain SML as a dependency", uPluginFile.Name)
 	}
 
 	modInfo.Type = UEPlugin
@@ -455,7 +439,35 @@ func validateUPluginJSON(archive *zip.Reader, uPluginFile *zip.File, withValidat
 	return &modInfo, nil
 }
 
-func validateMultiTargetPlugin(archive *zip.Reader, withValidation bool, modReference string) (*ModInfo, error) {
+func getGameVersionFromSMLVersion(ctx context.Context, smlVersion string) (string, error) {
+	smlQuery := db.From(ctx).Mod.Query().Where(mod.ModReferenceEQ("SML")).WithVersions()
+	smlMod, err := smlQuery.First(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get SML mod: %w", err)
+	}
+
+	smlVersions := smlMod.Edges.Versions
+
+	// Sort increasing by version
+	sort.Slice(smlVersions, func(a, b int) bool {
+		return semver.MustParse(smlVersions[a].Version).Compare(semver.MustParse(smlVersions[b].Version)) < 0
+	})
+
+	constraint, err := semver.NewConstraint(smlVersion)
+	if err != nil {
+		return "", fmt.Errorf("failed to create semver constraint: %w", err)
+	}
+
+	for _, version := range smlVersions {
+		if constraint.Check(semver.MustParse(version.Version)) {
+			return version.GameVersion, nil
+		}
+	}
+
+	return "", fmt.Errorf("no SML version matches constraint: %s", smlVersion)
+}
+
+func validateMultiTargetPlugin(ctx context.Context, archive *zip.Reader, withValidation bool, modReference string) (*ModInfo, error) {
 	var targets []string
 	var uPluginFiles []*zip.File
 	for _, file := range archive.File {
@@ -518,7 +530,7 @@ func validateMultiTargetPlugin(archive *zip.Reader, withValidation bool, modRefe
 	}
 
 	// All the .uplugin files should be the same at this point (assuming validation is enabled)
-	modInfo, err := validateUPluginJSON(archive, uPluginFiles[0], withValidation, modReference)
+	modInfo, err := validateUPluginJSON(ctx, archive, uPluginFiles[0], withValidation, modReference)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate multi-target plugin: %w", err)
 	}

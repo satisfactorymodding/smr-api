@@ -147,21 +147,9 @@ type NewGuide struct {
 	TagIDs           []string `json:"tagIDs,omitempty"`
 }
 
-type NewSMLVersion struct {
-	Version             string                 `json:"version"`
-	SatisfactoryVersion int                    `json:"satisfactory_version"`
-	Stability           VersionStabilities     `json:"stability"`
-	Link                string                 `json:"link"`
-	Targets             []*NewSMLVersionTarget `json:"targets"`
-	Changelog           string                 `json:"changelog"`
-	Date                string                 `json:"date"`
-	BootstrapVersion    *string                `json:"bootstrap_version,omitempty"`
-	EngineVersion       string                 `json:"engine_version"`
-}
-
-type NewSMLVersionTarget struct {
-	TargetName TargetName `json:"targetName"`
-	Link       string     `json:"link"`
+type NewSatisfactoryVersion struct {
+	Version       int    `json:"version"`
+	EngineVersion string `json:"engine_version"`
 }
 
 type NewTag struct {
@@ -204,6 +192,12 @@ type SMLVersionTarget struct {
 	Link       string     `json:"link"`
 }
 
+type SatisfactoryVersion struct {
+	ID            string `json:"id"`
+	Version       int    `json:"version"`
+	EngineVersion string `json:"engine_version"`
+}
+
 type Tag struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -230,21 +224,9 @@ type UpdateGuide struct {
 	TagIDs           []string `json:"tagIDs,omitempty"`
 }
 
-type UpdateSMLVersion struct {
-	Version             *string                   `json:"version,omitempty"`
-	SatisfactoryVersion *int                      `json:"satisfactory_version,omitempty"`
-	Stability           *VersionStabilities       `json:"stability,omitempty"`
-	Link                *string                   `json:"link,omitempty"`
-	Targets             []*UpdateSMLVersionTarget `json:"targets"`
-	Changelog           *string                   `json:"changelog,omitempty"`
-	Date                *string                   `json:"date,omitempty"`
-	BootstrapVersion    *string                   `json:"bootstrap_version,omitempty"`
-	EngineVersion       *string                   `json:"engine_version,omitempty"`
-}
-
-type UpdateSMLVersionTarget struct {
-	TargetName TargetName `json:"targetName"`
-	Link       string     `json:"link"`
+type UpdateSatisfactoryVersion struct {
+	Version       *int    `json:"version,omitempty"`
+	EngineVersion *string `json:"engine_version,omitempty"`
 }
 
 type UpdateUser struct {
@@ -287,14 +269,14 @@ type UserMod struct {
 }
 
 type UserRoles struct {
-	ApproveMods             bool `json:"approveMods"`
-	ApproveVersions         bool `json:"approveVersions"`
-	DeleteContent           bool `json:"deleteContent"`
-	EditContent             bool `json:"editContent"`
-	EditUsers               bool `json:"editUsers"`
-	EditSMLVersions         bool `json:"editSMLVersions"`
-	EditBootstrapVersions   bool `json:"editBootstrapVersions"`
-	EditAnyModCompatibility bool `json:"editAnyModCompatibility"`
+	ApproveMods              bool `json:"approveMods"`
+	ApproveVersions          bool `json:"approveVersions"`
+	DeleteContent            bool `json:"deleteContent"`
+	EditContent              bool `json:"editContent"`
+	EditUsers                bool `json:"editUsers"`
+	EditSatisfactoryVersions bool `json:"editSatisfactoryVersions"`
+	EditBootstrapVersions    bool `json:"editBootstrapVersions"`
+	EditAnyModCompatibility  bool `json:"editAnyModCompatibility"`
 }
 
 type UserSession struct {
@@ -306,6 +288,7 @@ type Version struct {
 	ModID        string               `json:"mod_id"`
 	Version      string               `json:"version"`
 	SmlVersion   string               `json:"sml_version"`
+	GameVersion  string               `json:"game_version"`
 	Changelog    string               `json:"changelog"`
 	Downloads    int                  `json:"downloads"`
 	Stability    VersionStabilities   `json:"stability"`

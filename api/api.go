@@ -153,7 +153,6 @@ func Setup(ctx context.Context) *echo.Echo {
 	nodes.RegisterModRoutes(v1.Group("/mod"))
 	nodes.RegisterModsRoutes(v1.Group("/mods"))
 	nodes.RegisterVersionRoutes(v1.Group("/version"))
-	nodes.RegisterSMLRoutes(v1.Group("/sml"))
 
 	v2 := e.Group("/v2")
 

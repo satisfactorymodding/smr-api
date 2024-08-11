@@ -379,6 +379,19 @@ func (r *versionResolver) Size(_ context.Context, obj *generated.Version) (*int,
 	return &size, nil
 }
 
+func (r *versionResolver) SmlVersion(ctx context.Context, obj *generated.Version) (string, error) {
+	dependencies, err := r.Dependencies(ctx, obj)
+	if err != nil {
+		return "", err
+	}
+	for _, dep := range dependencies {
+		if dep.ModID == "SML" {
+			return dep.Condition, nil
+		}
+	}
+	return "", nil
+}
+
 var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config{
 	NumCounters: 1e6, // number of keys to track frequency of (1M).
 	MaxCost:     1e6, // maximum cost of cache (1M).

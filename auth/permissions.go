@@ -32,9 +32,9 @@ var (
 		ID:          "5",
 		Description: "Allows user to edit other users",
 	}
-	RoleEditSMLVersions = &Role{
+	RoleEditSatisfactoryVersions = &Role{
 		ID:          "6",
-		Description: "Allows user to sml versions",
+		Description: "Allows user to edit satisfactory versions",
 	}
 	RoleEditBootstrapVersions = &Role{
 		ID:          "7",
@@ -64,7 +64,7 @@ var (
 			RoleDeleteAnyContent,
 			RoleEditAnyContent,
 			RoleEditUsers,
-			RoleEditSMLVersions,
+			RoleEditSatisfactoryVersions,
 			RoleEditBootstrapVersions,
 			RoleEditAnnouncements,
 			RoleManageTags,
@@ -86,7 +86,7 @@ var (
 		ID:   "3",
 		Name: "SML Dev",
 		Roles: []*Role{
-			RoleEditSMLVersions,
+			RoleEditSatisfactoryVersions,
 		},
 	}
 	GroupBootstrapDev = &Group{

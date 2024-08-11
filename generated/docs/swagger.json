@@ -511,26 +511,6 @@
                 }
             }
         },
-        "/sml/latest-versions": {
-            "get": {
-                "description": "Retrieve a list of latest versions for sml",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "SML"
-                ],
-                "summary": "Retrieve a list of latest versions for sml",
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
         "/user/me": {
             "get": {
                 "description": "Retrieve the user associated with the token",

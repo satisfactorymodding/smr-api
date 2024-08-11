@@ -7,6 +7,7 @@ import (
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/migrations/utils"
 )
 
@@ -18,7 +19,14 @@ func init() {
 				return err
 			}
 			return utils.ReindexAllModFiles(ctx, false, nil, func(version *ent.Version) bool {
-				return version.SmlVersion == ""
+				smlDependency, err := db.From(ctx).VersionDependency.Query().Where(
+					versiondependency.VersionID(version.ID),
+					versiondependency.ModID("SML"),
+				).First(ctx)
+				if err != nil {
+					return true
+				}
+				return smlDependency == nil || smlDependency.Condition == ""
 			})
 		},
 	)

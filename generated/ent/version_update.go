@@ -86,16 +86,16 @@ func (vu *VersionUpdate) SetNillableVersion(s *string) *VersionUpdate {
 	return vu
 }
 
-// SetSmlVersion sets the "sml_version" field.
-func (vu *VersionUpdate) SetSmlVersion(s string) *VersionUpdate {
-	vu.mutation.SetSmlVersion(s)
+// SetGameVersion sets the "game_version" field.
+func (vu *VersionUpdate) SetGameVersion(s string) *VersionUpdate {
+	vu.mutation.SetGameVersion(s)
 	return vu
 }
 
-// SetNillableSmlVersion sets the "sml_version" field if the given value is not nil.
-func (vu *VersionUpdate) SetNillableSmlVersion(s *string) *VersionUpdate {
+// SetNillableGameVersion sets the "game_version" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableGameVersion(s *string) *VersionUpdate {
 	if s != nil {
-		vu.SetSmlVersion(*s)
+		vu.SetGameVersion(*s)
 	}
 	return vu
 }
@@ -523,11 +523,6 @@ func (vu *VersionUpdate) check() error {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Version.version": %w`, err)}
 		}
 	}
-	if v, ok := vu.mutation.SmlVersion(); ok {
-		if err := version.SmlVersionValidator(v); err != nil {
-			return &ValidationError{Name: "sml_version", err: fmt.Errorf(`ent: validator failed for field "Version.sml_version": %w`, err)}
-		}
-	}
 	if v, ok := vu.mutation.Stability(); ok {
 		if err := version.StabilityValidator(v); err != nil {
 			return &ValidationError{Name: "stability", err: fmt.Errorf(`ent: validator failed for field "Version.stability": %w`, err)}
@@ -579,8 +574,8 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.Version(); ok {
 		_spec.SetField(version.FieldVersion, field.TypeString, value)
 	}
-	if value, ok := vu.mutation.SmlVersion(); ok {
-		_spec.SetField(version.FieldSmlVersion, field.TypeString, value)
+	if value, ok := vu.mutation.GameVersion(); ok {
+		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
 	}
 	if value, ok := vu.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)
@@ -873,16 +868,16 @@ func (vuo *VersionUpdateOne) SetNillableVersion(s *string) *VersionUpdateOne {
 	return vuo
 }
 
-// SetSmlVersion sets the "sml_version" field.
-func (vuo *VersionUpdateOne) SetSmlVersion(s string) *VersionUpdateOne {
-	vuo.mutation.SetSmlVersion(s)
+// SetGameVersion sets the "game_version" field.
+func (vuo *VersionUpdateOne) SetGameVersion(s string) *VersionUpdateOne {
+	vuo.mutation.SetGameVersion(s)
 	return vuo
 }
 
-// SetNillableSmlVersion sets the "sml_version" field if the given value is not nil.
-func (vuo *VersionUpdateOne) SetNillableSmlVersion(s *string) *VersionUpdateOne {
+// SetNillableGameVersion sets the "game_version" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableGameVersion(s *string) *VersionUpdateOne {
 	if s != nil {
-		vuo.SetSmlVersion(*s)
+		vuo.SetGameVersion(*s)
 	}
 	return vuo
 }
@@ -1323,11 +1318,6 @@ func (vuo *VersionUpdateOne) check() error {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Version.version": %w`, err)}
 		}
 	}
-	if v, ok := vuo.mutation.SmlVersion(); ok {
-		if err := version.SmlVersionValidator(v); err != nil {
-			return &ValidationError{Name: "sml_version", err: fmt.Errorf(`ent: validator failed for field "Version.sml_version": %w`, err)}
-		}
-	}
 	if v, ok := vuo.mutation.Stability(); ok {
 		if err := version.StabilityValidator(v); err != nil {
 			return &ValidationError{Name: "stability", err: fmt.Errorf(`ent: validator failed for field "Version.stability": %w`, err)}
@@ -1396,8 +1386,8 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	if value, ok := vuo.mutation.Version(); ok {
 		_spec.SetField(version.FieldVersion, field.TypeString, value)
 	}
-	if value, ok := vuo.mutation.SmlVersion(); ok {
-		_spec.SetField(version.FieldSmlVersion, field.TypeString, value)
+	if value, ok := vuo.mutation.GameVersion(); ok {
+		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
 	}
 	if value, ok := vuo.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)

@@ -47,6 +47,8 @@ type ResolverRoot interface {
 	Mod() ModResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
+	SMLVersion() SMLVersionResolver
+	SMLVersionTarget() SMLVersionTargetResolver
 	User() UserResolver
 	UserMod() UserModResolver
 	Version() VersionResolver
@@ -54,20 +56,19 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	CanApproveMods           func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanApproveVersions       func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanEditAnnouncements     func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanEditBootstrapVersions func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanEditGuide             func(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error)
-	CanEditMod               func(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error)
-	CanEditModCompatibility  func(ctx context.Context, obj interface{}, next graphql.Resolver, field *string) (res interface{}, err error)
-	CanEditSMLVersions       func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanEditUser              func(ctx context.Context, obj interface{}, next graphql.Resolver, field string, object bool) (res interface{}, err error)
-	CanEditUsers             func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanEditVersion           func(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error)
-	CanManageTags            func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	IsLoggedIn               func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	IsNotLoggedIn            func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	CanApproveMods              func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	CanApproveVersions          func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	CanEditAnnouncements        func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	CanEditGuide                func(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error)
+	CanEditMod                  func(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error)
+	CanEditModCompatibility     func(ctx context.Context, obj interface{}, next graphql.Resolver, field *string) (res interface{}, err error)
+	CanEditSatisfactoryVersions func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	CanEditUser                 func(ctx context.Context, obj interface{}, next graphql.Resolver, field string, object bool) (res interface{}, err error)
+	CanEditUsers                func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	CanEditVersion              func(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error)
+	CanManageTags               func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	IsLoggedIn                  func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	IsNotLoggedIn               func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -185,13 +186,13 @@ type ComplexityRoot struct {
 		CreateGuide                      func(childComplexity int, guide NewGuide) int
 		CreateMod                        func(childComplexity int, mod NewMod) int
 		CreateMultipleTags               func(childComplexity int, tagNames []*NewTag) int
-		CreateSMLVersion                 func(childComplexity int, smlVersion NewSMLVersion) int
+		CreateSatisfactoryVersion        func(childComplexity int, input NewSatisfactoryVersion) int
 		CreateTag                        func(childComplexity int, tagName string, description string) int
 		CreateVersion                    func(childComplexity int, modID string) int
 		DeleteAnnouncement               func(childComplexity int, announcementID string) int
 		DeleteGuide                      func(childComplexity int, guideID string) int
 		DeleteMod                        func(childComplexity int, modID string) int
-		DeleteSMLVersion                 func(childComplexity int, smlVersionID string) int
+		DeleteSatisfactoryVersion        func(childComplexity int, id string) int
 		DeleteTag                        func(childComplexity int, tagID string) int
 		DeleteVersion                    func(childComplexity int, versionID string) int
 		DenyMod                          func(childComplexity int, modID string) int
@@ -207,7 +208,7 @@ type ComplexityRoot struct {
 		UpdateMod                        func(childComplexity int, modID string, mod UpdateMod) int
 		UpdateModCompatibility           func(childComplexity int, modID string, compatibility CompatibilityInfoInput) int
 		UpdateMultipleModCompatibilities func(childComplexity int, modIDs []string, compatibility CompatibilityInfoInput) int
-		UpdateSMLVersion                 func(childComplexity int, smlVersionID string, smlVersion UpdateSMLVersion) int
+		UpdateSatisfactoryVersion        func(childComplexity int, id string, input UpdateSatisfactoryVersion) int
 		UpdateTag                        func(childComplexity int, tagID string, newName string, description string) int
 		UpdateUser                       func(childComplexity int, userID string, input UpdateUser) int
 		UpdateVersion                    func(childComplexity int, versionID string, version UpdateVersion) int
@@ -240,6 +241,8 @@ type ComplexityRoot struct {
 		GetOAuthOptions              func(childComplexity int, callbackURL string) int
 		GetSMLVersion                func(childComplexity int, smlVersionID string) int
 		GetSMLVersions               func(childComplexity int, filter map[string]interface{}) int
+		GetSatisfactoryVersion       func(childComplexity int, id string) int
+		GetSatisfactoryVersions      func(childComplexity int) int
 		GetTag                       func(childComplexity int, tagID string) int
 		GetTags                      func(childComplexity int, filter *TagFilter) int
 		GetUnapprovedMods            func(childComplexity int, filter map[string]interface{}) int
@@ -272,6 +275,12 @@ type ComplexityRoot struct {
 		VersionID  func(childComplexity int) int
 	}
 
+	SatisfactoryVersion struct {
+		EngineVersion func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Version       func(childComplexity int) int
+	}
+
 	Tag struct {
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -302,14 +311,14 @@ type ComplexityRoot struct {
 	}
 
 	UserRoles struct {
-		ApproveMods             func(childComplexity int) int
-		ApproveVersions         func(childComplexity int) int
-		DeleteContent           func(childComplexity int) int
-		EditAnyModCompatibility func(childComplexity int) int
-		EditBootstrapVersions   func(childComplexity int) int
-		EditContent             func(childComplexity int) int
-		EditSMLVersions         func(childComplexity int) int
-		EditUsers               func(childComplexity int) int
+		ApproveMods              func(childComplexity int) int
+		ApproveVersions          func(childComplexity int) int
+		DeleteContent            func(childComplexity int) int
+		EditAnyModCompatibility  func(childComplexity int) int
+		EditBootstrapVersions    func(childComplexity int) int
+		EditContent              func(childComplexity int) int
+		EditSatisfactoryVersions func(childComplexity int) int
+		EditUsers                func(childComplexity int) int
 	}
 
 	UserSession struct {
@@ -322,6 +331,7 @@ type ComplexityRoot struct {
 		CreatedAt    func(childComplexity int) int
 		Dependencies func(childComplexity int) int
 		Downloads    func(childComplexity int) int
+		GameVersion  func(childComplexity int) int
 		Hash         func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Link         func(childComplexity int) int
@@ -402,9 +412,9 @@ type MutationResolver interface {
 	DeleteMod(ctx context.Context, modID string) (bool, error)
 	ApproveMod(ctx context.Context, modID string) (bool, error)
 	DenyMod(ctx context.Context, modID string) (bool, error)
-	CreateSMLVersion(ctx context.Context, smlVersion NewSMLVersion) (*SMLVersion, error)
-	UpdateSMLVersion(ctx context.Context, smlVersionID string, smlVersion UpdateSMLVersion) (*SMLVersion, error)
-	DeleteSMLVersion(ctx context.Context, smlVersionID string) (bool, error)
+	CreateSatisfactoryVersion(ctx context.Context, input NewSatisfactoryVersion) (*SatisfactoryVersion, error)
+	UpdateSatisfactoryVersion(ctx context.Context, id string, input UpdateSatisfactoryVersion) (*SatisfactoryVersion, error)
+	DeleteSatisfactoryVersion(ctx context.Context, id string) (bool, error)
 	CreateTag(ctx context.Context, tagName string, description string) (*Tag, error)
 	CreateMultipleTags(ctx context.Context, tagNames []*NewTag) ([]*Tag, error)
 	UpdateTag(ctx context.Context, tagID string, newName string, description string) (*Tag, error)
@@ -438,6 +448,8 @@ type QueryResolver interface {
 	GetMyUnapprovedMods(ctx context.Context, filter map[string]interface{}) (*GetMyMods, error)
 	ResolveModVersions(ctx context.Context, filter []*ModVersionConstraint) ([]*ModVersion, error)
 	GetModAssetList(ctx context.Context, modReference string) ([]string, error)
+	GetSatisfactoryVersions(ctx context.Context) ([]*SatisfactoryVersion, error)
+	GetSatisfactoryVersion(ctx context.Context, id string) (*SatisfactoryVersion, error)
 	GetSMLVersion(ctx context.Context, smlVersionID string) (*SMLVersion, error)
 	GetSMLVersions(ctx context.Context, filter map[string]interface{}) (*GetSMLVersions, error)
 	GetTag(ctx context.Context, tagID string) (*Tag, error)
@@ -452,6 +464,15 @@ type QueryResolver interface {
 	GetMyVersions(ctx context.Context, filter map[string]interface{}) (*GetMyVersions, error)
 	GetMyUnapprovedVersions(ctx context.Context, filter map[string]interface{}) (*GetMyVersions, error)
 }
+type SMLVersionResolver interface {
+	Link(ctx context.Context, obj *SMLVersion) (string, error)
+
+	BootstrapVersion(ctx context.Context, obj *SMLVersion) (*string, error)
+	EngineVersion(ctx context.Context, obj *SMLVersion) (string, error)
+}
+type SMLVersionTargetResolver interface {
+	Link(ctx context.Context, obj *SMLVersionTarget) (string, error)
+}
 type UserResolver interface {
 	Roles(ctx context.Context, obj *User) (*UserRoles, error)
 	Groups(ctx context.Context, obj *User) ([]*Group, error)
@@ -463,6 +484,8 @@ type UserModResolver interface {
 	Mod(ctx context.Context, obj *UserMod) (*Mod, error)
 }
 type VersionResolver interface {
+	SmlVersion(ctx context.Context, obj *Version) (string, error)
+
 	Link(ctx context.Context, obj *Version) (string, error)
 
 	Size(ctx context.Context, obj *Version) (*int, error)
@@ -1009,17 +1032,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateMultipleTags(childComplexity, args["tagNames"].([]*NewTag)), true
 
-	case "Mutation.createSMLVersion":
-		if e.complexity.Mutation.CreateSMLVersion == nil {
+	case "Mutation.createSatisfactoryVersion":
+		if e.complexity.Mutation.CreateSatisfactoryVersion == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createSMLVersion_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createSatisfactoryVersion_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateSMLVersion(childComplexity, args["smlVersion"].(NewSMLVersion)), true
+		return e.complexity.Mutation.CreateSatisfactoryVersion(childComplexity, args["input"].(NewSatisfactoryVersion)), true
 
 	case "Mutation.createTag":
 		if e.complexity.Mutation.CreateTag == nil {
@@ -1081,17 +1104,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteMod(childComplexity, args["modId"].(string)), true
 
-	case "Mutation.deleteSMLVersion":
-		if e.complexity.Mutation.DeleteSMLVersion == nil {
+	case "Mutation.deleteSatisfactoryVersion":
+		if e.complexity.Mutation.DeleteSatisfactoryVersion == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteSMLVersion_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteSatisfactoryVersion_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteSMLVersion(childComplexity, args["smlVersionId"].(string)), true
+		return e.complexity.Mutation.DeleteSatisfactoryVersion(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteTag":
 		if e.complexity.Mutation.DeleteTag == nil {
@@ -1268,17 +1291,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateMultipleModCompatibilities(childComplexity, args["modIDs"].([]string), args["compatibility"].(CompatibilityInfoInput)), true
 
-	case "Mutation.updateSMLVersion":
-		if e.complexity.Mutation.UpdateSMLVersion == nil {
+	case "Mutation.updateSatisfactoryVersion":
+		if e.complexity.Mutation.UpdateSatisfactoryVersion == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateSMLVersion_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateSatisfactoryVersion_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateSMLVersion(childComplexity, args["smlVersionId"].(string), args["smlVersion"].(UpdateSMLVersion)), true
+		return e.complexity.Mutation.UpdateSatisfactoryVersion(childComplexity, args["id"].(string), args["input"].(UpdateSatisfactoryVersion)), true
 
 	case "Mutation.updateTag":
 		if e.complexity.Mutation.UpdateTag == nil {
@@ -1567,6 +1590,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetSMLVersions(childComplexity, args["filter"].(map[string]interface{})), true
 
+	case "Query.getSatisfactoryVersion":
+		if e.complexity.Query.GetSatisfactoryVersion == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getSatisfactoryVersion_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetSatisfactoryVersion(childComplexity, args["id"].(string)), true
+
+	case "Query.getSatisfactoryVersions":
+		if e.complexity.Query.GetSatisfactoryVersions == nil {
+			break
+		}
+
+		return e.complexity.Query.GetSatisfactoryVersions(childComplexity), true
+
 	case "Query.getTag":
 		if e.complexity.Query.GetTag == nil {
 			break
@@ -1780,6 +1822,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SMLVersionTarget.VersionID(childComplexity), true
 
+	case "SatisfactoryVersion.engine_version":
+		if e.complexity.SatisfactoryVersion.EngineVersion == nil {
+			break
+		}
+
+		return e.complexity.SatisfactoryVersion.EngineVersion(childComplexity), true
+
+	case "SatisfactoryVersion.id":
+		if e.complexity.SatisfactoryVersion.ID == nil {
+			break
+		}
+
+		return e.complexity.SatisfactoryVersion.ID(childComplexity), true
+
+	case "SatisfactoryVersion.version":
+		if e.complexity.SatisfactoryVersion.Version == nil {
+			break
+		}
+
+		return e.complexity.SatisfactoryVersion.Version(childComplexity), true
+
 	case "Tag.description":
 		if e.complexity.Tag.Description == nil {
 			break
@@ -1962,12 +2025,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserRoles.EditContent(childComplexity), true
 
-	case "UserRoles.editSMLVersions":
-		if e.complexity.UserRoles.EditSMLVersions == nil {
+	case "UserRoles.editSatisfactoryVersions":
+		if e.complexity.UserRoles.EditSatisfactoryVersions == nil {
 			break
 		}
 
-		return e.complexity.UserRoles.EditSMLVersions(childComplexity), true
+		return e.complexity.UserRoles.EditSatisfactoryVersions(childComplexity), true
 
 	case "UserRoles.editUsers":
 		if e.complexity.UserRoles.EditUsers == nil {
@@ -2017,6 +2080,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Version.Downloads(childComplexity), true
+
+	case "Version.game_version":
+		if e.complexity.Version.GameVersion == nil {
+			break
+		}
+
+		return e.complexity.Version.GameVersion(childComplexity), true
 
 	case "Version.hash":
 		if e.complexity.Version.Hash == nil {
@@ -2195,8 +2265,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNewAnnouncement,
 		ec.unmarshalInputNewGuide,
 		ec.unmarshalInputNewMod,
-		ec.unmarshalInputNewSMLVersion,
-		ec.unmarshalInputNewSMLVersionTarget,
+		ec.unmarshalInputNewSatisfactoryVersion,
 		ec.unmarshalInputNewTag,
 		ec.unmarshalInputNewVersion,
 		ec.unmarshalInputSMLVersionFilter,
@@ -2204,8 +2273,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateAnnouncement,
 		ec.unmarshalInputUpdateGuide,
 		ec.unmarshalInputUpdateMod,
-		ec.unmarshalInputUpdateSMLVersion,
-		ec.unmarshalInputUpdateSMLVersionTarget,
+		ec.unmarshalInputUpdateSatisfactoryVersion,
 		ec.unmarshalInputUpdateUser,
 		ec.unmarshalInputUpdateUserMod,
 		ec.unmarshalInputUpdateVersion,
@@ -2416,10 +2484,10 @@ directive @canEditModCompatibility(field: String) on FIELD_DEFINITION
 directive @canApproveMods on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canApproveVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canEditUsers on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
-directive @canEditSMLVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
-directive @canEditBootstrapVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @canEditSatisfactoryVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canEditAnnouncements on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
-directive @canManageTags on FIELD_DEFINITION | INPUT_FIELD_DEFINITION`, BuiltIn: false},
+directive @canManageTags on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+`, BuiltIn: false},
 	{Name: "../schemas/guide.graphql", Input: `### Types
 
 scalar GuideID
@@ -2625,6 +2693,43 @@ extend type Mutation {
     approveMod(modId: ModID!): Boolean! @canApproveMods @isLoggedIn
     denyMod(modId: ModID!): Boolean! @canApproveMods @isLoggedIn
 }`, BuiltIn: false},
+	{Name: "../schemas/satisfactory_version.graphql", Input: `### Types
+
+scalar SatisfactoryVersionID
+
+type SatisfactoryVersion {
+    id: SatisfactoryVersionID!
+    version: Int!
+    engine_version: String!
+}
+
+### Inputs
+
+input NewSatisfactoryVersion {
+    version: Int!
+    engine_version: String!
+}
+
+input UpdateSatisfactoryVersion {
+    version: Int
+    engine_version: String
+}
+
+### Queries
+
+extend type Query {
+    getSatisfactoryVersions: [SatisfactoryVersion!]!
+    getSatisfactoryVersion(id: SatisfactoryVersionID!): SatisfactoryVersion
+}
+
+### Mutations
+
+extend type Mutation {
+    createSatisfactoryVersion(input: NewSatisfactoryVersion!): SatisfactoryVersion! @isLoggedIn @canEditSatisfactoryVersions
+    updateSatisfactoryVersion(id: SatisfactoryVersionID!, input: UpdateSatisfactoryVersion!): SatisfactoryVersion! @isLoggedIn @canEditSatisfactoryVersions
+    deleteSatisfactoryVersion(id: SatisfactoryVersionID!): Boolean! @isLoggedIn @canEditSatisfactoryVersions
+}
+`, BuiltIn: false},
 	{Name: "../schemas/sml_version.graphql", Input: `### Types
 
 scalar SMLVersionID
@@ -2666,40 +2771,6 @@ enum SMLVersionFields {
 
 ### Inputs
 
-input NewSMLVersion {
-    version: String!
-    satisfactory_version: Int!
-    stability: VersionStabilities!
-    link: String!
-    targets: [NewSMLVersionTarget!]!
-    changelog: String!
-    date: Date!
-    bootstrap_version: String
-    engine_version: String!
-}
-
-input UpdateSMLVersion {
-    version: String
-    satisfactory_version: Int
-    stability: VersionStabilities
-    link: String
-    targets: [UpdateSMLVersionTarget]!
-    changelog: String
-    date: Date
-    bootstrap_version: String
-    engine_version: String
-}
-
-input NewSMLVersionTarget {
-    targetName: TargetName!
-    link: String!
-}
-
-input UpdateSMLVersionTarget {
-    targetName: TargetName!
-    link: String!
-}
-
 input SMLVersionFilter {
     limit: Int
     offset: Int
@@ -2712,17 +2783,12 @@ input SMLVersionFilter {
 ### Queries
 
 extend type Query {
-    getSMLVersion(smlVersionID: SMLVersionID!): SMLVersion
-    getSMLVersions(filter: SMLVersionFilter): GetSMLVersions!
+    getSMLVersion(smlVersionID: SMLVersionID!): SMLVersion @deprecated(reason: "SML is now a mod")
+    getSMLVersions(filter: SMLVersionFilter): GetSMLVersions! @deprecated(reason: "SML is now a mod")
 }
 
 ### Mutations
 
-extend type Mutation {
-    createSMLVersion(smlVersion: NewSMLVersion!): SMLVersion @canEditSMLVersions @isLoggedIn
-    updateSMLVersion(smlVersionId: SMLVersionID!, smlVersion: UpdateSMLVersion!): SMLVersion! @canEditSMLVersions @isLoggedIn
-    deleteSMLVersion(smlVersionId: SMLVersionID!): Boolean! @canEditSMLVersions @isLoggedIn
-}
 `, BuiltIn: false},
 	{Name: "../schemas/tags.graphql", Input: `scalar TagID
 scalar TagName
@@ -2769,7 +2835,7 @@ type UserRoles {
     deleteContent: Boolean!
     editContent: Boolean!
     editUsers: Boolean!
-    editSMLVersions: Boolean!
+    editSatisfactoryVersions: Boolean!
     editBootstrapVersions: Boolean!
     editAnyModCompatibility: Boolean!
 }
@@ -2863,6 +2929,7 @@ type Version {
     mod_id: ModID!
     version: String!
     sml_version: String!
+    game_version: String!
     changelog: String!
     downloads: Int!
     stability: VersionStabilities!
@@ -3175,18 +3242,18 @@ func (ec *executionContext) field_Mutation_createMultipleTags_args(ctx context.C
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createSMLVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 NewSMLVersion
-	if tmp, ok := rawArgs["smlVersion"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("smlVersion"))
-		arg0, err = ec.unmarshalNNewSMLVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSMLVersion(ctx, tmp)
+	var arg0 NewSatisfactoryVersion
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNNewSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSatisfactoryVersion(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["smlVersion"] = arg0
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -3274,18 +3341,18 @@ func (ec *executionContext) field_Mutation_deleteMod_args(ctx context.Context, r
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteSMLVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_deleteSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["smlVersionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("smlVersionId"))
-		arg0, err = ec.unmarshalNSMLVersionID2string(ctx, tmp)
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNSatisfactoryVersionID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["smlVersionId"] = arg0
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -3598,27 +3665,27 @@ func (ec *executionContext) field_Mutation_updateMultipleModCompatibilities_args
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateSMLVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_updateSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["smlVersionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("smlVersionId"))
-		arg0, err = ec.unmarshalNSMLVersionID2string(ctx, tmp)
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNSatisfactoryVersionID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["smlVersionId"] = arg0
-	var arg1 UpdateSMLVersion
-	if tmp, ok := rawArgs["smlVersion"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("smlVersion"))
-		arg1, err = ec.unmarshalNUpdateSMLVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSMLVersion(ctx, tmp)
+	args["id"] = arg0
+	var arg1 UpdateSatisfactoryVersion
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNUpdateSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSatisfactoryVersion(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["smlVersion"] = arg1
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -4021,6 +4088,21 @@ func (ec *executionContext) field_Query_getSMLVersions_args(ctx context.Context,
 		}
 	}
 	args["filter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNSatisfactoryVersionID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -4602,6 +4684,8 @@ func (ec *executionContext) fieldContext_CreateVersionResponse_version(_ context
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -5064,6 +5148,8 @@ func (ec *executionContext) fieldContext_GetMyVersions_versions(_ context.Contex
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -5302,6 +5388,8 @@ func (ec *executionContext) fieldContext_GetVersions_versions(_ context.Context,
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -5985,6 +6073,8 @@ func (ec *executionContext) fieldContext_LatestVersions_alpha(_ context.Context,
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -6062,6 +6152,8 @@ func (ec *executionContext) fieldContext_LatestVersions_beta(_ context.Context, 
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -6139,6 +6231,8 @@ func (ec *executionContext) fieldContext_LatestVersions_release(_ context.Contex
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -7104,6 +7198,8 @@ func (ec *executionContext) fieldContext_Mod_version(ctx context.Context, field 
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -7195,6 +7291,8 @@ func (ec *executionContext) fieldContext_Mod_versions(ctx context.Context, field
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -7426,6 +7524,8 @@ func (ec *executionContext) fieldContext_ModVersion_versions(_ context.Context, 
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -8739,8 +8839,8 @@ func (ec *executionContext) fieldContext_Mutation_denyMod(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createSMLVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createSMLVersion(ctx, field)
+func (ec *executionContext) _Mutation_createSatisfactoryVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createSatisfactoryVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -8754,19 +8854,19 @@ func (ec *executionContext) _Mutation_createSMLVersion(ctx context.Context, fiel
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateSMLVersion(rctx, fc.Args["smlVersion"].(NewSMLVersion))
+			return ec.resolvers.Mutation().CreateSatisfactoryVersion(rctx, fc.Args["input"].(NewSatisfactoryVersion))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.CanEditSMLVersions == nil {
-				return nil, errors.New("directive canEditSMLVersions is not implemented")
-			}
-			return ec.directives.CanEditSMLVersions(ctx, nil, directive0)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsLoggedIn == nil {
 				return nil, errors.New("directive isLoggedIn is not implemented")
 			}
-			return ec.directives.IsLoggedIn(ctx, nil, directive1)
+			return ec.directives.IsLoggedIn(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.CanEditSatisfactoryVersions == nil {
+				return nil, errors.New("directive canEditSatisfactoryVersions is not implemented")
+			}
+			return ec.directives.CanEditSatisfactoryVersions(ctx, nil, directive1)
 		}
 
 		tmp, err := directive2(rctx)
@@ -8776,114 +8876,10 @@ func (ec *executionContext) _Mutation_createSMLVersion(ctx context.Context, fiel
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*SMLVersion); ok {
+		if data, ok := tmp.(*SatisfactoryVersion); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/satisfactorymodding/smr-api/generated.SMLVersion`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*SMLVersion)
-	fc.Result = res
-	return ec.marshalOSMLVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersion(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createSMLVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_SMLVersion_id(ctx, field)
-			case "version":
-				return ec.fieldContext_SMLVersion_version(ctx, field)
-			case "satisfactory_version":
-				return ec.fieldContext_SMLVersion_satisfactory_version(ctx, field)
-			case "stability":
-				return ec.fieldContext_SMLVersion_stability(ctx, field)
-			case "link":
-				return ec.fieldContext_SMLVersion_link(ctx, field)
-			case "targets":
-				return ec.fieldContext_SMLVersion_targets(ctx, field)
-			case "changelog":
-				return ec.fieldContext_SMLVersion_changelog(ctx, field)
-			case "date":
-				return ec.fieldContext_SMLVersion_date(ctx, field)
-			case "bootstrap_version":
-				return ec.fieldContext_SMLVersion_bootstrap_version(ctx, field)
-			case "engine_version":
-				return ec.fieldContext_SMLVersion_engine_version(ctx, field)
-			case "updated_at":
-				return ec.fieldContext_SMLVersion_updated_at(ctx, field)
-			case "created_at":
-				return ec.fieldContext_SMLVersion_created_at(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SMLVersion", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createSMLVersion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateSMLVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateSMLVersion(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdateSMLVersion(rctx, fc.Args["smlVersionId"].(string), fc.Args["smlVersion"].(UpdateSMLVersion))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.CanEditSMLVersions == nil {
-				return nil, errors.New("directive canEditSMLVersions is not implemented")
-			}
-			return ec.directives.CanEditSMLVersions(ctx, nil, directive0)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
-			}
-			return ec.directives.IsLoggedIn(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*SMLVersion); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/satisfactorymodding/smr-api/generated.SMLVersion`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/satisfactorymodding/smr-api/generated.SatisfactoryVersion`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8895,12 +8891,12 @@ func (ec *executionContext) _Mutation_updateSMLVersion(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*SMLVersion)
+	res := resTmp.(*SatisfactoryVersion)
 	fc.Result = res
-	return ec.marshalNSMLVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersion(ctx, field.Selections, res)
+	return ec.marshalNSatisfactoryVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSatisfactoryVersion(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateSMLVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createSatisfactoryVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -8909,31 +8905,13 @@ func (ec *executionContext) fieldContext_Mutation_updateSMLVersion(ctx context.C
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_SMLVersion_id(ctx, field)
+				return ec.fieldContext_SatisfactoryVersion_id(ctx, field)
 			case "version":
-				return ec.fieldContext_SMLVersion_version(ctx, field)
-			case "satisfactory_version":
-				return ec.fieldContext_SMLVersion_satisfactory_version(ctx, field)
-			case "stability":
-				return ec.fieldContext_SMLVersion_stability(ctx, field)
-			case "link":
-				return ec.fieldContext_SMLVersion_link(ctx, field)
-			case "targets":
-				return ec.fieldContext_SMLVersion_targets(ctx, field)
-			case "changelog":
-				return ec.fieldContext_SMLVersion_changelog(ctx, field)
-			case "date":
-				return ec.fieldContext_SMLVersion_date(ctx, field)
-			case "bootstrap_version":
-				return ec.fieldContext_SMLVersion_bootstrap_version(ctx, field)
+				return ec.fieldContext_SatisfactoryVersion_version(ctx, field)
 			case "engine_version":
-				return ec.fieldContext_SMLVersion_engine_version(ctx, field)
-			case "updated_at":
-				return ec.fieldContext_SMLVersion_updated_at(ctx, field)
-			case "created_at":
-				return ec.fieldContext_SMLVersion_created_at(ctx, field)
+				return ec.fieldContext_SatisfactoryVersion_engine_version(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type SMLVersion", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SatisfactoryVersion", field.Name)
 		},
 	}
 	defer func() {
@@ -8943,15 +8921,15 @@ func (ec *executionContext) fieldContext_Mutation_updateSMLVersion(ctx context.C
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateSMLVersion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createSatisfactoryVersion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteSMLVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteSMLVersion(ctx, field)
+func (ec *executionContext) _Mutation_updateSatisfactoryVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateSatisfactoryVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -8965,19 +8943,108 @@ func (ec *executionContext) _Mutation_deleteSMLVersion(ctx context.Context, fiel
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DeleteSMLVersion(rctx, fc.Args["smlVersionId"].(string))
+			return ec.resolvers.Mutation().UpdateSatisfactoryVersion(rctx, fc.Args["id"].(string), fc.Args["input"].(UpdateSatisfactoryVersion))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.CanEditSMLVersions == nil {
-				return nil, errors.New("directive canEditSMLVersions is not implemented")
-			}
-			return ec.directives.CanEditSMLVersions(ctx, nil, directive0)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsLoggedIn == nil {
 				return nil, errors.New("directive isLoggedIn is not implemented")
 			}
-			return ec.directives.IsLoggedIn(ctx, nil, directive1)
+			return ec.directives.IsLoggedIn(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.CanEditSatisfactoryVersions == nil {
+				return nil, errors.New("directive canEditSatisfactoryVersions is not implemented")
+			}
+			return ec.directives.CanEditSatisfactoryVersions(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*SatisfactoryVersion); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/satisfactorymodding/smr-api/generated.SatisfactoryVersion`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*SatisfactoryVersion)
+	fc.Result = res
+	return ec.marshalNSatisfactoryVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSatisfactoryVersion(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateSatisfactoryVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SatisfactoryVersion_id(ctx, field)
+			case "version":
+				return ec.fieldContext_SatisfactoryVersion_version(ctx, field)
+			case "engine_version":
+				return ec.fieldContext_SatisfactoryVersion_engine_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SatisfactoryVersion", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateSatisfactoryVersion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteSatisfactoryVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteSatisfactoryVersion(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteSatisfactoryVersion(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsLoggedIn == nil {
+				return nil, errors.New("directive isLoggedIn is not implemented")
+			}
+			return ec.directives.IsLoggedIn(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.CanEditSatisfactoryVersions == nil {
+				return nil, errors.New("directive canEditSatisfactoryVersions is not implemented")
+			}
+			return ec.directives.CanEditSatisfactoryVersions(ctx, nil, directive1)
 		}
 
 		tmp, err := directive2(rctx)
@@ -9007,7 +9074,7 @@ func (ec *executionContext) _Mutation_deleteSMLVersion(ctx context.Context, fiel
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteSMLVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteSatisfactoryVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -9024,7 +9091,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteSMLVersion(ctx context.C
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteSMLVersion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteSatisfactoryVersion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -10115,6 +10182,8 @@ func (ec *executionContext) fieldContext_Mutation_updateVersion(ctx context.Cont
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -11639,6 +11708,118 @@ func (ec *executionContext) fieldContext_Query_getModAssetList(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getSatisfactoryVersions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getSatisfactoryVersions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetSatisfactoryVersions(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*SatisfactoryVersion)
+	fc.Result = res
+	return ec.marshalNSatisfactoryVersion2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSatisfactoryVersionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getSatisfactoryVersions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SatisfactoryVersion_id(ctx, field)
+			case "version":
+				return ec.fieldContext_SatisfactoryVersion_version(ctx, field)
+			case "engine_version":
+				return ec.fieldContext_SatisfactoryVersion_engine_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SatisfactoryVersion", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getSatisfactoryVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getSatisfactoryVersion(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetSatisfactoryVersion(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*SatisfactoryVersion)
+	fc.Result = res
+	return ec.marshalOSatisfactoryVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSatisfactoryVersion(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getSatisfactoryVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SatisfactoryVersion_id(ctx, field)
+			case "version":
+				return ec.fieldContext_SatisfactoryVersion_version(ctx, field)
+			case "engine_version":
+				return ec.fieldContext_SatisfactoryVersion_engine_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SatisfactoryVersion", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getSatisfactoryVersion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getSMLVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getSMLVersion(ctx, field)
 	if err != nil {
@@ -12191,6 +12372,8 @@ func (ec *executionContext) fieldContext_Query_getVersion(ctx context.Context, f
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -12952,7 +13135,7 @@ func (ec *executionContext) _SMLVersion_link(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Link, nil
+		return ec.resolvers.SMLVersion().Link(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12973,8 +13156,8 @@ func (ec *executionContext) fieldContext_SMLVersion_link(_ context.Context, fiel
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -13136,7 +13319,7 @@ func (ec *executionContext) _SMLVersion_bootstrap_version(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.BootstrapVersion, nil
+		return ec.resolvers.SMLVersion().BootstrapVersion(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13154,8 +13337,8 @@ func (ec *executionContext) fieldContext_SMLVersion_bootstrap_version(_ context.
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -13177,7 +13360,7 @@ func (ec *executionContext) _SMLVersion_engine_version(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.EngineVersion, nil
+		return ec.resolvers.SMLVersion().EngineVersion(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13198,8 +13381,8 @@ func (ec *executionContext) fieldContext_SMLVersion_engine_version(_ context.Con
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersion",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -13397,7 +13580,7 @@ func (ec *executionContext) _SMLVersionTarget_link(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Link, nil
+		return ec.resolvers.SMLVersionTarget().Link(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13417,6 +13600,138 @@ func (ec *executionContext) _SMLVersionTarget_link(ctx context.Context, field gr
 func (ec *executionContext) fieldContext_SMLVersionTarget_link(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SMLVersionTarget",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SatisfactoryVersion_id(ctx context.Context, field graphql.CollectedField, obj *SatisfactoryVersion) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SatisfactoryVersion_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNSatisfactoryVersionID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SatisfactoryVersion_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SatisfactoryVersion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type SatisfactoryVersionID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SatisfactoryVersion_version(ctx context.Context, field graphql.CollectedField, obj *SatisfactoryVersion) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SatisfactoryVersion_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SatisfactoryVersion_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SatisfactoryVersion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SatisfactoryVersion_engine_version(ctx context.Context, field graphql.CollectedField, obj *SatisfactoryVersion) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SatisfactoryVersion_engine_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EngineVersion, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SatisfactoryVersion_engine_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SatisfactoryVersion",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -14115,8 +14430,8 @@ func (ec *executionContext) fieldContext_User_roles(_ context.Context, field gra
 				return ec.fieldContext_UserRoles_editContent(ctx, field)
 			case "editUsers":
 				return ec.fieldContext_UserRoles_editUsers(ctx, field)
-			case "editSMLVersions":
-				return ec.fieldContext_UserRoles_editSMLVersions(ctx, field)
+			case "editSatisfactoryVersions":
+				return ec.fieldContext_UserRoles_editSatisfactoryVersions(ctx, field)
 			case "editBootstrapVersions":
 				return ec.fieldContext_UserRoles_editBootstrapVersions(ctx, field)
 			case "editAnyModCompatibility":
@@ -14848,8 +15163,8 @@ func (ec *executionContext) fieldContext_UserRoles_editUsers(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _UserRoles_editSMLVersions(ctx context.Context, field graphql.CollectedField, obj *UserRoles) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserRoles_editSMLVersions(ctx, field)
+func (ec *executionContext) _UserRoles_editSatisfactoryVersions(ctx context.Context, field graphql.CollectedField, obj *UserRoles) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserRoles_editSatisfactoryVersions(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -14862,7 +15177,7 @@ func (ec *executionContext) _UserRoles_editSMLVersions(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.EditSMLVersions, nil
+		return obj.EditSatisfactoryVersions, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -14879,7 +15194,7 @@ func (ec *executionContext) _UserRoles_editSMLVersions(ctx context.Context, fiel
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UserRoles_editSMLVersions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserRoles_editSatisfactoryVersions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserRoles",
 		Field:      field,
@@ -15170,7 +15485,7 @@ func (ec *executionContext) _Version_sml_version(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SmlVersion, nil
+		return ec.resolvers.Version().SmlVersion(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -15188,6 +15503,50 @@ func (ec *executionContext) _Version_sml_version(ctx context.Context, field grap
 }
 
 func (ec *executionContext) fieldContext_Version_sml_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Version",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Version_game_version(ctx context.Context, field graphql.CollectedField, obj *Version) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Version_game_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GameVersion, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Version_game_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -16146,6 +16505,8 @@ func (ec *executionContext) fieldContext_VersionDependency_version(_ context.Con
 				return ec.fieldContext_Version_version(ctx, field)
 			case "sml_version":
 				return ec.fieldContext_Version_sml_version(ctx, field)
+			case "game_version":
+				return ec.fieldContext_Version_game_version(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -18578,14 +18939,14 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj interface{}) (NewSMLVersion, error) {
-	var it NewSMLVersion
+func (ec *executionContext) unmarshalInputNewSatisfactoryVersion(ctx context.Context, obj interface{}) (NewSatisfactoryVersion, error) {
+	var it NewSatisfactoryVersion
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"version", "satisfactory_version", "stability", "link", "targets", "changelog", "date", "bootstrap_version", "engine_version"}
+	fieldsInOrder := [...]string{"version", "engine_version"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18594,60 +18955,11 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 		switch k {
 		case "version":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Version = data
-		case "satisfactory_version":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("satisfactory_version"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.SatisfactoryVersion = data
-		case "stability":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stability"))
-			data, err := ec.unmarshalNVersionStabilities2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Stability = data
-		case "link":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("link"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Link = data
-		case "targets":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targets"))
-			data, err := ec.unmarshalNNewSMLVersionTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSMLVersionTargetᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Targets = data
-		case "changelog":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changelog"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Changelog = data
-		case "date":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
-			data, err := ec.unmarshalNDate2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Date = data
-		case "bootstrap_version":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bootstrap_version"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BootstrapVersion = data
+			it.Version = data
 		case "engine_version":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("engine_version"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -18655,40 +18967,6 @@ func (ec *executionContext) unmarshalInputNewSMLVersion(ctx context.Context, obj
 				return it, err
 			}
 			it.EngineVersion = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputNewSMLVersionTarget(ctx context.Context, obj interface{}) (NewSMLVersionTarget, error) {
-	var it NewSMLVersionTarget
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"targetName", "link"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "targetName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetName"))
-			data, err := ec.unmarshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.TargetName = data
-		case "link":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("link"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Link = data
 		}
 	}
 
@@ -19052,14 +19330,14 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, obj interface{}) (UpdateSMLVersion, error) {
-	var it UpdateSMLVersion
+func (ec *executionContext) unmarshalInputUpdateSatisfactoryVersion(ctx context.Context, obj interface{}) (UpdateSatisfactoryVersion, error) {
+	var it UpdateSatisfactoryVersion
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"version", "satisfactory_version", "stability", "link", "targets", "changelog", "date", "bootstrap_version", "engine_version"}
+	fieldsInOrder := [...]string{"version", "engine_version"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19068,60 +19346,11 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 		switch k {
 		case "version":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Version = data
-		case "satisfactory_version":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("satisfactory_version"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.SatisfactoryVersion = data
-		case "stability":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stability"))
-			data, err := ec.unmarshalOVersionStabilities2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Stability = data
-		case "link":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("link"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Link = data
-		case "targets":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targets"))
-			data, err := ec.unmarshalNUpdateSMLVersionTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSMLVersionTarget(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Targets = data
-		case "changelog":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changelog"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Changelog = data
-		case "date":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
-			data, err := ec.unmarshalODate2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Date = data
-		case "bootstrap_version":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bootstrap_version"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BootstrapVersion = data
+			it.Version = data
 		case "engine_version":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("engine_version"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -19129,40 +19358,6 @@ func (ec *executionContext) unmarshalInputUpdateSMLVersion(ctx context.Context, 
 				return it, err
 			}
 			it.EngineVersion = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputUpdateSMLVersionTarget(ctx context.Context, obj interface{}) (UpdateSMLVersionTarget, error) {
-	var it UpdateSMLVersionTarget
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"targetName", "link"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "targetName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetName"))
-			data, err := ec.unmarshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.TargetName = data
-		case "link":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("link"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Link = data
 		}
 	}
 
@@ -20785,20 +20980,23 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createSMLVersion":
+		case "createSatisfactoryVersion":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createSMLVersion(ctx, field)
-			})
-		case "updateSMLVersion":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateSMLVersion(ctx, field)
+				return ec._Mutation_createSatisfactoryVersion(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "deleteSMLVersion":
+		case "updateSatisfactoryVersion":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteSMLVersion(ctx, field)
+				return ec._Mutation_updateSatisfactoryVersion(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteSatisfactoryVersion":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSatisfactoryVersion(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -21309,6 +21507,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getSatisfactoryVersions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getSatisfactoryVersions(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getSatisfactoryVersion":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getSatisfactoryVersion(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getSMLVersion":
 			field := field
 
@@ -21622,59 +21861,152 @@ func (ec *executionContext) _SMLVersion(ctx context.Context, sel ast.SelectionSe
 		case "id":
 			out.Values[i] = ec._SMLVersion_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "version":
 			out.Values[i] = ec._SMLVersion_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "satisfactory_version":
 			out.Values[i] = ec._SMLVersion_satisfactory_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "stability":
 			out.Values[i] = ec._SMLVersion_stability(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "link":
-			out.Values[i] = ec._SMLVersion_link(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SMLVersion_link(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "targets":
 			out.Values[i] = ec._SMLVersion_targets(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "changelog":
 			out.Values[i] = ec._SMLVersion_changelog(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "date":
 			out.Values[i] = ec._SMLVersion_date(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "bootstrap_version":
-			out.Values[i] = ec._SMLVersion_bootstrap_version(ctx, field, obj)
-		case "engine_version":
-			out.Values[i] = ec._SMLVersion_engine_version(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SMLVersion_bootstrap_version(ctx, field, obj)
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "engine_version":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SMLVersion_engine_version(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "updated_at":
 			out.Values[i] = ec._SMLVersion_updated_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "created_at":
 			out.Values[i] = ec._SMLVersion_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -21713,15 +22045,95 @@ func (ec *executionContext) _SMLVersionTarget(ctx context.Context, sel ast.Selec
 		case "VersionID":
 			out.Values[i] = ec._SMLVersionTarget_VersionID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "targetName":
 			out.Values[i] = ec._SMLVersionTarget_targetName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "link":
-			out.Values[i] = ec._SMLVersionTarget_link(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SMLVersionTarget_link(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var satisfactoryVersionImplementors = []string{"SatisfactoryVersion"}
+
+func (ec *executionContext) _SatisfactoryVersion(ctx context.Context, sel ast.SelectionSet, obj *SatisfactoryVersion) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, satisfactoryVersionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SatisfactoryVersion")
+		case "id":
+			out.Values[i] = ec._SatisfactoryVersion_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "version":
+			out.Values[i] = ec._SatisfactoryVersion_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "engine_version":
+			out.Values[i] = ec._SatisfactoryVersion_engine_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -22157,8 +22569,8 @@ func (ec *executionContext) _UserRoles(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "editSMLVersions":
-			out.Values[i] = ec._UserRoles_editSMLVersions(ctx, field, obj)
+		case "editSatisfactoryVersions":
+			out.Values[i] = ec._UserRoles_editSatisfactoryVersions(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -22261,7 +22673,43 @@ func (ec *executionContext) _Version(ctx context.Context, sel ast.SelectionSet, 
 				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "sml_version":
-			out.Values[i] = ec._Version_sml_version(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Version_sml_version(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "game_version":
+			out.Values[i] = ec._Version_game_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -23561,31 +24009,9 @@ func (ec *executionContext) unmarshalNNewMod2githubᚗcomᚋsatisfactorymodding�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewSMLVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSMLVersion(ctx context.Context, v interface{}) (NewSMLVersion, error) {
-	res, err := ec.unmarshalInputNewSMLVersion(ctx, v)
+func (ec *executionContext) unmarshalNNewSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSatisfactoryVersion(ctx context.Context, v interface{}) (NewSatisfactoryVersion, error) {
+	res, err := ec.unmarshalInputNewSatisfactoryVersion(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNNewSMLVersionTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSMLVersionTargetᚄ(ctx context.Context, v interface{}) ([]*NewSMLVersionTarget, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*NewSMLVersionTarget, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNNewSMLVersionTarget2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSMLVersionTarget(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalNNewSMLVersionTarget2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSMLVersionTarget(ctx context.Context, v interface{}) (*NewSMLVersionTarget, error) {
-	res, err := ec.unmarshalInputNewSMLVersionTarget(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNNewTag2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTagᚄ(ctx context.Context, v interface{}) ([]*NewTag, error) {
@@ -23627,10 +24053,6 @@ func (ec *executionContext) marshalNOAuthOptions2ᚖgithubᚗcomᚋsatisfactorym
 		return graphql.Null
 	}
 	return ec._OAuthOptions(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNSMLVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersion(ctx context.Context, sel ast.SelectionSet, v SMLVersion) graphql.Marshaler {
-	return ec._SMLVersion(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNSMLVersion2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersionᚄ(ctx context.Context, sel ast.SelectionSet, v []*SMLVersion) graphql.Marshaler {
@@ -23738,6 +24160,79 @@ func (ec *executionContext) marshalNSMLVersionTarget2ᚕᚖgithubᚗcomᚋsatisf
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSatisfactoryVersion(ctx context.Context, sel ast.SelectionSet, v SatisfactoryVersion) graphql.Marshaler {
+	return ec._SatisfactoryVersion(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSatisfactoryVersion2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSatisfactoryVersionᚄ(ctx context.Context, sel ast.SelectionSet, v []*SatisfactoryVersion) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSatisfactoryVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSatisfactoryVersion(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSatisfactoryVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSatisfactoryVersion(ctx context.Context, sel ast.SelectionSet, v *SatisfactoryVersion) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SatisfactoryVersion(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSatisfactoryVersionID2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSatisfactoryVersionID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -23900,26 +24395,9 @@ func (ec *executionContext) unmarshalNUpdateMod2githubᚗcomᚋsatisfactorymoddi
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateSMLVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSMLVersion(ctx context.Context, v interface{}) (UpdateSMLVersion, error) {
-	res, err := ec.unmarshalInputUpdateSMLVersion(ctx, v)
+func (ec *executionContext) unmarshalNUpdateSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSatisfactoryVersion(ctx context.Context, v interface{}) (UpdateSatisfactoryVersion, error) {
+	res, err := ec.unmarshalInputUpdateSatisfactoryVersion(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNUpdateSMLVersionTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSMLVersionTarget(ctx context.Context, v interface{}) ([]*UpdateSMLVersionTarget, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*UpdateSMLVersionTarget, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOUpdateSMLVersionTarget2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSMLVersionTarget(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
 }
 
 func (ec *executionContext) unmarshalNUpdateUser2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUser(ctx context.Context, v interface{}) (UpdateUser, error) {
@@ -24782,6 +25260,13 @@ func (ec *executionContext) marshalOSMLVersionTarget2ᚖgithubᚗcomᚋsatisfact
 	return ec._SMLVersionTarget(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOSatisfactoryVersion2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSatisfactoryVersion(ctx context.Context, sel ast.SelectionSet, v *SatisfactoryVersion) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._SatisfactoryVersion(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
 	if v == nil {
 		return nil, nil
@@ -24934,14 +25419,6 @@ func (ec *executionContext) marshalOTagID2ᚕstringᚄ(ctx context.Context, sel 
 	}
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalOUpdateSMLVersionTarget2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSMLVersionTarget(ctx context.Context, v interface{}) (*UpdateSMLVersionTarget, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputUpdateSMLVersionTarget(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOUpdateUserMod2ᚕgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserModᚄ(ctx context.Context, v interface{}) ([]UpdateUserMod, error) {

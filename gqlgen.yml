@@ -72,8 +72,24 @@ models:
         resolver: true
       hash:
         resolver: true
+      sml_version:
+        resolver: true
 
   VersionTarget:
+    fields:
+      link:
+        resolver: true
+
+  SMLVersion:
+    fields:
+      bootstrap_version:
+        resolver: true
+      engine_version:
+        resolver: true
+      link:
+        resolver: true
+
+  SMLVersionTarget:
     fields:
       link:
         resolver: true
@@ -142,6 +158,13 @@ models:
   GetBootstrapVersions:
     fields:
       bootstrap_versions:
+        resolver: true
+      count:
+        resolver: true
+
+  GetSatisfactoryVersions:
+    fields:
+      satisfactory_versions:
         resolver: true
       count:
         resolver: true

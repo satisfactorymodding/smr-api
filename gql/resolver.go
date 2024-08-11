@@ -34,6 +34,14 @@ func (r *Resolver) Version() generated.VersionResolver {
 	return &versionResolver{r}
 }
 
+func (r *Resolver) SMLVersion() generated.SMLVersionResolver {
+	return &smlVersionResolver{r}
+}
+
+func (r *Resolver) SMLVersionTarget() generated.SMLVersionTargetResolver {
+	return &smlVersionTargetResolver{r}
+}
+
 func (r *Resolver) GetMods() generated.GetModsResolver {
 	return &getModsResolver{r}
 }

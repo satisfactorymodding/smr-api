@@ -14,8 +14,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modtag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
@@ -217,58 +216,31 @@ func (f TraverseModTag) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.ModTagQuery", q)
 }
 
-// The SmlVersionFunc type is an adapter to allow the use of ordinary function as a Querier.
-type SmlVersionFunc func(context.Context, *ent.SmlVersionQuery) (ent.Value, error)
+// The SatisfactoryVersionFunc type is an adapter to allow the use of ordinary function as a Querier.
+type SatisfactoryVersionFunc func(context.Context, *ent.SatisfactoryVersionQuery) (ent.Value, error)
 
 // Query calls f(ctx, q).
-func (f SmlVersionFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
-	if q, ok := q.(*ent.SmlVersionQuery); ok {
+func (f SatisfactoryVersionFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.SatisfactoryVersionQuery); ok {
 		return f(ctx, q)
 	}
-	return nil, fmt.Errorf("unexpected query type %T. expect *ent.SmlVersionQuery", q)
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.SatisfactoryVersionQuery", q)
 }
 
-// The TraverseSmlVersion type is an adapter to allow the use of ordinary function as Traverser.
-type TraverseSmlVersion func(context.Context, *ent.SmlVersionQuery) error
+// The TraverseSatisfactoryVersion type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseSatisfactoryVersion func(context.Context, *ent.SatisfactoryVersionQuery) error
 
 // Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
-func (f TraverseSmlVersion) Intercept(next ent.Querier) ent.Querier {
+func (f TraverseSatisfactoryVersion) Intercept(next ent.Querier) ent.Querier {
 	return next
 }
 
 // Traverse calls f(ctx, q).
-func (f TraverseSmlVersion) Traverse(ctx context.Context, q ent.Query) error {
-	if q, ok := q.(*ent.SmlVersionQuery); ok {
+func (f TraverseSatisfactoryVersion) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.SatisfactoryVersionQuery); ok {
 		return f(ctx, q)
 	}
-	return fmt.Errorf("unexpected query type %T. expect *ent.SmlVersionQuery", q)
-}
-
-// The SmlVersionTargetFunc type is an adapter to allow the use of ordinary function as a Querier.
-type SmlVersionTargetFunc func(context.Context, *ent.SmlVersionTargetQuery) (ent.Value, error)
-
-// Query calls f(ctx, q).
-func (f SmlVersionTargetFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
-	if q, ok := q.(*ent.SmlVersionTargetQuery); ok {
-		return f(ctx, q)
-	}
-	return nil, fmt.Errorf("unexpected query type %T. expect *ent.SmlVersionTargetQuery", q)
-}
-
-// The TraverseSmlVersionTarget type is an adapter to allow the use of ordinary function as Traverser.
-type TraverseSmlVersionTarget func(context.Context, *ent.SmlVersionTargetQuery) error
-
-// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
-func (f TraverseSmlVersionTarget) Intercept(next ent.Querier) ent.Querier {
-	return next
-}
-
-// Traverse calls f(ctx, q).
-func (f TraverseSmlVersionTarget) Traverse(ctx context.Context, q ent.Query) error {
-	if q, ok := q.(*ent.SmlVersionTargetQuery); ok {
-		return f(ctx, q)
-	}
-	return fmt.Errorf("unexpected query type %T. expect *ent.SmlVersionTargetQuery", q)
+	return fmt.Errorf("unexpected query type %T. expect *ent.SatisfactoryVersionQuery", q)
 }
 
 // The TagFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -500,10 +472,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.ModQuery, predicate.Mod, mod.OrderOption]{typ: ent.TypeMod, tq: q}, nil
 	case *ent.ModTagQuery:
 		return &query[*ent.ModTagQuery, predicate.ModTag, modtag.OrderOption]{typ: ent.TypeModTag, tq: q}, nil
-	case *ent.SmlVersionQuery:
-		return &query[*ent.SmlVersionQuery, predicate.SmlVersion, smlversion.OrderOption]{typ: ent.TypeSmlVersion, tq: q}, nil
-	case *ent.SmlVersionTargetQuery:
-		return &query[*ent.SmlVersionTargetQuery, predicate.SmlVersionTarget, smlversiontarget.OrderOption]{typ: ent.TypeSmlVersionTarget, tq: q}, nil
+	case *ent.SatisfactoryVersionQuery:
+		return &query[*ent.SatisfactoryVersionQuery, predicate.SatisfactoryVersion, satisfactoryversion.OrderOption]{typ: ent.TypeSatisfactoryVersion, tq: q}, nil
 	case *ent.TagQuery:
 		return &query[*ent.TagQuery, predicate.Tag, tag.OrderOption]{typ: ent.TypeTag, tq: q}, nil
 	case *ent.UserQuery:

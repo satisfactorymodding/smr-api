@@ -21,11 +21,8 @@ type Mod func(*sql.Selector)
 // ModTag is the predicate function for modtag builders.
 type ModTag func(*sql.Selector)
 
-// SmlVersion is the predicate function for smlversion builders.
-type SmlVersion func(*sql.Selector)
-
-// SmlVersionTarget is the predicate function for smlversiontarget builders.
-type SmlVersionTarget func(*sql.Selector)
+// SatisfactoryVersion is the predicate function for satisfactoryversion builders.
+type SatisfactoryVersion func(*sql.Selector)
 
 // Tag is the predicate function for tag builders.
 type Tag func(*sql.Selector)

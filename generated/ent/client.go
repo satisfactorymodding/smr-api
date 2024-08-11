@@ -20,8 +20,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/guidetag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modtag"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
@@ -49,10 +48,8 @@ type Client struct {
 	Mod *ModClient
 	// ModTag is the client for interacting with the ModTag builders.
 	ModTag *ModTagClient
-	// SmlVersion is the client for interacting with the SmlVersion builders.
-	SmlVersion *SmlVersionClient
-	// SmlVersionTarget is the client for interacting with the SmlVersionTarget builders.
-	SmlVersionTarget *SmlVersionTargetClient
+	// SatisfactoryVersion is the client for interacting with the SatisfactoryVersion builders.
+	SatisfactoryVersion *SatisfactoryVersionClient
 	// Tag is the client for interacting with the Tag builders.
 	Tag *TagClient
 	// User is the client for interacting with the User builders.
@@ -85,8 +82,7 @@ func (c *Client) init() {
 	c.GuideTag = NewGuideTagClient(c.config)
 	c.Mod = NewModClient(c.config)
 	c.ModTag = NewModTagClient(c.config)
-	c.SmlVersion = NewSmlVersionClient(c.config)
-	c.SmlVersionTarget = NewSmlVersionTargetClient(c.config)
+	c.SatisfactoryVersion = NewSatisfactoryVersionClient(c.config)
 	c.Tag = NewTagClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserGroup = NewUserGroupClient(c.config)
@@ -185,23 +181,22 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:               ctx,
-		config:            cfg,
-		Announcement:      NewAnnouncementClient(cfg),
-		Guide:             NewGuideClient(cfg),
-		GuideTag:          NewGuideTagClient(cfg),
-		Mod:               NewModClient(cfg),
-		ModTag:            NewModTagClient(cfg),
-		SmlVersion:        NewSmlVersionClient(cfg),
-		SmlVersionTarget:  NewSmlVersionTargetClient(cfg),
-		Tag:               NewTagClient(cfg),
-		User:              NewUserClient(cfg),
-		UserGroup:         NewUserGroupClient(cfg),
-		UserMod:           NewUserModClient(cfg),
-		UserSession:       NewUserSessionClient(cfg),
-		Version:           NewVersionClient(cfg),
-		VersionDependency: NewVersionDependencyClient(cfg),
-		VersionTarget:     NewVersionTargetClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		Announcement:        NewAnnouncementClient(cfg),
+		Guide:               NewGuideClient(cfg),
+		GuideTag:            NewGuideTagClient(cfg),
+		Mod:                 NewModClient(cfg),
+		ModTag:              NewModTagClient(cfg),
+		SatisfactoryVersion: NewSatisfactoryVersionClient(cfg),
+		Tag:                 NewTagClient(cfg),
+		User:                NewUserClient(cfg),
+		UserGroup:           NewUserGroupClient(cfg),
+		UserMod:             NewUserModClient(cfg),
+		UserSession:         NewUserSessionClient(cfg),
+		Version:             NewVersionClient(cfg),
+		VersionDependency:   NewVersionDependencyClient(cfg),
+		VersionTarget:       NewVersionTargetClient(cfg),
 	}, nil
 }
 
@@ -219,23 +214,22 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:               ctx,
-		config:            cfg,
-		Announcement:      NewAnnouncementClient(cfg),
-		Guide:             NewGuideClient(cfg),
-		GuideTag:          NewGuideTagClient(cfg),
-		Mod:               NewModClient(cfg),
-		ModTag:            NewModTagClient(cfg),
-		SmlVersion:        NewSmlVersionClient(cfg),
-		SmlVersionTarget:  NewSmlVersionTargetClient(cfg),
-		Tag:               NewTagClient(cfg),
-		User:              NewUserClient(cfg),
-		UserGroup:         NewUserGroupClient(cfg),
-		UserMod:           NewUserModClient(cfg),
-		UserSession:       NewUserSessionClient(cfg),
-		Version:           NewVersionClient(cfg),
-		VersionDependency: NewVersionDependencyClient(cfg),
-		VersionTarget:     NewVersionTargetClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		Announcement:        NewAnnouncementClient(cfg),
+		Guide:               NewGuideClient(cfg),
+		GuideTag:            NewGuideTagClient(cfg),
+		Mod:                 NewModClient(cfg),
+		ModTag:              NewModTagClient(cfg),
+		SatisfactoryVersion: NewSatisfactoryVersionClient(cfg),
+		Tag:                 NewTagClient(cfg),
+		User:                NewUserClient(cfg),
+		UserGroup:           NewUserGroupClient(cfg),
+		UserMod:             NewUserModClient(cfg),
+		UserSession:         NewUserSessionClient(cfg),
+		Version:             NewVersionClient(cfg),
+		VersionDependency:   NewVersionDependencyClient(cfg),
+		VersionTarget:       NewVersionTargetClient(cfg),
 	}, nil
 }
 
@@ -265,9 +259,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.SmlVersion,
-		c.SmlVersionTarget, c.Tag, c.User, c.UserGroup, c.UserMod, c.UserSession,
-		c.Version, c.VersionDependency, c.VersionTarget,
+		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.SatisfactoryVersion,
+		c.Tag, c.User, c.UserGroup, c.UserMod, c.UserSession, c.Version,
+		c.VersionDependency, c.VersionTarget,
 	} {
 		n.Use(hooks...)
 	}
@@ -277,9 +271,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.SmlVersion,
-		c.SmlVersionTarget, c.Tag, c.User, c.UserGroup, c.UserMod, c.UserSession,
-		c.Version, c.VersionDependency, c.VersionTarget,
+		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.SatisfactoryVersion,
+		c.Tag, c.User, c.UserGroup, c.UserMod, c.UserSession, c.Version,
+		c.VersionDependency, c.VersionTarget,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -298,10 +292,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Mod.mutate(ctx, m)
 	case *ModTagMutation:
 		return c.ModTag.mutate(ctx, m)
-	case *SmlVersionMutation:
-		return c.SmlVersion.mutate(ctx, m)
-	case *SmlVersionTargetMutation:
-		return c.SmlVersionTarget.mutate(ctx, m)
+	case *SatisfactoryVersionMutation:
+		return c.SatisfactoryVersion.mutate(ctx, m)
 	case *TagMutation:
 		return c.Tag.mutate(ctx, m)
 	case *UserMutation:
@@ -1120,107 +1112,107 @@ func (c *ModTagClient) mutate(ctx context.Context, m *ModTagMutation) (Value, er
 	}
 }
 
-// SmlVersionClient is a client for the SmlVersion schema.
-type SmlVersionClient struct {
+// SatisfactoryVersionClient is a client for the SatisfactoryVersion schema.
+type SatisfactoryVersionClient struct {
 	config
 }
 
-// NewSmlVersionClient returns a client for the SmlVersion from the given config.
-func NewSmlVersionClient(c config) *SmlVersionClient {
-	return &SmlVersionClient{config: c}
+// NewSatisfactoryVersionClient returns a client for the SatisfactoryVersion from the given config.
+func NewSatisfactoryVersionClient(c config) *SatisfactoryVersionClient {
+	return &SatisfactoryVersionClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `smlversion.Hooks(f(g(h())))`.
-func (c *SmlVersionClient) Use(hooks ...Hook) {
-	c.hooks.SmlVersion = append(c.hooks.SmlVersion, hooks...)
+// A call to `Use(f, g, h)` equals to `satisfactoryversion.Hooks(f(g(h())))`.
+func (c *SatisfactoryVersionClient) Use(hooks ...Hook) {
+	c.hooks.SatisfactoryVersion = append(c.hooks.SatisfactoryVersion, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `smlversion.Intercept(f(g(h())))`.
-func (c *SmlVersionClient) Intercept(interceptors ...Interceptor) {
-	c.inters.SmlVersion = append(c.inters.SmlVersion, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `satisfactoryversion.Intercept(f(g(h())))`.
+func (c *SatisfactoryVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SatisfactoryVersion = append(c.inters.SatisfactoryVersion, interceptors...)
 }
 
-// Create returns a builder for creating a SmlVersion entity.
-func (c *SmlVersionClient) Create() *SmlVersionCreate {
-	mutation := newSmlVersionMutation(c.config, OpCreate)
-	return &SmlVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a SatisfactoryVersion entity.
+func (c *SatisfactoryVersionClient) Create() *SatisfactoryVersionCreate {
+	mutation := newSatisfactoryVersionMutation(c.config, OpCreate)
+	return &SatisfactoryVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of SmlVersion entities.
-func (c *SmlVersionClient) CreateBulk(builders ...*SmlVersionCreate) *SmlVersionCreateBulk {
-	return &SmlVersionCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of SatisfactoryVersion entities.
+func (c *SatisfactoryVersionClient) CreateBulk(builders ...*SatisfactoryVersionCreate) *SatisfactoryVersionCreateBulk {
+	return &SatisfactoryVersionCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *SmlVersionClient) MapCreateBulk(slice any, setFunc func(*SmlVersionCreate, int)) *SmlVersionCreateBulk {
+func (c *SatisfactoryVersionClient) MapCreateBulk(slice any, setFunc func(*SatisfactoryVersionCreate, int)) *SatisfactoryVersionCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &SmlVersionCreateBulk{err: fmt.Errorf("calling to SmlVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &SatisfactoryVersionCreateBulk{err: fmt.Errorf("calling to SatisfactoryVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*SmlVersionCreate, rv.Len())
+	builders := make([]*SatisfactoryVersionCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &SmlVersionCreateBulk{config: c.config, builders: builders}
+	return &SatisfactoryVersionCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for SmlVersion.
-func (c *SmlVersionClient) Update() *SmlVersionUpdate {
-	mutation := newSmlVersionMutation(c.config, OpUpdate)
-	return &SmlVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for SatisfactoryVersion.
+func (c *SatisfactoryVersionClient) Update() *SatisfactoryVersionUpdate {
+	mutation := newSatisfactoryVersionMutation(c.config, OpUpdate)
+	return &SatisfactoryVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *SmlVersionClient) UpdateOne(sv *SmlVersion) *SmlVersionUpdateOne {
-	mutation := newSmlVersionMutation(c.config, OpUpdateOne, withSmlVersion(sv))
-	return &SmlVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *SatisfactoryVersionClient) UpdateOne(sv *SatisfactoryVersion) *SatisfactoryVersionUpdateOne {
+	mutation := newSatisfactoryVersionMutation(c.config, OpUpdateOne, withSatisfactoryVersion(sv))
+	return &SatisfactoryVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *SmlVersionClient) UpdateOneID(id string) *SmlVersionUpdateOne {
-	mutation := newSmlVersionMutation(c.config, OpUpdateOne, withSmlVersionID(id))
-	return &SmlVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *SatisfactoryVersionClient) UpdateOneID(id string) *SatisfactoryVersionUpdateOne {
+	mutation := newSatisfactoryVersionMutation(c.config, OpUpdateOne, withSatisfactoryVersionID(id))
+	return &SatisfactoryVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for SmlVersion.
-func (c *SmlVersionClient) Delete() *SmlVersionDelete {
-	mutation := newSmlVersionMutation(c.config, OpDelete)
-	return &SmlVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for SatisfactoryVersion.
+func (c *SatisfactoryVersionClient) Delete() *SatisfactoryVersionDelete {
+	mutation := newSatisfactoryVersionMutation(c.config, OpDelete)
+	return &SatisfactoryVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *SmlVersionClient) DeleteOne(sv *SmlVersion) *SmlVersionDeleteOne {
+func (c *SatisfactoryVersionClient) DeleteOne(sv *SatisfactoryVersion) *SatisfactoryVersionDeleteOne {
 	return c.DeleteOneID(sv.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SmlVersionClient) DeleteOneID(id string) *SmlVersionDeleteOne {
-	builder := c.Delete().Where(smlversion.ID(id))
+func (c *SatisfactoryVersionClient) DeleteOneID(id string) *SatisfactoryVersionDeleteOne {
+	builder := c.Delete().Where(satisfactoryversion.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &SmlVersionDeleteOne{builder}
+	return &SatisfactoryVersionDeleteOne{builder}
 }
 
-// Query returns a query builder for SmlVersion.
-func (c *SmlVersionClient) Query() *SmlVersionQuery {
-	return &SmlVersionQuery{
+// Query returns a query builder for SatisfactoryVersion.
+func (c *SatisfactoryVersionClient) Query() *SatisfactoryVersionQuery {
+	return &SatisfactoryVersionQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeSmlVersion},
+		ctx:    &QueryContext{Type: TypeSatisfactoryVersion},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a SmlVersion entity by its id.
-func (c *SmlVersionClient) Get(ctx context.Context, id string) (*SmlVersion, error) {
-	return c.Query().Where(smlversion.ID(id)).Only(ctx)
+// Get returns a SatisfactoryVersion entity by its id.
+func (c *SatisfactoryVersionClient) Get(ctx context.Context, id string) (*SatisfactoryVersion, error) {
+	return c.Query().Where(satisfactoryversion.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *SmlVersionClient) GetX(ctx context.Context, id string) *SmlVersion {
+func (c *SatisfactoryVersionClient) GetX(ctx context.Context, id string) *SatisfactoryVersion {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1228,195 +1220,28 @@ func (c *SmlVersionClient) GetX(ctx context.Context, id string) *SmlVersion {
 	return obj
 }
 
-// QueryTargets queries the targets edge of a SmlVersion.
-func (c *SmlVersionClient) QueryTargets(sv *SmlVersion) *SmlVersionTargetQuery {
-	query := (&SmlVersionTargetClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := sv.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(smlversion.Table, smlversion.FieldID, id),
-			sqlgraph.To(smlversiontarget.Table, smlversiontarget.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, smlversion.TargetsTable, smlversion.TargetsColumn),
-		)
-		fromV = sqlgraph.Neighbors(sv.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
-func (c *SmlVersionClient) Hooks() []Hook {
-	hooks := c.hooks.SmlVersion
-	return append(hooks[:len(hooks):len(hooks)], smlversion.Hooks[:]...)
+func (c *SatisfactoryVersionClient) Hooks() []Hook {
+	return c.hooks.SatisfactoryVersion
 }
 
 // Interceptors returns the client interceptors.
-func (c *SmlVersionClient) Interceptors() []Interceptor {
-	inters := c.inters.SmlVersion
-	return append(inters[:len(inters):len(inters)], smlversion.Interceptors[:]...)
+func (c *SatisfactoryVersionClient) Interceptors() []Interceptor {
+	return c.inters.SatisfactoryVersion
 }
 
-func (c *SmlVersionClient) mutate(ctx context.Context, m *SmlVersionMutation) (Value, error) {
+func (c *SatisfactoryVersionClient) mutate(ctx context.Context, m *SatisfactoryVersionMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&SmlVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&SatisfactoryVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&SmlVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&SatisfactoryVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&SmlVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&SatisfactoryVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&SmlVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&SatisfactoryVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown SmlVersion mutation op: %q", m.Op())
-	}
-}
-
-// SmlVersionTargetClient is a client for the SmlVersionTarget schema.
-type SmlVersionTargetClient struct {
-	config
-}
-
-// NewSmlVersionTargetClient returns a client for the SmlVersionTarget from the given config.
-func NewSmlVersionTargetClient(c config) *SmlVersionTargetClient {
-	return &SmlVersionTargetClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `smlversiontarget.Hooks(f(g(h())))`.
-func (c *SmlVersionTargetClient) Use(hooks ...Hook) {
-	c.hooks.SmlVersionTarget = append(c.hooks.SmlVersionTarget, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `smlversiontarget.Intercept(f(g(h())))`.
-func (c *SmlVersionTargetClient) Intercept(interceptors ...Interceptor) {
-	c.inters.SmlVersionTarget = append(c.inters.SmlVersionTarget, interceptors...)
-}
-
-// Create returns a builder for creating a SmlVersionTarget entity.
-func (c *SmlVersionTargetClient) Create() *SmlVersionTargetCreate {
-	mutation := newSmlVersionTargetMutation(c.config, OpCreate)
-	return &SmlVersionTargetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of SmlVersionTarget entities.
-func (c *SmlVersionTargetClient) CreateBulk(builders ...*SmlVersionTargetCreate) *SmlVersionTargetCreateBulk {
-	return &SmlVersionTargetCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *SmlVersionTargetClient) MapCreateBulk(slice any, setFunc func(*SmlVersionTargetCreate, int)) *SmlVersionTargetCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &SmlVersionTargetCreateBulk{err: fmt.Errorf("calling to SmlVersionTargetClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*SmlVersionTargetCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &SmlVersionTargetCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for SmlVersionTarget.
-func (c *SmlVersionTargetClient) Update() *SmlVersionTargetUpdate {
-	mutation := newSmlVersionTargetMutation(c.config, OpUpdate)
-	return &SmlVersionTargetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *SmlVersionTargetClient) UpdateOne(svt *SmlVersionTarget) *SmlVersionTargetUpdateOne {
-	mutation := newSmlVersionTargetMutation(c.config, OpUpdateOne, withSmlVersionTarget(svt))
-	return &SmlVersionTargetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *SmlVersionTargetClient) UpdateOneID(id string) *SmlVersionTargetUpdateOne {
-	mutation := newSmlVersionTargetMutation(c.config, OpUpdateOne, withSmlVersionTargetID(id))
-	return &SmlVersionTargetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for SmlVersionTarget.
-func (c *SmlVersionTargetClient) Delete() *SmlVersionTargetDelete {
-	mutation := newSmlVersionTargetMutation(c.config, OpDelete)
-	return &SmlVersionTargetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *SmlVersionTargetClient) DeleteOne(svt *SmlVersionTarget) *SmlVersionTargetDeleteOne {
-	return c.DeleteOneID(svt.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SmlVersionTargetClient) DeleteOneID(id string) *SmlVersionTargetDeleteOne {
-	builder := c.Delete().Where(smlversiontarget.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &SmlVersionTargetDeleteOne{builder}
-}
-
-// Query returns a query builder for SmlVersionTarget.
-func (c *SmlVersionTargetClient) Query() *SmlVersionTargetQuery {
-	return &SmlVersionTargetQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeSmlVersionTarget},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a SmlVersionTarget entity by its id.
-func (c *SmlVersionTargetClient) Get(ctx context.Context, id string) (*SmlVersionTarget, error) {
-	return c.Query().Where(smlversiontarget.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *SmlVersionTargetClient) GetX(ctx context.Context, id string) *SmlVersionTarget {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QuerySmlVersion queries the sml_version edge of a SmlVersionTarget.
-func (c *SmlVersionTargetClient) QuerySmlVersion(svt *SmlVersionTarget) *SmlVersionQuery {
-	query := (&SmlVersionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := svt.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(smlversiontarget.Table, smlversiontarget.FieldID, id),
-			sqlgraph.To(smlversion.Table, smlversion.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, smlversiontarget.SmlVersionTable, smlversiontarget.SmlVersionColumn),
-		)
-		fromV = sqlgraph.Neighbors(svt.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *SmlVersionTargetClient) Hooks() []Hook {
-	return c.hooks.SmlVersionTarget
-}
-
-// Interceptors returns the client interceptors.
-func (c *SmlVersionTargetClient) Interceptors() []Interceptor {
-	return c.inters.SmlVersionTarget
-}
-
-func (c *SmlVersionTargetClient) mutate(ctx context.Context, m *SmlVersionTargetMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&SmlVersionTargetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&SmlVersionTargetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&SmlVersionTargetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&SmlVersionTargetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown SmlVersionTarget mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown SatisfactoryVersion mutation op: %q", m.Op())
 	}
 }
 
@@ -2721,13 +2546,13 @@ func (c *VersionTargetClient) mutate(ctx context.Context, m *VersionTargetMutati
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Announcement, Guide, GuideTag, Mod, ModTag, SmlVersion, SmlVersionTarget, Tag,
-		User, UserGroup, UserMod, UserSession, Version, VersionDependency,
+		Announcement, Guide, GuideTag, Mod, ModTag, SatisfactoryVersion, Tag, User,
+		UserGroup, UserMod, UserSession, Version, VersionDependency,
 		VersionTarget []ent.Hook
 	}
 	inters struct {
-		Announcement, Guide, GuideTag, Mod, ModTag, SmlVersion, SmlVersionTarget, Tag,
-		User, UserGroup, UserMod, UserSession, Version, VersionDependency,
+		Announcement, Guide, GuideTag, Mod, ModTag, SatisfactoryVersion, Tag, User,
+		UserGroup, UserMod, UserSession, Version, VersionDependency,
 		VersionTarget []ent.Interceptor
 	}
 )

@@ -9,8 +9,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/announcement"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
@@ -151,54 +150,21 @@ func init() {
 	modDescID := modMixinFields0[0].Descriptor()
 	// mod.DefaultID holds the default value on creation for the id field.
 	mod.DefaultID = modDescID.Default.(func() string)
-	smlversionMixin := schema.SmlVersion{}.Mixin()
-	smlversionMixinHooks2 := smlversionMixin[2].Hooks()
-	smlversion.Hooks[0] = smlversionMixinHooks2[0]
-	smlversionMixinInters2 := smlversionMixin[2].Interceptors()
-	smlversion.Interceptors[0] = smlversionMixinInters2[0]
-	smlversionMixinFields0 := smlversionMixin[0].Fields()
-	_ = smlversionMixinFields0
-	smlversionMixinFields1 := smlversionMixin[1].Fields()
-	_ = smlversionMixinFields1
-	smlversionFields := schema.SmlVersion{}.Fields()
-	_ = smlversionFields
-	// smlversionDescCreatedAt is the schema descriptor for created_at field.
-	smlversionDescCreatedAt := smlversionMixinFields1[0].Descriptor()
-	// smlversion.DefaultCreatedAt holds the default value on creation for the created_at field.
-	smlversion.DefaultCreatedAt = smlversionDescCreatedAt.Default.(func() time.Time)
-	// smlversionDescUpdatedAt is the schema descriptor for updated_at field.
-	smlversionDescUpdatedAt := smlversionMixinFields1[1].Descriptor()
-	// smlversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	smlversion.DefaultUpdatedAt = smlversionDescUpdatedAt.Default.(func() time.Time)
-	// smlversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	smlversion.UpdateDefaultUpdatedAt = smlversionDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// smlversionDescVersion is the schema descriptor for version field.
-	smlversionDescVersion := smlversionFields[0].Descriptor()
-	// smlversion.VersionValidator is a validator for the "version" field. It is called by the builders before save.
-	smlversion.VersionValidator = smlversionDescVersion.Validators[0].(func(string) error)
-	// smlversionDescBootstrapVersion is the schema descriptor for bootstrap_version field.
-	smlversionDescBootstrapVersion := smlversionFields[6].Descriptor()
-	// smlversion.BootstrapVersionValidator is a validator for the "bootstrap_version" field. It is called by the builders before save.
-	smlversion.BootstrapVersionValidator = smlversionDescBootstrapVersion.Validators[0].(func(string) error)
-	// smlversionDescEngineVersion is the schema descriptor for engine_version field.
-	smlversionDescEngineVersion := smlversionFields[7].Descriptor()
-	// smlversion.DefaultEngineVersion holds the default value on creation for the engine_version field.
-	smlversion.DefaultEngineVersion = smlversionDescEngineVersion.Default.(string)
-	// smlversion.EngineVersionValidator is a validator for the "engine_version" field. It is called by the builders before save.
-	smlversion.EngineVersionValidator = smlversionDescEngineVersion.Validators[0].(func(string) error)
-	// smlversionDescID is the schema descriptor for id field.
-	smlversionDescID := smlversionMixinFields0[0].Descriptor()
-	// smlversion.DefaultID holds the default value on creation for the id field.
-	smlversion.DefaultID = smlversionDescID.Default.(func() string)
-	smlversiontargetMixin := schema.SmlVersionTarget{}.Mixin()
-	smlversiontargetMixinFields0 := smlversiontargetMixin[0].Fields()
-	_ = smlversiontargetMixinFields0
-	smlversiontargetFields := schema.SmlVersionTarget{}.Fields()
-	_ = smlversiontargetFields
-	// smlversiontargetDescID is the schema descriptor for id field.
-	smlversiontargetDescID := smlversiontargetMixinFields0[0].Descriptor()
-	// smlversiontarget.DefaultID holds the default value on creation for the id field.
-	smlversiontarget.DefaultID = smlversiontargetDescID.Default.(func() string)
+	satisfactoryversionMixin := schema.SatisfactoryVersion{}.Mixin()
+	satisfactoryversionMixinFields0 := satisfactoryversionMixin[0].Fields()
+	_ = satisfactoryversionMixinFields0
+	satisfactoryversionFields := schema.SatisfactoryVersion{}.Fields()
+	_ = satisfactoryversionFields
+	// satisfactoryversionDescEngineVersion is the schema descriptor for engine_version field.
+	satisfactoryversionDescEngineVersion := satisfactoryversionFields[1].Descriptor()
+	// satisfactoryversion.DefaultEngineVersion holds the default value on creation for the engine_version field.
+	satisfactoryversion.DefaultEngineVersion = satisfactoryversionDescEngineVersion.Default.(string)
+	// satisfactoryversion.EngineVersionValidator is a validator for the "engine_version" field. It is called by the builders before save.
+	satisfactoryversion.EngineVersionValidator = satisfactoryversionDescEngineVersion.Validators[0].(func(string) error)
+	// satisfactoryversionDescID is the schema descriptor for id field.
+	satisfactoryversionDescID := satisfactoryversionMixinFields0[0].Descriptor()
+	// satisfactoryversion.DefaultID holds the default value on creation for the id field.
+	satisfactoryversion.DefaultID = satisfactoryversionDescID.Default.(func() string)
 	tagMixin := schema.Tag{}.Mixin()
 	tagMixinHooks2 := tagMixin[2].Hooks()
 	tag.Hooks[0] = tagMixinHooks2[0]
@@ -372,10 +338,6 @@ func init() {
 	versionDescVersion := versionFields[1].Descriptor()
 	// version.VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	version.VersionValidator = versionDescVersion.Validators[0].(func(string) error)
-	// versionDescSmlVersion is the schema descriptor for sml_version field.
-	versionDescSmlVersion := versionFields[2].Descriptor()
-	// version.SmlVersionValidator is a validator for the "sml_version" field. It is called by the builders before save.
-	version.SmlVersionValidator = versionDescSmlVersion.Validators[0].(func(string) error)
 	// versionDescDownloads is the schema descriptor for downloads field.
 	versionDescDownloads := versionFields[4].Descriptor()
 	// version.DefaultDownloads holds the default value on creation for the downloads field.

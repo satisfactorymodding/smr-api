@@ -80,9 +80,9 @@ func (vc *VersionCreate) SetVersion(s string) *VersionCreate {
 	return vc
 }
 
-// SetSmlVersion sets the "sml_version" field.
-func (vc *VersionCreate) SetSmlVersion(s string) *VersionCreate {
-	vc.mutation.SetSmlVersion(s)
+// SetGameVersion sets the "game_version" field.
+func (vc *VersionCreate) SetGameVersion(s string) *VersionCreate {
+	vc.mutation.SetGameVersion(s)
 	return vc
 }
 
@@ -411,13 +411,8 @@ func (vc *VersionCreate) check() error {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Version.version": %w`, err)}
 		}
 	}
-	if _, ok := vc.mutation.SmlVersion(); !ok {
-		return &ValidationError{Name: "sml_version", err: errors.New(`ent: missing required field "Version.sml_version"`)}
-	}
-	if v, ok := vc.mutation.SmlVersion(); ok {
-		if err := version.SmlVersionValidator(v); err != nil {
-			return &ValidationError{Name: "sml_version", err: fmt.Errorf(`ent: validator failed for field "Version.sml_version": %w`, err)}
-		}
+	if _, ok := vc.mutation.GameVersion(); !ok {
+		return &ValidationError{Name: "game_version", err: errors.New(`ent: missing required field "Version.game_version"`)}
 	}
 	if _, ok := vc.mutation.Downloads(); !ok {
 		return &ValidationError{Name: "downloads", err: errors.New(`ent: missing required field "Version.downloads"`)}
@@ -507,9 +502,9 @@ func (vc *VersionCreate) createSpec() (*Version, *sqlgraph.CreateSpec) {
 		_spec.SetField(version.FieldVersion, field.TypeString, value)
 		_node.Version = value
 	}
-	if value, ok := vc.mutation.SmlVersion(); ok {
-		_spec.SetField(version.FieldSmlVersion, field.TypeString, value)
-		_node.SmlVersion = value
+	if value, ok := vc.mutation.GameVersion(); ok {
+		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
+		_node.GameVersion = value
 	}
 	if value, ok := vc.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)
@@ -726,15 +721,15 @@ func (u *VersionUpsert) UpdateVersion() *VersionUpsert {
 	return u
 }
 
-// SetSmlVersion sets the "sml_version" field.
-func (u *VersionUpsert) SetSmlVersion(v string) *VersionUpsert {
-	u.Set(version.FieldSmlVersion, v)
+// SetGameVersion sets the "game_version" field.
+func (u *VersionUpsert) SetGameVersion(v string) *VersionUpsert {
+	u.Set(version.FieldGameVersion, v)
 	return u
 }
 
-// UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
-func (u *VersionUpsert) UpdateSmlVersion() *VersionUpsert {
-	u.SetExcluded(version.FieldSmlVersion)
+// UpdateGameVersion sets the "game_version" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateGameVersion() *VersionUpsert {
+	u.SetExcluded(version.FieldGameVersion)
 	return u
 }
 
@@ -1104,17 +1099,17 @@ func (u *VersionUpsertOne) UpdateVersion() *VersionUpsertOne {
 	})
 }
 
-// SetSmlVersion sets the "sml_version" field.
-func (u *VersionUpsertOne) SetSmlVersion(v string) *VersionUpsertOne {
+// SetGameVersion sets the "game_version" field.
+func (u *VersionUpsertOne) SetGameVersion(v string) *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
-		s.SetSmlVersion(v)
+		s.SetGameVersion(v)
 	})
 }
 
-// UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
-func (u *VersionUpsertOne) UpdateSmlVersion() *VersionUpsertOne {
+// UpdateGameVersion sets the "game_version" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateGameVersion() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
-		s.UpdateSmlVersion()
+		s.UpdateGameVersion()
 	})
 }
 
@@ -1693,17 +1688,17 @@ func (u *VersionUpsertBulk) UpdateVersion() *VersionUpsertBulk {
 	})
 }
 
-// SetSmlVersion sets the "sml_version" field.
-func (u *VersionUpsertBulk) SetSmlVersion(v string) *VersionUpsertBulk {
+// SetGameVersion sets the "game_version" field.
+func (u *VersionUpsertBulk) SetGameVersion(v string) *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
-		s.SetSmlVersion(v)
+		s.SetGameVersion(v)
 	})
 }
 
-// UpdateSmlVersion sets the "sml_version" field to the value that was provided on create.
-func (u *VersionUpsertBulk) UpdateSmlVersion() *VersionUpsertBulk {
+// UpdateGameVersion sets the "game_version" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateGameVersion() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
-		s.UpdateSmlVersion()
+		s.UpdateGameVersion()
 	})
 }
 

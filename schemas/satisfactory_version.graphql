@@ -1,0 +1,36 @@
+### Types
+
+scalar SatisfactoryVersionID
+
+type SatisfactoryVersion {
+    id: SatisfactoryVersionID!
+    version: Int!
+    engine_version: String!
+}
+
+### Inputs
+
+input NewSatisfactoryVersion {
+    version: Int!
+    engine_version: String!
+}
+
+input UpdateSatisfactoryVersion {
+    version: Int
+    engine_version: String
+}
+
+### Queries
+
+extend type Query {
+    getSatisfactoryVersions: [SatisfactoryVersion!]!
+    getSatisfactoryVersion(id: SatisfactoryVersionID!): SatisfactoryVersion
+}
+
+### Mutations
+
+extend type Mutation {
+    createSatisfactoryVersion(input: NewSatisfactoryVersion!): SatisfactoryVersion! @isLoggedIn @canEditSatisfactoryVersions
+    updateSatisfactoryVersion(id: SatisfactoryVersionID!, input: UpdateSatisfactoryVersion!): SatisfactoryVersion! @isLoggedIn @canEditSatisfactoryVersions
+    deleteSatisfactoryVersion(id: SatisfactoryVersionID!): Boolean! @isLoggedIn @canEditSatisfactoryVersions
+}

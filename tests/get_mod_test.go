@@ -43,7 +43,7 @@ func TestGetModLimitOffset(t *testing.T) {
 		GetMods generated.GetMods
 	}
 	testza.AssertNoError(t, client.Run(ctx, getRequest, &getResponse))
-	testza.AssertEqual(t, 10, getResponse.GetMods.Count)
+	testza.AssertEqual(t, 11, getResponse.GetMods.Count)
 	testza.AssertEqual(t, 2, len(getResponse.GetMods.Mods))
 	testza.AssertEqual(t, "resource_overhaul", getResponse.GetMods.Mods[0].ModReference)
 	testza.AssertEqual(t, "automated_defense", getResponse.GetMods.Mods[1].ModReference)

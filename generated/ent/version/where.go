@@ -91,9 +91,9 @@ func Version(v string) predicate.Version {
 	return predicate.Version(sql.FieldEQ(FieldVersion, v))
 }
 
-// SmlVersion applies equality check predicate on the "sml_version" field. It's identical to SmlVersionEQ.
-func SmlVersion(v string) predicate.Version {
-	return predicate.Version(sql.FieldEQ(FieldSmlVersion, v))
+// GameVersion applies equality check predicate on the "game_version" field. It's identical to GameVersionEQ.
+func GameVersion(v string) predicate.Version {
+	return predicate.Version(sql.FieldEQ(FieldGameVersion, v))
 }
 
 // Changelog applies equality check predicate on the "changelog" field. It's identical to ChangelogEQ.
@@ -421,69 +421,69 @@ func VersionContainsFold(v string) predicate.Version {
 	return predicate.Version(sql.FieldContainsFold(FieldVersion, v))
 }
 
-// SmlVersionEQ applies the EQ predicate on the "sml_version" field.
-func SmlVersionEQ(v string) predicate.Version {
-	return predicate.Version(sql.FieldEQ(FieldSmlVersion, v))
+// GameVersionEQ applies the EQ predicate on the "game_version" field.
+func GameVersionEQ(v string) predicate.Version {
+	return predicate.Version(sql.FieldEQ(FieldGameVersion, v))
 }
 
-// SmlVersionNEQ applies the NEQ predicate on the "sml_version" field.
-func SmlVersionNEQ(v string) predicate.Version {
-	return predicate.Version(sql.FieldNEQ(FieldSmlVersion, v))
+// GameVersionNEQ applies the NEQ predicate on the "game_version" field.
+func GameVersionNEQ(v string) predicate.Version {
+	return predicate.Version(sql.FieldNEQ(FieldGameVersion, v))
 }
 
-// SmlVersionIn applies the In predicate on the "sml_version" field.
-func SmlVersionIn(vs ...string) predicate.Version {
-	return predicate.Version(sql.FieldIn(FieldSmlVersion, vs...))
+// GameVersionIn applies the In predicate on the "game_version" field.
+func GameVersionIn(vs ...string) predicate.Version {
+	return predicate.Version(sql.FieldIn(FieldGameVersion, vs...))
 }
 
-// SmlVersionNotIn applies the NotIn predicate on the "sml_version" field.
-func SmlVersionNotIn(vs ...string) predicate.Version {
-	return predicate.Version(sql.FieldNotIn(FieldSmlVersion, vs...))
+// GameVersionNotIn applies the NotIn predicate on the "game_version" field.
+func GameVersionNotIn(vs ...string) predicate.Version {
+	return predicate.Version(sql.FieldNotIn(FieldGameVersion, vs...))
 }
 
-// SmlVersionGT applies the GT predicate on the "sml_version" field.
-func SmlVersionGT(v string) predicate.Version {
-	return predicate.Version(sql.FieldGT(FieldSmlVersion, v))
+// GameVersionGT applies the GT predicate on the "game_version" field.
+func GameVersionGT(v string) predicate.Version {
+	return predicate.Version(sql.FieldGT(FieldGameVersion, v))
 }
 
-// SmlVersionGTE applies the GTE predicate on the "sml_version" field.
-func SmlVersionGTE(v string) predicate.Version {
-	return predicate.Version(sql.FieldGTE(FieldSmlVersion, v))
+// GameVersionGTE applies the GTE predicate on the "game_version" field.
+func GameVersionGTE(v string) predicate.Version {
+	return predicate.Version(sql.FieldGTE(FieldGameVersion, v))
 }
 
-// SmlVersionLT applies the LT predicate on the "sml_version" field.
-func SmlVersionLT(v string) predicate.Version {
-	return predicate.Version(sql.FieldLT(FieldSmlVersion, v))
+// GameVersionLT applies the LT predicate on the "game_version" field.
+func GameVersionLT(v string) predicate.Version {
+	return predicate.Version(sql.FieldLT(FieldGameVersion, v))
 }
 
-// SmlVersionLTE applies the LTE predicate on the "sml_version" field.
-func SmlVersionLTE(v string) predicate.Version {
-	return predicate.Version(sql.FieldLTE(FieldSmlVersion, v))
+// GameVersionLTE applies the LTE predicate on the "game_version" field.
+func GameVersionLTE(v string) predicate.Version {
+	return predicate.Version(sql.FieldLTE(FieldGameVersion, v))
 }
 
-// SmlVersionContains applies the Contains predicate on the "sml_version" field.
-func SmlVersionContains(v string) predicate.Version {
-	return predicate.Version(sql.FieldContains(FieldSmlVersion, v))
+// GameVersionContains applies the Contains predicate on the "game_version" field.
+func GameVersionContains(v string) predicate.Version {
+	return predicate.Version(sql.FieldContains(FieldGameVersion, v))
 }
 
-// SmlVersionHasPrefix applies the HasPrefix predicate on the "sml_version" field.
-func SmlVersionHasPrefix(v string) predicate.Version {
-	return predicate.Version(sql.FieldHasPrefix(FieldSmlVersion, v))
+// GameVersionHasPrefix applies the HasPrefix predicate on the "game_version" field.
+func GameVersionHasPrefix(v string) predicate.Version {
+	return predicate.Version(sql.FieldHasPrefix(FieldGameVersion, v))
 }
 
-// SmlVersionHasSuffix applies the HasSuffix predicate on the "sml_version" field.
-func SmlVersionHasSuffix(v string) predicate.Version {
-	return predicate.Version(sql.FieldHasSuffix(FieldSmlVersion, v))
+// GameVersionHasSuffix applies the HasSuffix predicate on the "game_version" field.
+func GameVersionHasSuffix(v string) predicate.Version {
+	return predicate.Version(sql.FieldHasSuffix(FieldGameVersion, v))
 }
 
-// SmlVersionEqualFold applies the EqualFold predicate on the "sml_version" field.
-func SmlVersionEqualFold(v string) predicate.Version {
-	return predicate.Version(sql.FieldEqualFold(FieldSmlVersion, v))
+// GameVersionEqualFold applies the EqualFold predicate on the "game_version" field.
+func GameVersionEqualFold(v string) predicate.Version {
+	return predicate.Version(sql.FieldEqualFold(FieldGameVersion, v))
 }
 
-// SmlVersionContainsFold applies the ContainsFold predicate on the "sml_version" field.
-func SmlVersionContainsFold(v string) predicate.Version {
-	return predicate.Version(sql.FieldContainsFold(FieldSmlVersion, v))
+// GameVersionContainsFold applies the ContainsFold predicate on the "game_version" field.
+func GameVersionContainsFold(v string) predicate.Version {
+	return predicate.Version(sql.FieldContainsFold(FieldGameVersion, v))
 }
 
 // ChangelogEQ applies the EQ predicate on the "changelog" field.
