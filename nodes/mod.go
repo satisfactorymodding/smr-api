@@ -486,5 +486,5 @@ func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 		return nil, &ErrorVersionNotFound
 	}
 
-	return (*conv.VersionImpl)(nil).ConvertSlice(versions), nil
+	return (*conv.ModAllVersionsImpl)(nil).ConvertSlice(versions), nil
 }
