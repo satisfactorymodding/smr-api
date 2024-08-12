@@ -476,7 +476,7 @@ func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 	}
 
 	versions, err := mod.QueryVersions().
-		WithDependencies().
+		WithVersionDependencies().
 		WithTargets().
 		Where(version2.Approved(true), version2.Denied(false)).
 		Select(version2.FieldHash, version2.FieldSize, version2.FieldGameVersion, version2.FieldVersion).
