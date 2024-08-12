@@ -23,7 +23,7 @@ func (c *ModAllVersionsImpl) Convert(source *ent.Version) *types.ModAllVersionsV
 		if (*source).Edges.Targets != nil {
 			pTypesModAllVersionsVersionTargetList = make([]*types.ModAllVersionsVersionTarget, len((*source).Edges.Targets))
 			for i := 0; i < len((*source).Edges.Targets); i++ {
-				pTypesModAllVersionsVersionTargetList[i] = c.pEntVersionTargetToPTypesModAllVersionsVersionTarget((*source).Edges.Targets[i])
+				pTypesModAllVersionsVersionTargetList[i] = c.ConvertTarget((*source).Edges.Targets[i])
 			}
 		}
 		typesModAllVersionsVersion.Targets = pTypesModAllVersionsVersionTargetList
@@ -49,6 +49,19 @@ func (c *ModAllVersionsImpl) ConvertSlice(source []*ent.Version) []*types.ModAll
 	}
 	return pTypesModAllVersionsVersionList
 }
+func (c *ModAllVersionsImpl) ConvertTarget(source *ent.VersionTarget) *types.ModAllVersionsVersionTarget {
+	var pTypesModAllVersionsVersionTarget *types.ModAllVersionsVersionTarget
+	if source != nil {
+		var typesModAllVersionsVersionTarget types.ModAllVersionsVersionTarget
+		typesModAllVersionsVersionTarget.VersionID = (*source).VersionID
+		typesModAllVersionsVersionTarget.TargetName = (*source).TargetName
+		typesModAllVersionsVersionTarget.Link = conversion.TargetLink(source)
+		typesModAllVersionsVersionTarget.Hash = (*source).Hash
+		typesModAllVersionsVersionTarget.Size = conversion.Int64ToInt((*source).Size)
+		pTypesModAllVersionsVersionTarget = &typesModAllVersionsVersionTarget
+	}
+	return pTypesModAllVersionsVersionTarget
+}
 func (c *ModAllVersionsImpl) pEntVersionDependencyToPTypesModAllVersionsVersionDependency(source *ent.VersionDependency) *types.ModAllVersionsVersionDependency {
 	var pTypesModAllVersionsVersionDependency *types.ModAllVersionsVersionDependency
 	if source != nil {
@@ -59,18 +72,6 @@ func (c *ModAllVersionsImpl) pEntVersionDependencyToPTypesModAllVersionsVersionD
 		pTypesModAllVersionsVersionDependency = &typesModAllVersionsVersionDependency
 	}
 	return pTypesModAllVersionsVersionDependency
-}
-func (c *ModAllVersionsImpl) pEntVersionTargetToPTypesModAllVersionsVersionTarget(source *ent.VersionTarget) *types.ModAllVersionsVersionTarget {
-	var pTypesModAllVersionsVersionTarget *types.ModAllVersionsVersionTarget
-	if source != nil {
-		var typesModAllVersionsVersionTarget types.ModAllVersionsVersionTarget
-		typesModAllVersionsVersionTarget.VersionID = (*source).VersionID
-		typesModAllVersionsVersionTarget.TargetName = (*source).TargetName
-		typesModAllVersionsVersionTarget.Hash = (*source).Hash
-		typesModAllVersionsVersionTarget.Size = conversion.Int64ToInt((*source).Size)
-		pTypesModAllVersionsVersionTarget = &typesModAllVersionsVersionTarget
-	}
-	return pTypesModAllVersionsVersionTarget
 }
 
 type VersionImpl struct{}

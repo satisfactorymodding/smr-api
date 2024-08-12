@@ -11,6 +11,7 @@ type ModAllVersionsVersion struct {
 type ModAllVersionsVersionTarget struct {
 	VersionID  string `json:"version_id"`
 	TargetName string `json:"target_name"`
+	Link       string `json:"link"`
 	Hash       string `json:"hash"`
 	Size       int    `json:"size"`
 }

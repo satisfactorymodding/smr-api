@@ -14,4 +14,14 @@ type ModAllVersions interface {
 	// goverter:map Edges.VersionDependencies Dependencies
 	Convert(source *ent.Version) *types.ModAllVersionsVersion
 	ConvertSlice(source []*ent.Version) []*types.ModAllVersionsVersion
+
+	// goverter:map . Link | TargetLink
+	ConvertTarget(source *ent.VersionTarget) *types.ModAllVersionsVersionTarget
+}
+
+func TargetLink(source *ent.VersionTarget) string {
+	if source == nil {
+		return ""
+	}
+	return "/v1/version/" + source.VersionID + "/" + source.TargetName + "/download"
 }
