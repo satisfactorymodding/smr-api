@@ -108,15 +108,15 @@ jobs:
     strategy:
       matrix:
         include:
-          - download_url: "${{ secrets.S3_URL_PROD }}"
+          - download_url: "S3_URL_PROD"
             s3_bucket: "smr-prod-s3"
-            s3_key: "${{ secrets.S3_KEY_PROD }}"
-            s3_secret: "${{ secrets.S3_SECRET_PROD }}"
+            s3_key: "S3_KEY_PROD"
+            s3_secret: "S3_SECRET_PROD"
             s3_base_url: "https://storage.ficsit.app"
-          - download_url: "${{ secrets.S3_URL_STAGING }}"
+          - download_url: "S3_URL_STAGING"
             s3_bucket: "smr-staging-s3"
-            s3_key: "${{ secrets.S3_KEY_STAGING }}"
-            s3_secret: "${{ secrets.S3_SECRET_STAGING }}"
+            s3_key: "S3_KEY_STAGING"
+            s3_secret: "S3_SECRET_STAGING"
             s3_base_url: "https://storage-staging.ficsit.app"
     steps:
       - name: Check out code into the Go module directory
@@ -148,7 +148,7 @@ jobs:
 
       - name: Download and seed database
         run: |
-          psql -h localhost -p 5432 -U postgres < curl ${{ matrix.download_url }}
+          psql -h localhost -p 5432 -U postgres < curl ${{ secrets[matrix.download_url] }}
         env:
           PGPASSWORD: REPLACE_ME
 
@@ -162,8 +162,8 @@ jobs:
           REPO_STORAGE.READER.TYPE: "s3"
           REPO_STORAGE.READER.REGION: "us-west-002"
           REPO_STORAGE.READER.BUCKET: "${{ matrix.s3_bucket }}"
-          REPO_STORAGE.READER.KEY: "${{ matrix.s3_key }}"
-          REPO_STORAGE.READER.SECRET: "${{ matrix.s3_secret }}"
+          REPO_STORAGE.READER.KEY: "${{ secrets[matrix.s3_key] }}"
+          REPO_STORAGE.READER.SECRET: "${{ secrets[matrix.s3_secret] }}"
           REPO_STORAGE.READER.ENDPOINT: "https://s3.us-west-002.backblazeb2.com"
           REPO_STORAGE.READER.BASE_URL: "${{ matrix.s3_base_url }}"
           REPO_STORAGE.READER.KEYPATH: "%s/file/%s/%s"
