@@ -13,6 +13,16 @@ import (
 )
 
 func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(*ent.Mod) bool, versionFilter func(version *ent.Version) bool) error {
+	return ExecuteOnVersions(ctx, modFilter, versionFilter, func(m *ent.Mod, v *ent.Version) {
+		if withMetadata {
+			jobs.SubmitJobUpdateDBFromModVersionFileTask(ctx, m.ID, v.ID)
+		} else {
+			jobs.SubmitJobUpdateDBFromModVersionJSONFileTask(ctx, m.ID, v.ID)
+		}
+	})
+}
+
+func ExecuteOnVersions(ctx context.Context, modFilter func(*ent.Mod) bool, versionFilter func(version *ent.Version) bool, f func(mod *ent.Mod, version *ent.Version)) error {
 	offset := 0
 
 	for {
@@ -51,11 +61,7 @@ func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(*
 							}
 						}
 
-						if withMetadata {
-							jobs.SubmitJobUpdateDBFromModVersionFileTask(ctx, m.ID, v.ID)
-						} else {
-							jobs.SubmitJobUpdateDBFromModVersionJSONFileTask(ctx, m.ID, v.ID)
-						}
+						f(m, v)
 					}
 				} else {
 					break

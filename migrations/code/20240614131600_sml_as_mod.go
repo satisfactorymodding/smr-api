@@ -7,17 +7,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path"
+	"sort"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/Vilsol/slox"
 	"github.com/lab259/go-migration"
 	"github.com/pkg/errors"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/migrations/utils"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/validation"
@@ -37,7 +41,55 @@ func init() {
 			}
 
 			// Add the game version
-			err = utils.ReindexAllModFiles(ctx, false, nil, nil)
+			smlQuery := db.From(ctx).Mod.Query().Where(mod.ModReferenceEQ("SML")).WithVersions()
+			smlMod, err := smlQuery.First(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to get SML mod: %w", err)
+			}
+
+			smlVersions := smlMod.Edges.Versions
+
+			// Sort increasing by version
+			sort.Slice(smlVersions, func(a, b int) bool {
+				return semver.MustParse(smlVersions[a].Version).Compare(semver.MustParse(smlVersions[b].Version)) < 0
+			})
+
+			err = utils.ExecuteOnVersions(ctx, func(m *ent.Mod) bool {
+				return m.ModReference != "SML"
+			}, nil, func(mod *ent.Mod, version *ent.Version) {
+				smlDependency, err := version.QueryVersionDependencies().Where(versiondependency.ModID("SML")).First(ctx)
+				if err != nil {
+					slox.Error(ctx, "failed to get SML dependency", slog.String("mod", mod.ModReference), slog.String("version", version.Version), slog.Any("err", err))
+					return
+				}
+
+				constraint, err := semver.NewConstraint(smlDependency.Condition)
+				if err != nil {
+					slox.Error(ctx, "failed to get SML dependency", slog.String("mod", mod.ModReference), slog.String("version", version.Version), slog.Any("err", err))
+					return
+				}
+
+				gameVersion := ""
+				for _, v := range smlVersions {
+					if constraint.Check(semver.MustParse(v.Version)) {
+						gameVersion = v.GameVersion
+						break
+					}
+				}
+
+				if gameVersion == "" {
+					slox.Error(ctx, "no SML version matches constraint", slog.String("mod", mod.ModReference), slog.String("version", version.Version), slog.String("constraint", smlDependency.Condition))
+					return
+				}
+
+				err = version.Update().
+					SetGameVersion(gameVersion).
+					Exec(ctx)
+				if err != nil {
+					slox.Error(ctx, "failed to update game version", slog.String("mod", mod.ModReference), slog.String("version", version.Version), slog.Any("err", err))
+					return
+				}
+			})
 			if err != nil {
 				return fmt.Errorf("failed to reindex all mod files: %w", err)
 			}
