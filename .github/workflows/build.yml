@@ -148,7 +148,7 @@ jobs:
 
       - name: Download and seed database
         run: |
-          psql -h localhost -p 5432 -U postgres < curl ${{ secrets[matrix.download_url] }}
+          curl ${{ secrets[matrix.download_url] }} | psql -h localhost -p 5432 -U postgres
         env:
           PGPASSWORD: REPLACE_ME
 
