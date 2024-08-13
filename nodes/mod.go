@@ -476,15 +476,15 @@ func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 	}
 
 	versions, err := mod.QueryVersions().
-		WithDependencies().
+		WithVersionDependencies().
 		WithTargets().
 		Where(version2.Approved(true), version2.Denied(false)).
-		Select(version2.FieldHash, version2.FieldSize, version2.FieldVersion).
+		Select(version2.FieldHash, version2.FieldSize, version2.FieldGameVersion, version2.FieldVersion).
 		All(c.Request().Context())
 	if err != nil {
 		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
 		return nil, &ErrorVersionNotFound
 	}
 
-	return (*conv.VersionImpl)(nil).ConvertSlice(versions), nil
+	return (*conv.ModAllVersionsImpl)(nil).ConvertSlice(versions), nil
 }

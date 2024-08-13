@@ -7,7 +7,72 @@ import (
 	conversion "github.com/satisfactorymodding/smr-api/conversion"
 	generated "github.com/satisfactorymodding/smr-api/generated"
 	ent "github.com/satisfactorymodding/smr-api/generated/ent"
+	types "github.com/satisfactorymodding/smr-api/nodes/types"
 )
+
+type ModAllVersionsImpl struct{}
+
+func (c *ModAllVersionsImpl) Convert(source *ent.Version) *types.ModAllVersionsVersion {
+	var pTypesModAllVersionsVersion *types.ModAllVersionsVersion
+	if source != nil {
+		var typesModAllVersionsVersion types.ModAllVersionsVersion
+		typesModAllVersionsVersion.ID = (*source).ID
+		typesModAllVersionsVersion.Version = (*source).Version
+		typesModAllVersionsVersion.GameVersion = (*source).GameVersion
+		var pTypesModAllVersionsVersionTargetList []*types.ModAllVersionsVersionTarget
+		if (*source).Edges.Targets != nil {
+			pTypesModAllVersionsVersionTargetList = make([]*types.ModAllVersionsVersionTarget, len((*source).Edges.Targets))
+			for i := 0; i < len((*source).Edges.Targets); i++ {
+				pTypesModAllVersionsVersionTargetList[i] = c.ConvertTarget((*source).Edges.Targets[i])
+			}
+		}
+		typesModAllVersionsVersion.Targets = pTypesModAllVersionsVersionTargetList
+		var pTypesModAllVersionsVersionDependencyList []*types.ModAllVersionsVersionDependency
+		if (*source).Edges.VersionDependencies != nil {
+			pTypesModAllVersionsVersionDependencyList = make([]*types.ModAllVersionsVersionDependency, len((*source).Edges.VersionDependencies))
+			for j := 0; j < len((*source).Edges.VersionDependencies); j++ {
+				pTypesModAllVersionsVersionDependencyList[j] = c.pEntVersionDependencyToPTypesModAllVersionsVersionDependency((*source).Edges.VersionDependencies[j])
+			}
+		}
+		typesModAllVersionsVersion.Dependencies = pTypesModAllVersionsVersionDependencyList
+		pTypesModAllVersionsVersion = &typesModAllVersionsVersion
+	}
+	return pTypesModAllVersionsVersion
+}
+func (c *ModAllVersionsImpl) ConvertSlice(source []*ent.Version) []*types.ModAllVersionsVersion {
+	var pTypesModAllVersionsVersionList []*types.ModAllVersionsVersion
+	if source != nil {
+		pTypesModAllVersionsVersionList = make([]*types.ModAllVersionsVersion, len(source))
+		for i := 0; i < len(source); i++ {
+			pTypesModAllVersionsVersionList[i] = c.Convert(source[i])
+		}
+	}
+	return pTypesModAllVersionsVersionList
+}
+func (c *ModAllVersionsImpl) ConvertTarget(source *ent.VersionTarget) *types.ModAllVersionsVersionTarget {
+	var pTypesModAllVersionsVersionTarget *types.ModAllVersionsVersionTarget
+	if source != nil {
+		var typesModAllVersionsVersionTarget types.ModAllVersionsVersionTarget
+		typesModAllVersionsVersionTarget.VersionID = (*source).VersionID
+		typesModAllVersionsVersionTarget.TargetName = (*source).TargetName
+		typesModAllVersionsVersionTarget.Link = conversion.TargetLink(source)
+		typesModAllVersionsVersionTarget.Hash = (*source).Hash
+		typesModAllVersionsVersionTarget.Size = conversion.Int64ToInt((*source).Size)
+		pTypesModAllVersionsVersionTarget = &typesModAllVersionsVersionTarget
+	}
+	return pTypesModAllVersionsVersionTarget
+}
+func (c *ModAllVersionsImpl) pEntVersionDependencyToPTypesModAllVersionsVersionDependency(source *ent.VersionDependency) *types.ModAllVersionsVersionDependency {
+	var pTypesModAllVersionsVersionDependency *types.ModAllVersionsVersionDependency
+	if source != nil {
+		var typesModAllVersionsVersionDependency types.ModAllVersionsVersionDependency
+		typesModAllVersionsVersionDependency.ModID = (*source).ModID
+		typesModAllVersionsVersionDependency.Condition = (*source).Condition
+		typesModAllVersionsVersionDependency.Optional = (*source).Optional
+		pTypesModAllVersionsVersionDependency = &typesModAllVersionsVersionDependency
+	}
+	return pTypesModAllVersionsVersionDependency
+}
 
 type VersionImpl struct{}
 
