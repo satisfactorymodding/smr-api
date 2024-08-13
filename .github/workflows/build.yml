@@ -80,7 +80,7 @@ jobs:
         run: go generate -tags tools -x ./...
 
       - name: Start stack
-        run: docker compose -f docker-compose-dev.yml up -d
+        run: docker compose up -d
 
       - name: Setup Minio
         run: |
@@ -101,3 +101,69 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  seeded_test:
+    name: Seeded Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - download_url: "${{ secrets.S3_URL_PROD }}"
+            s3_bucket: "smr-prod-s3",
+            s3_key: "${{ secrets.S3_KEY_PROD }}",
+            s3_secret: "${{ secrets.S3_SECRET_PROD }}",
+            s3_base_url: "https://storage.ficsit.app"
+          - download_url: "${{ secrets.S3_URL_STAGING }}"
+            s3_bucket: "smr-staging-s3",
+            s3_key: "${{ secrets.S3_KEY_STAGING }}",
+            s3_secret: "${{ secrets.S3_SECRET_STAGING }}",
+            s3_base_url: "https://storage-staging.ficsit.app"
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Download dependencies
+        run: |
+          sudo apt update && sudo apt install -y build-essential libpng-dev protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+
+      - name: Go Generate
+        run: go generate -tags tools -x ./...
+
+      - name: Start stack
+        run: docker compose up -d
+
+      - name: Setup Minio
+        run: |
+          go install github.com/minio/mc@latest
+          mc alias set local http://localhost:9000 minio minio123
+          mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET
+          mc anonymous set public local/smr
+
+      - name: Download and seed database
+        run: |
+          psql -h localhost -p 5432 -U postgres < curl ${{ matrix.download_url }}
+        env:
+          PGPASSWORD: REPLACE_ME
+
+      - name: Test
+        run: go test -v -run '^TestSetup$' ./...
+        env:
+          CGO_ENABLED: 1
+          REPO_PASETO.PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_PASETO.PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_FEATURE_FLAGS.ALLOW_MULTI_TARGET_UPLOAD: "true"
+          REPO_STORAGE.READER.TYPE: "s3",
+          REPO_STORAGE.READER.REGION: "us-west-002",
+          REPO_STORAGE.READER.BUCKET: "${{ matrix.s3_bucket }}",
+          REPO_STORAGE.READER.KEY: "${{ matrix.s3_key }}",
+          REPO_STORAGE.READER.SECRET: "${{ matrix.s3_secret }}",
+          REPO_STORAGE.READER.ENDPOINT: "https://s3.us-west-002.backblazeb2.com",
+          REPO_STORAGE.READER.BASE_URL: "${{ matrix.s3_base_url }}",
+          REPO_STORAGE.READER.KEYPATH: "%s/file/%s/%s"

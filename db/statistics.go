@@ -113,6 +113,11 @@ func RunAsyncStatisticLoop(ctx context.Context) {
 			for _, row := range resultRows {
 				err := Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
 					mod, err := tx.Mod.Get(ctx, row.ModID)
+
+					if mod == nil || mod.ID == "" {
+						return nil
+					}
+
 					if err != nil {
 						return err
 					}

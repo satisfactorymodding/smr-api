@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
@@ -19,6 +20,7 @@ import (
 func UpdateModDataFromStorage(ctx context.Context, modID string, versionID string, metadata bool) error {
 	// perform task
 	slox.Info(ctx, "Updating DB for mod version with metadata", slog.String("mod", modID), slog.String("version", versionID), slog.Bool("metadata", metadata))
+	start := time.Now()
 
 	version, err := db.From(ctx).Version.Get(ctx, versionID)
 	if err != nil {
@@ -45,7 +47,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 
 	info, err := validation.ExtractModInfo(ctx, fileData, metadata, false, mod.ModReference)
 	if err != nil {
-		slox.Warn(ctx, "failed updating mod, likely outdated", slog.Any("err", err), slog.String("version", versionID))
+		slox.Warn(ctx, "failed updating mod, likely outdated", slog.Any("err", err), slog.String("version", versionID), slog.String("link", link), slog.Int("size", len(fileData)), slog.String("mod_reference", mod.ModReference))
 		// Outdated version
 		return nil
 	}
@@ -91,7 +93,7 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 	versionMinor := int(info.Semver.Minor())
 	versionPatch := int(info.Semver.Patch())
 
-	return version.Update().
+	err = version.Update().
 		SetSize(info.Size).
 		SetHash(info.Hash).
 		SetVersionMajor(versionMajor).
@@ -100,4 +102,11 @@ func UpdateModDataFromStorage(ctx context.Context, modID string, versionID strin
 		SetModReference(info.ModReference).
 		SetGameVersion(info.GameVersion).
 		Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	slox.Info(ctx, "mod update success", slog.String("version", versionID), slog.String("mod_reference", mod.ModReference), slog.Duration("took", time.Since(start)))
+
+	return nil
 }

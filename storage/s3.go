@@ -15,8 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
-
 	"github.com/satisfactorymodding/smr-api/redis"
 )
 
@@ -72,7 +70,7 @@ func (s3o *S3) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 
 	_, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Body:   body,
-		Bucket: aws.String(viper.GetString("storage.bucket")),
+		Bucket: aws.String(s3o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
 	if err != nil {
@@ -85,7 +83,7 @@ func (s3o *S3) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 func (s3o *S3) SignGet(key string) (string, error) {
 	// Public Bucket
 	cleanedKey := strings.TrimPrefix(key, "/")
-	return fmt.Sprintf(viper.GetString("storage.keypath"), s3o.BaseURL, viper.GetString("storage.bucket"), cleanedKey), nil
+	return fmt.Sprintf(s3o.Config.Keypath, s3o.BaseURL, s3o.Config.Bucket, cleanedKey), nil
 }
 
 func (s3o *S3) SignPut(_ string) (string, error) {
@@ -96,7 +94,7 @@ func (s3o *S3) SignPut(_ string) (string, error) {
 func (s3o *S3) StartMultipartUpload(key string) error {
 	cleanedKey := strings.TrimPrefix(key, "/")
 	upload, err := s3o.S3Client.CreateMultipartUpload(&s3.CreateMultipartUploadInput{
-		Bucket: aws.String(viper.GetString("storage.bucket")),
+		Bucket: aws.String(s3o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
 	if err != nil {
@@ -114,7 +112,7 @@ func (s3o *S3) UploadPart(key string, part int64, data io.ReadSeeker) error {
 
 	response, err := s3o.S3Client.UploadPart(&s3.UploadPartInput{
 		Body:       data,
-		Bucket:     aws.String(viper.GetString("storage.bucket")),
+		Bucket:     aws.String(s3o.Config.Bucket),
 		Key:        aws.String(cleanedKey),
 		PartNumber: aws.Int64(part),
 		UploadId:   aws.String(id),
@@ -140,7 +138,7 @@ func (s3o *S3) CompleteMultipartUpload(key string) error {
 	}
 
 	_, err := s3o.S3Client.CompleteMultipartUpload(&s3.CompleteMultipartUploadInput{
-		Bucket:          aws.String(viper.GetString("storage.bucket")),
+		Bucket:          aws.String(s3o.Config.Bucket),
 		Key:             aws.String(cleanedKey),
 		MultipartUpload: &s3.CompletedMultipartUpload{Parts: completedParts},
 		UploadId:        aws.String(id),
@@ -156,8 +154,8 @@ func (s3o *S3) Rename(from string, to string) error {
 	cleanedKey := strings.TrimPrefix(to, "/")
 
 	_, err := s3o.S3Client.CopyObject(&s3.CopyObjectInput{
-		Bucket:     aws.String(viper.GetString("storage.bucket")),
-		CopySource: aws.String(viper.GetString("storage.bucket") + from),
+		Bucket:     aws.String(s3o.Config.Bucket),
+		CopySource: aws.String(s3o.Config.Bucket + from),
 		Key:        aws.String(cleanedKey),
 	})
 	if err != nil {
@@ -173,14 +171,14 @@ func (s3o *S3) Delete(key string) error {
 	// Check up to 10 object pages
 	for range 10 {
 		versions, err := s3o.S3Client.ListObjectVersions(&s3.ListObjectVersionsInput{
-			Bucket:    aws.String(viper.GetString("storage.bucket")),
+			Bucket:    aws.String(s3o.Config.Bucket),
 			KeyMarker: aws.String(cleanedKey),
 			Prefix:    aws.String(cleanedKey),
 		})
 		if err != nil {
 			if strings.Contains(err.Error(), "NotImplemented") {
 				_, err = s3o.S3Client.DeleteObject(&s3.DeleteObjectInput{
-					Bucket: aws.String(viper.GetString("storage.bucket")),
+					Bucket: aws.String(s3o.Config.Bucket),
 					Key:    aws.String(cleanedKey),
 				})
 				if err != nil {
@@ -211,7 +209,7 @@ func (s3o *S3) Delete(key string) error {
 
 		if len(objects) == 0 {
 			_, err = s3o.S3Client.DeleteObject(&s3.DeleteObjectInput{
-				Bucket: aws.String(viper.GetString("storage.bucket")),
+				Bucket: aws.String(s3o.Config.Bucket),
 				Key:    aws.String(cleanedKey),
 			})
 			if err != nil {
@@ -222,7 +220,7 @@ func (s3o *S3) Delete(key string) error {
 		}
 
 		_, err = s3o.S3Client.DeleteObjects(&s3.DeleteObjectsInput{
-			Bucket: aws.String(viper.GetString("storage.bucket")),
+			Bucket: aws.String(s3o.Config.Bucket),
 			Delete: &s3.Delete{
 				Objects: objects,
 			},
@@ -239,7 +237,7 @@ func (s3o *S3) Meta(key string) (*ObjectMeta, error) {
 	cleanedKey := strings.TrimPrefix(key, "/")
 
 	data, err := s3o.S3Client.HeadObject(&s3.HeadObjectInput{
-		Bucket: aws.String(viper.GetString("storage.bucket")),
+		Bucket: aws.String(s3o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
 	if err != nil {
@@ -256,7 +254,7 @@ func (s3o *S3) List(prefix string) ([]Object, error) {
 	out := make([]Object, 0)
 
 	err := s3o.S3Client.ListObjectsPages(&s3.ListObjectsInput{
-		Bucket: aws.String(viper.GetString("storage.bucket")),
+		Bucket: aws.String(s3o.Config.Bucket),
 		Prefix: aws.String(prefix),
 	}, func(output *s3.ListObjectsOutput, _ bool) bool {
 		for _, obj := range output.Contents {

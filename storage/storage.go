@@ -51,6 +51,7 @@ type Config struct {
 	BaseURL  string `json:"base_url"`
 	Endpoint string `json:"endpoint"`
 	Region   string `json:"region"`
+	Keypath  string `json:"keypath"`
 }
 
 var storage Storage
@@ -64,12 +65,28 @@ func InitializeStorage(ctx context.Context) {
 		BaseURL:  viper.GetString("storage.base_url"),
 		Endpoint: viper.GetString("storage.endpoint"),
 		Region:   viper.GetString("storage.region"),
+		Keypath:  viper.GetString("storage.keypath"),
 	}
 
 	storage = configToStorage(ctx, baseConfig)
 
 	if storage == nil {
 		panic("Failed to initialize storage!")
+	}
+
+	if viper.IsSet("storage.reader.type") {
+		reader := configToStorage(ctx, Config{
+			Type:     viper.GetString("storage.reader.type"),
+			Bucket:   viper.GetString("storage.reader.bucket"),
+			Key:      viper.GetString("storage.reader.key"),
+			Secret:   viper.GetString("storage.reader.secret"),
+			BaseURL:  viper.GetString("storage.reader.base_url"),
+			Endpoint: viper.GetString("storage.reader.endpoint"),
+			Region:   viper.GetString("storage.reader.region"),
+			Keypath:  viper.GetString("storage.reader.keypath"),
+		})
+
+		storage = initializeWrapper(reader, storage)
 	}
 
 	slox.Info(ctx, "storage initialized", slog.String("type", baseConfig.Type))

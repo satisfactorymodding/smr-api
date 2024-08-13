@@ -30,7 +30,7 @@ To run the API, you will need to have a working Postgres, Redis and Storage. The
 start via:
 
 ```bash
-docker-compose -f docker-compose-dev.yml up -d
+docker compose up -d
 ```
 
 It is suggested you create a configuration file at `config.json` (but you can also use environment variables).
