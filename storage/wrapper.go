@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 )
@@ -21,7 +22,6 @@ func initializeWrapper(reader Storage, writer Storage) *Wrapper {
 
 func (w *Wrapper) Get(key string) (io.ReadCloser, error) {
 	get, err := w.Writer.Get(key)
-
 	if err != nil {
 		return w.Reader.Get(key)
 	}
@@ -71,7 +71,7 @@ func (w *Wrapper) Rename(from string, to string) error {
 		defer get.Close()
 		all, err := io.ReadAll(get)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed reading file: %w", err)
 		}
 
 		if _, err := w.Writer.Put(context.Background(), from, bytes.NewReader(all)); err != nil {
@@ -92,7 +92,6 @@ func (w *Wrapper) Delete(key string) error {
 
 func (w *Wrapper) Meta(key string) (*ObjectMeta, error) {
 	get, err := w.Writer.Meta(key)
-
 	if err != nil {
 		return w.Reader.Meta(key)
 	}
@@ -102,7 +101,6 @@ func (w *Wrapper) Meta(key string) (*ObjectMeta, error) {
 
 func (w *Wrapper) List(prefix string) ([]Object, error) {
 	get, err := w.Writer.List(prefix)
-
 	if err != nil {
 		return w.Reader.List(prefix)
 	}
