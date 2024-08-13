@@ -59,7 +59,8 @@ func downloadVersion(c echo.Context) error {
 		return c.String(404, "version not found")
 	}
 
-	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
+	if c.Request().Method == echo.GET &&
+		redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
 		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
@@ -100,7 +101,8 @@ func downloadModTarget(c echo.Context) error {
 		return c.String(404, "target not found, versionID:"+versionID+" target:"+target)
 	}
 
-	if redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
+	if c.Request().Method == echo.GET &&
+		redis.CanIncrement(c.RealIP(), "download", "version:"+versionID, time.Hour*4) {
 		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
