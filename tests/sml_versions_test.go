@@ -2,7 +2,6 @@ package tests
 
 import (
 	"bytes"
-	_ "embed"
 	"encoding/json"
 	"errors"
 	"io"
@@ -21,6 +20,8 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
+
+	_ "embed"
 )
 
 func init() {
