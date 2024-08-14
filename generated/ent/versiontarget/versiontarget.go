@@ -22,17 +22,17 @@ const (
 	FieldHash = "hash"
 	// FieldSize holds the string denoting the size field in the database.
 	FieldSize = "size"
-	// EdgeSmlVersion holds the string denoting the sml_version edge name in mutations.
-	EdgeSmlVersion = "sml_version"
+	// EdgeVersion holds the string denoting the version edge name in mutations.
+	EdgeVersion = "version"
 	// Table holds the table name of the versiontarget in the database.
 	Table = "version_targets"
-	// SmlVersionTable is the table that holds the sml_version relation/edge.
-	SmlVersionTable = "version_targets"
-	// SmlVersionInverseTable is the table name for the Version entity.
+	// VersionTable is the table that holds the version relation/edge.
+	VersionTable = "version_targets"
+	// VersionInverseTable is the table name for the Version entity.
 	// It exists in this package in order to avoid circular dependency with the "version" package.
-	SmlVersionInverseTable = "versions"
-	// SmlVersionColumn is the table column denoting the sml_version relation/edge.
-	SmlVersionColumn = "version_id"
+	VersionInverseTable = "versions"
+	// VersionColumn is the table column denoting the version relation/edge.
+	VersionColumn = "version_id"
 )
 
 // Columns holds all SQL columns for versiontarget fields.
@@ -93,16 +93,16 @@ func BySize(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSize, opts...).ToFunc()
 }
 
-// BySmlVersionField orders the results by sml_version field.
-func BySmlVersionField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByVersionField orders the results by version field.
+func ByVersionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSmlVersionStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newVersionStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newSmlVersionStep() *sqlgraph.Step {
+func newVersionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SmlVersionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, SmlVersionTable, SmlVersionColumn),
+		sqlgraph.To(VersionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, VersionTable, VersionColumn),
 	)
 }

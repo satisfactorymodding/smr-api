@@ -1,3 +1,14 @@
+-- modify "satisfactory_versions" table
+ALTER TABLE "satisfactory_versions"
+    DROP CONSTRAINT "satisfactory_versions_version_key",
+    ALTER COLUMN "id" TYPE character varying,
+    ALTER COLUMN "version" TYPE bigint,
+    ALTER COLUMN "engine_version" TYPE character varying,
+    ALTER COLUMN "engine_version" SET NOT NULL;
+-- create index "satisfactory_versions_version_key" to table: "satisfactory_versions"
+CREATE UNIQUE INDEX "satisfactory_versions_version_key" ON "satisfactory_versions" ("version");
+-- create index "satisfactoryversion_id" to table: "satisfactory_versions"
+CREATE UNIQUE INDEX "satisfactoryversion_id" ON "satisfactory_versions" ("id");
 -- modify "announcements" table
 ALTER TABLE "announcements"
     ALTER COLUMN "id" TYPE character varying,
@@ -111,47 +122,6 @@ ALTER TABLE "mod_tags"
     ALTER COLUMN "mod_id" TYPE character varying,
     ADD CONSTRAINT "mod_tags_mods_mod" FOREIGN KEY ("mod_id") REFERENCES "mods" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION,
     ADD CONSTRAINT "mod_tags_tags_tag" FOREIGN KEY ("tag_id") REFERENCES "tags" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION;
--- modify "sml_versions" table
-ALTER TABLE "sml_versions"
-    DROP CONSTRAINT "sml_versions_version_key",
-    ALTER COLUMN "id" TYPE character varying,
-    ALTER COLUMN "version" TYPE character varying,
-    ALTER COLUMN "version" SET NOT NULL,
-    ALTER COLUMN "satisfactory_version" TYPE bigint,
-    ALTER COLUMN "satisfactory_version" SET NOT NULL,
-    ALTER COLUMN "stability" TYPE character varying,
-    ALTER COLUMN "stability" SET NOT NULL,
-    ALTER COLUMN "date" SET NOT NULL,
-    ALTER COLUMN "link" TYPE character varying,
-    ALTER COLUMN "link" SET NOT NULL,
-    ALTER COLUMN "changelog" TYPE character varying,
-    ALTER COLUMN "changelog" SET NOT NULL,
-    ALTER COLUMN "bootstrap_version" TYPE character varying,
-    ALTER COLUMN "engine_version" TYPE character varying,
-    ALTER COLUMN "engine_version" SET NOT NULL;
--- create index "sml_versions_version_key" to table: "sml_versions"
-CREATE UNIQUE INDEX "sml_versions_version_key" ON "sml_versions" ("version");
--- create index "smlversion_deleted_at" to table: "sml_versions"
-CREATE INDEX "smlversion_deleted_at" ON "sml_versions" ("deleted_at");
--- create index "smlversion_id" to table: "sml_versions"
-CREATE UNIQUE INDEX "smlversion_id" ON "sml_versions" ("id");
--- modify "sml_version_targets" table
-ALTER TABLE "sml_version_targets"
-    DROP CONSTRAINT "sml_version_targets_pkey",
-    DROP CONSTRAINT "sml_version_targets_version_id_fkey",
-    ALTER COLUMN "version_id" TYPE character varying,
-    ALTER COLUMN "target_name" TYPE character varying,
-    ALTER COLUMN "link" TYPE character varying,
-    ALTER COLUMN "link" SET NOT NULL,
-    ALTER COLUMN "id" TYPE character varying,
-    ALTER COLUMN "id" SET NOT NULL,
-    ALTER COLUMN "id" DROP DEFAULT,
-    ADD PRIMARY KEY ("id"),
-    ADD CONSTRAINT "sml_version_targets_sml_versions_targets" FOREIGN KEY ("version_id") REFERENCES "sml_versions" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION;
--- create index "smlversiontarget_version_id_target_name" to table: "sml_version_targets"
-CREATE UNIQUE INDEX "smlversiontarget_version_id_target_name" ON "sml_version_targets" ("version_id", "target_name");
--- rename an index from "uix_sml_version_targets_id" to "smlversiontarget_id"
-ALTER INDEX "uix_sml_version_targets_id" RENAME TO "smlversiontarget_id";
 -- modify "user_groups" table
 ALTER TABLE "user_groups"
     DROP CONSTRAINT "user_groups_pkey",
@@ -203,8 +173,6 @@ ALTER TABLE "versions"
     ALTER COLUMN "mod_id" SET NOT NULL,
     ALTER COLUMN "version" TYPE character varying,
     ALTER COLUMN "version" SET NOT NULL,
-    ALTER COLUMN "sml_version" TYPE character varying,
-    ALTER COLUMN "sml_version" SET NOT NULL,
     ALTER COLUMN "changelog" TYPE character varying,
     ALTER COLUMN "downloads" TYPE bigint,
     ALTER COLUMN "downloads" SET NOT NULL,
@@ -222,6 +190,7 @@ ALTER TABLE "versions"
     ALTER COLUMN "version_minor" TYPE bigint,
     ALTER COLUMN "version_patch" TYPE bigint,
     ALTER COLUMN "hash" TYPE character varying,
+    ALTER COLUMN "game_version" SET NOT NULL,
     ADD CONSTRAINT "versions_mods_versions" FOREIGN KEY ("mod_id") REFERENCES "mods" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION;
 -- create index "version_id" to table: "versions"
 CREATE UNIQUE INDEX "version_id" ON "versions" ("id");

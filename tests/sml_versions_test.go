@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"io"
@@ -20,8 +21,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
-
-	_ "embed"
 )
 
 func init() {
@@ -289,12 +288,12 @@ func TestSMLVersions(t *testing.T) {
 				Link:       "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v3.7.0/SML-LinuxServer.zip",
 			},
 			{
-				TargetName: generated.TargetNameWindows,
-				Link:       "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v3.7.0/SML-Windows.zip",
-			},
-			{
 				TargetName: generated.TargetNameWindowsServer,
 				Link:       "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v3.7.0/SML-WindowsServer.zip",
+			},
+			{
+				TargetName: generated.TargetNameWindows,
+				Link:       "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v3.7.0/SML-Windows.zip",
 			},
 		}, queryResponse.GetSMLVersion.Targets)
 	})
@@ -347,12 +346,12 @@ func TestSMLVersions(t *testing.T) {
 				Link:       "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v3.7.0/SML-LinuxServer.zip",
 			},
 			{
-				TargetName: generated.TargetNameWindows,
-				Link:       "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v3.7.0/SML-Windows.zip",
-			},
-			{
 				TargetName: generated.TargetNameWindowsServer,
 				Link:       "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v3.7.0/SML-WindowsServer.zip",
+			},
+			{
+				TargetName: generated.TargetNameWindows,
+				Link:       "https://github.com/satisfactorymodding/SatisfactoryModLoader/releases/download/v3.7.0/SML-Windows.zip",
 			},
 		}, queryResponse.GetSMLVersions.SmlVersions[0].Targets)
 	})

@@ -18,12 +18,12 @@ import (
 // VersionTargetQuery is the builder for querying VersionTarget entities.
 type VersionTargetQuery struct {
 	config
-	ctx            *QueryContext
-	order          []versiontarget.OrderOption
-	inters         []Interceptor
-	predicates     []predicate.VersionTarget
-	withSmlVersion *VersionQuery
-	modifiers      []func(*sql.Selector)
+	ctx         *QueryContext
+	order       []versiontarget.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.VersionTarget
+	withVersion *VersionQuery
+	modifiers   []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -60,8 +60,8 @@ func (vtq *VersionTargetQuery) Order(o ...versiontarget.OrderOption) *VersionTar
 	return vtq
 }
 
-// QuerySmlVersion chains the current query on the "sml_version" edge.
-func (vtq *VersionTargetQuery) QuerySmlVersion() *VersionQuery {
+// QueryVersion chains the current query on the "version" edge.
+func (vtq *VersionTargetQuery) QueryVersion() *VersionQuery {
 	query := (&VersionClient{config: vtq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := vtq.prepareQuery(ctx); err != nil {
@@ -74,7 +74,7 @@ func (vtq *VersionTargetQuery) QuerySmlVersion() *VersionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(versiontarget.Table, versiontarget.FieldID, selector),
 			sqlgraph.To(version.Table, version.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, versiontarget.SmlVersionTable, versiontarget.SmlVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, versiontarget.VersionTable, versiontarget.VersionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(vtq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,26 +269,26 @@ func (vtq *VersionTargetQuery) Clone() *VersionTargetQuery {
 		return nil
 	}
 	return &VersionTargetQuery{
-		config:         vtq.config,
-		ctx:            vtq.ctx.Clone(),
-		order:          append([]versiontarget.OrderOption{}, vtq.order...),
-		inters:         append([]Interceptor{}, vtq.inters...),
-		predicates:     append([]predicate.VersionTarget{}, vtq.predicates...),
-		withSmlVersion: vtq.withSmlVersion.Clone(),
+		config:      vtq.config,
+		ctx:         vtq.ctx.Clone(),
+		order:       append([]versiontarget.OrderOption{}, vtq.order...),
+		inters:      append([]Interceptor{}, vtq.inters...),
+		predicates:  append([]predicate.VersionTarget{}, vtq.predicates...),
+		withVersion: vtq.withVersion.Clone(),
 		// clone intermediate query.
 		sql:  vtq.sql.Clone(),
 		path: vtq.path,
 	}
 }
 
-// WithSmlVersion tells the query-builder to eager-load the nodes that are connected to
-// the "sml_version" edge. The optional arguments are used to configure the query builder of the edge.
-func (vtq *VersionTargetQuery) WithSmlVersion(opts ...func(*VersionQuery)) *VersionTargetQuery {
+// WithVersion tells the query-builder to eager-load the nodes that are connected to
+// the "version" edge. The optional arguments are used to configure the query builder of the edge.
+func (vtq *VersionTargetQuery) WithVersion(opts ...func(*VersionQuery)) *VersionTargetQuery {
 	query := (&VersionClient{config: vtq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	vtq.withSmlVersion = query
+	vtq.withVersion = query
 	return vtq
 }
 
@@ -371,7 +371,7 @@ func (vtq *VersionTargetQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		nodes       = []*VersionTarget{}
 		_spec       = vtq.querySpec()
 		loadedTypes = [1]bool{
-			vtq.withSmlVersion != nil,
+			vtq.withVersion != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -395,16 +395,16 @@ func (vtq *VersionTargetQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := vtq.withSmlVersion; query != nil {
-		if err := vtq.loadSmlVersion(ctx, query, nodes, nil,
-			func(n *VersionTarget, e *Version) { n.Edges.SmlVersion = e }); err != nil {
+	if query := vtq.withVersion; query != nil {
+		if err := vtq.loadVersion(ctx, query, nodes, nil,
+			func(n *VersionTarget, e *Version) { n.Edges.Version = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (vtq *VersionTargetQuery) loadSmlVersion(ctx context.Context, query *VersionQuery, nodes []*VersionTarget, init func(*VersionTarget), assign func(*VersionTarget, *Version)) error {
+func (vtq *VersionTargetQuery) loadVersion(ctx context.Context, query *VersionQuery, nodes []*VersionTarget, init func(*VersionTarget), assign func(*VersionTarget, *Version)) error {
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*VersionTarget)
 	for i := range nodes {
@@ -462,7 +462,7 @@ func (vtq *VersionTargetQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if vtq.withSmlVersion != nil {
+		if vtq.withVersion != nil {
 			_spec.Node.AddColumnOnce(versiontarget.FieldVersionID)
 		}
 	}

@@ -20,7 +20,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/satisfactorymodding/smr-api/gql"
 )
 
 func init() {
@@ -82,47 +81,6 @@ func TestVersions(t *testing.T) {
 		testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
 
 		modID = createResponse.CreateMod.ID
-	})
-
-	t.Run("Create Dependable Mod", func(t *testing.T) {
-		createRequest := authRequest(`mutation CreateMod {
-			createMod(mod: {
-				name: "Moo",
-				short_description: "Beep beep I'm a sheep",
-				full_description: "Lorem ipsum dolor sit amet",
-				mod_reference: "LoadBalancers"
-			}) {
-				id
-			}
-		}`, token)
-
-		var createResponse struct {
-			CreateMod generated.Mod
-		}
-		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-		testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
-	})
-
-	t.Run("Create Mock SML Mod", func(t *testing.T) {
-		gql.DisallowedModReferences["sml"] = false
-		defer func() { gql.DisallowedModReferences["sml"] = true }()
-
-		createRequest := authRequest(`mutation CreateMod {
-			createMod(mod: {
-				name: "Fake SML",
-				short_description: "I am a fake SML mod",
-				full_description: "Lorem ipsum dolor sit amet",
-				mod_reference: "SML"
-			}) {
-				id
-			}
-		}`, token)
-
-		var createResponse struct {
-			CreateMod generated.Mod
-		}
-		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-		testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
 	})
 
 	var versionID string
@@ -315,20 +273,21 @@ func TestVersions(t *testing.T) {
 	})
 
 	t.Run("List Assets", func(t *testing.T) {
-		listRequest := authRequest(`{
-		  getModAssetList(modReference: "DigbyTool")
+		listRequest := authRequest(`query GetModAssetList($mod_reference: ModID!) {
+		  getModAssetList(modReference: $mod_reference)
 		}`, token)
+		listRequest.Var("mod_reference", modReference)
 
 		var listResponse struct {
 			GetModAssetList []string
 		}
 		testza.AssertNoError(t, client.Run(ctx, listRequest, &listResponse))
-		testza.AssertGreaterOrEqual(t, len(listResponse.GetModAssetList), 1)
+		testza.AssertGreater(t, len(listResponse.GetModAssetList), 0)
 	})
 
 	t.Run("List Dependencies", func(t *testing.T) {
-		listRequest := authRequest(`{
-		  getMods(filter: {references: ["DigbyTool"]}) {
+		listRequest := authRequest(`query getMods($mod_reference: String!) {
+		  getMods(filter: {references: [$mod_reference]}) {
 			count
 			mods {
 			  id
@@ -349,6 +308,7 @@ func TestVersions(t *testing.T) {
 			}
 		  }
 		}`, token)
+		listRequest.Var("mod_reference", modReference)
 
 		var listResponse struct {
 			GetMods *generated.GetMods
@@ -357,6 +317,5 @@ func TestVersions(t *testing.T) {
 		testza.AssertNoError(t, client.Run(ctx, listRequest, &listResponse))
 
 		testza.AssertEqual(t, "SML", listResponse.GetMods.Mods[0].Versions[0].Dependencies[0].Mod.ModReference)
-		testza.AssertEqual(t, "LoadBalancers", listResponse.GetMods.Mods[0].Versions[0].Dependencies[1].Mod.ModReference)
 	})
 }

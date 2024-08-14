@@ -91,15 +91,9 @@ func (vtc *VersionTargetCreate) SetNillableID(s *string) *VersionTargetCreate {
 	return vtc
 }
 
-// SetSmlVersionID sets the "sml_version" edge to the Version entity by ID.
-func (vtc *VersionTargetCreate) SetSmlVersionID(id string) *VersionTargetCreate {
-	vtc.mutation.SetSmlVersionID(id)
-	return vtc
-}
-
-// SetSmlVersion sets the "sml_version" edge to the Version entity.
-func (vtc *VersionTargetCreate) SetSmlVersion(v *Version) *VersionTargetCreate {
-	return vtc.SetSmlVersionID(v.ID)
+// SetVersion sets the "version" edge to the Version entity.
+func (vtc *VersionTargetCreate) SetVersion(v *Version) *VersionTargetCreate {
+	return vtc.SetVersionID(v.ID)
 }
 
 // Mutation returns the VersionTargetMutation object of the builder.
@@ -151,8 +145,8 @@ func (vtc *VersionTargetCreate) check() error {
 	if _, ok := vtc.mutation.TargetName(); !ok {
 		return &ValidationError{Name: "target_name", err: errors.New(`ent: missing required field "VersionTarget.target_name"`)}
 	}
-	if _, ok := vtc.mutation.SmlVersionID(); !ok {
-		return &ValidationError{Name: "sml_version", err: errors.New(`ent: missing required edge "VersionTarget.sml_version"`)}
+	if _, ok := vtc.mutation.VersionID(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`ent: missing required edge "VersionTarget.version"`)}
 	}
 	return nil
 }
@@ -206,12 +200,12 @@ func (vtc *VersionTargetCreate) createSpec() (*VersionTarget, *sqlgraph.CreateSp
 		_spec.SetField(versiontarget.FieldSize, field.TypeInt64, value)
 		_node.Size = value
 	}
-	if nodes := vtc.mutation.SmlVersionIDs(); len(nodes) > 0 {
+	if nodes := vtc.mutation.VersionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   versiontarget.SmlVersionTable,
-			Columns: []string{versiontarget.SmlVersionColumn},
+			Table:   versiontarget.VersionTable,
+			Columns: []string{versiontarget.VersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),

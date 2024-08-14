@@ -52,6 +52,7 @@ DROP INDEX "version_id";
 -- reverse: modify "versions" table
 ALTER TABLE "versions"
     DROP CONSTRAINT "versions_mods_versions",
+    ALTER COLUMN "game_version" DROP NOT NULL,
     ALTER COLUMN "hash" TYPE character(64),
     ALTER COLUMN "version_patch" TYPE integer,
     ALTER COLUMN "version_minor" TYPE integer,
@@ -69,8 +70,6 @@ ALTER TABLE "versions"
     ALTER COLUMN "downloads" DROP NOT NULL,
     ALTER COLUMN "downloads" DROP DEFAULT,
     ALTER COLUMN "changelog" TYPE text,
-    ALTER COLUMN "sml_version" TYPE character varying(16),
-    ALTER COLUMN "sml_version" DROP NOT NULL,
     ALTER COLUMN "version" TYPE character varying(16),
     ALTER COLUMN "version" DROP NOT NULL,
     ALTER COLUMN "mod_id" TYPE text,
@@ -120,47 +119,6 @@ ALTER TABLE "user_groups"
     ALTER COLUMN "user_id" TYPE character varying(14),
     ADD CONSTRAINT "user_groups_user_id_users_id" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION,
     ADD PRIMARY KEY ("user_id", "group_id");
--- reverse: rename an index from "uix_sml_version_targets_id" to "smlversiontarget_id"
-ALTER INDEX "smlversiontarget_id" RENAME TO "uix_sml_version_targets_id";
--- reverse: create index "smlversiontarget_version_id_target_name" to table: "sml_version_targets"
-DROP INDEX "smlversiontarget_version_id_target_name";
--- reverse: modify "sml_version_targets" table
-ALTER TABLE "sml_version_targets"
-    DROP CONSTRAINT "sml_version_targets_sml_versions_targets",
-    DROP CONSTRAINT "sml_version_targets_pkey",
-    ALTER COLUMN "id" TYPE character varying(14),
-    ALTER COLUMN "id" DROP NOT NULL,
-    ALTER COLUMN "id" SET DEFAULT generate_random_id(14),
-    ALTER COLUMN "link" TYPE text,
-    ALTER COLUMN "link" DROP NOT NULL,
-    ALTER COLUMN "target_name" TYPE character varying(16),
-    ALTER COLUMN "version_id" TYPE character varying(14),
-    ADD CONSTRAINT "sml_version_targets_version_id_fkey" FOREIGN KEY ("version_id") REFERENCES "sml_versions" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION,
-    ADD PRIMARY KEY ("version_id", "target_name");
--- reverse: create index "smlversion_id" to table: "sml_versions"
-DROP INDEX "smlversion_id";
--- reverse: create index "smlversion_deleted_at" to table: "sml_versions"
-DROP INDEX "smlversion_deleted_at";
--- reverse: create index "sml_versions_version_key" to table: "sml_versions"
-DROP INDEX "sml_versions_version_key";
--- reverse: modify "sml_versions" table
-ALTER TABLE "sml_versions"
-    ALTER COLUMN "engine_version" TYPE character varying(16),
-    ALTER COLUMN "engine_version" DROP NOT NULL,
-    ALTER COLUMN "bootstrap_version" TYPE character varying(14),
-    ALTER COLUMN "changelog" TYPE text,
-    ALTER COLUMN "changelog" DROP NOT NULL,
-    ALTER COLUMN "link" TYPE text,
-    ALTER COLUMN "link" DROP NOT NULL,
-    ALTER COLUMN "date" DROP NOT NULL,
-    ALTER COLUMN "stability" TYPE "version_stability",
-    ALTER COLUMN "stability" DROP NOT NULL,
-    ALTER COLUMN "satisfactory_version" TYPE integer,
-    ALTER COLUMN "satisfactory_version" DROP NOT NULL,
-    ALTER COLUMN "version" TYPE character varying(32),
-    ALTER COLUMN "version" DROP NOT NULL,
-    ALTER COLUMN "id" TYPE character varying(14),
-    ADD CONSTRAINT "sml_versions_version_key" UNIQUE ("version");
 -- reverse: modify "mod_tags" table
 ALTER TABLE "mod_tags"
     DROP CONSTRAINT "mod_tags_tags_tag",
@@ -274,3 +232,14 @@ ALTER TABLE "announcements"
     ALTER COLUMN "importance" TYPE text,
     ALTER COLUMN "message" TYPE text,
     ALTER COLUMN "id" TYPE character varying(14);
+-- reverse: create index "satisfactoryversion_id" to table: "satisfactory_versions"
+DROP INDEX "satisfactoryversion_id";
+-- reverse: create index "satisfactory_versions_version_key" to table: "satisfactory_versions"
+DROP INDEX "satisfactory_versions_version_key";
+-- reverse: modify "satisfactory_versions" table
+ALTER TABLE "satisfactory_versions"
+    ALTER COLUMN "engine_version" TYPE character varying(16),
+    ALTER COLUMN "engine_version" DROP NOT NULL,
+    ALTER COLUMN "version" TYPE integer,
+    ALTER COLUMN "id" TYPE character varying(14),
+    ADD CONSTRAINT "satisfactory_versions_version_key" UNIQUE ("version");

@@ -2502,15 +2502,15 @@ func (c *VersionTargetClient) GetX(ctx context.Context, id string) *VersionTarge
 	return obj
 }
 
-// QuerySmlVersion queries the sml_version edge of a VersionTarget.
-func (c *VersionTargetClient) QuerySmlVersion(vt *VersionTarget) *VersionQuery {
+// QueryVersion queries the version edge of a VersionTarget.
+func (c *VersionTargetClient) QueryVersion(vt *VersionTarget) *VersionQuery {
 	query := (&VersionClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := vt.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(versiontarget.Table, versiontarget.FieldID, id),
 			sqlgraph.To(version.Table, version.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, versiontarget.SmlVersionTable, versiontarget.SmlVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, versiontarget.VersionTable, versiontarget.VersionColumn),
 		)
 		fromV = sqlgraph.Neighbors(vt.driver.Dialect(), step)
 		return fromV, nil

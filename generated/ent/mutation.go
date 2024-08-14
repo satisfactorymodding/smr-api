@@ -17,8 +17,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modtag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversion"
-	"github.com/satisfactorymodding/smr-api/generated/ent/smlversiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
@@ -39,21 +38,20 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeAnnouncement      = "Announcement"
-	TypeGuide             = "Guide"
-	TypeGuideTag          = "GuideTag"
-	TypeMod               = "Mod"
-	TypeModTag            = "ModTag"
-	TypeSmlVersion        = "SmlVersion"
-	TypeSmlVersionTarget  = "SmlVersionTarget"
-	TypeTag               = "Tag"
-	TypeUser              = "User"
-	TypeUserGroup         = "UserGroup"
-	TypeUserMod           = "UserMod"
-	TypeUserSession       = "UserSession"
-	TypeVersion           = "Version"
-	TypeVersionDependency = "VersionDependency"
-	TypeVersionTarget     = "VersionTarget"
+	TypeAnnouncement        = "Announcement"
+	TypeGuide               = "Guide"
+	TypeGuideTag            = "GuideTag"
+	TypeMod                 = "Mod"
+	TypeModTag              = "ModTag"
+	TypeSatisfactoryVersion = "SatisfactoryVersion"
+	TypeTag                 = "Tag"
+	TypeUser                = "User"
+	TypeUserGroup           = "UserGroup"
+	TypeUserMod             = "UserMod"
+	TypeUserSession         = "UserSession"
+	TypeVersion             = "Version"
+	TypeVersionDependency   = "VersionDependency"
+	TypeVersionTarget       = "VersionTarget"
 )
 
 // AnnouncementMutation represents an operation that mutates the Announcement nodes in the graph.
@@ -4284,44 +4282,32 @@ func (m *ModTagMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown ModTag edge %s", name)
 }
 
-// SmlVersionMutation represents an operation that mutates the SmlVersion nodes in the graph.
-type SmlVersionMutation struct {
+// SatisfactoryVersionMutation represents an operation that mutates the SatisfactoryVersion nodes in the graph.
+type SatisfactoryVersionMutation struct {
 	config
-	op                      Op
-	typ                     string
-	id                      *string
-	created_at              *time.Time
-	updated_at              *time.Time
-	deleted_at              *time.Time
-	version                 *string
-	satisfactory_version    *int
-	addsatisfactory_version *int
-	stability               *util.Stability
-	date                    *time.Time
-	link                    *string
-	changelog               *string
-	bootstrap_version       *string
-	engine_version          *string
-	clearedFields           map[string]struct{}
-	targets                 map[string]struct{}
-	removedtargets          map[string]struct{}
-	clearedtargets          bool
-	done                    bool
-	oldValue                func(context.Context) (*SmlVersion, error)
-	predicates              []predicate.SmlVersion
+	op             Op
+	typ            string
+	id             *string
+	version        *int
+	addversion     *int
+	engine_version *string
+	clearedFields  map[string]struct{}
+	done           bool
+	oldValue       func(context.Context) (*SatisfactoryVersion, error)
+	predicates     []predicate.SatisfactoryVersion
 }
 
-var _ ent.Mutation = (*SmlVersionMutation)(nil)
+var _ ent.Mutation = (*SatisfactoryVersionMutation)(nil)
 
-// smlversionOption allows management of the mutation configuration using functional options.
-type smlversionOption func(*SmlVersionMutation)
+// satisfactoryversionOption allows management of the mutation configuration using functional options.
+type satisfactoryversionOption func(*SatisfactoryVersionMutation)
 
-// newSmlVersionMutation creates new mutation for the SmlVersion entity.
-func newSmlVersionMutation(c config, op Op, opts ...smlversionOption) *SmlVersionMutation {
-	m := &SmlVersionMutation{
+// newSatisfactoryVersionMutation creates new mutation for the SatisfactoryVersion entity.
+func newSatisfactoryVersionMutation(c config, op Op, opts ...satisfactoryversionOption) *SatisfactoryVersionMutation {
+	m := &SatisfactoryVersionMutation{
 		config:        c,
 		op:            op,
-		typ:           TypeSmlVersion,
+		typ:           TypeSatisfactoryVersion,
 		clearedFields: make(map[string]struct{}),
 	}
 	for _, opt := range opts {
@@ -4330,20 +4316,20 @@ func newSmlVersionMutation(c config, op Op, opts ...smlversionOption) *SmlVersio
 	return m
 }
 
-// withSmlVersionID sets the ID field of the mutation.
-func withSmlVersionID(id string) smlversionOption {
-	return func(m *SmlVersionMutation) {
+// withSatisfactoryVersionID sets the ID field of the mutation.
+func withSatisfactoryVersionID(id string) satisfactoryversionOption {
+	return func(m *SatisfactoryVersionMutation) {
 		var (
 			err   error
 			once  sync.Once
-			value *SmlVersion
+			value *SatisfactoryVersion
 		)
-		m.oldValue = func(ctx context.Context) (*SmlVersion, error) {
+		m.oldValue = func(ctx context.Context) (*SatisfactoryVersion, error) {
 			once.Do(func() {
 				if m.done {
 					err = errors.New("querying old values post mutation is not allowed")
 				} else {
-					value, err = m.Client().SmlVersion.Get(ctx, id)
+					value, err = m.Client().SatisfactoryVersion.Get(ctx, id)
 				}
 			})
 			return value, err
@@ -4352,10 +4338,10 @@ func withSmlVersionID(id string) smlversionOption {
 	}
 }
 
-// withSmlVersion sets the old SmlVersion of the mutation.
-func withSmlVersion(node *SmlVersion) smlversionOption {
-	return func(m *SmlVersionMutation) {
-		m.oldValue = func(context.Context) (*SmlVersion, error) {
+// withSatisfactoryVersion sets the old SatisfactoryVersion of the mutation.
+func withSatisfactoryVersion(node *SatisfactoryVersion) satisfactoryversionOption {
+	return func(m *SatisfactoryVersionMutation) {
+		m.oldValue = func(context.Context) (*SatisfactoryVersion, error) {
 			return node, nil
 		}
 		m.id = &node.ID
@@ -4364,7 +4350,7 @@ func withSmlVersion(node *SmlVersion) smlversionOption {
 
 // Client returns a new `ent.Client` from the mutation. If the mutation was
 // executed in a transaction (ent.Tx), a transactional client is returned.
-func (m SmlVersionMutation) Client() *Client {
+func (m SatisfactoryVersionMutation) Client() *Client {
 	client := &Client{config: m.config}
 	client.init()
 	return client
@@ -4372,7 +4358,7 @@ func (m SmlVersionMutation) Client() *Client {
 
 // Tx returns an `ent.Tx` for mutations that were executed in transactions;
 // it returns an error otherwise.
-func (m SmlVersionMutation) Tx() (*Tx, error) {
+func (m SatisfactoryVersionMutation) Tx() (*Tx, error) {
 	if _, ok := m.driver.(*txDriver); !ok {
 		return nil, errors.New("ent: mutation is not running in a transaction")
 	}
@@ -4382,14 +4368,14 @@ func (m SmlVersionMutation) Tx() (*Tx, error) {
 }
 
 // SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of SmlVersion entities.
-func (m *SmlVersionMutation) SetID(id string) {
+// operation is only accepted on creation of SatisfactoryVersion entities.
+func (m *SatisfactoryVersionMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *SmlVersionMutation) ID() (id string, exists bool) {
+func (m *SatisfactoryVersionMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -4400,7 +4386,7 @@ func (m *SmlVersionMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *SmlVersionMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *SatisfactoryVersionMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
@@ -4409,166 +4395,20 @@ func (m *SmlVersionMutation) IDs(ctx context.Context) ([]string, error) {
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().SmlVersion.Query().Where(m.predicates...).IDs(ctx)
+		return m.Client().SatisfactoryVersion.Query().Where(m.predicates...).IDs(ctx)
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (m *SmlVersionMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
-}
-
-// CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *SmlVersionMutation) CreatedAt() (r time.Time, exists bool) {
-	v := m.created_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCreatedAt returns the old "created_at" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
-	}
-	return oldValue.CreatedAt, nil
-}
-
-// ClearCreatedAt clears the value of the "created_at" field.
-func (m *SmlVersionMutation) ClearCreatedAt() {
-	m.created_at = nil
-	m.clearedFields[smlversion.FieldCreatedAt] = struct{}{}
-}
-
-// CreatedAtCleared returns if the "created_at" field was cleared in this mutation.
-func (m *SmlVersionMutation) CreatedAtCleared() bool {
-	_, ok := m.clearedFields[smlversion.FieldCreatedAt]
-	return ok
-}
-
-// ResetCreatedAt resets all changes to the "created_at" field.
-func (m *SmlVersionMutation) ResetCreatedAt() {
-	m.created_at = nil
-	delete(m.clearedFields, smlversion.FieldCreatedAt)
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (m *SmlVersionMutation) SetUpdatedAt(t time.Time) {
-	m.updated_at = &t
-}
-
-// UpdatedAt returns the value of the "updated_at" field in the mutation.
-func (m *SmlVersionMutation) UpdatedAt() (r time.Time, exists bool) {
-	v := m.updated_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldUpdatedAt returns the old "updated_at" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
-	}
-	return oldValue.UpdatedAt, nil
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (m *SmlVersionMutation) ClearUpdatedAt() {
-	m.updated_at = nil
-	m.clearedFields[smlversion.FieldUpdatedAt] = struct{}{}
-}
-
-// UpdatedAtCleared returns if the "updated_at" field was cleared in this mutation.
-func (m *SmlVersionMutation) UpdatedAtCleared() bool {
-	_, ok := m.clearedFields[smlversion.FieldUpdatedAt]
-	return ok
-}
-
-// ResetUpdatedAt resets all changes to the "updated_at" field.
-func (m *SmlVersionMutation) ResetUpdatedAt() {
-	m.updated_at = nil
-	delete(m.clearedFields, smlversion.FieldUpdatedAt)
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (m *SmlVersionMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *SmlVersionMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *SmlVersionMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[smlversion.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *SmlVersionMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[smlversion.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *SmlVersionMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, smlversion.FieldDeletedAt)
-}
-
 // SetVersion sets the "version" field.
-func (m *SmlVersionMutation) SetVersion(s string) {
-	m.version = &s
+func (m *SatisfactoryVersionMutation) SetVersion(i int) {
+	m.version = &i
+	m.addversion = nil
 }
 
 // Version returns the value of the "version" field in the mutation.
-func (m *SmlVersionMutation) Version() (r string, exists bool) {
+func (m *SatisfactoryVersionMutation) Version() (r int, exists bool) {
 	v := m.version
 	if v == nil {
 		return
@@ -4576,10 +4416,10 @@ func (m *SmlVersionMutation) Version() (r string, exists bool) {
 	return *v, true
 }
 
-// OldVersion returns the old "version" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
+// OldVersion returns the old "version" field's value of the SatisfactoryVersion entity.
+// If the SatisfactoryVersion object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldVersion(ctx context.Context) (v string, err error) {
+func (m *SatisfactoryVersionMutation) OldVersion(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
 	}
@@ -4593,267 +4433,37 @@ func (m *SmlVersionMutation) OldVersion(ctx context.Context) (v string, err erro
 	return oldValue.Version, nil
 }
 
-// ResetVersion resets all changes to the "version" field.
-func (m *SmlVersionMutation) ResetVersion() {
-	m.version = nil
-}
-
-// SetSatisfactoryVersion sets the "satisfactory_version" field.
-func (m *SmlVersionMutation) SetSatisfactoryVersion(i int) {
-	m.satisfactory_version = &i
-	m.addsatisfactory_version = nil
-}
-
-// SatisfactoryVersion returns the value of the "satisfactory_version" field in the mutation.
-func (m *SmlVersionMutation) SatisfactoryVersion() (r int, exists bool) {
-	v := m.satisfactory_version
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSatisfactoryVersion returns the old "satisfactory_version" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldSatisfactoryVersion(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSatisfactoryVersion is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSatisfactoryVersion requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSatisfactoryVersion: %w", err)
-	}
-	return oldValue.SatisfactoryVersion, nil
-}
-
-// AddSatisfactoryVersion adds i to the "satisfactory_version" field.
-func (m *SmlVersionMutation) AddSatisfactoryVersion(i int) {
-	if m.addsatisfactory_version != nil {
-		*m.addsatisfactory_version += i
+// AddVersion adds i to the "version" field.
+func (m *SatisfactoryVersionMutation) AddVersion(i int) {
+	if m.addversion != nil {
+		*m.addversion += i
 	} else {
-		m.addsatisfactory_version = &i
+		m.addversion = &i
 	}
 }
 
-// AddedSatisfactoryVersion returns the value that was added to the "satisfactory_version" field in this mutation.
-func (m *SmlVersionMutation) AddedSatisfactoryVersion() (r int, exists bool) {
-	v := m.addsatisfactory_version
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *SatisfactoryVersionMutation) AddedVersion() (r int, exists bool) {
+	v := m.addversion
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetSatisfactoryVersion resets all changes to the "satisfactory_version" field.
-func (m *SmlVersionMutation) ResetSatisfactoryVersion() {
-	m.satisfactory_version = nil
-	m.addsatisfactory_version = nil
-}
-
-// SetStability sets the "stability" field.
-func (m *SmlVersionMutation) SetStability(u util.Stability) {
-	m.stability = &u
-}
-
-// Stability returns the value of the "stability" field in the mutation.
-func (m *SmlVersionMutation) Stability() (r util.Stability, exists bool) {
-	v := m.stability
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStability returns the old "stability" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldStability(ctx context.Context) (v util.Stability, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldStability is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldStability requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStability: %w", err)
-	}
-	return oldValue.Stability, nil
-}
-
-// ResetStability resets all changes to the "stability" field.
-func (m *SmlVersionMutation) ResetStability() {
-	m.stability = nil
-}
-
-// SetDate sets the "date" field.
-func (m *SmlVersionMutation) SetDate(t time.Time) {
-	m.date = &t
-}
-
-// Date returns the value of the "date" field in the mutation.
-func (m *SmlVersionMutation) Date() (r time.Time, exists bool) {
-	v := m.date
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDate returns the old "date" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldDate(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDate is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDate requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDate: %w", err)
-	}
-	return oldValue.Date, nil
-}
-
-// ResetDate resets all changes to the "date" field.
-func (m *SmlVersionMutation) ResetDate() {
-	m.date = nil
-}
-
-// SetLink sets the "link" field.
-func (m *SmlVersionMutation) SetLink(s string) {
-	m.link = &s
-}
-
-// Link returns the value of the "link" field in the mutation.
-func (m *SmlVersionMutation) Link() (r string, exists bool) {
-	v := m.link
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLink returns the old "link" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldLink(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLink is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLink requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLink: %w", err)
-	}
-	return oldValue.Link, nil
-}
-
-// ResetLink resets all changes to the "link" field.
-func (m *SmlVersionMutation) ResetLink() {
-	m.link = nil
-}
-
-// SetChangelog sets the "changelog" field.
-func (m *SmlVersionMutation) SetChangelog(s string) {
-	m.changelog = &s
-}
-
-// Changelog returns the value of the "changelog" field in the mutation.
-func (m *SmlVersionMutation) Changelog() (r string, exists bool) {
-	v := m.changelog
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldChangelog returns the old "changelog" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldChangelog(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldChangelog is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldChangelog requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldChangelog: %w", err)
-	}
-	return oldValue.Changelog, nil
-}
-
-// ResetChangelog resets all changes to the "changelog" field.
-func (m *SmlVersionMutation) ResetChangelog() {
-	m.changelog = nil
-}
-
-// SetBootstrapVersion sets the "bootstrap_version" field.
-func (m *SmlVersionMutation) SetBootstrapVersion(s string) {
-	m.bootstrap_version = &s
-}
-
-// BootstrapVersion returns the value of the "bootstrap_version" field in the mutation.
-func (m *SmlVersionMutation) BootstrapVersion() (r string, exists bool) {
-	v := m.bootstrap_version
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldBootstrapVersion returns the old "bootstrap_version" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldBootstrapVersion(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldBootstrapVersion is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldBootstrapVersion requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldBootstrapVersion: %w", err)
-	}
-	return oldValue.BootstrapVersion, nil
-}
-
-// ClearBootstrapVersion clears the value of the "bootstrap_version" field.
-func (m *SmlVersionMutation) ClearBootstrapVersion() {
-	m.bootstrap_version = nil
-	m.clearedFields[smlversion.FieldBootstrapVersion] = struct{}{}
-}
-
-// BootstrapVersionCleared returns if the "bootstrap_version" field was cleared in this mutation.
-func (m *SmlVersionMutation) BootstrapVersionCleared() bool {
-	_, ok := m.clearedFields[smlversion.FieldBootstrapVersion]
-	return ok
-}
-
-// ResetBootstrapVersion resets all changes to the "bootstrap_version" field.
-func (m *SmlVersionMutation) ResetBootstrapVersion() {
-	m.bootstrap_version = nil
-	delete(m.clearedFields, smlversion.FieldBootstrapVersion)
+// ResetVersion resets all changes to the "version" field.
+func (m *SatisfactoryVersionMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
 }
 
 // SetEngineVersion sets the "engine_version" field.
-func (m *SmlVersionMutation) SetEngineVersion(s string) {
+func (m *SatisfactoryVersionMutation) SetEngineVersion(s string) {
 	m.engine_version = &s
 }
 
 // EngineVersion returns the value of the "engine_version" field in the mutation.
-func (m *SmlVersionMutation) EngineVersion() (r string, exists bool) {
+func (m *SatisfactoryVersionMutation) EngineVersion() (r string, exists bool) {
 	v := m.engine_version
 	if v == nil {
 		return
@@ -4861,10 +4471,10 @@ func (m *SmlVersionMutation) EngineVersion() (r string, exists bool) {
 	return *v, true
 }
 
-// OldEngineVersion returns the old "engine_version" field's value of the SmlVersion entity.
-// If the SmlVersion object wasn't provided to the builder, the object is fetched from the database.
+// OldEngineVersion returns the old "engine_version" field's value of the SatisfactoryVersion entity.
+// If the SatisfactoryVersion object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionMutation) OldEngineVersion(ctx context.Context) (v string, err error) {
+func (m *SatisfactoryVersionMutation) OldEngineVersion(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldEngineVersion is only allowed on UpdateOne operations")
 	}
@@ -4879,73 +4489,19 @@ func (m *SmlVersionMutation) OldEngineVersion(ctx context.Context) (v string, er
 }
 
 // ResetEngineVersion resets all changes to the "engine_version" field.
-func (m *SmlVersionMutation) ResetEngineVersion() {
+func (m *SatisfactoryVersionMutation) ResetEngineVersion() {
 	m.engine_version = nil
 }
 
-// AddTargetIDs adds the "targets" edge to the SmlVersionTarget entity by ids.
-func (m *SmlVersionMutation) AddTargetIDs(ids ...string) {
-	if m.targets == nil {
-		m.targets = make(map[string]struct{})
-	}
-	for i := range ids {
-		m.targets[ids[i]] = struct{}{}
-	}
-}
-
-// ClearTargets clears the "targets" edge to the SmlVersionTarget entity.
-func (m *SmlVersionMutation) ClearTargets() {
-	m.clearedtargets = true
-}
-
-// TargetsCleared reports if the "targets" edge to the SmlVersionTarget entity was cleared.
-func (m *SmlVersionMutation) TargetsCleared() bool {
-	return m.clearedtargets
-}
-
-// RemoveTargetIDs removes the "targets" edge to the SmlVersionTarget entity by IDs.
-func (m *SmlVersionMutation) RemoveTargetIDs(ids ...string) {
-	if m.removedtargets == nil {
-		m.removedtargets = make(map[string]struct{})
-	}
-	for i := range ids {
-		delete(m.targets, ids[i])
-		m.removedtargets[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedTargets returns the removed IDs of the "targets" edge to the SmlVersionTarget entity.
-func (m *SmlVersionMutation) RemovedTargetsIDs() (ids []string) {
-	for id := range m.removedtargets {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// TargetsIDs returns the "targets" edge IDs in the mutation.
-func (m *SmlVersionMutation) TargetsIDs() (ids []string) {
-	for id := range m.targets {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetTargets resets all changes to the "targets" edge.
-func (m *SmlVersionMutation) ResetTargets() {
-	m.targets = nil
-	m.clearedtargets = false
-	m.removedtargets = nil
-}
-
-// Where appends a list predicates to the SmlVersionMutation builder.
-func (m *SmlVersionMutation) Where(ps ...predicate.SmlVersion) {
+// Where appends a list predicates to the SatisfactoryVersionMutation builder.
+func (m *SatisfactoryVersionMutation) Where(ps ...predicate.SatisfactoryVersion) {
 	m.predicates = append(m.predicates, ps...)
 }
 
-// WhereP appends storage-level predicates to the SmlVersionMutation builder. Using this method,
+// WhereP appends storage-level predicates to the SatisfactoryVersionMutation builder. Using this method,
 // users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *SmlVersionMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.SmlVersion, len(ps))
+func (m *SatisfactoryVersionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.SatisfactoryVersion, len(ps))
 	for i := range ps {
 		p[i] = ps[i]
 	}
@@ -4953,57 +4509,30 @@ func (m *SmlVersionMutation) WhereP(ps ...func(*sql.Selector)) {
 }
 
 // Op returns the operation name.
-func (m *SmlVersionMutation) Op() Op {
+func (m *SatisfactoryVersionMutation) Op() Op {
 	return m.op
 }
 
 // SetOp allows setting the mutation operation.
-func (m *SmlVersionMutation) SetOp(op Op) {
+func (m *SatisfactoryVersionMutation) SetOp(op Op) {
 	m.op = op
 }
 
-// Type returns the node type of this mutation (SmlVersion).
-func (m *SmlVersionMutation) Type() string {
+// Type returns the node type of this mutation (SatisfactoryVersion).
+func (m *SatisfactoryVersionMutation) Type() string {
 	return m.typ
 }
 
 // Fields returns all fields that were changed during this mutation. Note that in
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
-func (m *SmlVersionMutation) Fields() []string {
-	fields := make([]string, 0, 11)
-	if m.created_at != nil {
-		fields = append(fields, smlversion.FieldCreatedAt)
-	}
-	if m.updated_at != nil {
-		fields = append(fields, smlversion.FieldUpdatedAt)
-	}
-	if m.deleted_at != nil {
-		fields = append(fields, smlversion.FieldDeletedAt)
-	}
+func (m *SatisfactoryVersionMutation) Fields() []string {
+	fields := make([]string, 0, 2)
 	if m.version != nil {
-		fields = append(fields, smlversion.FieldVersion)
-	}
-	if m.satisfactory_version != nil {
-		fields = append(fields, smlversion.FieldSatisfactoryVersion)
-	}
-	if m.stability != nil {
-		fields = append(fields, smlversion.FieldStability)
-	}
-	if m.date != nil {
-		fields = append(fields, smlversion.FieldDate)
-	}
-	if m.link != nil {
-		fields = append(fields, smlversion.FieldLink)
-	}
-	if m.changelog != nil {
-		fields = append(fields, smlversion.FieldChangelog)
-	}
-	if m.bootstrap_version != nil {
-		fields = append(fields, smlversion.FieldBootstrapVersion)
+		fields = append(fields, satisfactoryversion.FieldVersion)
 	}
 	if m.engine_version != nil {
-		fields = append(fields, smlversion.FieldEngineVersion)
+		fields = append(fields, satisfactoryversion.FieldEngineVersion)
 	}
 	return fields
 }
@@ -5011,29 +4540,11 @@ func (m *SmlVersionMutation) Fields() []string {
 // Field returns the value of a field with the given name. The second boolean
 // return value indicates that this field was not set, or was not defined in the
 // schema.
-func (m *SmlVersionMutation) Field(name string) (ent.Value, bool) {
+func (m *SatisfactoryVersionMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case smlversion.FieldCreatedAt:
-		return m.CreatedAt()
-	case smlversion.FieldUpdatedAt:
-		return m.UpdatedAt()
-	case smlversion.FieldDeletedAt:
-		return m.DeletedAt()
-	case smlversion.FieldVersion:
+	case satisfactoryversion.FieldVersion:
 		return m.Version()
-	case smlversion.FieldSatisfactoryVersion:
-		return m.SatisfactoryVersion()
-	case smlversion.FieldStability:
-		return m.Stability()
-	case smlversion.FieldDate:
-		return m.Date()
-	case smlversion.FieldLink:
-		return m.Link()
-	case smlversion.FieldChangelog:
-		return m.Changelog()
-	case smlversion.FieldBootstrapVersion:
-		return m.BootstrapVersion()
-	case smlversion.FieldEngineVersion:
+	case satisfactoryversion.FieldEngineVersion:
 		return m.EngineVersion()
 	}
 	return nil, false
@@ -5042,110 +4553,29 @@ func (m *SmlVersionMutation) Field(name string) (ent.Value, bool) {
 // OldField returns the old value of the field from the database. An error is
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
-func (m *SmlVersionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+func (m *SatisfactoryVersionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case smlversion.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
-	case smlversion.FieldUpdatedAt:
-		return m.OldUpdatedAt(ctx)
-	case smlversion.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
-	case smlversion.FieldVersion:
+	case satisfactoryversion.FieldVersion:
 		return m.OldVersion(ctx)
-	case smlversion.FieldSatisfactoryVersion:
-		return m.OldSatisfactoryVersion(ctx)
-	case smlversion.FieldStability:
-		return m.OldStability(ctx)
-	case smlversion.FieldDate:
-		return m.OldDate(ctx)
-	case smlversion.FieldLink:
-		return m.OldLink(ctx)
-	case smlversion.FieldChangelog:
-		return m.OldChangelog(ctx)
-	case smlversion.FieldBootstrapVersion:
-		return m.OldBootstrapVersion(ctx)
-	case smlversion.FieldEngineVersion:
+	case satisfactoryversion.FieldEngineVersion:
 		return m.OldEngineVersion(ctx)
 	}
-	return nil, fmt.Errorf("unknown SmlVersion field %s", name)
+	return nil, fmt.Errorf("unknown SatisfactoryVersion field %s", name)
 }
 
 // SetField sets the value of a field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *SmlVersionMutation) SetField(name string, value ent.Value) error {
+func (m *SatisfactoryVersionMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case smlversion.FieldCreatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatedAt(v)
-		return nil
-	case smlversion.FieldUpdatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetUpdatedAt(v)
-		return nil
-	case smlversion.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
-		return nil
-	case smlversion.FieldVersion:
-		v, ok := value.(string)
+	case satisfactoryversion.FieldVersion:
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVersion(v)
 		return nil
-	case smlversion.FieldSatisfactoryVersion:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSatisfactoryVersion(v)
-		return nil
-	case smlversion.FieldStability:
-		v, ok := value.(util.Stability)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStability(v)
-		return nil
-	case smlversion.FieldDate:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDate(v)
-		return nil
-	case smlversion.FieldLink:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLink(v)
-		return nil
-	case smlversion.FieldChangelog:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetChangelog(v)
-		return nil
-	case smlversion.FieldBootstrapVersion:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetBootstrapVersion(v)
-		return nil
-	case smlversion.FieldEngineVersion:
+	case satisfactoryversion.FieldEngineVersion:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
@@ -5153,15 +4583,15 @@ func (m *SmlVersionMutation) SetField(name string, value ent.Value) error {
 		m.SetEngineVersion(v)
 		return nil
 	}
-	return fmt.Errorf("unknown SmlVersion field %s", name)
+	return fmt.Errorf("unknown SatisfactoryVersion field %s", name)
 }
 
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
-func (m *SmlVersionMutation) AddedFields() []string {
+func (m *SatisfactoryVersionMutation) AddedFields() []string {
 	var fields []string
-	if m.addsatisfactory_version != nil {
-		fields = append(fields, smlversion.FieldSatisfactoryVersion)
+	if m.addversion != nil {
+		fields = append(fields, satisfactoryversion.FieldVersion)
 	}
 	return fields
 }
@@ -5169,10 +4599,10 @@ func (m *SmlVersionMutation) AddedFields() []string {
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
-func (m *SmlVersionMutation) AddedField(name string) (ent.Value, bool) {
+func (m *SatisfactoryVersionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case smlversion.FieldSatisfactoryVersion:
-		return m.AddedSatisfactoryVersion()
+	case satisfactoryversion.FieldVersion:
+		return m.AddedVersion()
 	}
 	return nil, false
 }
@@ -5180,695 +4610,98 @@ func (m *SmlVersionMutation) AddedField(name string) (ent.Value, bool) {
 // AddField adds the value to the field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *SmlVersionMutation) AddField(name string, value ent.Value) error {
+func (m *SatisfactoryVersionMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case smlversion.FieldSatisfactoryVersion:
+	case satisfactoryversion.FieldVersion:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.AddSatisfactoryVersion(v)
+		m.AddVersion(v)
 		return nil
 	}
-	return fmt.Errorf("unknown SmlVersion numeric field %s", name)
+	return fmt.Errorf("unknown SatisfactoryVersion numeric field %s", name)
 }
 
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
-func (m *SmlVersionMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(smlversion.FieldCreatedAt) {
-		fields = append(fields, smlversion.FieldCreatedAt)
-	}
-	if m.FieldCleared(smlversion.FieldUpdatedAt) {
-		fields = append(fields, smlversion.FieldUpdatedAt)
-	}
-	if m.FieldCleared(smlversion.FieldDeletedAt) {
-		fields = append(fields, smlversion.FieldDeletedAt)
-	}
-	if m.FieldCleared(smlversion.FieldBootstrapVersion) {
-		fields = append(fields, smlversion.FieldBootstrapVersion)
-	}
-	return fields
+func (m *SatisfactoryVersionMutation) ClearedFields() []string {
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
 // cleared in this mutation.
-func (m *SmlVersionMutation) FieldCleared(name string) bool {
+func (m *SatisfactoryVersionMutation) FieldCleared(name string) bool {
 	_, ok := m.clearedFields[name]
 	return ok
 }
 
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
-func (m *SmlVersionMutation) ClearField(name string) error {
-	switch name {
-	case smlversion.FieldCreatedAt:
-		m.ClearCreatedAt()
-		return nil
-	case smlversion.FieldUpdatedAt:
-		m.ClearUpdatedAt()
-		return nil
-	case smlversion.FieldDeletedAt:
-		m.ClearDeletedAt()
-		return nil
-	case smlversion.FieldBootstrapVersion:
-		m.ClearBootstrapVersion()
-		return nil
-	}
-	return fmt.Errorf("unknown SmlVersion nullable field %s", name)
+func (m *SatisfactoryVersionMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown SatisfactoryVersion nullable field %s", name)
 }
 
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
-func (m *SmlVersionMutation) ResetField(name string) error {
+func (m *SatisfactoryVersionMutation) ResetField(name string) error {
 	switch name {
-	case smlversion.FieldCreatedAt:
-		m.ResetCreatedAt()
-		return nil
-	case smlversion.FieldUpdatedAt:
-		m.ResetUpdatedAt()
-		return nil
-	case smlversion.FieldDeletedAt:
-		m.ResetDeletedAt()
-		return nil
-	case smlversion.FieldVersion:
+	case satisfactoryversion.FieldVersion:
 		m.ResetVersion()
 		return nil
-	case smlversion.FieldSatisfactoryVersion:
-		m.ResetSatisfactoryVersion()
-		return nil
-	case smlversion.FieldStability:
-		m.ResetStability()
-		return nil
-	case smlversion.FieldDate:
-		m.ResetDate()
-		return nil
-	case smlversion.FieldLink:
-		m.ResetLink()
-		return nil
-	case smlversion.FieldChangelog:
-		m.ResetChangelog()
-		return nil
-	case smlversion.FieldBootstrapVersion:
-		m.ResetBootstrapVersion()
-		return nil
-	case smlversion.FieldEngineVersion:
+	case satisfactoryversion.FieldEngineVersion:
 		m.ResetEngineVersion()
 		return nil
 	}
-	return fmt.Errorf("unknown SmlVersion field %s", name)
+	return fmt.Errorf("unknown SatisfactoryVersion field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
-func (m *SmlVersionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.targets != nil {
-		edges = append(edges, smlversion.EdgeTargets)
-	}
+func (m *SatisfactoryVersionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
-func (m *SmlVersionMutation) AddedIDs(name string) []ent.Value {
-	switch name {
-	case smlversion.EdgeTargets:
-		ids := make([]ent.Value, 0, len(m.targets))
-		for id := range m.targets {
-			ids = append(ids, id)
-		}
-		return ids
-	}
+func (m *SatisfactoryVersionMutation) AddedIDs(name string) []ent.Value {
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
-func (m *SmlVersionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.removedtargets != nil {
-		edges = append(edges, smlversion.EdgeTargets)
-	}
+func (m *SatisfactoryVersionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
-func (m *SmlVersionMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case smlversion.EdgeTargets:
-		ids := make([]ent.Value, 0, len(m.removedtargets))
-		for id := range m.removedtargets {
-			ids = append(ids, id)
-		}
-		return ids
-	}
+func (m *SatisfactoryVersionMutation) RemovedIDs(name string) []ent.Value {
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *SmlVersionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedtargets {
-		edges = append(edges, smlversion.EdgeTargets)
-	}
+func (m *SatisfactoryVersionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
-func (m *SmlVersionMutation) EdgeCleared(name string) bool {
-	switch name {
-	case smlversion.EdgeTargets:
-		return m.clearedtargets
-	}
+func (m *SatisfactoryVersionMutation) EdgeCleared(name string) bool {
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
-func (m *SmlVersionMutation) ClearEdge(name string) error {
-	switch name {
-	}
-	return fmt.Errorf("unknown SmlVersion unique edge %s", name)
+func (m *SatisfactoryVersionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown SatisfactoryVersion unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
-func (m *SmlVersionMutation) ResetEdge(name string) error {
-	switch name {
-	case smlversion.EdgeTargets:
-		m.ResetTargets()
-		return nil
-	}
-	return fmt.Errorf("unknown SmlVersion edge %s", name)
-}
-
-// SmlVersionTargetMutation represents an operation that mutates the SmlVersionTarget nodes in the graph.
-type SmlVersionTargetMutation struct {
-	config
-	op                 Op
-	typ                string
-	id                 *string
-	target_name        *string
-	link               *string
-	clearedFields      map[string]struct{}
-	sml_version        *string
-	clearedsml_version bool
-	done               bool
-	oldValue           func(context.Context) (*SmlVersionTarget, error)
-	predicates         []predicate.SmlVersionTarget
-}
-
-var _ ent.Mutation = (*SmlVersionTargetMutation)(nil)
-
-// smlversiontargetOption allows management of the mutation configuration using functional options.
-type smlversiontargetOption func(*SmlVersionTargetMutation)
-
-// newSmlVersionTargetMutation creates new mutation for the SmlVersionTarget entity.
-func newSmlVersionTargetMutation(c config, op Op, opts ...smlversiontargetOption) *SmlVersionTargetMutation {
-	m := &SmlVersionTargetMutation{
-		config:        c,
-		op:            op,
-		typ:           TypeSmlVersionTarget,
-		clearedFields: make(map[string]struct{}),
-	}
-	for _, opt := range opts {
-		opt(m)
-	}
-	return m
-}
-
-// withSmlVersionTargetID sets the ID field of the mutation.
-func withSmlVersionTargetID(id string) smlversiontargetOption {
-	return func(m *SmlVersionTargetMutation) {
-		var (
-			err   error
-			once  sync.Once
-			value *SmlVersionTarget
-		)
-		m.oldValue = func(ctx context.Context) (*SmlVersionTarget, error) {
-			once.Do(func() {
-				if m.done {
-					err = errors.New("querying old values post mutation is not allowed")
-				} else {
-					value, err = m.Client().SmlVersionTarget.Get(ctx, id)
-				}
-			})
-			return value, err
-		}
-		m.id = &id
-	}
-}
-
-// withSmlVersionTarget sets the old SmlVersionTarget of the mutation.
-func withSmlVersionTarget(node *SmlVersionTarget) smlversiontargetOption {
-	return func(m *SmlVersionTargetMutation) {
-		m.oldValue = func(context.Context) (*SmlVersionTarget, error) {
-			return node, nil
-		}
-		m.id = &node.ID
-	}
-}
-
-// Client returns a new `ent.Client` from the mutation. If the mutation was
-// executed in a transaction (ent.Tx), a transactional client is returned.
-func (m SmlVersionTargetMutation) Client() *Client {
-	client := &Client{config: m.config}
-	client.init()
-	return client
-}
-
-// Tx returns an `ent.Tx` for mutations that were executed in transactions;
-// it returns an error otherwise.
-func (m SmlVersionTargetMutation) Tx() (*Tx, error) {
-	if _, ok := m.driver.(*txDriver); !ok {
-		return nil, errors.New("ent: mutation is not running in a transaction")
-	}
-	tx := &Tx{config: m.config}
-	tx.init()
-	return tx, nil
-}
-
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of SmlVersionTarget entities.
-func (m *SmlVersionTargetMutation) SetID(id string) {
-	m.id = &id
-}
-
-// ID returns the ID value in the mutation. Note that the ID is only available
-// if it was provided to the builder or after it was returned from the database.
-func (m *SmlVersionTargetMutation) ID() (id string, exists bool) {
-	if m.id == nil {
-		return
-	}
-	return *m.id, true
-}
-
-// IDs queries the database and returns the entity ids that match the mutation's predicate.
-// That means, if the mutation is applied within a transaction with an isolation level such
-// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
-// or updated by the mutation.
-func (m *SmlVersionTargetMutation) IDs(ctx context.Context) ([]string, error) {
-	switch {
-	case m.op.Is(OpUpdateOne | OpDeleteOne):
-		id, exists := m.ID()
-		if exists {
-			return []string{id}, nil
-		}
-		fallthrough
-	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().SmlVersionTarget.Query().Where(m.predicates...).IDs(ctx)
-	default:
-		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
-	}
-}
-
-// SetVersionID sets the "version_id" field.
-func (m *SmlVersionTargetMutation) SetVersionID(s string) {
-	m.sml_version = &s
-}
-
-// VersionID returns the value of the "version_id" field in the mutation.
-func (m *SmlVersionTargetMutation) VersionID() (r string, exists bool) {
-	v := m.sml_version
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldVersionID returns the old "version_id" field's value of the SmlVersionTarget entity.
-// If the SmlVersionTarget object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionTargetMutation) OldVersionID(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldVersionID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldVersionID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldVersionID: %w", err)
-	}
-	return oldValue.VersionID, nil
-}
-
-// ResetVersionID resets all changes to the "version_id" field.
-func (m *SmlVersionTargetMutation) ResetVersionID() {
-	m.sml_version = nil
-}
-
-// SetTargetName sets the "target_name" field.
-func (m *SmlVersionTargetMutation) SetTargetName(s string) {
-	m.target_name = &s
-}
-
-// TargetName returns the value of the "target_name" field in the mutation.
-func (m *SmlVersionTargetMutation) TargetName() (r string, exists bool) {
-	v := m.target_name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldTargetName returns the old "target_name" field's value of the SmlVersionTarget entity.
-// If the SmlVersionTarget object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionTargetMutation) OldTargetName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldTargetName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldTargetName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTargetName: %w", err)
-	}
-	return oldValue.TargetName, nil
-}
-
-// ResetTargetName resets all changes to the "target_name" field.
-func (m *SmlVersionTargetMutation) ResetTargetName() {
-	m.target_name = nil
-}
-
-// SetLink sets the "link" field.
-func (m *SmlVersionTargetMutation) SetLink(s string) {
-	m.link = &s
-}
-
-// Link returns the value of the "link" field in the mutation.
-func (m *SmlVersionTargetMutation) Link() (r string, exists bool) {
-	v := m.link
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLink returns the old "link" field's value of the SmlVersionTarget entity.
-// If the SmlVersionTarget object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SmlVersionTargetMutation) OldLink(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLink is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLink requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLink: %w", err)
-	}
-	return oldValue.Link, nil
-}
-
-// ResetLink resets all changes to the "link" field.
-func (m *SmlVersionTargetMutation) ResetLink() {
-	m.link = nil
-}
-
-// SetSmlVersionID sets the "sml_version" edge to the SmlVersion entity by id.
-func (m *SmlVersionTargetMutation) SetSmlVersionID(id string) {
-	m.sml_version = &id
-}
-
-// ClearSmlVersion clears the "sml_version" edge to the SmlVersion entity.
-func (m *SmlVersionTargetMutation) ClearSmlVersion() {
-	m.clearedsml_version = true
-	m.clearedFields[smlversiontarget.FieldVersionID] = struct{}{}
-}
-
-// SmlVersionCleared reports if the "sml_version" edge to the SmlVersion entity was cleared.
-func (m *SmlVersionTargetMutation) SmlVersionCleared() bool {
-	return m.clearedsml_version
-}
-
-// SmlVersionID returns the "sml_version" edge ID in the mutation.
-func (m *SmlVersionTargetMutation) SmlVersionID() (id string, exists bool) {
-	if m.sml_version != nil {
-		return *m.sml_version, true
-	}
-	return
-}
-
-// SmlVersionIDs returns the "sml_version" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// SmlVersionID instead. It exists only for internal usage by the builders.
-func (m *SmlVersionTargetMutation) SmlVersionIDs() (ids []string) {
-	if id := m.sml_version; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetSmlVersion resets all changes to the "sml_version" edge.
-func (m *SmlVersionTargetMutation) ResetSmlVersion() {
-	m.sml_version = nil
-	m.clearedsml_version = false
-}
-
-// Where appends a list predicates to the SmlVersionTargetMutation builder.
-func (m *SmlVersionTargetMutation) Where(ps ...predicate.SmlVersionTarget) {
-	m.predicates = append(m.predicates, ps...)
-}
-
-// WhereP appends storage-level predicates to the SmlVersionTargetMutation builder. Using this method,
-// users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *SmlVersionTargetMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.SmlVersionTarget, len(ps))
-	for i := range ps {
-		p[i] = ps[i]
-	}
-	m.Where(p...)
-}
-
-// Op returns the operation name.
-func (m *SmlVersionTargetMutation) Op() Op {
-	return m.op
-}
-
-// SetOp allows setting the mutation operation.
-func (m *SmlVersionTargetMutation) SetOp(op Op) {
-	m.op = op
-}
-
-// Type returns the node type of this mutation (SmlVersionTarget).
-func (m *SmlVersionTargetMutation) Type() string {
-	return m.typ
-}
-
-// Fields returns all fields that were changed during this mutation. Note that in
-// order to get all numeric fields that were incremented/decremented, call
-// AddedFields().
-func (m *SmlVersionTargetMutation) Fields() []string {
-	fields := make([]string, 0, 3)
-	if m.sml_version != nil {
-		fields = append(fields, smlversiontarget.FieldVersionID)
-	}
-	if m.target_name != nil {
-		fields = append(fields, smlversiontarget.FieldTargetName)
-	}
-	if m.link != nil {
-		fields = append(fields, smlversiontarget.FieldLink)
-	}
-	return fields
-}
-
-// Field returns the value of a field with the given name. The second boolean
-// return value indicates that this field was not set, or was not defined in the
-// schema.
-func (m *SmlVersionTargetMutation) Field(name string) (ent.Value, bool) {
-	switch name {
-	case smlversiontarget.FieldVersionID:
-		return m.VersionID()
-	case smlversiontarget.FieldTargetName:
-		return m.TargetName()
-	case smlversiontarget.FieldLink:
-		return m.Link()
-	}
-	return nil, false
-}
-
-// OldField returns the old value of the field from the database. An error is
-// returned if the mutation operation is not UpdateOne, or the query to the
-// database failed.
-func (m *SmlVersionTargetMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
-	switch name {
-	case smlversiontarget.FieldVersionID:
-		return m.OldVersionID(ctx)
-	case smlversiontarget.FieldTargetName:
-		return m.OldTargetName(ctx)
-	case smlversiontarget.FieldLink:
-		return m.OldLink(ctx)
-	}
-	return nil, fmt.Errorf("unknown SmlVersionTarget field %s", name)
-}
-
-// SetField sets the value of a field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *SmlVersionTargetMutation) SetField(name string, value ent.Value) error {
-	switch name {
-	case smlversiontarget.FieldVersionID:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetVersionID(v)
-		return nil
-	case smlversiontarget.FieldTargetName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetTargetName(v)
-		return nil
-	case smlversiontarget.FieldLink:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLink(v)
-		return nil
-	}
-	return fmt.Errorf("unknown SmlVersionTarget field %s", name)
-}
-
-// AddedFields returns all numeric fields that were incremented/decremented during
-// this mutation.
-func (m *SmlVersionTargetMutation) AddedFields() []string {
-	return nil
-}
-
-// AddedField returns the numeric value that was incremented/decremented on a field
-// with the given name. The second boolean return value indicates that this field
-// was not set, or was not defined in the schema.
-func (m *SmlVersionTargetMutation) AddedField(name string) (ent.Value, bool) {
-	return nil, false
-}
-
-// AddField adds the value to the field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *SmlVersionTargetMutation) AddField(name string, value ent.Value) error {
-	switch name {
-	}
-	return fmt.Errorf("unknown SmlVersionTarget numeric field %s", name)
-}
-
-// ClearedFields returns all nullable fields that were cleared during this
-// mutation.
-func (m *SmlVersionTargetMutation) ClearedFields() []string {
-	return nil
-}
-
-// FieldCleared returns a boolean indicating if a field with the given name was
-// cleared in this mutation.
-func (m *SmlVersionTargetMutation) FieldCleared(name string) bool {
-	_, ok := m.clearedFields[name]
-	return ok
-}
-
-// ClearField clears the value of the field with the given name. It returns an
-// error if the field is not defined in the schema.
-func (m *SmlVersionTargetMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown SmlVersionTarget nullable field %s", name)
-}
-
-// ResetField resets all changes in the mutation for the field with the given name.
-// It returns an error if the field is not defined in the schema.
-func (m *SmlVersionTargetMutation) ResetField(name string) error {
-	switch name {
-	case smlversiontarget.FieldVersionID:
-		m.ResetVersionID()
-		return nil
-	case smlversiontarget.FieldTargetName:
-		m.ResetTargetName()
-		return nil
-	case smlversiontarget.FieldLink:
-		m.ResetLink()
-		return nil
-	}
-	return fmt.Errorf("unknown SmlVersionTarget field %s", name)
-}
-
-// AddedEdges returns all edge names that were set/added in this mutation.
-func (m *SmlVersionTargetMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.sml_version != nil {
-		edges = append(edges, smlversiontarget.EdgeSmlVersion)
-	}
-	return edges
-}
-
-// AddedIDs returns all IDs (to other nodes) that were added for the given edge
-// name in this mutation.
-func (m *SmlVersionTargetMutation) AddedIDs(name string) []ent.Value {
-	switch name {
-	case smlversiontarget.EdgeSmlVersion:
-		if id := m.sml_version; id != nil {
-			return []ent.Value{*id}
-		}
-	}
-	return nil
-}
-
-// RemovedEdges returns all edge names that were removed in this mutation.
-func (m *SmlVersionTargetMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
-	return edges
-}
-
-// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
-// the given name in this mutation.
-func (m *SmlVersionTargetMutation) RemovedIDs(name string) []ent.Value {
-	return nil
-}
-
-// ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *SmlVersionTargetMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedsml_version {
-		edges = append(edges, smlversiontarget.EdgeSmlVersion)
-	}
-	return edges
-}
-
-// EdgeCleared returns a boolean which indicates if the edge with the given name
-// was cleared in this mutation.
-func (m *SmlVersionTargetMutation) EdgeCleared(name string) bool {
-	switch name {
-	case smlversiontarget.EdgeSmlVersion:
-		return m.clearedsml_version
-	}
-	return false
-}
-
-// ClearEdge clears the value of the edge with the given name. It returns an error
-// if that edge is not defined in the schema.
-func (m *SmlVersionTargetMutation) ClearEdge(name string) error {
-	switch name {
-	case smlversiontarget.EdgeSmlVersion:
-		m.ClearSmlVersion()
-		return nil
-	}
-	return fmt.Errorf("unknown SmlVersionTarget unique edge %s", name)
-}
-
-// ResetEdge resets all changes to the edge with the given name in this mutation.
-// It returns an error if the edge is not defined in the schema.
-func (m *SmlVersionTargetMutation) ResetEdge(name string) error {
-	switch name {
-	case smlversiontarget.EdgeSmlVersion:
-		m.ResetSmlVersion()
-		return nil
-	}
-	return fmt.Errorf("unknown SmlVersionTarget edge %s", name)
+func (m *SatisfactoryVersionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown SatisfactoryVersion edge %s", name)
 }
 
 // TagMutation represents an operation that mutates the Tag nodes in the graph.
@@ -9894,7 +8727,7 @@ type VersionMutation struct {
 	updated_at          *time.Time
 	deleted_at          *time.Time
 	version             *string
-	sml_version         *string
+	game_version        *string
 	changelog           *string
 	downloads           *uint
 	adddownloads        *int
@@ -10252,40 +9085,40 @@ func (m *VersionMutation) ResetVersion() {
 	m.version = nil
 }
 
-// SetSmlVersion sets the "sml_version" field.
-func (m *VersionMutation) SetSmlVersion(s string) {
-	m.sml_version = &s
+// SetGameVersion sets the "game_version" field.
+func (m *VersionMutation) SetGameVersion(s string) {
+	m.game_version = &s
 }
 
-// SmlVersion returns the value of the "sml_version" field in the mutation.
-func (m *VersionMutation) SmlVersion() (r string, exists bool) {
-	v := m.sml_version
+// GameVersion returns the value of the "game_version" field in the mutation.
+func (m *VersionMutation) GameVersion() (r string, exists bool) {
+	v := m.game_version
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSmlVersion returns the old "sml_version" field's value of the Version entity.
+// OldGameVersion returns the old "game_version" field's value of the Version entity.
 // If the Version object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *VersionMutation) OldSmlVersion(ctx context.Context) (v string, err error) {
+func (m *VersionMutation) OldGameVersion(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSmlVersion is only allowed on UpdateOne operations")
+		return v, errors.New("OldGameVersion is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSmlVersion requires an ID field in the mutation")
+		return v, errors.New("OldGameVersion requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSmlVersion: %w", err)
+		return v, fmt.Errorf("querying old value for OldGameVersion: %w", err)
 	}
-	return oldValue.SmlVersion, nil
+	return oldValue.GameVersion, nil
 }
 
-// ResetSmlVersion resets all changes to the "sml_version" field.
-func (m *VersionMutation) ResetSmlVersion() {
-	m.sml_version = nil
+// ResetGameVersion resets all changes to the "game_version" field.
+func (m *VersionMutation) ResetGameVersion() {
+	m.game_version = nil
 }
 
 // SetChangelog sets the "changelog" field.
@@ -11205,8 +10038,8 @@ func (m *VersionMutation) Fields() []string {
 	if m.version != nil {
 		fields = append(fields, version.FieldVersion)
 	}
-	if m.sml_version != nil {
-		fields = append(fields, version.FieldSmlVersion)
+	if m.game_version != nil {
+		fields = append(fields, version.FieldGameVersion)
 	}
 	if m.changelog != nil {
 		fields = append(fields, version.FieldChangelog)
@@ -11268,8 +10101,8 @@ func (m *VersionMutation) Field(name string) (ent.Value, bool) {
 		return m.ModID()
 	case version.FieldVersion:
 		return m.Version()
-	case version.FieldSmlVersion:
-		return m.SmlVersion()
+	case version.FieldGameVersion:
+		return m.GameVersion()
 	case version.FieldChangelog:
 		return m.Changelog()
 	case version.FieldDownloads:
@@ -11317,8 +10150,8 @@ func (m *VersionMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldModID(ctx)
 	case version.FieldVersion:
 		return m.OldVersion(ctx)
-	case version.FieldSmlVersion:
-		return m.OldSmlVersion(ctx)
+	case version.FieldGameVersion:
+		return m.OldGameVersion(ctx)
 	case version.FieldChangelog:
 		return m.OldChangelog(ctx)
 	case version.FieldDownloads:
@@ -11391,12 +10224,12 @@ func (m *VersionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetVersion(v)
 		return nil
-	case version.FieldSmlVersion:
+	case version.FieldGameVersion:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSmlVersion(v)
+		m.SetGameVersion(v)
 		return nil
 	case version.FieldChangelog:
 		v, ok := value.(string)
@@ -11704,8 +10537,8 @@ func (m *VersionMutation) ResetField(name string) error {
 	case version.FieldVersion:
 		m.ResetVersion()
 		return nil
-	case version.FieldSmlVersion:
-		m.ResetSmlVersion()
+	case version.FieldGameVersion:
+		m.ResetGameVersion()
 		return nil
 	case version.FieldChangelog:
 		m.ResetChangelog()
@@ -12498,20 +11331,20 @@ func (m *VersionDependencyMutation) ResetEdge(name string) error {
 // VersionTargetMutation represents an operation that mutates the VersionTarget nodes in the graph.
 type VersionTargetMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *string
-	target_name        *string
-	key                *string
-	hash               *string
-	size               *int64
-	addsize            *int64
-	clearedFields      map[string]struct{}
-	sml_version        *string
-	clearedsml_version bool
-	done               bool
-	oldValue           func(context.Context) (*VersionTarget, error)
-	predicates         []predicate.VersionTarget
+	op             Op
+	typ            string
+	id             *string
+	target_name    *string
+	key            *string
+	hash           *string
+	size           *int64
+	addsize        *int64
+	clearedFields  map[string]struct{}
+	version        *string
+	clearedversion bool
+	done           bool
+	oldValue       func(context.Context) (*VersionTarget, error)
+	predicates     []predicate.VersionTarget
 }
 
 var _ ent.Mutation = (*VersionTargetMutation)(nil)
@@ -12620,12 +11453,12 @@ func (m *VersionTargetMutation) IDs(ctx context.Context) ([]string, error) {
 
 // SetVersionID sets the "version_id" field.
 func (m *VersionTargetMutation) SetVersionID(s string) {
-	m.sml_version = &s
+	m.version = &s
 }
 
 // VersionID returns the value of the "version_id" field in the mutation.
 func (m *VersionTargetMutation) VersionID() (r string, exists bool) {
-	v := m.sml_version
+	v := m.version
 	if v == nil {
 		return
 	}
@@ -12651,7 +11484,7 @@ func (m *VersionTargetMutation) OldVersionID(ctx context.Context) (v string, err
 
 // ResetVersionID resets all changes to the "version_id" field.
 func (m *VersionTargetMutation) ResetVersionID() {
-	m.sml_version = nil
+	m.version = nil
 }
 
 // SetTargetName sets the "target_name" field.
@@ -12858,44 +11691,31 @@ func (m *VersionTargetMutation) ResetSize() {
 	delete(m.clearedFields, versiontarget.FieldSize)
 }
 
-// SetSmlVersionID sets the "sml_version" edge to the Version entity by id.
-func (m *VersionTargetMutation) SetSmlVersionID(id string) {
-	m.sml_version = &id
-}
-
-// ClearSmlVersion clears the "sml_version" edge to the Version entity.
-func (m *VersionTargetMutation) ClearSmlVersion() {
-	m.clearedsml_version = true
+// ClearVersion clears the "version" edge to the Version entity.
+func (m *VersionTargetMutation) ClearVersion() {
+	m.clearedversion = true
 	m.clearedFields[versiontarget.FieldVersionID] = struct{}{}
 }
 
-// SmlVersionCleared reports if the "sml_version" edge to the Version entity was cleared.
-func (m *VersionTargetMutation) SmlVersionCleared() bool {
-	return m.clearedsml_version
+// VersionCleared reports if the "version" edge to the Version entity was cleared.
+func (m *VersionTargetMutation) VersionCleared() bool {
+	return m.clearedversion
 }
 
-// SmlVersionID returns the "sml_version" edge ID in the mutation.
-func (m *VersionTargetMutation) SmlVersionID() (id string, exists bool) {
-	if m.sml_version != nil {
-		return *m.sml_version, true
-	}
-	return
-}
-
-// SmlVersionIDs returns the "sml_version" edge IDs in the mutation.
+// VersionIDs returns the "version" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// SmlVersionID instead. It exists only for internal usage by the builders.
-func (m *VersionTargetMutation) SmlVersionIDs() (ids []string) {
-	if id := m.sml_version; id != nil {
+// VersionID instead. It exists only for internal usage by the builders.
+func (m *VersionTargetMutation) VersionIDs() (ids []string) {
+	if id := m.version; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetSmlVersion resets all changes to the "sml_version" edge.
-func (m *VersionTargetMutation) ResetSmlVersion() {
-	m.sml_version = nil
-	m.clearedsml_version = false
+// ResetVersion resets all changes to the "version" edge.
+func (m *VersionTargetMutation) ResetVersion() {
+	m.version = nil
+	m.clearedversion = false
 }
 
 // Where appends a list predicates to the VersionTargetMutation builder.
@@ -12933,7 +11753,7 @@ func (m *VersionTargetMutation) Type() string {
 // AddedFields().
 func (m *VersionTargetMutation) Fields() []string {
 	fields := make([]string, 0, 5)
-	if m.sml_version != nil {
+	if m.version != nil {
 		fields = append(fields, versiontarget.FieldVersionID)
 	}
 	if m.target_name != nil {
@@ -13136,8 +11956,8 @@ func (m *VersionTargetMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *VersionTargetMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.sml_version != nil {
-		edges = append(edges, versiontarget.EdgeSmlVersion)
+	if m.version != nil {
+		edges = append(edges, versiontarget.EdgeVersion)
 	}
 	return edges
 }
@@ -13146,8 +11966,8 @@ func (m *VersionTargetMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *VersionTargetMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case versiontarget.EdgeSmlVersion:
-		if id := m.sml_version; id != nil {
+	case versiontarget.EdgeVersion:
+		if id := m.version; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -13169,8 +11989,8 @@ func (m *VersionTargetMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *VersionTargetMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearedsml_version {
-		edges = append(edges, versiontarget.EdgeSmlVersion)
+	if m.clearedversion {
+		edges = append(edges, versiontarget.EdgeVersion)
 	}
 	return edges
 }
@@ -13179,8 +11999,8 @@ func (m *VersionTargetMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *VersionTargetMutation) EdgeCleared(name string) bool {
 	switch name {
-	case versiontarget.EdgeSmlVersion:
-		return m.clearedsml_version
+	case versiontarget.EdgeVersion:
+		return m.clearedversion
 	}
 	return false
 }
@@ -13189,8 +12009,8 @@ func (m *VersionTargetMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *VersionTargetMutation) ClearEdge(name string) error {
 	switch name {
-	case versiontarget.EdgeSmlVersion:
-		m.ClearSmlVersion()
+	case versiontarget.EdgeVersion:
+		m.ClearVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown VersionTarget unique edge %s", name)
@@ -13200,8 +12020,8 @@ func (m *VersionTargetMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *VersionTargetMutation) ResetEdge(name string) error {
 	switch name {
-	case versiontarget.EdgeSmlVersion:
-		m.ResetSmlVersion()
+	case versiontarget.EdgeVersion:
+		m.ResetVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown VersionTarget edge %s", name)

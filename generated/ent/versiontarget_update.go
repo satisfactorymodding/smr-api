@@ -124,15 +124,9 @@ func (vtu *VersionTargetUpdate) ClearSize() *VersionTargetUpdate {
 	return vtu
 }
 
-// SetSmlVersionID sets the "sml_version" edge to the Version entity by ID.
-func (vtu *VersionTargetUpdate) SetSmlVersionID(id string) *VersionTargetUpdate {
-	vtu.mutation.SetSmlVersionID(id)
-	return vtu
-}
-
-// SetSmlVersion sets the "sml_version" edge to the Version entity.
-func (vtu *VersionTargetUpdate) SetSmlVersion(v *Version) *VersionTargetUpdate {
-	return vtu.SetSmlVersionID(v.ID)
+// SetVersion sets the "version" edge to the Version entity.
+func (vtu *VersionTargetUpdate) SetVersion(v *Version) *VersionTargetUpdate {
+	return vtu.SetVersionID(v.ID)
 }
 
 // Mutation returns the VersionTargetMutation object of the builder.
@@ -140,9 +134,9 @@ func (vtu *VersionTargetUpdate) Mutation() *VersionTargetMutation {
 	return vtu.mutation
 }
 
-// ClearSmlVersion clears the "sml_version" edge to the Version entity.
-func (vtu *VersionTargetUpdate) ClearSmlVersion() *VersionTargetUpdate {
-	vtu.mutation.ClearSmlVersion()
+// ClearVersion clears the "version" edge to the Version entity.
+func (vtu *VersionTargetUpdate) ClearVersion() *VersionTargetUpdate {
+	vtu.mutation.ClearVersion()
 	return vtu
 }
 
@@ -175,8 +169,8 @@ func (vtu *VersionTargetUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (vtu *VersionTargetUpdate) check() error {
-	if _, ok := vtu.mutation.SmlVersionID(); vtu.mutation.SmlVersionCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "VersionTarget.sml_version"`)
+	if _, ok := vtu.mutation.VersionID(); vtu.mutation.VersionCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "VersionTarget.version"`)
 	}
 	return nil
 }
@@ -223,12 +217,12 @@ func (vtu *VersionTargetUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if vtu.mutation.SizeCleared() {
 		_spec.ClearField(versiontarget.FieldSize, field.TypeInt64)
 	}
-	if vtu.mutation.SmlVersionCleared() {
+	if vtu.mutation.VersionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   versiontarget.SmlVersionTable,
-			Columns: []string{versiontarget.SmlVersionColumn},
+			Table:   versiontarget.VersionTable,
+			Columns: []string{versiontarget.VersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
@@ -236,12 +230,12 @@ func (vtu *VersionTargetUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vtu.mutation.SmlVersionIDs(); len(nodes) > 0 {
+	if nodes := vtu.mutation.VersionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   versiontarget.SmlVersionTable,
-			Columns: []string{versiontarget.SmlVersionColumn},
+			Table:   versiontarget.VersionTable,
+			Columns: []string{versiontarget.VersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
@@ -369,15 +363,9 @@ func (vtuo *VersionTargetUpdateOne) ClearSize() *VersionTargetUpdateOne {
 	return vtuo
 }
 
-// SetSmlVersionID sets the "sml_version" edge to the Version entity by ID.
-func (vtuo *VersionTargetUpdateOne) SetSmlVersionID(id string) *VersionTargetUpdateOne {
-	vtuo.mutation.SetSmlVersionID(id)
-	return vtuo
-}
-
-// SetSmlVersion sets the "sml_version" edge to the Version entity.
-func (vtuo *VersionTargetUpdateOne) SetSmlVersion(v *Version) *VersionTargetUpdateOne {
-	return vtuo.SetSmlVersionID(v.ID)
+// SetVersion sets the "version" edge to the Version entity.
+func (vtuo *VersionTargetUpdateOne) SetVersion(v *Version) *VersionTargetUpdateOne {
+	return vtuo.SetVersionID(v.ID)
 }
 
 // Mutation returns the VersionTargetMutation object of the builder.
@@ -385,9 +373,9 @@ func (vtuo *VersionTargetUpdateOne) Mutation() *VersionTargetMutation {
 	return vtuo.mutation
 }
 
-// ClearSmlVersion clears the "sml_version" edge to the Version entity.
-func (vtuo *VersionTargetUpdateOne) ClearSmlVersion() *VersionTargetUpdateOne {
-	vtuo.mutation.ClearSmlVersion()
+// ClearVersion clears the "version" edge to the Version entity.
+func (vtuo *VersionTargetUpdateOne) ClearVersion() *VersionTargetUpdateOne {
+	vtuo.mutation.ClearVersion()
 	return vtuo
 }
 
@@ -433,8 +421,8 @@ func (vtuo *VersionTargetUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (vtuo *VersionTargetUpdateOne) check() error {
-	if _, ok := vtuo.mutation.SmlVersionID(); vtuo.mutation.SmlVersionCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "VersionTarget.sml_version"`)
+	if _, ok := vtuo.mutation.VersionID(); vtuo.mutation.VersionCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "VersionTarget.version"`)
 	}
 	return nil
 }
@@ -498,12 +486,12 @@ func (vtuo *VersionTargetUpdateOne) sqlSave(ctx context.Context) (_node *Version
 	if vtuo.mutation.SizeCleared() {
 		_spec.ClearField(versiontarget.FieldSize, field.TypeInt64)
 	}
-	if vtuo.mutation.SmlVersionCleared() {
+	if vtuo.mutation.VersionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   versiontarget.SmlVersionTable,
-			Columns: []string{versiontarget.SmlVersionColumn},
+			Table:   versiontarget.VersionTable,
+			Columns: []string{versiontarget.VersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
@@ -511,12 +499,12 @@ func (vtuo *VersionTargetUpdateOne) sqlSave(ctx context.Context) (_node *Version
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := vtuo.mutation.SmlVersionIDs(); len(nodes) > 0 {
+	if nodes := vtuo.mutation.VersionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   versiontarget.SmlVersionTable,
-			Columns: []string{versiontarget.SmlVersionColumn},
+			Table:   versiontarget.VersionTable,
+			Columns: []string{versiontarget.VersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
