@@ -66,7 +66,6 @@ ALTER TABLE "versions"
     ALTER COLUMN "stability" DROP NOT NULL,
     ALTER COLUMN "key" TYPE text,
     ALTER COLUMN "downloads" TYPE integer,
-    ALTER COLUMN "downloads" DROP NOT NULL,
     ALTER COLUMN "downloads" DROP DEFAULT,
     ALTER COLUMN "changelog" TYPE text,
     ALTER COLUMN "version" TYPE character varying(16),

@@ -27,7 +27,7 @@ func (Version) Fields() []ent.Field {
 		field.String("version").MaxLen(16),
 		field.String("game_version").Optional(), // TODO Should be backfilled and turned non-optional
 		field.String("changelog").Optional(),
-		field.Uint("downloads").Default(0),
+		field.Uint("downloads").Default(0).Optional(),
 		field.String("key").Optional(),
 		field.Enum("stability").GoType(util.Stability("")),
 		field.Bool("approved").Default(false),

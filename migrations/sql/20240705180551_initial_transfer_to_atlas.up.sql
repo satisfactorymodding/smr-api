@@ -172,7 +172,6 @@ ALTER TABLE "versions"
     ALTER COLUMN "version" SET NOT NULL,
     ALTER COLUMN "changelog" TYPE character varying,
     ALTER COLUMN "downloads" TYPE bigint,
-    ALTER COLUMN "downloads" SET NOT NULL,
     ALTER COLUMN "downloads" SET DEFAULT 0,
     ALTER COLUMN "key" TYPE character varying,
     ALTER COLUMN "stability" TYPE character varying,

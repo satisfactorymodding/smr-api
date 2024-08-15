@@ -631,6 +631,16 @@ func DownloadsLTE(v uint) predicate.Version {
 	return predicate.Version(sql.FieldLTE(FieldDownloads, v))
 }
 
+// DownloadsIsNil applies the IsNil predicate on the "downloads" field.
+func DownloadsIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldDownloads))
+}
+
+// DownloadsNotNil applies the NotNil predicate on the "downloads" field.
+func DownloadsNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldDownloads))
+}
+
 // KeyEQ applies the EQ predicate on the "key" field.
 func KeyEQ(v string) predicate.Version {
 	return predicate.Version(sql.FieldEQ(FieldKey, v))

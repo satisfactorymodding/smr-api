@@ -9252,10 +9252,24 @@ func (m *VersionMutation) AddedDownloads() (r int, exists bool) {
 	return *v, true
 }
 
+// ClearDownloads clears the value of the "downloads" field.
+func (m *VersionMutation) ClearDownloads() {
+	m.downloads = nil
+	m.adddownloads = nil
+	m.clearedFields[version.FieldDownloads] = struct{}{}
+}
+
+// DownloadsCleared returns if the "downloads" field was cleared in this mutation.
+func (m *VersionMutation) DownloadsCleared() bool {
+	_, ok := m.clearedFields[version.FieldDownloads]
+	return ok
+}
+
 // ResetDownloads resets all changes to the "downloads" field.
 func (m *VersionMutation) ResetDownloads() {
 	m.downloads = nil
 	m.adddownloads = nil
+	delete(m.clearedFields, version.FieldDownloads)
 }
 
 // SetKey sets the "key" field.
@@ -10481,6 +10495,9 @@ func (m *VersionMutation) ClearedFields() []string {
 	if m.FieldCleared(version.FieldChangelog) {
 		fields = append(fields, version.FieldChangelog)
 	}
+	if m.FieldCleared(version.FieldDownloads) {
+		fields = append(fields, version.FieldDownloads)
+	}
 	if m.FieldCleared(version.FieldKey) {
 		fields = append(fields, version.FieldKey)
 	}
@@ -10530,6 +10547,9 @@ func (m *VersionMutation) ClearField(name string) error {
 		return nil
 	case version.FieldChangelog:
 		m.ClearChangelog()
+		return nil
+	case version.FieldDownloads:
+		m.ClearDownloads()
 		return nil
 	case version.FieldKey:
 		m.ClearKey()
