@@ -187,7 +187,6 @@ ALTER TABLE "versions"
     ALTER COLUMN "version_minor" TYPE bigint,
     ALTER COLUMN "version_patch" TYPE bigint,
     ALTER COLUMN "hash" TYPE character varying,
-    ALTER COLUMN "game_version" SET NOT NULL,
     ADD CONSTRAINT "versions_mods_versions" FOREIGN KEY ("mod_id") REFERENCES "mods" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION;
 -- create index "version_id" to table: "versions"
 CREATE UNIQUE INDEX "version_id" ON "versions" ("id");

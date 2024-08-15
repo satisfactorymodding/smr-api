@@ -9135,9 +9135,22 @@ func (m *VersionMutation) OldGameVersion(ctx context.Context) (v string, err err
 	return oldValue.GameVersion, nil
 }
 
+// ClearGameVersion clears the value of the "game_version" field.
+func (m *VersionMutation) ClearGameVersion() {
+	m.game_version = nil
+	m.clearedFields[version.FieldGameVersion] = struct{}{}
+}
+
+// GameVersionCleared returns if the "game_version" field was cleared in this mutation.
+func (m *VersionMutation) GameVersionCleared() bool {
+	_, ok := m.clearedFields[version.FieldGameVersion]
+	return ok
+}
+
 // ResetGameVersion resets all changes to the "game_version" field.
 func (m *VersionMutation) ResetGameVersion() {
 	m.game_version = nil
+	delete(m.clearedFields, version.FieldGameVersion)
 }
 
 // SetChangelog sets the "changelog" field.
@@ -10462,6 +10475,9 @@ func (m *VersionMutation) ClearedFields() []string {
 	if m.FieldCleared(version.FieldDeletedAt) {
 		fields = append(fields, version.FieldDeletedAt)
 	}
+	if m.FieldCleared(version.FieldGameVersion) {
+		fields = append(fields, version.FieldGameVersion)
+	}
 	if m.FieldCleared(version.FieldChangelog) {
 		fields = append(fields, version.FieldChangelog)
 	}
@@ -10508,6 +10524,9 @@ func (m *VersionMutation) ClearField(name string) error {
 		return nil
 	case version.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case version.FieldGameVersion:
+		m.ClearGameVersion()
 		return nil
 	case version.FieldChangelog:
 		m.ClearChangelog()

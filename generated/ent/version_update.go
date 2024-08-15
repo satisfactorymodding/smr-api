@@ -106,6 +106,12 @@ func (vu *VersionUpdate) SetNillableGameVersion(s *string) *VersionUpdate {
 	return vu
 }
 
+// ClearGameVersion clears the value of the "game_version" field.
+func (vu *VersionUpdate) ClearGameVersion() *VersionUpdate {
+	vu.mutation.ClearGameVersion()
+	return vu
+}
+
 // SetChangelog sets the "changelog" field.
 func (vu *VersionUpdate) SetChangelog(s string) *VersionUpdate {
 	vu.mutation.SetChangelog(s)
@@ -589,6 +595,9 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.GameVersion(); ok {
 		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
 	}
+	if vu.mutation.GameVersionCleared() {
+		_spec.ClearField(version.FieldGameVersion, field.TypeString)
+	}
 	if value, ok := vu.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)
 	}
@@ -897,6 +906,12 @@ func (vuo *VersionUpdateOne) SetNillableGameVersion(s *string) *VersionUpdateOne
 	if s != nil {
 		vuo.SetGameVersion(*s)
 	}
+	return vuo
+}
+
+// ClearGameVersion clears the value of the "game_version" field.
+func (vuo *VersionUpdateOne) ClearGameVersion() *VersionUpdateOne {
+	vuo.mutation.ClearGameVersion()
 	return vuo
 }
 
@@ -1412,6 +1427,9 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	}
 	if value, ok := vuo.mutation.GameVersion(); ok {
 		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
+	}
+	if vuo.mutation.GameVersionCleared() {
+		_spec.ClearField(version.FieldGameVersion, field.TypeString)
 	}
 	if value, ok := vuo.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)

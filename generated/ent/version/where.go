@@ -496,6 +496,16 @@ func GameVersionHasSuffix(v string) predicate.Version {
 	return predicate.Version(sql.FieldHasSuffix(FieldGameVersion, v))
 }
 
+// GameVersionIsNil applies the IsNil predicate on the "game_version" field.
+func GameVersionIsNil() predicate.Version {
+	return predicate.Version(sql.FieldIsNull(FieldGameVersion))
+}
+
+// GameVersionNotNil applies the NotNil predicate on the "game_version" field.
+func GameVersionNotNil() predicate.Version {
+	return predicate.Version(sql.FieldNotNull(FieldGameVersion))
+}
+
 // GameVersionEqualFold applies the EqualFold predicate on the "game_version" field.
 func GameVersionEqualFold(v string) predicate.Version {
 	return predicate.Version(sql.FieldEqualFold(FieldGameVersion, v))

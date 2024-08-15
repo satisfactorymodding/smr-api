@@ -52,7 +52,6 @@ DROP INDEX "version_id";
 -- reverse: modify "versions" table
 ALTER TABLE "versions"
     DROP CONSTRAINT "versions_mods_versions",
-    ALTER COLUMN "game_version" DROP NOT NULL,
     ALTER COLUMN "hash" TYPE character(64),
     ALTER COLUMN "version_patch" TYPE integer,
     ALTER COLUMN "version_minor" TYPE integer,

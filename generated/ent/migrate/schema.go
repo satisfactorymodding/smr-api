@@ -388,7 +388,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "version", Type: field.TypeString, Size: 16},
-		{Name: "game_version", Type: field.TypeString},
+		{Name: "game_version", Type: field.TypeString, Nullable: true},
 		{Name: "changelog", Type: field.TypeString, Nullable: true},
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
 		{Name: "key", Type: field.TypeString, Nullable: true},
