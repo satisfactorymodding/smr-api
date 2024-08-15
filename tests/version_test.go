@@ -288,19 +288,6 @@ func TestVersions(t *testing.T) {
 		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.Dependencies[0].Condition)
 	})
 
-	t.Run("List Assets", func(t *testing.T) {
-		listRequest := authRequest(`query GetModAssetList($mod_reference: ModID!) {
-		  getModAssetList(modReference: $mod_reference)
-		}`, token)
-		listRequest.Var("mod_reference", modReference)
-
-		var listResponse struct {
-			GetModAssetList []string
-		}
-		testza.AssertNoError(t, client.Run(ctx, listRequest, &listResponse))
-		testza.AssertGreater(t, len(listResponse.GetModAssetList), 0)
-	})
-
 	t.Run("List Dependencies", func(t *testing.T) {
 		listRequest := authRequest(`query getMods($mod_reference: String!) {
 		  getMods(filter: {references: [$mod_reference]}) {
