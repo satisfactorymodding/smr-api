@@ -1,5 +1,3 @@
--- reverse: drop enum type "version_stability"
-CREATE TYPE "version_stability" AS ENUM ('alpha', 'beta', 'release');
 -- reverse: drop "bootstrap_versions" table
 CREATE TABLE "bootstrap_versions"
 (
@@ -61,12 +59,9 @@ ALTER TABLE "versions"
     ALTER COLUMN "metadata" TYPE text,
     ALTER COLUMN "hotness" TYPE integer,
     ALTER COLUMN "hotness" DROP NOT NULL,
-    ALTER COLUMN "hotness" DROP DEFAULT,
-    ALTER COLUMN "stability" TYPE "version_stability",
-    ALTER COLUMN "stability" DROP NOT NULL,
     ALTER COLUMN "key" TYPE text,
     ALTER COLUMN "downloads" TYPE integer,
-    ALTER COLUMN "downloads" DROP DEFAULT,
+    ALTER COLUMN "downloads" DROP NOT NULL,
     ALTER COLUMN "changelog" TYPE text,
     ALTER COLUMN "version" TYPE character varying(16),
     ALTER COLUMN "version" DROP NOT NULL,

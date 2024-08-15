@@ -153,12 +153,6 @@ func (vu *VersionUpdate) AddDownloads(u int) *VersionUpdate {
 	return vu
 }
 
-// ClearDownloads clears the value of the "downloads" field.
-func (vu *VersionUpdate) ClearDownloads() *VersionUpdate {
-	vu.mutation.ClearDownloads()
-	return vu
-}
-
 // SetKey sets the "key" field.
 func (vu *VersionUpdate) SetKey(s string) *VersionUpdate {
 	vu.mutation.SetKey(s)
@@ -616,9 +610,6 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.AddedDownloads(); ok {
 		_spec.AddField(version.FieldDownloads, field.TypeUint, value)
 	}
-	if vu.mutation.DownloadsCleared() {
-		_spec.ClearField(version.FieldDownloads, field.TypeUint)
-	}
 	if value, ok := vu.mutation.Key(); ok {
 		_spec.SetField(version.FieldKey, field.TypeString, value)
 	}
@@ -962,12 +953,6 @@ func (vuo *VersionUpdateOne) SetNillableDownloads(u *uint) *VersionUpdateOne {
 // AddDownloads adds u to the "downloads" field.
 func (vuo *VersionUpdateOne) AddDownloads(u int) *VersionUpdateOne {
 	vuo.mutation.AddDownloads(u)
-	return vuo
-}
-
-// ClearDownloads clears the value of the "downloads" field.
-func (vuo *VersionUpdateOne) ClearDownloads() *VersionUpdateOne {
-	vuo.mutation.ClearDownloads()
 	return vuo
 }
 
@@ -1457,9 +1442,6 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	}
 	if value, ok := vuo.mutation.AddedDownloads(); ok {
 		_spec.AddField(version.FieldDownloads, field.TypeUint, value)
-	}
-	if vuo.mutation.DownloadsCleared() {
-		_spec.ClearField(version.FieldDownloads, field.TypeUint)
 	}
 	if value, ok := vuo.mutation.Key(); ok {
 		_spec.SetField(version.FieldKey, field.TypeString, value)

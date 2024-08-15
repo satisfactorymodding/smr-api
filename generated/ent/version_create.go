@@ -142,6 +142,14 @@ func (vc *VersionCreate) SetStability(u util.Stability) *VersionCreate {
 	return vc
 }
 
+// SetNillableStability sets the "stability" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableStability(u *util.Stability) *VersionCreate {
+	if u != nil {
+		vc.SetStability(*u)
+	}
+	return vc
+}
+
 // SetApproved sets the "approved" field.
 func (vc *VersionCreate) SetApproved(b bool) *VersionCreate {
 	vc.mutation.SetApproved(b)
@@ -378,6 +386,10 @@ func (vc *VersionCreate) defaults() error {
 		v := version.DefaultDownloads
 		vc.mutation.SetDownloads(v)
 	}
+	if _, ok := vc.mutation.Stability(); !ok {
+		v := version.DefaultStability
+		vc.mutation.SetStability(v)
+	}
 	if _, ok := vc.mutation.Approved(); !ok {
 		v := version.DefaultApproved
 		vc.mutation.SetApproved(v)
@@ -412,6 +424,9 @@ func (vc *VersionCreate) check() error {
 		if err := version.VersionValidator(v); err != nil {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Version.version": %w`, err)}
 		}
+	}
+	if _, ok := vc.mutation.Downloads(); !ok {
+		return &ValidationError{Name: "downloads", err: errors.New(`ent: missing required field "Version.downloads"`)}
 	}
 	if _, ok := vc.mutation.Stability(); !ok {
 		return &ValidationError{Name: "stability", err: errors.New(`ent: missing required field "Version.stability"`)}
@@ -774,12 +789,6 @@ func (u *VersionUpsert) UpdateDownloads() *VersionUpsert {
 // AddDownloads adds v to the "downloads" field.
 func (u *VersionUpsert) AddDownloads(v uint) *VersionUpsert {
 	u.Add(version.FieldDownloads, v)
-	return u
-}
-
-// ClearDownloads clears the value of the "downloads" field.
-func (u *VersionUpsert) ClearDownloads() *VersionUpsert {
-	u.SetNull(version.FieldDownloads)
 	return u
 }
 
@@ -1180,13 +1189,6 @@ func (u *VersionUpsertOne) AddDownloads(v uint) *VersionUpsertOne {
 func (u *VersionUpsertOne) UpdateDownloads() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateDownloads()
-	})
-}
-
-// ClearDownloads clears the value of the "downloads" field.
-func (u *VersionUpsertOne) ClearDownloads() *VersionUpsertOne {
-	return u.Update(func(s *VersionUpsert) {
-		s.ClearDownloads()
 	})
 }
 
@@ -1790,13 +1792,6 @@ func (u *VersionUpsertBulk) AddDownloads(v uint) *VersionUpsertBulk {
 func (u *VersionUpsertBulk) UpdateDownloads() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateDownloads()
-	})
-}
-
-// ClearDownloads clears the value of the "downloads" field.
-func (u *VersionUpsertBulk) ClearDownloads() *VersionUpsertBulk {
-	return u.Update(func(s *VersionUpsert) {
-		s.ClearDownloads()
 	})
 }
 

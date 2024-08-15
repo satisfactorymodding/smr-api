@@ -1,0 +1,3 @@
+ALTER TABLE "versions"
+    ALTER COLUMN "downloads" SET DEFAULT NULL,
+    ALTER COLUMN "hotness" SET DEFAULT NULL;

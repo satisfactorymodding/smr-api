@@ -168,6 +168,8 @@ var (
 	DefaultID func() string
 )
 
+const DefaultStability util.Stability = "release"
+
 // StabilityValidator is a validator for the "stability" field enum values. It is called by the builders before save.
 func StabilityValidator(s util.Stability) error {
 	switch s {

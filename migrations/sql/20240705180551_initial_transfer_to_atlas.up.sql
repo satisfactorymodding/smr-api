@@ -172,13 +172,11 @@ ALTER TABLE "versions"
     ALTER COLUMN "version" SET NOT NULL,
     ALTER COLUMN "changelog" TYPE character varying,
     ALTER COLUMN "downloads" TYPE bigint,
-    ALTER COLUMN "downloads" SET DEFAULT 0,
+    ALTER COLUMN "downloads" SET NOT NULL,
     ALTER COLUMN "key" TYPE character varying,
-    ALTER COLUMN "stability" TYPE character varying,
-    ALTER COLUMN "stability" SET NOT NULL,
+    ALTER COLUMN "stability" SET DEFAULT 'release',
     ALTER COLUMN "hotness" TYPE bigint,
     ALTER COLUMN "hotness" SET NOT NULL,
-    ALTER COLUMN "hotness" SET DEFAULT 0,
     ALTER COLUMN "metadata" TYPE character varying,
     ALTER COLUMN "mod_reference" TYPE character varying,
     ALTER COLUMN "mod_reference" SET NOT NULL,
@@ -200,7 +198,7 @@ ALTER TABLE "version_dependencies"
     ALTER COLUMN "condition" SET NOT NULL,
     ALTER COLUMN "optional" SET NOT NULL,
     ALTER COLUMN "optional" DROP DEFAULT,
-    ADD CONSTRAINT "version_dependencies_mods_mod" FOREIGN KEY ("mod_id") REFERENCES "mods" ("mod_reference") ON UPDATE NO ACTION ON DELETE NO ACTION,
+    ADD CONSTRAINT "version_dependencies_mods_mod" FOREIGN KEY ("mod_id") REFERENCES "mods" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION,
     ADD CONSTRAINT "version_dependencies_versions_version" FOREIGN KEY ("version_id") REFERENCES "versions" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION;
 -- create index "versiondependency_deleted_at" to table: "version_dependencies"
 CREATE INDEX "versiondependency_deleted_at" ON "version_dependencies" ("deleted_at");
@@ -223,5 +221,3 @@ CREATE UNIQUE INDEX "versiontarget_version_id_target_name" ON "version_targets" 
 ALTER INDEX "uix_version_targets_id" RENAME TO "versiontarget_id";
 -- drop "bootstrap_versions" table
 DROP TABLE "bootstrap_versions";
--- drop enum type "version_stability"
-DROP TYPE "version_stability";
