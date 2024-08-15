@@ -91,6 +91,12 @@ func (tu *TagUpdate) SetNillableDescription(s *string) *TagUpdate {
 	return tu
 }
 
+// ClearDescription clears the value of the "description" field.
+func (tu *TagUpdate) ClearDescription() *TagUpdate {
+	tu.mutation.ClearDescription()
+	return tu
+}
+
 // AddModIDs adds the "mods" edge to the Mod entity by IDs.
 func (tu *TagUpdate) AddModIDs(ids ...string) *TagUpdate {
 	tu.mutation.AddModIDs(ids...)
@@ -264,6 +270,9 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tu.mutation.Description(); ok {
 		_spec.SetField(tag.FieldDescription, field.TypeString, value)
 	}
+	if tu.mutation.DescriptionCleared() {
+		_spec.ClearField(tag.FieldDescription, field.TypeString)
+	}
 	if tu.mutation.ModsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -433,6 +442,12 @@ func (tuo *TagUpdateOne) SetNillableDescription(s *string) *TagUpdateOne {
 	if s != nil {
 		tuo.SetDescription(*s)
 	}
+	return tuo
+}
+
+// ClearDescription clears the value of the "description" field.
+func (tuo *TagUpdateOne) ClearDescription() *TagUpdateOne {
+	tuo.mutation.ClearDescription()
 	return tuo
 }
 
@@ -638,6 +653,9 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 	}
 	if value, ok := tuo.mutation.Description(); ok {
 		_spec.SetField(tag.FieldDescription, field.TypeString, value)
+	}
+	if tuo.mutation.DescriptionCleared() {
+		_spec.ClearField(tag.FieldDescription, field.TypeString)
 	}
 	if tuo.mutation.ModsCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -64,14 +64,11 @@ ALTER TABLE "tags"
     DROP CONSTRAINT "tags_name_key",
     ALTER COLUMN "id" TYPE character varying,
     ALTER COLUMN "name" TYPE character varying,
-    ALTER COLUMN "description" TYPE character varying,
-    ALTER COLUMN "description" SET NOT NULL;
+    ALTER COLUMN "description" TYPE character varying;
 -- create index "tags_name_key" to table: "tags"
 CREATE UNIQUE INDEX "tags_name_key" ON "tags" ("name");
 -- create index "tag_id" to table: "tags"
 CREATE UNIQUE INDEX "tag_id" ON "tags" ("id");
--- create index "tags_description_key" to table: "tags"
-CREATE UNIQUE INDEX "tags_description_key" ON "tags" ("description");
 -- rename an index from "idx_tags_deleted_at" to "tag_deleted_at"
 ALTER INDEX "idx_tags_deleted_at" RENAME TO "tag_deleted_at";
 -- modify "guide_tags" table

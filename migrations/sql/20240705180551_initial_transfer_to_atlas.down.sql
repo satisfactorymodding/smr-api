@@ -169,8 +169,6 @@ ALTER TABLE "guide_tags"
     ADD CONSTRAINT "guide_tags_guide_id_fkey" FOREIGN KEY ("guide_id") REFERENCES "guides" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION;
 -- reverse: rename an index from "idx_tags_deleted_at" to "tag_deleted_at"
 ALTER INDEX "tag_deleted_at" RENAME TO "idx_tags_deleted_at";
--- reverse: create index "tags_description_key" to table: "tags"
-DROP INDEX "tags_description_key";
 -- reverse: create index "tag_id" to table: "tags"
 DROP INDEX "tag_id";
 -- reverse: create index "tags_name_key" to table: "tags"
@@ -178,7 +176,6 @@ DROP INDEX "tags_name_key";
 -- reverse: modify "tags" table
 ALTER TABLE "tags"
     ALTER COLUMN "description" TYPE character varying(512),
-    ALTER COLUMN "description" DROP NOT NULL,
     ALTER COLUMN "name" TYPE character varying(24),
     ALTER COLUMN "id" TYPE character varying(14),
     ADD CONSTRAINT "tags_name_key" UNIQUE ("name");

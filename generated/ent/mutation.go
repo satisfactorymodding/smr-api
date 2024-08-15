@@ -5045,9 +5045,22 @@ func (m *TagMutation) OldDescription(ctx context.Context) (v string, err error) 
 	return oldValue.Description, nil
 }
 
+// ClearDescription clears the value of the "description" field.
+func (m *TagMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[tag.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *TagMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[tag.FieldDescription]
+	return ok
+}
+
 // ResetDescription resets all changes to the "description" field.
 func (m *TagMutation) ResetDescription() {
 	m.description = nil
+	delete(m.clearedFields, tag.FieldDescription)
 }
 
 // AddModIDs adds the "mods" edge to the Mod entity by ids.
@@ -5328,6 +5341,9 @@ func (m *TagMutation) ClearedFields() []string {
 	if m.FieldCleared(tag.FieldDeletedAt) {
 		fields = append(fields, tag.FieldDeletedAt)
 	}
+	if m.FieldCleared(tag.FieldDescription) {
+		fields = append(fields, tag.FieldDescription)
+	}
 	return fields
 }
 
@@ -5350,6 +5366,9 @@ func (m *TagMutation) ClearField(name string) error {
 		return nil
 	case tag.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case tag.FieldDescription:
+		m.ClearDescription()
 		return nil
 	}
 	return fmt.Errorf("unknown Tag nullable field %s", name)
