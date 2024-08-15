@@ -15,6 +15,7 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/dgraph-io/ristretto"
 	"github.com/pkg/errors"
+	mod2 "github.com/satisfactorymodding/smr-api/generated/ent/mod"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db"
@@ -384,12 +385,19 @@ func (r *versionResolver) SmlVersion(ctx context.Context, obj *generated.Version
 	if err != nil {
 		return "", err
 	}
+
+	smlMod, err := db.From(ctx).Mod.Query().Where(mod2.ModReference("SML")).First(ctx)
+	if err != nil {
+		return "", err
+	}
+
 	for _, dep := range dependencies {
-		if dep.ModID == "SML" {
+		if dep.ModID == smlMod.ID {
 			return dep.Condition, nil
 		}
 	}
-	return "", nil
+	slox.Error(ctx, "could not find SML version")
+	return "", errors.New("could not find SML version")
 }
 
 var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config{

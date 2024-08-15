@@ -9,5 +9,5 @@ import (
 type versionDependencyResolver struct{ *Resolver }
 
 func (r *versionDependencyResolver) Mod(ctx context.Context, obj *generated.VersionDependency) (*generated.Mod, error) {
-	return r.Query().GetModByReference(ctx, obj.ModID)
+	return r.Query().GetMod(ctx, obj.ModID)
 }

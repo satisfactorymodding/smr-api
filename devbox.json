@@ -29,7 +29,16 @@
       "migrate:hash": [
         "atlas migrate hash --dir \"file://migrations/sql?format=golang-migrate\""
       ],
-      "generate": "go generate -tags tools -x ./..."
+      "generate": "go generate -tags tools -x ./...",
+      "setup": [
+        "docker compose up -d && sleep 5",
+        "mc alias set local http://localhost:9000 minio minio123",
+        "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
+        "mc anonymous set public local/smr"
+      ],
+      "teardown": [
+        "docker compose down"
+      ]
     }
   }
 }

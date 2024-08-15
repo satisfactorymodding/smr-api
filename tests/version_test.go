@@ -44,6 +44,22 @@ func TestVersions(t *testing.T) {
 
 	modReference := "FicsitRemoteMonitoring"
 
+	var smlModID string
+
+	t.Run("Get SML Mod", func(t *testing.T) {
+		getRequest := authRequest(`{
+   		  getModByReference(modReference: "SML") {
+			id
+          }
+ 	    }`, token)
+
+		var getResponse struct {
+			GetModByReference generated.Mod
+		}
+		testza.AssertNoError(t, client.Run(ctx, getRequest, &getResponse))
+		smlModID = getResponse.GetModByReference.ID
+	})
+
 	t.Run("Create Satisfactory Version", func(t *testing.T) {
 		createRequest := authRequest(`mutation {
 		  createSatisfactoryVersion(input: {
@@ -268,7 +284,7 @@ func TestVersions(t *testing.T) {
 		testza.AssertEqual(t, "0.10.3", getModVersionResponse.GetVersion.Version)
 		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.SmlVersion)
 		testza.AssertEqual(t, 1, len(getModVersionResponse.GetVersion.Dependencies))
-		testza.AssertEqual(t, "SML", getModVersionResponse.GetVersion.Dependencies[0].ModID)
+		testza.AssertEqual(t, smlModID, getModVersionResponse.GetVersion.Dependencies[0].ModID)
 		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.Dependencies[0].Condition)
 	})
 
