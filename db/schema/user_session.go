@@ -21,14 +21,14 @@ func (UserSession) Mixin() []ent.Mixin {
 
 func (UserSession) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("token").MaxLen(512).Unique(),
+		field.String("token").MaxLen(512),
 		field.String("user_agent").Optional(),
 	}
 }
 
 func (UserSession) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("token").Unique().StorageKey("uix_user_sessions_token"),
+		index.Fields("token").Unique(),
 	}
 }
 

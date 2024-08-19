@@ -36,12 +36,6 @@ func (usu *UserSessionUpdate) SetUpdatedAt(t time.Time) *UserSessionUpdate {
 	return usu
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (usu *UserSessionUpdate) ClearUpdatedAt() *UserSessionUpdate {
-	usu.mutation.ClearUpdatedAt()
-	return usu
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (usu *UserSessionUpdate) SetDeletedAt(t time.Time) *UserSessionUpdate {
 	usu.mutation.SetDeletedAt(t)
@@ -150,7 +144,7 @@ func (usu *UserSessionUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (usu *UserSessionUpdate) defaults() error {
-	if _, ok := usu.mutation.UpdatedAt(); !ok && !usu.mutation.UpdatedAtCleared() {
+	if _, ok := usu.mutation.UpdatedAt(); !ok {
 		if usersession.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized usersession.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -191,14 +185,8 @@ func (usu *UserSessionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if usu.mutation.CreatedAtCleared() {
-		_spec.ClearField(usersession.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := usu.mutation.UpdatedAt(); ok {
 		_spec.SetField(usersession.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if usu.mutation.UpdatedAtCleared() {
-		_spec.ClearField(usersession.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := usu.mutation.DeletedAt(); ok {
 		_spec.SetField(usersession.FieldDeletedAt, field.TypeTime, value)
@@ -269,12 +257,6 @@ type UserSessionUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (usuo *UserSessionUpdateOne) SetUpdatedAt(t time.Time) *UserSessionUpdateOne {
 	usuo.mutation.SetUpdatedAt(t)
-	return usuo
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (usuo *UserSessionUpdateOne) ClearUpdatedAt() *UserSessionUpdateOne {
-	usuo.mutation.ClearUpdatedAt()
 	return usuo
 }
 
@@ -399,7 +381,7 @@ func (usuo *UserSessionUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (usuo *UserSessionUpdateOne) defaults() error {
-	if _, ok := usuo.mutation.UpdatedAt(); !ok && !usuo.mutation.UpdatedAtCleared() {
+	if _, ok := usuo.mutation.UpdatedAt(); !ok {
 		if usersession.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized usersession.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -457,14 +439,8 @@ func (usuo *UserSessionUpdateOne) sqlSave(ctx context.Context) (_node *UserSessi
 			}
 		}
 	}
-	if usuo.mutation.CreatedAtCleared() {
-		_spec.ClearField(usersession.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := usuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(usersession.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if usuo.mutation.UpdatedAtCleared() {
-		_spec.ClearField(usersession.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := usuo.mutation.DeletedAt(); ok {
 		_spec.SetField(usersession.FieldDeletedAt, field.TypeTime, value)

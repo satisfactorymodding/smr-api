@@ -348,12 +348,13 @@ type ComplexityRoot struct {
 	}
 
 	VersionDependency struct {
-		Condition func(childComplexity int) int
-		Mod       func(childComplexity int) int
-		ModID     func(childComplexity int) int
-		Optional  func(childComplexity int) int
-		Version   func(childComplexity int) int
-		VersionID func(childComplexity int) int
+		Condition    func(childComplexity int) int
+		Mod          func(childComplexity int) int
+		ModID        func(childComplexity int) int
+		ModReference func(childComplexity int) int
+		Optional     func(childComplexity int) int
+		Version      func(childComplexity int) int
+		VersionID    func(childComplexity int) int
 	}
 
 	VersionTarget struct {
@@ -2197,6 +2198,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VersionDependency.ModID(childComplexity), true
 
+	case "VersionDependency.mod_reference":
+		if e.complexity.VersionDependency.ModReference == nil {
+			break
+		}
+
+		return e.complexity.VersionDependency.ModReference(childComplexity), true
+
 	case "VersionDependency.optional":
 		if e.complexity.VersionDependency.Optional == nil {
 			break
@@ -2975,9 +2983,10 @@ type GetMyVersions {
 
 type VersionDependency {
     version_id: VersionID!
-    mod_id: ModID!
+    mod_id: ModID! @deprecated(reason: "soon will return actual mod id instead of reference. use mod_reference field instead!")
     condition: String!
     optional: Boolean!
+    mod_reference: String!
 
     mod: Mod
     version: Version
@@ -16189,6 +16198,8 @@ func (ec *executionContext) fieldContext_Version_dependencies(_ context.Context,
 				return ec.fieldContext_VersionDependency_condition(ctx, field)
 			case "optional":
 				return ec.fieldContext_VersionDependency_optional(ctx, field)
+			case "mod_reference":
+				return ec.fieldContext_VersionDependency_mod_reference(ctx, field)
 			case "mod":
 				return ec.fieldContext_VersionDependency_mod(ctx, field)
 			case "version":
@@ -16371,6 +16382,50 @@ func (ec *executionContext) fieldContext_VersionDependency_optional(_ context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VersionDependency_mod_reference(ctx context.Context, field graphql.CollectedField, obj *VersionDependency) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VersionDependency_mod_reference(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModReference, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VersionDependency_mod_reference(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VersionDependency",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22979,6 +23034,11 @@ func (ec *executionContext) _VersionDependency(ctx context.Context, sel ast.Sele
 			}
 		case "optional":
 			out.Values[i] = ec._VersionDependency_optional(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "mod_reference":
+			out.Values[i] = ec._VersionDependency_mod_reference(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

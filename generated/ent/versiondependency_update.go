@@ -37,12 +37,6 @@ func (vdu *VersionDependencyUpdate) SetUpdatedAt(t time.Time) *VersionDependency
 	return vdu
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (vdu *VersionDependencyUpdate) ClearUpdatedAt() *VersionDependencyUpdate {
-	vdu.mutation.ClearUpdatedAt()
-	return vdu
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (vdu *VersionDependencyUpdate) SetDeletedAt(t time.Time) *VersionDependencyUpdate {
 	vdu.mutation.SetDeletedAt(t)
@@ -178,7 +172,7 @@ func (vdu *VersionDependencyUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (vdu *VersionDependencyUpdate) defaults() error {
-	if _, ok := vdu.mutation.UpdatedAt(); !ok && !vdu.mutation.UpdatedAtCleared() {
+	if _, ok := vdu.mutation.UpdatedAt(); !ok {
 		if versiondependency.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized versiondependency.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -222,14 +216,8 @@ func (vdu *VersionDependencyUpdate) sqlSave(ctx context.Context) (n int, err err
 			}
 		}
 	}
-	if vdu.mutation.CreatedAtCleared() {
-		_spec.ClearField(versiondependency.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := vdu.mutation.UpdatedAt(); ok {
 		_spec.SetField(versiondependency.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if vdu.mutation.UpdatedAtCleared() {
-		_spec.ClearField(versiondependency.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := vdu.mutation.DeletedAt(); ok {
 		_spec.SetField(versiondependency.FieldDeletedAt, field.TypeTime, value)
@@ -326,12 +314,6 @@ type VersionDependencyUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (vduo *VersionDependencyUpdateOne) SetUpdatedAt(t time.Time) *VersionDependencyUpdateOne {
 	vduo.mutation.SetUpdatedAt(t)
-	return vduo
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (vduo *VersionDependencyUpdateOne) ClearUpdatedAt() *VersionDependencyUpdateOne {
-	vduo.mutation.ClearUpdatedAt()
 	return vduo
 }
 
@@ -483,7 +465,7 @@ func (vduo *VersionDependencyUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (vduo *VersionDependencyUpdateOne) defaults() error {
-	if _, ok := vduo.mutation.UpdatedAt(); !ok && !vduo.mutation.UpdatedAtCleared() {
+	if _, ok := vduo.mutation.UpdatedAt(); !ok {
 		if versiondependency.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized versiondependency.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -546,14 +528,8 @@ func (vduo *VersionDependencyUpdateOne) sqlSave(ctx context.Context) (_node *Ver
 			}
 		}
 	}
-	if vduo.mutation.CreatedAtCleared() {
-		_spec.ClearField(versiondependency.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := vduo.mutation.UpdatedAt(); ok {
 		_spec.SetField(versiondependency.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if vduo.mutation.UpdatedAtCleared() {
-		_spec.ClearField(versiondependency.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := vduo.mutation.DeletedAt(); ok {
 		_spec.SetField(versiondependency.FieldDeletedAt, field.TypeTime, value)

@@ -229,7 +229,7 @@ func TestMods(t *testing.T) {
 
 			t.Run("Query Many", func(t *testing.T) {
 				queryRequest := authRequest(`query {
-					getMods {
+					getMods(filter: {order: asc, order_by: created_at}) {
 						count
 						mods {
 							id
@@ -259,7 +259,7 @@ func TestMods(t *testing.T) {
 
 			t.Run("Query My Mods", func(t *testing.T) {
 				queryRequest := authRequest(`query {
-					getMyMods {
+					getMyMods(filter: {order: asc, order_by: created_at}) {
 						count
 						mods {
 							id

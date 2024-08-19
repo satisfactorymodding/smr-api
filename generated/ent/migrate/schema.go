@@ -11,8 +11,8 @@ var (
 	// AnnouncementsColumns holds the columns for the "announcements" table.
 	AnnouncementsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "message", Type: field.TypeString},
 		{Name: "importance", Type: field.TypeString},
@@ -24,11 +24,6 @@ var (
 		PrimaryKey: []*schema.Column{AnnouncementsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "announcement_id",
-				Unique:  true,
-				Columns: []*schema.Column{AnnouncementsColumns[0]},
-			},
-			{
 				Name:    "announcement_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{AnnouncementsColumns[3]},
@@ -38,8 +33,8 @@ var (
 	// GuidesColumns holds the columns for the "guides" table.
 	GuidesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 32},
 		{Name: "short_description", Type: field.TypeString, Size: 128},
@@ -61,11 +56,6 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
-			{
-				Name:    "guide_id",
-				Unique:  true,
-				Columns: []*schema.Column{GuidesColumns[0]},
-			},
 			{
 				Name:    "guide_deleted_at",
 				Unique:  false,
@@ -101,8 +91,8 @@ var (
 	// ModsColumns holds the columns for the "mods" table.
 	ModsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 32},
 		{Name: "short_description", Type: field.TypeString, Size: 128},
@@ -128,22 +118,17 @@ var (
 		PrimaryKey: []*schema.Column{ModsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "mod_id",
-				Unique:  true,
-				Columns: []*schema.Column{ModsColumns[0]},
-			},
-			{
 				Name:    "mod_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{ModsColumns[3]},
 			},
 			{
-				Name:    "idx_mods_last_version_date",
+				Name:    "mod_last_version_date",
 				Unique:  false,
 				Columns: []*schema.Column{ModsColumns[16]},
 			},
 			{
-				Name:    "idx_mods_mod_reference",
+				Name:    "mod_mod_reference",
 				Unique:  true,
 				Columns: []*schema.Column{ModsColumns[17]},
 			},
@@ -185,19 +170,12 @@ var (
 		Name:       "satisfactory_versions",
 		Columns:    SatisfactoryVersionsColumns,
 		PrimaryKey: []*schema.Column{SatisfactoryVersionsColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "satisfactoryversion_id",
-				Unique:  true,
-				Columns: []*schema.Column{SatisfactoryVersionsColumns[0]},
-			},
-		},
 	}
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Unique: true, Size: 24},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 512},
@@ -209,11 +187,6 @@ var (
 		PrimaryKey: []*schema.Column{TagsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "tag_id",
-				Unique:  true,
-				Columns: []*schema.Column{TagsColumns[0]},
-			},
-			{
 				Name:    "tag_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{TagsColumns[3]},
@@ -223,10 +196,10 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "email", Type: field.TypeString, Unique: true, Size: 256},
+		{Name: "email", Type: field.TypeString, Size: 256},
 		{Name: "username", Type: field.TypeString, Size: 32},
 		{Name: "avatar", Type: field.TypeString, Nullable: true},
 		{Name: "joined_from", Type: field.TypeString, Nullable: true},
@@ -243,32 +216,27 @@ var (
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "user_id",
-				Unique:  true,
-				Columns: []*schema.Column{UsersColumns[0]},
-			},
-			{
 				Name:    "user_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[3]},
 			},
 			{
-				Name:    "uix_users_email",
+				Name:    "user_email",
 				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[4]},
 			},
 			{
-				Name:    "idx_users_github_id",
+				Name:    "user_github_id",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[10]},
 			},
 			{
-				Name:    "idx_users_google_id",
+				Name:    "user_google_id",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[11]},
 			},
 			{
-				Name:    "idx_users_facebook_id",
+				Name:    "user_facebook_id",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[12]},
 			},
@@ -277,8 +245,8 @@ var (
 	// UserGroupsColumns holds the columns for the "user_groups" table.
 	UserGroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "group_id", Type: field.TypeString, Size: 14},
 		{Name: "user_id", Type: field.TypeString},
@@ -297,11 +265,6 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
-			{
-				Name:    "usergroup_id",
-				Unique:  true,
-				Columns: []*schema.Column{UserGroupsColumns[0]},
-			},
 			{
 				Name:    "usergroup_deleted_at",
 				Unique:  false,
@@ -343,10 +306,10 @@ var (
 	// UserSessionsColumns holds the columns for the "user_sessions" table.
 	UserSessionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "token", Type: field.TypeString, Unique: true, Size: 512},
+		{Name: "token", Type: field.TypeString, Size: 512},
 		{Name: "user_agent", Type: field.TypeString, Nullable: true},
 		{Name: "user_id", Type: field.TypeString},
 	}
@@ -365,17 +328,12 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "usersession_id",
-				Unique:  true,
-				Columns: []*schema.Column{UserSessionsColumns[0]},
-			},
-			{
 				Name:    "usersession_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{UserSessionsColumns[3]},
 			},
 			{
-				Name:    "uix_user_sessions_token",
+				Name:    "usersession_token",
 				Unique:  true,
 				Columns: []*schema.Column{UserSessionsColumns[4]},
 			},
@@ -384,11 +342,11 @@ var (
 	// VersionsColumns holds the columns for the "versions" table.
 	VersionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "version", Type: field.TypeString, Size: 16},
-		{Name: "game_version", Type: field.TypeString, Nullable: true},
+		{Name: "game_version", Type: field.TypeString},
 		{Name: "changelog", Type: field.TypeString, Nullable: true},
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
 		{Name: "key", Type: field.TypeString, Nullable: true},
@@ -420,27 +378,22 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "version_id",
-				Unique:  true,
-				Columns: []*schema.Column{VersionsColumns[0]},
-			},
-			{
 				Name:    "version_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{VersionsColumns[3]},
 			},
 			{
-				Name:    "idx_versions_approved",
+				Name:    "version_approved",
 				Unique:  false,
 				Columns: []*schema.Column{VersionsColumns[10]},
 			},
 			{
-				Name:    "idx_versions_denied",
+				Name:    "version_denied",
 				Unique:  false,
 				Columns: []*schema.Column{VersionsColumns[12]},
 			},
 			{
-				Name:    "idx_versions_mod_id",
+				Name:    "version_mod_id",
 				Unique:  false,
 				Columns: []*schema.Column{VersionsColumns[20]},
 			},
@@ -448,8 +401,8 @@ var (
 	}
 	// VersionDependenciesColumns holds the columns for the "version_dependencies" table.
 	VersionDependenciesColumns = []*schema.Column{
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "condition", Type: field.TypeString, Size: 64},
 		{Name: "optional", Type: field.TypeBool},
@@ -506,11 +459,6 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
-			{
-				Name:    "versiontarget_id",
-				Unique:  true,
-				Columns: []*schema.Column{VersionTargetsColumns[0]},
-			},
 			{
 				Name:    "versiontarget_version_id_target_name",
 				Unique:  true,

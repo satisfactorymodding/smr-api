@@ -37,12 +37,6 @@ func (tu *TagUpdate) SetUpdatedAt(t time.Time) *TagUpdate {
 	return tu
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (tu *TagUpdate) ClearUpdatedAt() *TagUpdate {
-	tu.mutation.ClearUpdatedAt()
-	return tu
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (tu *TagUpdate) SetDeletedAt(t time.Time) *TagUpdate {
 	tu.mutation.SetDeletedAt(t)
@@ -206,7 +200,7 @@ func (tu *TagUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (tu *TagUpdate) defaults() error {
-	if _, ok := tu.mutation.UpdatedAt(); !ok && !tu.mutation.UpdatedAtCleared() {
+	if _, ok := tu.mutation.UpdatedAt(); !ok {
 		if tag.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized tag.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -249,14 +243,8 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if tu.mutation.CreatedAtCleared() {
-		_spec.ClearField(tag.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := tu.mutation.UpdatedAt(); ok {
 		_spec.SetField(tag.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if tu.mutation.UpdatedAtCleared() {
-		_spec.ClearField(tag.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := tu.mutation.DeletedAt(); ok {
 		_spec.SetField(tag.FieldDeletedAt, field.TypeTime, value)
@@ -388,12 +376,6 @@ type TagUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (tuo *TagUpdateOne) SetUpdatedAt(t time.Time) *TagUpdateOne {
 	tuo.mutation.SetUpdatedAt(t)
-	return tuo
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (tuo *TagUpdateOne) ClearUpdatedAt() *TagUpdateOne {
-	tuo.mutation.ClearUpdatedAt()
 	return tuo
 }
 
@@ -573,7 +555,7 @@ func (tuo *TagUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (tuo *TagUpdateOne) defaults() error {
-	if _, ok := tuo.mutation.UpdatedAt(); !ok && !tuo.mutation.UpdatedAtCleared() {
+	if _, ok := tuo.mutation.UpdatedAt(); !ok {
 		if tag.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized tag.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -633,14 +615,8 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 			}
 		}
 	}
-	if tuo.mutation.CreatedAtCleared() {
-		_spec.ClearField(tag.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := tuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(tag.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if tuo.mutation.UpdatedAtCleared() {
-		_spec.ClearField(tag.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := tuo.mutation.DeletedAt(); ok {
 		_spec.SetField(tag.FieldDeletedAt, field.TypeTime, value)

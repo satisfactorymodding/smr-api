@@ -194,6 +194,12 @@ func (tc *TagCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (tc *TagCreate) check() error {
+	if _, ok := tc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Tag.created_at"`)}
+	}
+	if _, ok := tc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Tag.updated_at"`)}
+	}
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Tag.name"`)}
 	}
@@ -359,12 +365,6 @@ func (u *TagUpsert) UpdateUpdatedAt() *TagUpsert {
 	return u
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *TagUpsert) ClearUpdatedAt() *TagUpsert {
-	u.SetNull(tag.FieldUpdatedAt)
-	return u
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (u *TagUpsert) SetDeletedAt(v time.Time) *TagUpsert {
 	u.Set(tag.FieldDeletedAt, v)
@@ -475,13 +475,6 @@ func (u *TagUpsertOne) SetUpdatedAt(v time.Time) *TagUpsertOne {
 func (u *TagUpsertOne) UpdateUpdatedAt() *TagUpsertOne {
 	return u.Update(func(s *TagUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *TagUpsertOne) ClearUpdatedAt() *TagUpsertOne {
-	return u.Update(func(s *TagUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 
@@ -770,13 +763,6 @@ func (u *TagUpsertBulk) SetUpdatedAt(v time.Time) *TagUpsertBulk {
 func (u *TagUpsertBulk) UpdateUpdatedAt() *TagUpsertBulk {
 	return u.Update(func(s *TagUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *TagUpsertBulk) ClearUpdatedAt() *TagUpsertBulk {
-	return u.Update(func(s *TagUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 

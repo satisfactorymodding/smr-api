@@ -156,6 +156,12 @@ func (vdc *VersionDependencyCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (vdc *VersionDependencyCreate) check() error {
+	if _, ok := vdc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "VersionDependency.created_at"`)}
+	}
+	if _, ok := vdc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "VersionDependency.updated_at"`)}
+	}
 	if _, ok := vdc.mutation.VersionID(); !ok {
 		return &ValidationError{Name: "version_id", err: errors.New(`ent: missing required field "VersionDependency.version_id"`)}
 	}
@@ -320,12 +326,6 @@ func (u *VersionDependencyUpsert) UpdateUpdatedAt() *VersionDependencyUpsert {
 	return u
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *VersionDependencyUpsert) ClearUpdatedAt() *VersionDependencyUpsert {
-	u.SetNull(versiondependency.FieldUpdatedAt)
-	return u
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (u *VersionDependencyUpsert) SetDeletedAt(v time.Time) *VersionDependencyUpsert {
 	u.Set(versiondependency.FieldDeletedAt, v)
@@ -448,13 +448,6 @@ func (u *VersionDependencyUpsertOne) SetUpdatedAt(v time.Time) *VersionDependenc
 func (u *VersionDependencyUpsertOne) UpdateUpdatedAt() *VersionDependencyUpsertOne {
 	return u.Update(func(s *VersionDependencyUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *VersionDependencyUpsertOne) ClearUpdatedAt() *VersionDependencyUpsertOne {
-	return u.Update(func(s *VersionDependencyUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 
@@ -734,13 +727,6 @@ func (u *VersionDependencyUpsertBulk) SetUpdatedAt(v time.Time) *VersionDependen
 func (u *VersionDependencyUpsertBulk) UpdateUpdatedAt() *VersionDependencyUpsertBulk {
 	return u.Update(func(s *VersionDependencyUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *VersionDependencyUpsertBulk) ClearUpdatedAt() *VersionDependencyUpsertBulk {
-	return u.Update(func(s *VersionDependencyUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 

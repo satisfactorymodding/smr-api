@@ -21,7 +21,7 @@ func (User) Mixin() []ent.Mixin {
 
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("email").MaxLen(256).Unique(),
+		field.String("email").MaxLen(256),
 		field.String("username").MaxLen(32),
 		field.String("avatar").Optional(),
 		field.String("joined_from").Optional(),
@@ -35,10 +35,10 @@ func (User) Fields() []ent.Field {
 
 func (User) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("email").Unique().StorageKey("uix_users_email"),
-		index.Fields("github_id").StorageKey("idx_users_github_id"),
-		index.Fields("google_id").StorageKey("idx_users_google_id"),
-		index.Fields("facebook_id").StorageKey("idx_users_facebook_id"),
+		index.Fields("email").Unique(),
+		index.Fields("github_id"),
+		index.Fields("google_id"),
+		index.Fields("facebook_id"),
 	}
 }
 

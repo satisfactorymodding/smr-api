@@ -30,3 +30,7 @@ SET mod_id = (SELECT id
               WHERE mod_reference = version_dependencies.mod_id
               LIMIT 1)
 WHERE mod_id NOT IN (SELECT id FROM mods);
+
+UPDATE versions
+SET game_version = '0'
+WHERE game_version IS NULL;

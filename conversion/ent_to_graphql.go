@@ -113,6 +113,7 @@ type Version interface {
 // goverter:extend TimeToString UIntToInt Int64ToInt
 type VersionDependency interface {
 	// goverter:ignore Mod Version
+	// goverter:map ModID ModReference
 	Convert(source *ent.VersionDependency) *generated.VersionDependency
 	ConvertSlice(source []*ent.VersionDependency) []*generated.VersionDependency
 }

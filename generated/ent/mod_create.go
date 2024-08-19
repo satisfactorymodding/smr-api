@@ -402,6 +402,12 @@ func (mc *ModCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (mc *ModCreate) check() error {
+	if _, ok := mc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Mod.created_at"`)}
+	}
+	if _, ok := mc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Mod.updated_at"`)}
+	}
 	if _, ok := mc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Mod.name"`)}
 	}
@@ -697,12 +703,6 @@ func (u *ModUpsert) SetUpdatedAt(v time.Time) *ModUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *ModUpsert) UpdateUpdatedAt() *ModUpsert {
 	u.SetExcluded(mod.FieldUpdatedAt)
-	return u
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *ModUpsert) ClearUpdatedAt() *ModUpsert {
-	u.SetNull(mod.FieldUpdatedAt)
 	return u
 }
 
@@ -1020,13 +1020,6 @@ func (u *ModUpsertOne) SetUpdatedAt(v time.Time) *ModUpsertOne {
 func (u *ModUpsertOne) UpdateUpdatedAt() *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *ModUpsertOne) ClearUpdatedAt() *ModUpsertOne {
-	return u.Update(func(s *ModUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 
@@ -1553,13 +1546,6 @@ func (u *ModUpsertBulk) SetUpdatedAt(v time.Time) *ModUpsertBulk {
 func (u *ModUpsertBulk) UpdateUpdatedAt() *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *ModUpsertBulk) ClearUpdatedAt() *ModUpsertBulk {
-	return u.Update(func(s *ModUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 

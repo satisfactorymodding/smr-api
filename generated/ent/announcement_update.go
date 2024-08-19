@@ -35,12 +35,6 @@ func (au *AnnouncementUpdate) SetUpdatedAt(t time.Time) *AnnouncementUpdate {
 	return au
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (au *AnnouncementUpdate) ClearUpdatedAt() *AnnouncementUpdate {
-	au.mutation.ClearUpdatedAt()
-	return au
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (au *AnnouncementUpdate) SetDeletedAt(t time.Time) *AnnouncementUpdate {
 	au.mutation.SetDeletedAt(t)
@@ -126,7 +120,7 @@ func (au *AnnouncementUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (au *AnnouncementUpdate) defaults() error {
-	if _, ok := au.mutation.UpdatedAt(); !ok && !au.mutation.UpdatedAtCleared() {
+	if _, ok := au.mutation.UpdatedAt(); !ok {
 		if announcement.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized announcement.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -151,14 +145,8 @@ func (au *AnnouncementUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if au.mutation.CreatedAtCleared() {
-		_spec.ClearField(announcement.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := au.mutation.UpdatedAt(); ok {
 		_spec.SetField(announcement.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if au.mutation.UpdatedAtCleared() {
-		_spec.ClearField(announcement.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := au.mutation.DeletedAt(); ok {
 		_spec.SetField(announcement.FieldDeletedAt, field.TypeTime, value)
@@ -197,12 +185,6 @@ type AnnouncementUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (auo *AnnouncementUpdateOne) SetUpdatedAt(t time.Time) *AnnouncementUpdateOne {
 	auo.mutation.SetUpdatedAt(t)
-	return auo
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (auo *AnnouncementUpdateOne) ClearUpdatedAt() *AnnouncementUpdateOne {
-	auo.mutation.ClearUpdatedAt()
 	return auo
 }
 
@@ -304,7 +286,7 @@ func (auo *AnnouncementUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (auo *AnnouncementUpdateOne) defaults() error {
-	if _, ok := auo.mutation.UpdatedAt(); !ok && !auo.mutation.UpdatedAtCleared() {
+	if _, ok := auo.mutation.UpdatedAt(); !ok {
 		if announcement.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized announcement.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -346,14 +328,8 @@ func (auo *AnnouncementUpdateOne) sqlSave(ctx context.Context) (_node *Announcem
 			}
 		}
 	}
-	if auo.mutation.CreatedAtCleared() {
-		_spec.ClearField(announcement.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := auo.mutation.UpdatedAt(); ok {
 		_spec.SetField(announcement.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if auo.mutation.UpdatedAtCleared() {
-		_spec.ClearField(announcement.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := auo.mutation.DeletedAt(); ok {
 		_spec.SetField(announcement.FieldDeletedAt, field.TypeTime, value)

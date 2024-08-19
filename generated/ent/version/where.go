@@ -201,16 +201,6 @@ func CreatedAtLTE(v time.Time) predicate.Version {
 	return predicate.Version(sql.FieldLTE(FieldCreatedAt, v))
 }
 
-// CreatedAtIsNil applies the IsNil predicate on the "created_at" field.
-func CreatedAtIsNil() predicate.Version {
-	return predicate.Version(sql.FieldIsNull(FieldCreatedAt))
-}
-
-// CreatedAtNotNil applies the NotNil predicate on the "created_at" field.
-func CreatedAtNotNil() predicate.Version {
-	return predicate.Version(sql.FieldNotNull(FieldCreatedAt))
-}
-
 // UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
 func UpdatedAtEQ(v time.Time) predicate.Version {
 	return predicate.Version(sql.FieldEQ(FieldUpdatedAt, v))
@@ -249,16 +239,6 @@ func UpdatedAtLT(v time.Time) predicate.Version {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Version {
 	return predicate.Version(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// UpdatedAtIsNil applies the IsNil predicate on the "updated_at" field.
-func UpdatedAtIsNil() predicate.Version {
-	return predicate.Version(sql.FieldIsNull(FieldUpdatedAt))
-}
-
-// UpdatedAtNotNil applies the NotNil predicate on the "updated_at" field.
-func UpdatedAtNotNil() predicate.Version {
-	return predicate.Version(sql.FieldNotNull(FieldUpdatedAt))
 }
 
 // DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
@@ -494,16 +474,6 @@ func GameVersionHasPrefix(v string) predicate.Version {
 // GameVersionHasSuffix applies the HasSuffix predicate on the "game_version" field.
 func GameVersionHasSuffix(v string) predicate.Version {
 	return predicate.Version(sql.FieldHasSuffix(FieldGameVersion, v))
-}
-
-// GameVersionIsNil applies the IsNil predicate on the "game_version" field.
-func GameVersionIsNil() predicate.Version {
-	return predicate.Version(sql.FieldIsNull(FieldGameVersion))
-}
-
-// GameVersionNotNil applies the NotNil predicate on the "game_version" field.
-func GameVersionNotNil() predicate.Version {
-	return predicate.Version(sql.FieldNotNull(FieldGameVersion))
 }
 
 // GameVersionEqualFold applies the EqualFold predicate on the "game_version" field.

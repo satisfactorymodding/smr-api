@@ -86,14 +86,6 @@ func (vc *VersionCreate) SetGameVersion(s string) *VersionCreate {
 	return vc
 }
 
-// SetNillableGameVersion sets the "game_version" field if the given value is not nil.
-func (vc *VersionCreate) SetNillableGameVersion(s *string) *VersionCreate {
-	if s != nil {
-		vc.SetGameVersion(*s)
-	}
-	return vc
-}
-
 // SetChangelog sets the "changelog" field.
 func (vc *VersionCreate) SetChangelog(s string) *VersionCreate {
 	vc.mutation.SetChangelog(s)
@@ -414,6 +406,12 @@ func (vc *VersionCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (vc *VersionCreate) check() error {
+	if _, ok := vc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Version.created_at"`)}
+	}
+	if _, ok := vc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Version.updated_at"`)}
+	}
 	if _, ok := vc.mutation.ModID(); !ok {
 		return &ValidationError{Name: "mod_id", err: errors.New(`ent: missing required field "Version.mod_id"`)}
 	}
@@ -424,6 +422,9 @@ func (vc *VersionCreate) check() error {
 		if err := version.VersionValidator(v); err != nil {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Version.version": %w`, err)}
 		}
+	}
+	if _, ok := vc.mutation.GameVersion(); !ok {
+		return &ValidationError{Name: "game_version", err: errors.New(`ent: missing required field "Version.game_version"`)}
 	}
 	if _, ok := vc.mutation.Downloads(); !ok {
 		return &ValidationError{Name: "downloads", err: errors.New(`ent: missing required field "Version.downloads"`)}
@@ -690,12 +691,6 @@ func (u *VersionUpsert) UpdateUpdatedAt() *VersionUpsert {
 	return u
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *VersionUpsert) ClearUpdatedAt() *VersionUpsert {
-	u.SetNull(version.FieldUpdatedAt)
-	return u
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (u *VersionUpsert) SetDeletedAt(v time.Time) *VersionUpsert {
 	u.Set(version.FieldDeletedAt, v)
@@ -747,12 +742,6 @@ func (u *VersionUpsert) SetGameVersion(v string) *VersionUpsert {
 // UpdateGameVersion sets the "game_version" field to the value that was provided on create.
 func (u *VersionUpsert) UpdateGameVersion() *VersionUpsert {
 	u.SetExcluded(version.FieldGameVersion)
-	return u
-}
-
-// ClearGameVersion clears the value of the "game_version" field.
-func (u *VersionUpsert) ClearGameVersion() *VersionUpsert {
-	u.SetNull(version.FieldGameVersion)
 	return u
 }
 
@@ -1073,13 +1062,6 @@ func (u *VersionUpsertOne) UpdateUpdatedAt() *VersionUpsertOne {
 	})
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *VersionUpsertOne) ClearUpdatedAt() *VersionUpsertOne {
-	return u.Update(func(s *VersionUpsert) {
-		s.ClearUpdatedAt()
-	})
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (u *VersionUpsertOne) SetDeletedAt(v time.Time) *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
@@ -1140,13 +1122,6 @@ func (u *VersionUpsertOne) SetGameVersion(v string) *VersionUpsertOne {
 func (u *VersionUpsertOne) UpdateGameVersion() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateGameVersion()
-	})
-}
-
-// ClearGameVersion clears the value of the "game_version" field.
-func (u *VersionUpsertOne) ClearGameVersion() *VersionUpsertOne {
-	return u.Update(func(s *VersionUpsert) {
-		s.ClearGameVersion()
 	})
 }
 
@@ -1676,13 +1651,6 @@ func (u *VersionUpsertBulk) UpdateUpdatedAt() *VersionUpsertBulk {
 	})
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *VersionUpsertBulk) ClearUpdatedAt() *VersionUpsertBulk {
-	return u.Update(func(s *VersionUpsert) {
-		s.ClearUpdatedAt()
-	})
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (u *VersionUpsertBulk) SetDeletedAt(v time.Time) *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
@@ -1743,13 +1711,6 @@ func (u *VersionUpsertBulk) SetGameVersion(v string) *VersionUpsertBulk {
 func (u *VersionUpsertBulk) UpdateGameVersion() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateGameVersion()
-	})
-}
-
-// ClearGameVersion clears the value of the "game_version" field.
-func (u *VersionUpsertBulk) ClearGameVersion() *VersionUpsertBulk {
-	return u.Update(func(s *VersionUpsert) {
-		s.ClearGameVersion()
 	})
 }
 

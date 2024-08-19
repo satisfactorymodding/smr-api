@@ -25,7 +25,7 @@ func (Version) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("mod_id"),
 		field.String("version").MaxLen(16),
-		field.String("game_version").Optional(), // TODO Should be backfilled and turned non-optional
+		field.String("game_version"),
 		field.String("changelog").Optional(),
 		field.Uint("downloads").Default(0),
 		field.String("key").Optional(),
@@ -45,9 +45,9 @@ func (Version) Fields() []ent.Field {
 
 func (Version) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("approved").StorageKey("idx_versions_approved"),
-		index.Fields("denied").StorageKey("idx_versions_denied"),
-		index.Fields("mod_id").StorageKey("idx_versions_mod_id"),
+		index.Fields("approved"),
+		index.Fields("denied"),
+		index.Fields("mod_id"),
 	}
 }
 

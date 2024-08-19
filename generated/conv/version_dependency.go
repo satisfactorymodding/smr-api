@@ -18,6 +18,7 @@ func (c *VersionDependencyImpl) Convert(source *ent.VersionDependency) *generate
 		generatedVersionDependency.ModID = (*source).ModID
 		generatedVersionDependency.Condition = (*source).Condition
 		generatedVersionDependency.Optional = (*source).Optional
+		generatedVersionDependency.ModReference = (*source).ModID
 		pGeneratedVersionDependency = &generatedVersionDependency
 	}
 	return pGeneratedVersionDependency

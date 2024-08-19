@@ -37,12 +37,6 @@ func (gu *GuideUpdate) SetUpdatedAt(t time.Time) *GuideUpdate {
 	return gu
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (gu *GuideUpdate) ClearUpdatedAt() *GuideUpdate {
-	gu.mutation.ClearUpdatedAt()
-	return gu
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (gu *GuideUpdate) SetDeletedAt(t time.Time) *GuideUpdate {
 	gu.mutation.SetDeletedAt(t)
@@ -230,7 +224,7 @@ func (gu *GuideUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (gu *GuideUpdate) defaults() error {
-	if _, ok := gu.mutation.UpdatedAt(); !ok && !gu.mutation.UpdatedAtCleared() {
+	if _, ok := gu.mutation.UpdatedAt(); !ok {
 		if guide.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized guide.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -273,14 +267,8 @@ func (gu *GuideUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if gu.mutation.CreatedAtCleared() {
-		_spec.ClearField(guide.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := gu.mutation.UpdatedAt(); ok {
 		_spec.SetField(guide.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if gu.mutation.UpdatedAtCleared() {
-		_spec.ClearField(guide.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := gu.mutation.DeletedAt(); ok {
 		_spec.SetField(guide.FieldDeletedAt, field.TypeTime, value)
@@ -402,12 +390,6 @@ type GuideUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (guo *GuideUpdateOne) SetUpdatedAt(t time.Time) *GuideUpdateOne {
 	guo.mutation.SetUpdatedAt(t)
-	return guo
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (guo *GuideUpdateOne) ClearUpdatedAt() *GuideUpdateOne {
-	guo.mutation.ClearUpdatedAt()
 	return guo
 }
 
@@ -611,7 +593,7 @@ func (guo *GuideUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (guo *GuideUpdateOne) defaults() error {
-	if _, ok := guo.mutation.UpdatedAt(); !ok && !guo.mutation.UpdatedAtCleared() {
+	if _, ok := guo.mutation.UpdatedAt(); !ok {
 		if guide.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized guide.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -671,14 +653,8 @@ func (guo *GuideUpdateOne) sqlSave(ctx context.Context) (_node *Guide, err error
 			}
 		}
 	}
-	if guo.mutation.CreatedAtCleared() {
-		_spec.ClearField(guide.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := guo.mutation.UpdatedAt(); ok {
 		_spec.SetField(guide.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if guo.mutation.UpdatedAtCleared() {
-		_spec.ClearField(guide.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := guo.mutation.DeletedAt(); ok {
 		_spec.SetField(guide.FieldDeletedAt, field.TypeTime, value)

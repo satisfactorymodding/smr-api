@@ -154,6 +154,12 @@ func (ac *AnnouncementCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (ac *AnnouncementCreate) check() error {
+	if _, ok := ac.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Announcement.created_at"`)}
+	}
+	if _, ok := ac.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Announcement.updated_at"`)}
+	}
 	if _, ok := ac.mutation.Message(); !ok {
 		return &ValidationError{Name: "message", err: errors.New(`ent: missing required field "Announcement.message"`)}
 	}
@@ -280,12 +286,6 @@ func (u *AnnouncementUpsert) UpdateUpdatedAt() *AnnouncementUpsert {
 	return u
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *AnnouncementUpsert) ClearUpdatedAt() *AnnouncementUpsert {
-	u.SetNull(announcement.FieldUpdatedAt)
-	return u
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (u *AnnouncementUpsert) SetDeletedAt(v time.Time) *AnnouncementUpsert {
 	u.Set(announcement.FieldDeletedAt, v)
@@ -390,13 +390,6 @@ func (u *AnnouncementUpsertOne) SetUpdatedAt(v time.Time) *AnnouncementUpsertOne
 func (u *AnnouncementUpsertOne) UpdateUpdatedAt() *AnnouncementUpsertOne {
 	return u.Update(func(s *AnnouncementUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *AnnouncementUpsertOne) ClearUpdatedAt() *AnnouncementUpsertOne {
-	return u.Update(func(s *AnnouncementUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 
@@ -678,13 +671,6 @@ func (u *AnnouncementUpsertBulk) SetUpdatedAt(v time.Time) *AnnouncementUpsertBu
 func (u *AnnouncementUpsertBulk) UpdateUpdatedAt() *AnnouncementUpsertBulk {
 	return u.Update(func(s *AnnouncementUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *AnnouncementUpsertBulk) ClearUpdatedAt() *AnnouncementUpsertBulk {
-	return u.Update(func(s *AnnouncementUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 

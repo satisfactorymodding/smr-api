@@ -38,12 +38,6 @@ func (vu *VersionUpdate) SetUpdatedAt(t time.Time) *VersionUpdate {
 	return vu
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (vu *VersionUpdate) ClearUpdatedAt() *VersionUpdate {
-	vu.mutation.ClearUpdatedAt()
-	return vu
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (vu *VersionUpdate) SetDeletedAt(t time.Time) *VersionUpdate {
 	vu.mutation.SetDeletedAt(t)
@@ -103,12 +97,6 @@ func (vu *VersionUpdate) SetNillableGameVersion(s *string) *VersionUpdate {
 	if s != nil {
 		vu.SetGameVersion(*s)
 	}
-	return vu
-}
-
-// ClearGameVersion clears the value of the "game_version" field.
-func (vu *VersionUpdate) ClearGameVersion() *VersionUpdate {
-	vu.mutation.ClearGameVersion()
 	return vu
 }
 
@@ -518,7 +506,7 @@ func (vu *VersionUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (vu *VersionUpdate) defaults() error {
-	if _, ok := vu.mutation.UpdatedAt(); !ok && !vu.mutation.UpdatedAtCleared() {
+	if _, ok := vu.mutation.UpdatedAt(); !ok {
 		if version.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized version.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -574,14 +562,8 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if vu.mutation.CreatedAtCleared() {
-		_spec.ClearField(version.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := vu.mutation.UpdatedAt(); ok {
 		_spec.SetField(version.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if vu.mutation.UpdatedAtCleared() {
-		_spec.ClearField(version.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := vu.mutation.DeletedAt(); ok {
 		_spec.SetField(version.FieldDeletedAt, field.TypeTime, value)
@@ -594,9 +576,6 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := vu.mutation.GameVersion(); ok {
 		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
-	}
-	if vu.mutation.GameVersionCleared() {
-		_spec.ClearField(version.FieldGameVersion, field.TypeString)
 	}
 	if value, ok := vu.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)
@@ -841,12 +820,6 @@ func (vuo *VersionUpdateOne) SetUpdatedAt(t time.Time) *VersionUpdateOne {
 	return vuo
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (vuo *VersionUpdateOne) ClearUpdatedAt() *VersionUpdateOne {
-	vuo.mutation.ClearUpdatedAt()
-	return vuo
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (vuo *VersionUpdateOne) SetDeletedAt(t time.Time) *VersionUpdateOne {
 	vuo.mutation.SetDeletedAt(t)
@@ -906,12 +879,6 @@ func (vuo *VersionUpdateOne) SetNillableGameVersion(s *string) *VersionUpdateOne
 	if s != nil {
 		vuo.SetGameVersion(*s)
 	}
-	return vuo
-}
-
-// ClearGameVersion clears the value of the "game_version" field.
-func (vuo *VersionUpdateOne) ClearGameVersion() *VersionUpdateOne {
-	vuo.mutation.ClearGameVersion()
 	return vuo
 }
 
@@ -1334,7 +1301,7 @@ func (vuo *VersionUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (vuo *VersionUpdateOne) defaults() error {
-	if _, ok := vuo.mutation.UpdatedAt(); !ok && !vuo.mutation.UpdatedAtCleared() {
+	if _, ok := vuo.mutation.UpdatedAt(); !ok {
 		if version.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized version.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -1407,14 +1374,8 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 			}
 		}
 	}
-	if vuo.mutation.CreatedAtCleared() {
-		_spec.ClearField(version.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := vuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(version.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if vuo.mutation.UpdatedAtCleared() {
-		_spec.ClearField(version.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := vuo.mutation.DeletedAt(); ok {
 		_spec.SetField(version.FieldDeletedAt, field.TypeTime, value)
@@ -1427,9 +1388,6 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	}
 	if value, ok := vuo.mutation.GameVersion(); ok {
 		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
-	}
-	if vuo.mutation.GameVersionCleared() {
-		_spec.ClearField(version.FieldGameVersion, field.TypeString)
 	}
 	if value, ok := vuo.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)

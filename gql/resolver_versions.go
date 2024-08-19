@@ -21,7 +21,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/generated/conv"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
-	mod2 "github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/models"
@@ -386,13 +385,8 @@ func (r *versionResolver) SmlVersion(ctx context.Context, obj *generated.Version
 		return "", err
 	}
 
-	smlMod, err := db.From(ctx).Mod.Query().Where(mod2.ModReference("SML")).First(ctx)
-	if err != nil {
-		return "", err
-	}
-
 	for _, dep := range dependencies {
-		if dep.ModID == smlMod.ID {
+		if dep.ModID == "SML" {
 			return dep.Condition, nil
 		}
 	}
@@ -420,6 +414,10 @@ func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Versi
 		dependencies, err = dataloader.For(ctx).VersionDependenciesByVersionID.Load(ctx, obj.ID)()
 		if err != nil {
 			return nil, err
+		}
+
+		for _, dependency := range dependencies {
+			dependency.ModID = dependency.Edges.Mod.ModReference
 		}
 
 		versionDependencyCache.SetWithTTL(obj.ID, dependencies, int64(len(dependencies)), versionDependencyCacheTTL)

@@ -44,8 +44,8 @@ func (Mod) Fields() []ent.Field {
 
 func (Mod) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("last_version_date").StorageKey("idx_mods_last_version_date"),
-		index.Fields("mod_reference").Unique().StorageKey("idx_mods_mod_reference"),
+		index.Fields("last_version_date"),
+		index.Fields("mod_reference").Unique(),
 	}
 }
 

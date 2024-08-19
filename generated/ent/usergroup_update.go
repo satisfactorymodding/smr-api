@@ -36,12 +36,6 @@ func (ugu *UserGroupUpdate) SetUpdatedAt(t time.Time) *UserGroupUpdate {
 	return ugu
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (ugu *UserGroupUpdate) ClearUpdatedAt() *UserGroupUpdate {
-	ugu.mutation.ClearUpdatedAt()
-	return ugu
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (ugu *UserGroupUpdate) SetDeletedAt(t time.Time) *UserGroupUpdate {
 	ugu.mutation.SetDeletedAt(t)
@@ -138,7 +132,7 @@ func (ugu *UserGroupUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (ugu *UserGroupUpdate) defaults() error {
-	if _, ok := ugu.mutation.UpdatedAt(); !ok && !ugu.mutation.UpdatedAtCleared() {
+	if _, ok := ugu.mutation.UpdatedAt(); !ok {
 		if usergroup.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized usergroup.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -184,14 +178,8 @@ func (ugu *UserGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if ugu.mutation.CreatedAtCleared() {
-		_spec.ClearField(usergroup.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := ugu.mutation.UpdatedAt(); ok {
 		_spec.SetField(usergroup.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if ugu.mutation.UpdatedAtCleared() {
-		_spec.ClearField(usergroup.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := ugu.mutation.DeletedAt(); ok {
 		_spec.SetField(usergroup.FieldDeletedAt, field.TypeTime, value)
@@ -256,12 +244,6 @@ type UserGroupUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (uguo *UserGroupUpdateOne) SetUpdatedAt(t time.Time) *UserGroupUpdateOne {
 	uguo.mutation.SetUpdatedAt(t)
-	return uguo
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (uguo *UserGroupUpdateOne) ClearUpdatedAt() *UserGroupUpdateOne {
-	uguo.mutation.ClearUpdatedAt()
 	return uguo
 }
 
@@ -374,7 +356,7 @@ func (uguo *UserGroupUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (uguo *UserGroupUpdateOne) defaults() error {
-	if _, ok := uguo.mutation.UpdatedAt(); !ok && !uguo.mutation.UpdatedAtCleared() {
+	if _, ok := uguo.mutation.UpdatedAt(); !ok {
 		if usergroup.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized usergroup.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -437,14 +419,8 @@ func (uguo *UserGroupUpdateOne) sqlSave(ctx context.Context) (_node *UserGroup, 
 			}
 		}
 	}
-	if uguo.mutation.CreatedAtCleared() {
-		_spec.ClearField(usergroup.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := uguo.mutation.UpdatedAt(); ok {
 		_spec.SetField(usergroup.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if uguo.mutation.UpdatedAtCleared() {
-		_spec.ClearField(usergroup.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := uguo.mutation.DeletedAt(); ok {
 		_spec.SetField(usergroup.FieldDeletedAt, field.TypeTime, value)

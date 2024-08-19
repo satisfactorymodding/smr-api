@@ -54,7 +54,7 @@ func init() {
 				return semver.MustParse(smlVersions[a].Version).Compare(semver.MustParse(smlVersions[b].Version)) < 0
 			})
 
-			err = utils.ExecuteOnVersions(ctx, func(m *ent.Mod) bool {
+			err = utils.ExecuteOnVersions(ctx, true, func(m *ent.Mod) bool {
 				return m.ModReference != "SML"
 			}, nil, func(mod *ent.Mod, version *ent.Version) {
 				smlDependency, err := version.QueryVersionDependencies().Where(versiondependency.ModIDIn(smlMod.ModReference, smlMod.ID)).First(ctx)

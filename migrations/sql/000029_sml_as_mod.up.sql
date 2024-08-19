@@ -19,9 +19,9 @@ VALUES (
     'Mod loading and compatibility API for Satisfactory',
     'Mod loading and compatibility API for Satisfactory',
     '', '',
-    (SELECT created_at FROM sml_versions ORDER BY created_at LIMIT 1),
-    (SELECT updated_at FROM sml_versions ORDER BY updated_at LIMIT 1),
-    (SELECT created_at FROM sml_versions ORDER BY created_at DESC LIMIT 1),
+    COALESCE((SELECT created_at FROM sml_versions ORDER BY created_at LIMIT 1), now()),
+    COALESCE((SELECT updated_at FROM sml_versions ORDER BY updated_at LIMIT 1), now()),
+    COALESCE((SELECT created_at FROM sml_versions ORDER BY created_at DESC LIMIT 1), now()),
     0, 0, 0, 0,
     true
 )

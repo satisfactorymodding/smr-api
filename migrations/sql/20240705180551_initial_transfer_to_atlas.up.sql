@@ -7,8 +7,6 @@ ALTER TABLE "satisfactory_versions"
     ALTER COLUMN "engine_version" SET NOT NULL;
 -- create index "satisfactory_versions_version_key" to table: "satisfactory_versions"
 CREATE UNIQUE INDEX "satisfactory_versions_version_key" ON "satisfactory_versions" ("version");
--- create index "satisfactoryversion_id" to table: "satisfactory_versions"
-CREATE UNIQUE INDEX "satisfactoryversion_id" ON "satisfactory_versions" ("id");
 -- modify "announcements" table
 ALTER TABLE "announcements"
     ALTER COLUMN "id" TYPE character varying,
@@ -16,8 +14,6 @@ ALTER TABLE "announcements"
     ALTER COLUMN "importance" TYPE character varying;
 -- create index "announcement_deleted_at" to table: "announcements"
 CREATE INDEX "announcement_deleted_at" ON "announcements" ("deleted_at");
--- create index "announcement_id" to table: "announcements"
-CREATE UNIQUE INDEX "announcement_id" ON "announcements" ("id");
 -- modify "users" table
 ALTER TABLE "users"
     DROP CONSTRAINT "users_facebook_id_key",
@@ -34,8 +30,6 @@ ALTER TABLE "users"
     ALTER COLUMN "github_id" TYPE character varying,
     ALTER COLUMN "google_id" TYPE character varying,
     ALTER COLUMN "facebook_id" TYPE character varying;
--- create index "user_id" to table: "users"
-CREATE UNIQUE INDEX "user_id" ON "users" ("id");
 -- create index "users_email_key" to table: "users"
 CREATE UNIQUE INDEX "users_email_key" ON "users" ("email");
 -- rename an index from "idx_users_deleted_at" to "user_deleted_at"
@@ -55,8 +49,6 @@ ALTER TABLE "guides"
     ALTER COLUMN "views" SET DEFAULT 0,
     ALTER COLUMN "user_id" TYPE character varying,
     ADD CONSTRAINT "guides_users_guides" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE SET NULL;
--- create index "guide_id" to table: "guides"
-CREATE UNIQUE INDEX "guide_id" ON "guides" ("id");
 -- rename an index from "idx_guides_deleted_at" to "guide_deleted_at"
 ALTER INDEX "idx_guides_deleted_at" RENAME TO "guide_deleted_at";
 -- modify "tags" table
@@ -67,8 +59,6 @@ ALTER TABLE "tags"
     ALTER COLUMN "description" TYPE character varying;
 -- create index "tags_name_key" to table: "tags"
 CREATE UNIQUE INDEX "tags_name_key" ON "tags" ("name");
--- create index "tag_id" to table: "tags"
-CREATE UNIQUE INDEX "tag_id" ON "tags" ("id");
 -- rename an index from "idx_tags_deleted_at" to "tag_deleted_at"
 ALTER INDEX "idx_tags_deleted_at" RENAME TO "tag_deleted_at";
 -- modify "guide_tags" table
@@ -107,8 +97,6 @@ ALTER TABLE "mods"
     ALTER COLUMN "downloads" SET DEFAULT 0,
     ALTER COLUMN "mod_reference" TYPE character varying,
     ALTER COLUMN "hidden" SET NOT NULL;
--- create index "mod_id" to table: "mods"
-CREATE UNIQUE INDEX "mod_id" ON "mods" ("id");
 -- rename an index from "idx_mods_deleted_at" to "mod_deleted_at"
 ALTER INDEX "idx_mods_deleted_at" RENAME TO "mod_deleted_at";
 -- modify "mod_tags" table
@@ -134,8 +122,6 @@ ALTER TABLE "user_groups"
 CREATE INDEX "usergroup_deleted_at" ON "user_groups" ("deleted_at");
 -- create index "usergroup_user_id_group_id" to table: "user_groups"
 CREATE UNIQUE INDEX "usergroup_user_id_group_id" ON "user_groups" ("user_id", "group_id");
--- rename an index from "uix_user_groups_id" to "usergroup_id"
-ALTER INDEX "uix_user_groups_id" RENAME TO "usergroup_id";
 -- modify "user_mods" table
 ALTER TABLE "user_mods"
     DROP CONSTRAINT "user_mods_mod_id_mods_id",
@@ -158,8 +144,6 @@ ALTER TABLE "user_sessions"
     ADD CONSTRAINT "user_sessions_users_sessions" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION;
 -- create index "user_sessions_token_key" to table: "user_sessions"
 CREATE UNIQUE INDEX "user_sessions_token_key" ON "user_sessions" ("token");
--- create index "usersession_id" to table: "user_sessions"
-CREATE UNIQUE INDEX "usersession_id" ON "user_sessions" ("id");
 -- rename an index from "idx_user_sessions_deleted_at" to "usersession_deleted_at"
 ALTER INDEX "idx_user_sessions_deleted_at" RENAME TO "usersession_deleted_at";
 -- modify "versions" table
@@ -185,8 +169,6 @@ ALTER TABLE "versions"
     ALTER COLUMN "version_patch" TYPE bigint,
     ALTER COLUMN "hash" TYPE character varying,
     ADD CONSTRAINT "versions_mods_versions" FOREIGN KEY ("mod_id") REFERENCES "mods" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION;
--- create index "version_id" to table: "versions"
-CREATE UNIQUE INDEX "version_id" ON "versions" ("id");
 -- rename an index from "idx_versions_deleted_at" to "version_deleted_at"
 ALTER INDEX "idx_versions_deleted_at" RENAME TO "version_deleted_at";
 -- modify "version_dependencies" table
@@ -217,7 +199,5 @@ ALTER TABLE "version_targets"
     ADD CONSTRAINT "version_targets_versions_targets" FOREIGN KEY ("version_id") REFERENCES "versions" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION;
 -- create index "versiontarget_version_id_target_name" to table: "version_targets"
 CREATE UNIQUE INDEX "versiontarget_version_id_target_name" ON "version_targets" ("version_id", "target_name");
--- rename an index from "uix_version_targets_id" to "versiontarget_id"
-ALTER INDEX "uix_version_targets_id" RENAME TO "versiontarget_id";
 -- drop "bootstrap_versions" table
 DROP TABLE "bootstrap_versions";

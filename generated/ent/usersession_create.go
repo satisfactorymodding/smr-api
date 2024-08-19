@@ -174,6 +174,12 @@ func (usc *UserSessionCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (usc *UserSessionCreate) check() error {
+	if _, ok := usc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "UserSession.created_at"`)}
+	}
+	if _, ok := usc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "UserSession.updated_at"`)}
+	}
 	if _, ok := usc.mutation.Token(); !ok {
 		return &ValidationError{Name: "token", err: errors.New(`ent: missing required field "UserSession.token"`)}
 	}
@@ -322,12 +328,6 @@ func (u *UserSessionUpsert) UpdateUpdatedAt() *UserSessionUpsert {
 	return u
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *UserSessionUpsert) ClearUpdatedAt() *UserSessionUpsert {
-	u.SetNull(usersession.FieldUpdatedAt)
-	return u
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (u *UserSessionUpsert) SetDeletedAt(v time.Time) *UserSessionUpsert {
 	u.Set(usersession.FieldDeletedAt, v)
@@ -438,13 +438,6 @@ func (u *UserSessionUpsertOne) SetUpdatedAt(v time.Time) *UserSessionUpsertOne {
 func (u *UserSessionUpsertOne) UpdateUpdatedAt() *UserSessionUpsertOne {
 	return u.Update(func(s *UserSessionUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *UserSessionUpsertOne) ClearUpdatedAt() *UserSessionUpsertOne {
-	return u.Update(func(s *UserSessionUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 
@@ -733,13 +726,6 @@ func (u *UserSessionUpsertBulk) SetUpdatedAt(v time.Time) *UserSessionUpsertBulk
 func (u *UserSessionUpsertBulk) UpdateUpdatedAt() *UserSessionUpsertBulk {
 	return u.Update(func(s *UserSessionUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *UserSessionUpsertBulk) ClearUpdatedAt() *UserSessionUpsertBulk {
-	return u.Update(func(s *UserSessionUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 

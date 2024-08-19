@@ -34,7 +34,7 @@ func TestGetModLimitOffset(t *testing.T) {
 
 	getRequest := authRequest(getQuery, token)
 
-	getRequest.Var("offset", "4")
+	getRequest.Var("offset", "5")
 	getRequest.Var("limit", "2")
 	getRequest.Var("order", "asc")
 	getRequest.Var("orderBy", "created_at")

@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 
 	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/db/schema"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
@@ -13,7 +14,7 @@ import (
 )
 
 func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(*ent.Mod) bool, versionFilter func(version *ent.Version) bool) error {
-	return ExecuteOnVersions(ctx, modFilter, versionFilter, func(m *ent.Mod, v *ent.Version) {
+	return ExecuteOnVersions(ctx, false, modFilter, versionFilter, func(m *ent.Mod, v *ent.Version) {
 		if withMetadata {
 			jobs.SubmitJobUpdateDBFromModVersionFileTask(ctx, m.ID, v.ID)
 		} else {
@@ -22,11 +23,15 @@ func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(*
 	})
 }
 
-func ExecuteOnVersions(ctx context.Context, modFilter func(*ent.Mod) bool, versionFilter func(version *ent.Version) bool, f func(mod *ent.Mod, version *ent.Version)) error {
+func ExecuteOnVersions(ctx context.Context, withDeleted bool, modFilter func(*ent.Mod) bool, versionFilter func(version *ent.Version) bool, f func(mod *ent.Mod, version *ent.Version)) error {
 	offset := 0
 
 	for {
-		mods, err := db.From(ctx).Mod.Query().Limit(100).Offset(offset).Order(mod.ByCreatedAt(sql.OrderDesc())).All(ctx)
+		q := db.From(ctx).Mod.Query().Limit(100).Offset(offset).Order(mod.ByCreatedAt(sql.OrderDesc()))
+		if withDeleted {
+			ctx = schema.SkipSoftDelete(ctx)
+		}
+		mods, err := q.All(ctx)
 		if err != nil {
 			return err
 		}

@@ -39,12 +39,6 @@ func (mu *ModUpdate) SetUpdatedAt(t time.Time) *ModUpdate {
 	return mu
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (mu *ModUpdate) ClearUpdatedAt() *ModUpdate {
-	mu.mutation.ClearUpdatedAt()
-	return mu
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (mu *ModUpdate) SetDeletedAt(t time.Time) *ModUpdate {
 	mu.mutation.SetDeletedAt(t)
@@ -508,7 +502,7 @@ func (mu *ModUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (mu *ModUpdate) defaults() error {
-	if _, ok := mu.mutation.UpdatedAt(); !ok && !mu.mutation.UpdatedAtCleared() {
+	if _, ok := mu.mutation.UpdatedAt(); !ok {
 		if mod.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized mod.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -556,14 +550,8 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if mu.mutation.CreatedAtCleared() {
-		_spec.ClearField(mod.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := mu.mutation.UpdatedAt(); ok {
 		_spec.SetField(mod.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if mu.mutation.UpdatedAtCleared() {
-		_spec.ClearField(mod.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := mu.mutation.DeletedAt(); ok {
 		_spec.SetField(mod.FieldDeletedAt, field.TypeTime, value)
@@ -857,12 +845,6 @@ type ModUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (muo *ModUpdateOne) SetUpdatedAt(t time.Time) *ModUpdateOne {
 	muo.mutation.SetUpdatedAt(t)
-	return muo
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (muo *ModUpdateOne) ClearUpdatedAt() *ModUpdateOne {
-	muo.mutation.ClearUpdatedAt()
 	return muo
 }
 
@@ -1342,7 +1324,7 @@ func (muo *ModUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (muo *ModUpdateOne) defaults() error {
-	if _, ok := muo.mutation.UpdatedAt(); !ok && !muo.mutation.UpdatedAtCleared() {
+	if _, ok := muo.mutation.UpdatedAt(); !ok {
 		if mod.UpdateDefaultUpdatedAt == nil {
 			return fmt.Errorf("ent: uninitialized mod.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
 		}
@@ -1407,14 +1389,8 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 			}
 		}
 	}
-	if muo.mutation.CreatedAtCleared() {
-		_spec.ClearField(mod.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := muo.mutation.UpdatedAt(); ok {
 		_spec.SetField(mod.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if muo.mutation.UpdatedAtCleared() {
-		_spec.ClearField(mod.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := muo.mutation.DeletedAt(); ok {
 		_spec.SetField(mod.FieldDeletedAt, field.TypeTime, value)

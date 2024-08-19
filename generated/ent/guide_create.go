@@ -214,6 +214,12 @@ func (gc *GuideCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (gc *GuideCreate) check() error {
+	if _, ok := gc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Guide.created_at"`)}
+	}
+	if _, ok := gc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Guide.updated_at"`)}
+	}
 	if _, ok := gc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Guide.name"`)}
 	}
@@ -397,12 +403,6 @@ func (u *GuideUpsert) UpdateUpdatedAt() *GuideUpsert {
 	return u
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *GuideUpsert) ClearUpdatedAt() *GuideUpsert {
-	u.SetNull(guide.FieldUpdatedAt)
-	return u
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (u *GuideUpsert) SetDeletedAt(v time.Time) *GuideUpsert {
 	u.Set(guide.FieldDeletedAt, v)
@@ -555,13 +555,6 @@ func (u *GuideUpsertOne) SetUpdatedAt(v time.Time) *GuideUpsertOne {
 func (u *GuideUpsertOne) UpdateUpdatedAt() *GuideUpsertOne {
 	return u.Update(func(s *GuideUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *GuideUpsertOne) ClearUpdatedAt() *GuideUpsertOne {
-	return u.Update(func(s *GuideUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 
@@ -899,13 +892,6 @@ func (u *GuideUpsertBulk) SetUpdatedAt(v time.Time) *GuideUpsertBulk {
 func (u *GuideUpsertBulk) UpdateUpdatedAt() *GuideUpsertBulk {
 	return u.Update(func(s *GuideUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (u *GuideUpsertBulk) ClearUpdatedAt() *GuideUpsertBulk {
-	return u.Update(func(s *GuideUpsert) {
-		s.ClearUpdatedAt()
 	})
 }
 
