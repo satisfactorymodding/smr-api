@@ -17,6 +17,9 @@ type ModAllVersions interface {
 
 	// goverter:map . Link | TargetLink
 	ConvertTarget(source *ent.VersionTarget) *types.ModAllVersionsVersionTarget
+
+	// goverter:map ModID ModReference
+	ConvertDependency(source *ent.VersionDependency) *types.ModAllVersionsVersionDependency
 }
 
 func TargetLink(source *ent.VersionTarget) string {

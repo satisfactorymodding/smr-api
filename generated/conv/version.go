@@ -31,13 +31,25 @@ func (c *ModAllVersionsImpl) Convert(source *ent.Version) *types.ModAllVersionsV
 		if (*source).Edges.VersionDependencies != nil {
 			pTypesModAllVersionsVersionDependencyList = make([]*types.ModAllVersionsVersionDependency, len((*source).Edges.VersionDependencies))
 			for j := 0; j < len((*source).Edges.VersionDependencies); j++ {
-				pTypesModAllVersionsVersionDependencyList[j] = c.pEntVersionDependencyToPTypesModAllVersionsVersionDependency((*source).Edges.VersionDependencies[j])
+				pTypesModAllVersionsVersionDependencyList[j] = c.ConvertDependency((*source).Edges.VersionDependencies[j])
 			}
 		}
 		typesModAllVersionsVersion.Dependencies = pTypesModAllVersionsVersionDependencyList
 		pTypesModAllVersionsVersion = &typesModAllVersionsVersion
 	}
 	return pTypesModAllVersionsVersion
+}
+func (c *ModAllVersionsImpl) ConvertDependency(source *ent.VersionDependency) *types.ModAllVersionsVersionDependency {
+	var pTypesModAllVersionsVersionDependency *types.ModAllVersionsVersionDependency
+	if source != nil {
+		var typesModAllVersionsVersionDependency types.ModAllVersionsVersionDependency
+		typesModAllVersionsVersionDependency.ModID = (*source).ModID
+		typesModAllVersionsVersionDependency.ModReference = (*source).ModID
+		typesModAllVersionsVersionDependency.Condition = (*source).Condition
+		typesModAllVersionsVersionDependency.Optional = (*source).Optional
+		pTypesModAllVersionsVersionDependency = &typesModAllVersionsVersionDependency
+	}
+	return pTypesModAllVersionsVersionDependency
 }
 func (c *ModAllVersionsImpl) ConvertSlice(source []*ent.Version) []*types.ModAllVersionsVersion {
 	var pTypesModAllVersionsVersionList []*types.ModAllVersionsVersion
@@ -61,17 +73,6 @@ func (c *ModAllVersionsImpl) ConvertTarget(source *ent.VersionTarget) *types.Mod
 		pTypesModAllVersionsVersionTarget = &typesModAllVersionsVersionTarget
 	}
 	return pTypesModAllVersionsVersionTarget
-}
-func (c *ModAllVersionsImpl) pEntVersionDependencyToPTypesModAllVersionsVersionDependency(source *ent.VersionDependency) *types.ModAllVersionsVersionDependency {
-	var pTypesModAllVersionsVersionDependency *types.ModAllVersionsVersionDependency
-	if source != nil {
-		var typesModAllVersionsVersionDependency types.ModAllVersionsVersionDependency
-		typesModAllVersionsVersionDependency.ModID = (*source).ModID
-		typesModAllVersionsVersionDependency.Condition = (*source).Condition
-		typesModAllVersionsVersionDependency.Optional = (*source).Optional
-		pTypesModAllVersionsVersionDependency = &typesModAllVersionsVersionDependency
-	}
-	return pTypesModAllVersionsVersionDependency
 }
 
 type VersionImpl struct{}

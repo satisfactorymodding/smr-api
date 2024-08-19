@@ -17,7 +17,8 @@ type ModAllVersionsVersionTarget struct {
 }
 
 type ModAllVersionsVersionDependency struct {
-	ModID     string `json:"mod_id"`
-	Condition string `json:"condition"`
-	Optional  bool   `json:"optional"`
+	ModID        string `json:"mod_id"`
+	ModReference string `json:"mod_reference"`
+	Condition    string `json:"condition"`
+	Optional     bool   `json:"optional"`
 }

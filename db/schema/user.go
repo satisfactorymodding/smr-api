@@ -36,9 +36,9 @@ func (User) Fields() []ent.Field {
 func (User) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("email").Unique(),
-		index.Fields("github_id"),
-		index.Fields("google_id"),
-		index.Fields("facebook_id"),
+		index.Fields("github_id").Unique(),
+		index.Fields("google_id").Unique(),
+		index.Fields("facebook_id").Unique(),
 	}
 }
 
