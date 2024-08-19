@@ -694,13 +694,13 @@ func (r *queryResolver) ResolveModVersions(ctx context.Context, filter []*genera
 	return modVersions, nil
 }
 
-func (r *queryResolver) GetModAssetList(_ context.Context, modReference string) ([]string, error) {
+func (r *queryResolver) GetModAssetList(ctx context.Context, modReference string) ([]string, error) {
 	list := redis.GetModAssetList(modReference)
 	if list != nil {
 		return list, nil
 	}
 
-	assets, err := storage.ListModAssets(modReference)
+	assets, err := storage.ListModAssets(ctx, modReference)
 	if err != nil {
 		return nil, err
 	}

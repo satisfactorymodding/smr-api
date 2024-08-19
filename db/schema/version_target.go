@@ -29,7 +29,7 @@ func (VersionTarget) Fields() []ent.Field {
 
 func (VersionTarget) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("sml_version", Version.Type).
+		edge.From("version", Version.Type).
 			Ref("targets").
 			Field("version_id").
 			Unique().

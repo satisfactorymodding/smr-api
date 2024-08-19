@@ -24,11 +24,6 @@ var (
 		PrimaryKey: []*schema.Column{AnnouncementsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "announcement_id",
-				Unique:  false,
-				Columns: []*schema.Column{AnnouncementsColumns[0]},
-			},
-			{
 				Name:    "announcement_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{AnnouncementsColumns[3]},
@@ -61,11 +56,6 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
-			{
-				Name:    "guide_id",
-				Unique:  false,
-				Columns: []*schema.Column{GuidesColumns[0]},
-			},
 			{
 				Name:    "guide_deleted_at",
 				Unique:  false,
@@ -117,7 +107,7 @@ var (
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
 		{Name: "denied", Type: field.TypeBool, Default: false},
 		{Name: "last_version_date", Type: field.TypeTime, Nullable: true},
-		{Name: "mod_reference", Type: field.TypeString, Unique: true, Size: 32},
+		{Name: "mod_reference", Type: field.TypeString, Size: 32},
 		{Name: "hidden", Type: field.TypeBool, Default: false},
 		{Name: "compatibility", Type: field.TypeJSON, Nullable: true},
 	}
@@ -128,11 +118,6 @@ var (
 		PrimaryKey: []*schema.Column{ModsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "mod_id",
-				Unique:  false,
-				Columns: []*schema.Column{ModsColumns[0]},
-			},
-			{
 				Name:    "mod_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{ModsColumns[3]},
@@ -141,6 +126,11 @@ var (
 				Name:    "mod_last_version_date",
 				Unique:  false,
 				Columns: []*schema.Column{ModsColumns[16]},
+			},
+			{
+				Name:    "mod_mod_reference",
+				Unique:  true,
+				Columns: []*schema.Column{ModsColumns[17]},
 			},
 		},
 	}
@@ -180,13 +170,6 @@ var (
 		Name:       "satisfactory_versions",
 		Columns:    SatisfactoryVersionsColumns,
 		PrimaryKey: []*schema.Column{SatisfactoryVersionsColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "satisfactoryversion_id",
-				Unique:  false,
-				Columns: []*schema.Column{SatisfactoryVersionsColumns[0]},
-			},
-		},
 	}
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{
@@ -195,7 +178,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Unique: true, Size: 24},
-		{Name: "description", Type: field.TypeString, Unique: true, Size: 512},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 512},
 	}
 	// TagsTable holds the schema information for the "tags" table.
 	TagsTable = &schema.Table{
@@ -203,11 +186,6 @@ var (
 		Columns:    TagsColumns,
 		PrimaryKey: []*schema.Column{TagsColumns[0]},
 		Indexes: []*schema.Index{
-			{
-				Name:    "tag_id",
-				Unique:  false,
-				Columns: []*schema.Column{TagsColumns[0]},
-			},
 			{
 				Name:    "tag_deleted_at",
 				Unique:  false,
@@ -221,15 +199,15 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "email", Type: field.TypeString, Unique: true, Size: 256},
+		{Name: "email", Type: field.TypeString, Size: 256},
 		{Name: "username", Type: field.TypeString, Size: 32},
 		{Name: "avatar", Type: field.TypeString, Nullable: true},
 		{Name: "joined_from", Type: field.TypeString, Nullable: true},
 		{Name: "banned", Type: field.TypeBool, Default: false},
 		{Name: "rank", Type: field.TypeInt, Default: 1},
-		{Name: "github_id", Type: field.TypeString, Unique: true, Nullable: true, Size: 16},
-		{Name: "google_id", Type: field.TypeString, Unique: true, Nullable: true, Size: 16},
-		{Name: "facebook_id", Type: field.TypeString, Unique: true, Nullable: true, Size: 16},
+		{Name: "github_id", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "google_id", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "facebook_id", Type: field.TypeString, Nullable: true, Size: 16},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -238,33 +216,28 @@ var (
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "user_id",
-				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[0]},
-			},
-			{
 				Name:    "user_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[3]},
 			},
 			{
 				Name:    "user_email",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[4]},
 			},
 			{
 				Name:    "user_github_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[10]},
 			},
 			{
 				Name:    "user_google_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[11]},
 			},
 			{
 				Name:    "user_facebook_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[12]},
 			},
 		},
@@ -292,11 +265,6 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
-			{
-				Name:    "usergroup_id",
-				Unique:  false,
-				Columns: []*schema.Column{UserGroupsColumns[0]},
-			},
 			{
 				Name:    "usergroup_deleted_at",
 				Unique:  false,
@@ -341,7 +309,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "token", Type: field.TypeString, Unique: true, Size: 512},
+		{Name: "token", Type: field.TypeString, Size: 512},
 		{Name: "user_agent", Type: field.TypeString, Nullable: true},
 		{Name: "user_id", Type: field.TypeString},
 	}
@@ -360,14 +328,14 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "usersession_id",
-				Unique:  false,
-				Columns: []*schema.Column{UserSessionsColumns[0]},
-			},
-			{
 				Name:    "usersession_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{UserSessionsColumns[3]},
+			},
+			{
+				Name:    "usersession_token",
+				Unique:  true,
+				Columns: []*schema.Column{UserSessionsColumns[4]},
 			},
 		},
 	}
@@ -382,7 +350,7 @@ var (
 		{Name: "changelog", Type: field.TypeString, Nullable: true},
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
 		{Name: "key", Type: field.TypeString, Nullable: true},
-		{Name: "stability", Type: field.TypeEnum, Enums: []string{"release", "beta", "alpha"}},
+		{Name: "stability", Type: field.TypeEnum, Enums: []string{"release", "beta", "alpha"}, Default: "release"},
 		{Name: "approved", Type: field.TypeBool, Default: false},
 		{Name: "hotness", Type: field.TypeUint, Default: 0},
 		{Name: "denied", Type: field.TypeBool, Default: false},
@@ -410,14 +378,24 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "version_id",
-				Unique:  false,
-				Columns: []*schema.Column{VersionsColumns[0]},
-			},
-			{
 				Name:    "version_deleted_at",
 				Unique:  false,
 				Columns: []*schema.Column{VersionsColumns[3]},
+			},
+			{
+				Name:    "version_approved",
+				Unique:  false,
+				Columns: []*schema.Column{VersionsColumns[10]},
+			},
+			{
+				Name:    "version_denied",
+				Unique:  false,
+				Columns: []*schema.Column{VersionsColumns[12]},
+			},
+			{
+				Name:    "version_mod_id",
+				Unique:  false,
+				Columns: []*schema.Column{VersionsColumns[20]},
 			},
 		},
 	}
@@ -481,11 +459,6 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
-			{
-				Name:    "versiontarget_id",
-				Unique:  false,
-				Columns: []*schema.Column{VersionTargetsColumns[0]},
-			},
 			{
 				Name:    "versiontarget_version_id_target_name",
 				Unique:  true,

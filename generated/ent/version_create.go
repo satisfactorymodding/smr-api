@@ -134,6 +134,14 @@ func (vc *VersionCreate) SetStability(u util.Stability) *VersionCreate {
 	return vc
 }
 
+// SetNillableStability sets the "stability" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableStability(u *util.Stability) *VersionCreate {
+	if u != nil {
+		vc.SetStability(*u)
+	}
+	return vc
+}
+
 // SetApproved sets the "approved" field.
 func (vc *VersionCreate) SetApproved(b bool) *VersionCreate {
 	vc.mutation.SetApproved(b)
@@ -369,6 +377,10 @@ func (vc *VersionCreate) defaults() error {
 	if _, ok := vc.mutation.Downloads(); !ok {
 		v := version.DefaultDownloads
 		vc.mutation.SetDownloads(v)
+	}
+	if _, ok := vc.mutation.Stability(); !ok {
+		v := version.DefaultStability
+		vc.mutation.SetStability(v)
 	}
 	if _, ok := vc.mutation.Approved(); !ok {
 		v := version.DefaultApproved

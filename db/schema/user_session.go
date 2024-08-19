@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 type UserSession struct {
@@ -20,8 +21,14 @@ func (UserSession) Mixin() []ent.Mixin {
 
 func (UserSession) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("token").MaxLen(512).Unique(),
+		field.String("token").MaxLen(512),
 		field.String("user_agent").Optional(),
+	}
+}
+
+func (UserSession) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("token").Unique(),
 	}
 }
 

@@ -106,6 +106,7 @@ jobs:
     name: Seeded Test
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - download_url: "S3_URL_PROD"

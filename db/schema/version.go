@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 
 	"github.com/satisfactorymodding/smr-api/util"
 )
@@ -28,7 +29,7 @@ func (Version) Fields() []ent.Field {
 		field.String("changelog").Optional(),
 		field.Uint("downloads").Default(0),
 		field.String("key").Optional(),
-		field.Enum("stability").GoType(util.Stability("")),
+		field.Enum("stability").GoType(util.Stability("")).Default("release"),
 		field.Bool("approved").Default(false),
 		field.Uint("hotness").Default(0),
 		field.Bool("denied").Default(false),
@@ -39,6 +40,14 @@ func (Version) Fields() []ent.Field {
 		field.Int("version_patch").Optional(),
 		field.Int64("size").Optional(),
 		field.String("hash").MinLen(64).MaxLen(64).Optional(),
+	}
+}
+
+func (Version) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("approved"),
+		index.Fields("denied"),
+		index.Fields("mod_id"),
 	}
 }
 

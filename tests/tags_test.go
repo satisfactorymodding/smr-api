@@ -9,11 +9,9 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/satisfactorymodding/smr-api/migrations"
 )
 
 func init() {
-	migrations.SetMigrationDir("../migrations")
 	config.SetConfigDir("../")
 	db.EnableDebug()
 }
@@ -42,7 +40,7 @@ func TestTags(t *testing.T) {
 				  }
 				}`, token)
 				createRequest.Var("tagName", "Foo"+strconv.Itoa(i))
-				createRequest.Var("description", "Lorem Ipsum")
+				createRequest.Var("description", "Lorem Ipsum"+strconv.Itoa(i))
 
 				var createResponse struct {
 					Obj generated.Tag
@@ -50,7 +48,7 @@ func TestTags(t *testing.T) {
 				testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
 				testza.AssertNotEqual(t, "", createResponse.Obj.ID)
 				testza.AssertEqual(t, "Foo"+strconv.Itoa(i), createResponse.Obj.Name)
-				testza.AssertEqual(t, "Lorem Ipsum", createResponse.Obj.Description)
+				testza.AssertEqual(t, "Lorem Ipsum"+strconv.Itoa(i), createResponse.Obj.Description)
 
 				objID = createResponse.Obj.ID
 			})
@@ -69,11 +67,11 @@ func TestTags(t *testing.T) {
 				}{
 					{
 						Name:        "One" + strconv.Itoa(i),
-						Description: "First Tag",
+						Description: "First Tag" + strconv.Itoa(i),
 					},
 					{
 						Name:        "Two" + strconv.Itoa(i),
-						Description: "Second Tag",
+						Description: "Second Tag" + strconv.Itoa(i),
 					},
 				})
 
@@ -84,11 +82,11 @@ func TestTags(t *testing.T) {
 
 				testza.AssertNotEqual(t, "", createResponse.Obj[0].ID)
 				testza.AssertEqual(t, "One"+strconv.Itoa(i), createResponse.Obj[0].Name)
-				testza.AssertEqual(t, "First Tag", createResponse.Obj[0].Description)
+				testza.AssertEqual(t, "First Tag"+strconv.Itoa(i), createResponse.Obj[0].Description)
 
 				testza.AssertNotEqual(t, "", createResponse.Obj[1].ID)
 				testza.AssertEqual(t, "Two"+strconv.Itoa(i), createResponse.Obj[1].Name)
-				testza.AssertEqual(t, "Second Tag", createResponse.Obj[1].Description)
+				testza.AssertEqual(t, "Second Tag"+strconv.Itoa(i), createResponse.Obj[1].Description)
 
 				firstTag = createResponse.Obj[0].ID
 				secondTag = createResponse.Obj[1].ID
@@ -110,7 +108,7 @@ func TestTags(t *testing.T) {
 				testza.AssertNoError(t, client.Run(ctx, queryRequest, &queryResponse))
 				testza.AssertEqual(t, objID, queryResponse.Obj.ID)
 				testza.AssertEqual(t, "Foo"+strconv.Itoa(i), queryResponse.Obj.Name)
-				testza.AssertEqual(t, "Lorem Ipsum", queryResponse.Obj.Description)
+				testza.AssertEqual(t, "Lorem Ipsum"+strconv.Itoa(i), queryResponse.Obj.Description)
 			})
 
 			t.Run("Update", func(t *testing.T) {
@@ -123,7 +121,7 @@ func TestTags(t *testing.T) {
 				}`, token)
 				updateRequest.Var("tagId", objID)
 				updateRequest.Var("newName", "Meow"+strconv.Itoa(i))
-				updateRequest.Var("description", "I'm a teapot")
+				updateRequest.Var("description", "I'm a teapot"+strconv.Itoa(i))
 
 				var updateResponse struct {
 					Obj generated.Tag
@@ -131,7 +129,7 @@ func TestTags(t *testing.T) {
 				testza.AssertNoError(t, client.Run(ctx, updateRequest, &updateResponse))
 				testza.AssertEqual(t, objID, updateResponse.Obj.ID)
 				testza.AssertEqual(t, "Meow"+strconv.Itoa(i), updateResponse.Obj.Name)
-				testza.AssertEqual(t, "I'm a teapot", updateResponse.Obj.Description)
+				testza.AssertEqual(t, "I'm a teapot"+strconv.Itoa(i), updateResponse.Obj.Description)
 			})
 
 			t.Run("Query Many", func(t *testing.T) {
@@ -150,7 +148,7 @@ func TestTags(t *testing.T) {
 				testza.AssertEqual(t, 3, len(queryResponse.Obj))
 				testza.AssertEqual(t, objID, queryResponse.Obj[0].ID)
 				testza.AssertEqual(t, "Meow"+strconv.Itoa(i), queryResponse.Obj[0].Name)
-				testza.AssertEqual(t, "I'm a teapot", queryResponse.Obj[0].Description)
+				testza.AssertEqual(t, "I'm a teapot"+strconv.Itoa(i), queryResponse.Obj[0].Description)
 			})
 
 			t.Run("Delete", func(t *testing.T) {

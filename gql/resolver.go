@@ -70,6 +70,10 @@ func (r *Resolver) GetSMLVersions() generated.GetSMLVersionsResolver {
 	return &getSMLVersionsResolver{r}
 }
 
+func (r *Resolver) VersionDependency() generated.VersionDependencyResolver {
+	return &versionDependencyResolver{r}
+}
+
 type mutationResolver struct{ *Resolver }
 
 type queryResolver struct{ *Resolver }

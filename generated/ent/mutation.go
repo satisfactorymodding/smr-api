@@ -4905,9 +4905,22 @@ func (m *TagMutation) OldDescription(ctx context.Context) (v string, err error) 
 	return oldValue.Description, nil
 }
 
+// ClearDescription clears the value of the "description" field.
+func (m *TagMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[tag.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *TagMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[tag.FieldDescription]
+	return ok
+}
+
 // ResetDescription resets all changes to the "description" field.
 func (m *TagMutation) ResetDescription() {
 	m.description = nil
+	delete(m.clearedFields, tag.FieldDescription)
 }
 
 // AddModIDs adds the "mods" edge to the Mod entity by ids.
@@ -5182,6 +5195,9 @@ func (m *TagMutation) ClearedFields() []string {
 	if m.FieldCleared(tag.FieldDeletedAt) {
 		fields = append(fields, tag.FieldDeletedAt)
 	}
+	if m.FieldCleared(tag.FieldDescription) {
+		fields = append(fields, tag.FieldDescription)
+	}
 	return fields
 }
 
@@ -5198,6 +5214,9 @@ func (m *TagMutation) ClearField(name string) error {
 	switch name {
 	case tag.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case tag.FieldDescription:
+		m.ClearDescription()
 		return nil
 	}
 	return fmt.Errorf("unknown Tag nullable field %s", name)
@@ -10989,20 +11008,20 @@ func (m *VersionDependencyMutation) ResetEdge(name string) error {
 // VersionTargetMutation represents an operation that mutates the VersionTarget nodes in the graph.
 type VersionTargetMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *string
-	target_name        *string
-	key                *string
-	hash               *string
-	size               *int64
-	addsize            *int64
-	clearedFields      map[string]struct{}
-	sml_version        *string
-	clearedsml_version bool
-	done               bool
-	oldValue           func(context.Context) (*VersionTarget, error)
-	predicates         []predicate.VersionTarget
+	op             Op
+	typ            string
+	id             *string
+	target_name    *string
+	key            *string
+	hash           *string
+	size           *int64
+	addsize        *int64
+	clearedFields  map[string]struct{}
+	version        *string
+	clearedversion bool
+	done           bool
+	oldValue       func(context.Context) (*VersionTarget, error)
+	predicates     []predicate.VersionTarget
 }
 
 var _ ent.Mutation = (*VersionTargetMutation)(nil)
@@ -11111,12 +11130,12 @@ func (m *VersionTargetMutation) IDs(ctx context.Context) ([]string, error) {
 
 // SetVersionID sets the "version_id" field.
 func (m *VersionTargetMutation) SetVersionID(s string) {
-	m.sml_version = &s
+	m.version = &s
 }
 
 // VersionID returns the value of the "version_id" field in the mutation.
 func (m *VersionTargetMutation) VersionID() (r string, exists bool) {
-	v := m.sml_version
+	v := m.version
 	if v == nil {
 		return
 	}
@@ -11142,7 +11161,7 @@ func (m *VersionTargetMutation) OldVersionID(ctx context.Context) (v string, err
 
 // ResetVersionID resets all changes to the "version_id" field.
 func (m *VersionTargetMutation) ResetVersionID() {
-	m.sml_version = nil
+	m.version = nil
 }
 
 // SetTargetName sets the "target_name" field.
@@ -11349,44 +11368,31 @@ func (m *VersionTargetMutation) ResetSize() {
 	delete(m.clearedFields, versiontarget.FieldSize)
 }
 
-// SetSmlVersionID sets the "sml_version" edge to the Version entity by id.
-func (m *VersionTargetMutation) SetSmlVersionID(id string) {
-	m.sml_version = &id
-}
-
-// ClearSmlVersion clears the "sml_version" edge to the Version entity.
-func (m *VersionTargetMutation) ClearSmlVersion() {
-	m.clearedsml_version = true
+// ClearVersion clears the "version" edge to the Version entity.
+func (m *VersionTargetMutation) ClearVersion() {
+	m.clearedversion = true
 	m.clearedFields[versiontarget.FieldVersionID] = struct{}{}
 }
 
-// SmlVersionCleared reports if the "sml_version" edge to the Version entity was cleared.
-func (m *VersionTargetMutation) SmlVersionCleared() bool {
-	return m.clearedsml_version
+// VersionCleared reports if the "version" edge to the Version entity was cleared.
+func (m *VersionTargetMutation) VersionCleared() bool {
+	return m.clearedversion
 }
 
-// SmlVersionID returns the "sml_version" edge ID in the mutation.
-func (m *VersionTargetMutation) SmlVersionID() (id string, exists bool) {
-	if m.sml_version != nil {
-		return *m.sml_version, true
-	}
-	return
-}
-
-// SmlVersionIDs returns the "sml_version" edge IDs in the mutation.
+// VersionIDs returns the "version" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// SmlVersionID instead. It exists only for internal usage by the builders.
-func (m *VersionTargetMutation) SmlVersionIDs() (ids []string) {
-	if id := m.sml_version; id != nil {
+// VersionID instead. It exists only for internal usage by the builders.
+func (m *VersionTargetMutation) VersionIDs() (ids []string) {
+	if id := m.version; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetSmlVersion resets all changes to the "sml_version" edge.
-func (m *VersionTargetMutation) ResetSmlVersion() {
-	m.sml_version = nil
-	m.clearedsml_version = false
+// ResetVersion resets all changes to the "version" edge.
+func (m *VersionTargetMutation) ResetVersion() {
+	m.version = nil
+	m.clearedversion = false
 }
 
 // Where appends a list predicates to the VersionTargetMutation builder.
@@ -11424,7 +11430,7 @@ func (m *VersionTargetMutation) Type() string {
 // AddedFields().
 func (m *VersionTargetMutation) Fields() []string {
 	fields := make([]string, 0, 5)
-	if m.sml_version != nil {
+	if m.version != nil {
 		fields = append(fields, versiontarget.FieldVersionID)
 	}
 	if m.target_name != nil {
@@ -11627,8 +11633,8 @@ func (m *VersionTargetMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *VersionTargetMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.sml_version != nil {
-		edges = append(edges, versiontarget.EdgeSmlVersion)
+	if m.version != nil {
+		edges = append(edges, versiontarget.EdgeVersion)
 	}
 	return edges
 }
@@ -11637,8 +11643,8 @@ func (m *VersionTargetMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *VersionTargetMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case versiontarget.EdgeSmlVersion:
-		if id := m.sml_version; id != nil {
+	case versiontarget.EdgeVersion:
+		if id := m.version; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -11660,8 +11666,8 @@ func (m *VersionTargetMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *VersionTargetMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearedsml_version {
-		edges = append(edges, versiontarget.EdgeSmlVersion)
+	if m.clearedversion {
+		edges = append(edges, versiontarget.EdgeVersion)
 	}
 	return edges
 }
@@ -11670,8 +11676,8 @@ func (m *VersionTargetMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *VersionTargetMutation) EdgeCleared(name string) bool {
 	switch name {
-	case versiontarget.EdgeSmlVersion:
-		return m.clearedsml_version
+	case versiontarget.EdgeVersion:
+		return m.clearedversion
 	}
 	return false
 }
@@ -11680,8 +11686,8 @@ func (m *VersionTargetMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *VersionTargetMutation) ClearEdge(name string) error {
 	switch name {
-	case versiontarget.EdgeSmlVersion:
-		m.ClearSmlVersion()
+	case versiontarget.EdgeVersion:
+		m.ClearVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown VersionTarget unique edge %s", name)
@@ -11691,8 +11697,8 @@ func (m *VersionTargetMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *VersionTargetMutation) ResetEdge(name string) error {
 	switch name {
-	case versiontarget.EdgeSmlVersion:
-		m.ResetSmlVersion()
+	case versiontarget.EdgeVersion:
+		m.ResetVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown VersionTarget edge %s", name)

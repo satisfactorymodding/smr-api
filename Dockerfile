@@ -1,4 +1,4 @@
-FROM golang:1.22.4-alpine AS builder
+FROM golang:1.22.3-alpine AS builder
 
 RUN apk add --no-cache git build-base libpng-dev protoc
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
@@ -18,7 +18,7 @@ RUN go generate -tags tools -x ./...
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -v -a -installsuffix cgo -o /go/bin/api cmd/api/serve.go
 
 
-FROM golang:1.22.4-alpine
+FROM golang:1.22.3-alpine
 RUN apk add --no-cache libstdc++ libpng
 COPY --from=builder /go/bin/api /api
 WORKDIR /app

@@ -67,9 +67,10 @@ type GetMyVersions {
 
 type VersionDependency {
     version_id: VersionID!
-    mod_id: ModID!
+    mod_id: ModID! @deprecated(reason: "soon will return actual mod id instead of reference. use mod_reference field instead!")
     condition: String!
     optional: Boolean!
+    mod_reference: String!
 
     mod: Mod
     version: Version

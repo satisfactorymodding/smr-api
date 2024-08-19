@@ -418,21 +418,21 @@ func SizeNotNil() predicate.VersionTarget {
 	return predicate.VersionTarget(sql.FieldNotNull(FieldSize))
 }
 
-// HasSmlVersion applies the HasEdge predicate on the "sml_version" edge.
-func HasSmlVersion() predicate.VersionTarget {
+// HasVersion applies the HasEdge predicate on the "version" edge.
+func HasVersion() predicate.VersionTarget {
 	return predicate.VersionTarget(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SmlVersionTable, SmlVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, VersionTable, VersionColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasSmlVersionWith applies the HasEdge predicate on the "sml_version" edge with a given conditions (other predicates).
-func HasSmlVersionWith(preds ...predicate.Version) predicate.VersionTarget {
+// HasVersionWith applies the HasEdge predicate on the "version" edge with a given conditions (other predicates).
+func HasVersionWith(preds ...predicate.Version) predicate.VersionTarget {
 	return predicate.VersionTarget(func(s *sql.Selector) {
-		step := newSmlVersionStep()
+		step := newVersionStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

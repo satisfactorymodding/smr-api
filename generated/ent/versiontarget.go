@@ -35,22 +35,22 @@ type VersionTarget struct {
 
 // VersionTargetEdges holds the relations/edges for other nodes in the graph.
 type VersionTargetEdges struct {
-	// SmlVersion holds the value of the sml_version edge.
-	SmlVersion *Version `json:"sml_version,omitempty"`
+	// Version holds the value of the version edge.
+	Version *Version `json:"version,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// SmlVersionOrErr returns the SmlVersion value or an error if the edge
+// VersionOrErr returns the Version value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e VersionTargetEdges) SmlVersionOrErr() (*Version, error) {
-	if e.SmlVersion != nil {
-		return e.SmlVersion, nil
+func (e VersionTargetEdges) VersionOrErr() (*Version, error) {
+	if e.Version != nil {
+		return e.Version, nil
 	} else if e.loadedTypes[0] {
 		return nil, &NotFoundError{label: version.Label}
 	}
-	return nil, &NotLoadedError{edge: "sml_version"}
+	return nil, &NotLoadedError{edge: "version"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -126,9 +126,9 @@ func (vt *VersionTarget) Value(name string) (ent.Value, error) {
 	return vt.selectValues.Get(name)
 }
 
-// QuerySmlVersion queries the "sml_version" edge of the VersionTarget entity.
-func (vt *VersionTarget) QuerySmlVersion() *VersionQuery {
-	return NewVersionTargetClient(vt.config).QuerySmlVersion(vt)
+// QueryVersion queries the "version" edge of the VersionTarget entity.
+func (vt *VersionTarget) QueryVersion() *VersionQuery {
+	return NewVersionTargetClient(vt.config).QueryVersion(vt)
 }
 
 // Update returns a builder for updating this VersionTarget.

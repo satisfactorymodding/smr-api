@@ -305,12 +305,13 @@ type Version struct {
 }
 
 type VersionDependency struct {
-	VersionID string   `json:"version_id"`
-	ModID     string   `json:"mod_id"`
-	Condition string   `json:"condition"`
-	Optional  bool     `json:"optional"`
-	Mod       *Mod     `json:"mod,omitempty"`
-	Version   *Version `json:"version,omitempty"`
+	VersionID    string   `json:"version_id"`
+	ModID        string   `json:"mod_id"`
+	Condition    string   `json:"condition"`
+	Optional     bool     `json:"optional"`
+	ModReference string   `json:"mod_reference"`
+	Mod          *Mod     `json:"mod,omitempty"`
+	Version      *Version `json:"version,omitempty"`
 }
 
 type VersionTarget struct {

@@ -20,11 +20,9 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
-	"github.com/satisfactorymodding/smr-api/migrations"
 )
 
 func init() {
-	migrations.SetMigrationDir("../migrations")
 	config.SetConfigDir("../")
 	db.EnableDebug()
 }
@@ -272,5 +270,39 @@ func TestVersions(t *testing.T) {
 		testza.AssertEqual(t, 1, len(getModVersionResponse.GetVersion.Dependencies))
 		testza.AssertEqual(t, "SML", getModVersionResponse.GetVersion.Dependencies[0].ModID)
 		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.Dependencies[0].Condition)
+	})
+
+	t.Run("List Dependencies", func(t *testing.T) {
+		listRequest := authRequest(`query getMods($mod_reference: String!) {
+		  getMods(filter: {references: [$mod_reference]}) {
+			count
+			mods {
+			  id
+			  mod_reference
+			  versions {
+				id
+				version
+				dependencies {
+				  version_id
+				  mod_id
+				  mod {
+					id
+					name
+					mod_reference
+				  }
+				}
+			  }
+			}
+		  }
+		}`, token)
+		listRequest.Var("mod_reference", modReference)
+
+		var listResponse struct {
+			GetMods *generated.GetMods
+		}
+
+		testza.AssertNoError(t, client.Run(ctx, listRequest, &listResponse))
+
+		testza.AssertEqual(t, "SML", listResponse.GetMods.Mods[0].Versions[0].Dependencies[0].Mod.ModReference)
 	})
 }

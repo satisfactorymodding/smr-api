@@ -79,6 +79,14 @@ func (tc *TagCreate) SetDescription(s string) *TagCreate {
 	return tc
 }
 
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (tc *TagCreate) SetNillableDescription(s *string) *TagCreate {
+	if s != nil {
+		tc.SetDescription(*s)
+	}
+	return tc
+}
+
 // SetID sets the "id" field.
 func (tc *TagCreate) SetID(s string) *TagCreate {
 	tc.mutation.SetID(s)
@@ -199,9 +207,6 @@ func (tc *TagCreate) check() error {
 		if err := tag.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tag.name": %w`, err)}
 		}
-	}
-	if _, ok := tc.mutation.Description(); !ok {
-		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Tag.description"`)}
 	}
 	if v, ok := tc.mutation.Description(); ok {
 		if err := tag.DescriptionValidator(v); err != nil {
@@ -402,6 +407,12 @@ func (u *TagUpsert) UpdateDescription() *TagUpsert {
 	return u
 }
 
+// ClearDescription clears the value of the "description" field.
+func (u *TagUpsert) ClearDescription() *TagUpsert {
+	u.SetNull(tag.FieldDescription)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -513,6 +524,13 @@ func (u *TagUpsertOne) SetDescription(v string) *TagUpsertOne {
 func (u *TagUpsertOne) UpdateDescription() *TagUpsertOne {
 	return u.Update(func(s *TagUpsert) {
 		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *TagUpsertOne) ClearDescription() *TagUpsertOne {
+	return u.Update(func(s *TagUpsert) {
+		s.ClearDescription()
 	})
 }
 
@@ -794,6 +812,13 @@ func (u *TagUpsertBulk) SetDescription(v string) *TagUpsertBulk {
 func (u *TagUpsertBulk) UpdateDescription() *TagUpsertBulk {
 	return u.Update(func(s *TagUpsert) {
 		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "description" field.
+func (u *TagUpsertBulk) ClearDescription() *TagUpsertBulk {
+	return u.Update(func(s *TagUpsert) {
+		s.ClearDescription()
 	})
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/generated/conv"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
 	mod2 "github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	version2 "github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
@@ -252,7 +253,7 @@ func getModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 
 	modID := c.Param("modId")
 
-	mod, err := db.From(c.Request().Context()).Mod.Query().
+	mod, err := db.From(c.Request().Context()).Debug().Mod.Query().
 		WithTags().
 		Where(mod2.ID(modID)).
 		First(c.Request().Context())
@@ -266,7 +267,9 @@ func getModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 	}
 
 	versions, err := mod.QueryVersions().
-		WithDependencies().
+		WithVersionDependencies(func(query *ent.VersionDependencyQuery) {
+			query.WithMod()
+		}).
 		WithTargets().
 		Limit(limit).
 		Offset(offset).
@@ -278,7 +281,13 @@ func getModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 		return nil, &ErrorVersionNotFound
 	}
 
-	return (*conv.VersionImpl)(nil).ConvertSlice(versions), nil
+	for _, version := range versions {
+		for _, dependency := range version.Edges.VersionDependencies {
+			dependency.ModID = dependency.Edges.Mod.ModReference
+		}
+	}
+
+	return (*conv.ModAllVersionsImpl)(nil).ConvertSlice(versions), nil
 }
 
 // @Summary Retrieve a Mod Authors
@@ -478,7 +487,9 @@ func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 	}
 
 	versions, err := mod.QueryVersions().
-		WithVersionDependencies().
+		WithVersionDependencies(func(query *ent.VersionDependencyQuery) {
+			query.WithMod()
+		}).
 		WithTargets().
 		Where(version2.Approved(true), version2.Denied(false)).
 		Select(version2.FieldHash, version2.FieldSize, version2.FieldGameVersion, version2.FieldVersion).
@@ -486,6 +497,12 @@ func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 	if err != nil {
 		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
 		return nil, &ErrorVersionNotFound
+	}
+
+	for _, version := range versions {
+		for _, dependency := range version.Edges.VersionDependencies {
+			dependency.ModID = dependency.Edges.Mod.ModReference
+		}
 	}
 
 	return (*conv.ModAllVersionsImpl)(nil).ConvertSlice(versions), nil

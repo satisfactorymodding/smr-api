@@ -18,6 +18,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/generated/conv"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
+	mod2 "github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	version2 "github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
@@ -138,10 +139,15 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *ent.Mod, versionID str
 		return nil, err
 	}
 
-	for modID, condition := range modInfo.Dependencies {
+	for modReference, condition := range modInfo.Dependencies {
+		modDependency, err := db.From(ctx).Mod.Query().Where(mod2.ModReference(modReference)).First(ctx)
+		if err != nil {
+			return nil, err
+		}
+
 		_, err = db.From(ctx).VersionDependency.Create().
 			SetVersion(dbVersion).
-			SetModID(modID).
+			SetModID(modDependency.ID).
 			SetCondition(condition).
 			SetOptional(false).
 			Save(ctx)
@@ -150,10 +156,15 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *ent.Mod, versionID str
 		}
 	}
 
-	for modID, condition := range modInfo.OptionalDependencies {
+	for modReference, condition := range modInfo.OptionalDependencies {
+		modDependency, err := db.From(ctx).Mod.Query().Where(mod2.ModReference(modReference)).First(ctx)
+		if err != nil {
+			return nil, err
+		}
+
 		_, err = db.From(ctx).VersionDependency.Create().
 			SetVersion(dbVersion).
-			SetModID(modID).
+			SetModID(modDependency.ID).
 			SetCondition(condition).
 			SetOptional(true).
 			Save(ctx)

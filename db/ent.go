@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
 
+	"github.com/satisfactorymodding/smr-api/db/entlogger"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 
 	// Required PGX driver
@@ -60,9 +61,7 @@ func WithDB(ctx context.Context) (context.Context, error) {
 
 	realClient := ent.NewClient(
 		ent.Driver(cacheDriver),
-		ent.Log(func(v ...interface{}) {
-			slox.Info(ctx, fmt.Sprint(v...))
-		}),
+		ent.Log(entlogger.EntLogger(ctx)),
 	)
 
 	if debugEnabled {

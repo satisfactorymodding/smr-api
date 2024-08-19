@@ -1,0 +1,35 @@
+name: generated
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  atlas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install atlas CLI
+        run: curl -sSf https://atlasgo.sh | sh
+
+      - name: Hash migrations
+        run: atlas migrate hash --dir "file://migrations/sql?format=golang-migrate"
+
+      - name: Ensure no changes
+        run: git diff --exit-code
+
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jetify-com/devbox-install-action@v0.11.0
+        with:
+          enable-cache: true
+
+      - name: Run generation tasks
+        run: devbox run generate
+
+      - name: Ensure no changes
+        run: git diff --exit-code

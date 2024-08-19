@@ -32,7 +32,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			ctx := context.WithValue(c.Request().Context(), loadersKey{}, &Loaders{
 				VersionDependenciesByVersionID: dataloader.NewBatchedLoader(func(ctx context.Context, ids []string) []*dataloader.Result[[]*ent.VersionDependency] {
 					// TODO Query only selected fields from context
-					entities, err := db.From(ctx).VersionDependency.Query().Where(versiondependency.VersionIDIn(ids...)).All(ctx)
+					entities, err := db.From(ctx).VersionDependency.Query().Where(versiondependency.VersionIDIn(ids...)).WithMod().All(ctx)
 					if err != nil {
 						return nil
 					}

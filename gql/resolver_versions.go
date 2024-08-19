@@ -384,12 +384,14 @@ func (r *versionResolver) SmlVersion(ctx context.Context, obj *generated.Version
 	if err != nil {
 		return "", err
 	}
+
 	for _, dep := range dependencies {
 		if dep.ModID == "SML" {
 			return dep.Condition, nil
 		}
 	}
-	return "", nil
+	slox.Error(ctx, "could not find SML version")
+	return "", errors.New("could not find SML version")
 }
 
 var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config{
@@ -412,6 +414,10 @@ func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Versi
 		dependencies, err = dataloader.For(ctx).VersionDependenciesByVersionID.Load(ctx, obj.ID)()
 		if err != nil {
 			return nil, err
+		}
+
+		for _, dependency := range dependencies {
+			dependency.ModID = dependency.Edges.Mod.ModReference
 		}
 
 		versionDependencyCache.SetWithTTL(obj.ID, dependencies, int64(len(dependencies)), versionDependencyCacheTTL)
