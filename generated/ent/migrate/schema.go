@@ -227,17 +227,17 @@ var (
 			},
 			{
 				Name:    "user_github_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[10]},
 			},
 			{
 				Name:    "user_google_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[11]},
 			},
 			{
 				Name:    "user_facebook_id",
-				Unique:  false,
+				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[12]},
 			},
 		},
