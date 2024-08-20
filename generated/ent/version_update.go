@@ -538,7 +538,7 @@ func (vu *VersionUpdate) check() error {
 			return &ValidationError{Name: "hash", err: fmt.Errorf(`ent: validator failed for field "Version.hash": %w`, err)}
 		}
 	}
-	if _, ok := vu.mutation.ModID(); vu.mutation.ModCleared() && !ok {
+	if vu.mutation.ModCleared() && len(vu.mutation.ModIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Version.mod"`)
 	}
 	return nil
@@ -1333,7 +1333,7 @@ func (vuo *VersionUpdateOne) check() error {
 			return &ValidationError{Name: "hash", err: fmt.Errorf(`ent: validator failed for field "Version.hash": %w`, err)}
 		}
 	}
-	if _, ok := vuo.mutation.ModID(); vuo.mutation.ModCleared() && !ok {
+	if vuo.mutation.ModCleared() && len(vuo.mutation.ModIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Version.mod"`)
 	}
 	return nil

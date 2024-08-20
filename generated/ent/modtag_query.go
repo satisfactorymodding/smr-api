@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
@@ -108,7 +109,7 @@ func (mtq *ModTagQuery) QueryTag() *TagQuery {
 // First returns the first ModTag entity from the query.
 // Returns a *NotFoundError when no ModTag was found.
 func (mtq *ModTagQuery) First(ctx context.Context) (*ModTag, error) {
-	nodes, err := mtq.Limit(1).All(setContextOp(ctx, mtq.ctx, "First"))
+	nodes, err := mtq.Limit(1).All(setContextOp(ctx, mtq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +132,7 @@ func (mtq *ModTagQuery) FirstX(ctx context.Context) *ModTag {
 // Returns a *NotSingularError when more than one ModTag entity is found.
 // Returns a *NotFoundError when no ModTag entities are found.
 func (mtq *ModTagQuery) Only(ctx context.Context) (*ModTag, error) {
-	nodes, err := mtq.Limit(2).All(setContextOp(ctx, mtq.ctx, "Only"))
+	nodes, err := mtq.Limit(2).All(setContextOp(ctx, mtq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +157,7 @@ func (mtq *ModTagQuery) OnlyX(ctx context.Context) *ModTag {
 
 // All executes the query and returns a list of ModTags.
 func (mtq *ModTagQuery) All(ctx context.Context) ([]*ModTag, error) {
-	ctx = setContextOp(ctx, mtq.ctx, "All")
+	ctx = setContextOp(ctx, mtq.ctx, ent.OpQueryAll)
 	if err := mtq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -175,7 +176,7 @@ func (mtq *ModTagQuery) AllX(ctx context.Context) []*ModTag {
 
 // Count returns the count of the given query.
 func (mtq *ModTagQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, mtq.ctx, "Count")
+	ctx = setContextOp(ctx, mtq.ctx, ent.OpQueryCount)
 	if err := mtq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -193,7 +194,7 @@ func (mtq *ModTagQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (mtq *ModTagQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, mtq.ctx, "Exist")
+	ctx = setContextOp(ctx, mtq.ctx, ent.OpQueryExist)
 	switch _, err := mtq.First(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -541,7 +542,7 @@ func (mtgb *ModTagGroupBy) Aggregate(fns ...AggregateFunc) *ModTagGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (mtgb *ModTagGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, mtgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, mtgb.build.ctx, ent.OpQueryGroupBy)
 	if err := mtgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -589,7 +590,7 @@ func (mts *ModTagSelect) Aggregate(fns ...AggregateFunc) *ModTagSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (mts *ModTagSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, mts.ctx, "Select")
+	ctx = setContextOp(ctx, mts.ctx, ent.OpQuerySelect)
 	if err := mts.prepareQuery(ctx); err != nil {
 		return err
 	}

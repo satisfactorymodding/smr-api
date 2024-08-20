@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
@@ -108,7 +109,7 @@ func (vdq *VersionDependencyQuery) QueryMod() *ModQuery {
 // First returns the first VersionDependency entity from the query.
 // Returns a *NotFoundError when no VersionDependency was found.
 func (vdq *VersionDependencyQuery) First(ctx context.Context) (*VersionDependency, error) {
-	nodes, err := vdq.Limit(1).All(setContextOp(ctx, vdq.ctx, "First"))
+	nodes, err := vdq.Limit(1).All(setContextOp(ctx, vdq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +132,7 @@ func (vdq *VersionDependencyQuery) FirstX(ctx context.Context) *VersionDependenc
 // Returns a *NotSingularError when more than one VersionDependency entity is found.
 // Returns a *NotFoundError when no VersionDependency entities are found.
 func (vdq *VersionDependencyQuery) Only(ctx context.Context) (*VersionDependency, error) {
-	nodes, err := vdq.Limit(2).All(setContextOp(ctx, vdq.ctx, "Only"))
+	nodes, err := vdq.Limit(2).All(setContextOp(ctx, vdq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +157,7 @@ func (vdq *VersionDependencyQuery) OnlyX(ctx context.Context) *VersionDependency
 
 // All executes the query and returns a list of VersionDependencies.
 func (vdq *VersionDependencyQuery) All(ctx context.Context) ([]*VersionDependency, error) {
-	ctx = setContextOp(ctx, vdq.ctx, "All")
+	ctx = setContextOp(ctx, vdq.ctx, ent.OpQueryAll)
 	if err := vdq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -175,7 +176,7 @@ func (vdq *VersionDependencyQuery) AllX(ctx context.Context) []*VersionDependenc
 
 // Count returns the count of the given query.
 func (vdq *VersionDependencyQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, vdq.ctx, "Count")
+	ctx = setContextOp(ctx, vdq.ctx, ent.OpQueryCount)
 	if err := vdq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -193,7 +194,7 @@ func (vdq *VersionDependencyQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (vdq *VersionDependencyQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, vdq.ctx, "Exist")
+	ctx = setContextOp(ctx, vdq.ctx, ent.OpQueryExist)
 	switch _, err := vdq.First(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -541,7 +542,7 @@ func (vdgb *VersionDependencyGroupBy) Aggregate(fns ...AggregateFunc) *VersionDe
 
 // Scan applies the selector query and scans the result into the given value.
 func (vdgb *VersionDependencyGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, vdgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, vdgb.build.ctx, ent.OpQueryGroupBy)
 	if err := vdgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -589,7 +590,7 @@ func (vds *VersionDependencySelect) Aggregate(fns ...AggregateFunc) *VersionDepe
 
 // Scan applies the selector query and scans the result into the given value.
 func (vds *VersionDependencySelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, vds.ctx, "Select")
+	ctx = setContextOp(ctx, vds.ctx, ent.OpQuerySelect)
 	if err := vds.prepareQuery(ctx); err != nil {
 		return err
 	}

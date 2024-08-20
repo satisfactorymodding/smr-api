@@ -85,10 +85,10 @@ func (gtc *GuideTagCreate) check() error {
 	if _, ok := gtc.mutation.TagID(); !ok {
 		return &ValidationError{Name: "tag_id", err: errors.New(`ent: missing required field "GuideTag.tag_id"`)}
 	}
-	if _, ok := gtc.mutation.GuideID(); !ok {
+	if len(gtc.mutation.GuideIDs()) == 0 {
 		return &ValidationError{Name: "guide", err: errors.New(`ent: missing required edge "GuideTag.guide"`)}
 	}
-	if _, ok := gtc.mutation.TagID(); !ok {
+	if len(gtc.mutation.TagIDs()) == 0 {
 		return &ValidationError{Name: "tag", err: errors.New(`ent: missing required edge "GuideTag.tag"`)}
 	}
 	return nil

@@ -459,7 +459,7 @@ func (vc *VersionCreate) check() error {
 			return &ValidationError{Name: "hash", err: fmt.Errorf(`ent: validator failed for field "Version.hash": %w`, err)}
 		}
 	}
-	if _, ok := vc.mutation.ModID(); !ok {
+	if len(vc.mutation.ModIDs()) == 0 {
 		return &ValidationError{Name: "mod", err: errors.New(`ent: missing required edge "Version.mod"`)}
 	}
 	return nil

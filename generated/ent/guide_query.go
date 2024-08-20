@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -134,7 +135,7 @@ func (gq *GuideQuery) QueryGuideTags() *GuideTagQuery {
 // First returns the first Guide entity from the query.
 // Returns a *NotFoundError when no Guide was found.
 func (gq *GuideQuery) First(ctx context.Context) (*Guide, error) {
-	nodes, err := gq.Limit(1).All(setContextOp(ctx, gq.ctx, "First"))
+	nodes, err := gq.Limit(1).All(setContextOp(ctx, gq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +158,7 @@ func (gq *GuideQuery) FirstX(ctx context.Context) *Guide {
 // Returns a *NotFoundError when no Guide ID was found.
 func (gq *GuideQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = gq.Limit(1).IDs(setContextOp(ctx, gq.ctx, "FirstID")); err != nil {
+	if ids, err = gq.Limit(1).IDs(setContextOp(ctx, gq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -180,7 +181,7 @@ func (gq *GuideQuery) FirstIDX(ctx context.Context) string {
 // Returns a *NotSingularError when more than one Guide entity is found.
 // Returns a *NotFoundError when no Guide entities are found.
 func (gq *GuideQuery) Only(ctx context.Context) (*Guide, error) {
-	nodes, err := gq.Limit(2).All(setContextOp(ctx, gq.ctx, "Only"))
+	nodes, err := gq.Limit(2).All(setContextOp(ctx, gq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +209,7 @@ func (gq *GuideQuery) OnlyX(ctx context.Context) *Guide {
 // Returns a *NotFoundError when no entities are found.
 func (gq *GuideQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = gq.Limit(2).IDs(setContextOp(ctx, gq.ctx, "OnlyID")); err != nil {
+	if ids, err = gq.Limit(2).IDs(setContextOp(ctx, gq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -233,7 +234,7 @@ func (gq *GuideQuery) OnlyIDX(ctx context.Context) string {
 
 // All executes the query and returns a list of Guides.
 func (gq *GuideQuery) All(ctx context.Context) ([]*Guide, error) {
-	ctx = setContextOp(ctx, gq.ctx, "All")
+	ctx = setContextOp(ctx, gq.ctx, ent.OpQueryAll)
 	if err := gq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -255,7 +256,7 @@ func (gq *GuideQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if gq.ctx.Unique == nil && gq.path != nil {
 		gq.Unique(true)
 	}
-	ctx = setContextOp(ctx, gq.ctx, "IDs")
+	ctx = setContextOp(ctx, gq.ctx, ent.OpQueryIDs)
 	if err = gq.Select(guide.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -273,7 +274,7 @@ func (gq *GuideQuery) IDsX(ctx context.Context) []string {
 
 // Count returns the count of the given query.
 func (gq *GuideQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, gq.ctx, "Count")
+	ctx = setContextOp(ctx, gq.ctx, ent.OpQueryCount)
 	if err := gq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -291,7 +292,7 @@ func (gq *GuideQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (gq *GuideQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, gq.ctx, "Exist")
+	ctx = setContextOp(ctx, gq.ctx, ent.OpQueryExist)
 	switch _, err := gq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -724,7 +725,7 @@ func (ggb *GuideGroupBy) Aggregate(fns ...AggregateFunc) *GuideGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (ggb *GuideGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ggb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, ggb.build.ctx, ent.OpQueryGroupBy)
 	if err := ggb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -772,7 +773,7 @@ func (gs *GuideSelect) Aggregate(fns ...AggregateFunc) *GuideSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (gs *GuideSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, gs.ctx, "Select")
+	ctx = setContextOp(ctx, gs.ctx, ent.OpQuerySelect)
 	if err := gs.prepareQuery(ctx); err != nil {
 		return err
 	}

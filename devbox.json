@@ -17,7 +17,7 @@
     "scripts": {
       "api": "go run cmd/api/serve.go",
       "test": "go test -v ./...",
-      "test:coverage": "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... ./...",
+      "test:coverage": "env && go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... ./...",
       "migrate:diff": [
         "echo -n 'Migration Name: '",
         "read migration_name",

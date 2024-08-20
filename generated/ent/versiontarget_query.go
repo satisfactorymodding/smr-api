@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -85,7 +86,7 @@ func (vtq *VersionTargetQuery) QueryVersion() *VersionQuery {
 // First returns the first VersionTarget entity from the query.
 // Returns a *NotFoundError when no VersionTarget was found.
 func (vtq *VersionTargetQuery) First(ctx context.Context) (*VersionTarget, error) {
-	nodes, err := vtq.Limit(1).All(setContextOp(ctx, vtq.ctx, "First"))
+	nodes, err := vtq.Limit(1).All(setContextOp(ctx, vtq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +109,7 @@ func (vtq *VersionTargetQuery) FirstX(ctx context.Context) *VersionTarget {
 // Returns a *NotFoundError when no VersionTarget ID was found.
 func (vtq *VersionTargetQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = vtq.Limit(1).IDs(setContextOp(ctx, vtq.ctx, "FirstID")); err != nil {
+	if ids, err = vtq.Limit(1).IDs(setContextOp(ctx, vtq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -131,7 +132,7 @@ func (vtq *VersionTargetQuery) FirstIDX(ctx context.Context) string {
 // Returns a *NotSingularError when more than one VersionTarget entity is found.
 // Returns a *NotFoundError when no VersionTarget entities are found.
 func (vtq *VersionTargetQuery) Only(ctx context.Context) (*VersionTarget, error) {
-	nodes, err := vtq.Limit(2).All(setContextOp(ctx, vtq.ctx, "Only"))
+	nodes, err := vtq.Limit(2).All(setContextOp(ctx, vtq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +160,7 @@ func (vtq *VersionTargetQuery) OnlyX(ctx context.Context) *VersionTarget {
 // Returns a *NotFoundError when no entities are found.
 func (vtq *VersionTargetQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = vtq.Limit(2).IDs(setContextOp(ctx, vtq.ctx, "OnlyID")); err != nil {
+	if ids, err = vtq.Limit(2).IDs(setContextOp(ctx, vtq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -184,7 +185,7 @@ func (vtq *VersionTargetQuery) OnlyIDX(ctx context.Context) string {
 
 // All executes the query and returns a list of VersionTargets.
 func (vtq *VersionTargetQuery) All(ctx context.Context) ([]*VersionTarget, error) {
-	ctx = setContextOp(ctx, vtq.ctx, "All")
+	ctx = setContextOp(ctx, vtq.ctx, ent.OpQueryAll)
 	if err := vtq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -206,7 +207,7 @@ func (vtq *VersionTargetQuery) IDs(ctx context.Context) (ids []string, err error
 	if vtq.ctx.Unique == nil && vtq.path != nil {
 		vtq.Unique(true)
 	}
-	ctx = setContextOp(ctx, vtq.ctx, "IDs")
+	ctx = setContextOp(ctx, vtq.ctx, ent.OpQueryIDs)
 	if err = vtq.Select(versiontarget.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -224,7 +225,7 @@ func (vtq *VersionTargetQuery) IDsX(ctx context.Context) []string {
 
 // Count returns the count of the given query.
 func (vtq *VersionTargetQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, vtq.ctx, "Count")
+	ctx = setContextOp(ctx, vtq.ctx, ent.OpQueryCount)
 	if err := vtq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -242,7 +243,7 @@ func (vtq *VersionTargetQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (vtq *VersionTargetQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, vtq.ctx, "Exist")
+	ctx = setContextOp(ctx, vtq.ctx, ent.OpQueryExist)
 	switch _, err := vtq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -544,7 +545,7 @@ func (vtgb *VersionTargetGroupBy) Aggregate(fns ...AggregateFunc) *VersionTarget
 
 // Scan applies the selector query and scans the result into the given value.
 func (vtgb *VersionTargetGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, vtgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, vtgb.build.ctx, ent.OpQueryGroupBy)
 	if err := vtgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -592,7 +593,7 @@ func (vts *VersionTargetSelect) Aggregate(fns ...AggregateFunc) *VersionTargetSe
 
 // Scan applies the selector query and scans the result into the given value.
 func (vts *VersionTargetSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, vts.ctx, "Select")
+	ctx = setContextOp(ctx, vts.ctx, ent.OpQuerySelect)
 	if err := vts.prepareQuery(ctx); err != nil {
 		return err
 	}

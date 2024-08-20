@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
@@ -108,7 +109,7 @@ func (gtq *GuideTagQuery) QueryTag() *TagQuery {
 // First returns the first GuideTag entity from the query.
 // Returns a *NotFoundError when no GuideTag was found.
 func (gtq *GuideTagQuery) First(ctx context.Context) (*GuideTag, error) {
-	nodes, err := gtq.Limit(1).All(setContextOp(ctx, gtq.ctx, "First"))
+	nodes, err := gtq.Limit(1).All(setContextOp(ctx, gtq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +132,7 @@ func (gtq *GuideTagQuery) FirstX(ctx context.Context) *GuideTag {
 // Returns a *NotSingularError when more than one GuideTag entity is found.
 // Returns a *NotFoundError when no GuideTag entities are found.
 func (gtq *GuideTagQuery) Only(ctx context.Context) (*GuideTag, error) {
-	nodes, err := gtq.Limit(2).All(setContextOp(ctx, gtq.ctx, "Only"))
+	nodes, err := gtq.Limit(2).All(setContextOp(ctx, gtq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +157,7 @@ func (gtq *GuideTagQuery) OnlyX(ctx context.Context) *GuideTag {
 
 // All executes the query and returns a list of GuideTags.
 func (gtq *GuideTagQuery) All(ctx context.Context) ([]*GuideTag, error) {
-	ctx = setContextOp(ctx, gtq.ctx, "All")
+	ctx = setContextOp(ctx, gtq.ctx, ent.OpQueryAll)
 	if err := gtq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -175,7 +176,7 @@ func (gtq *GuideTagQuery) AllX(ctx context.Context) []*GuideTag {
 
 // Count returns the count of the given query.
 func (gtq *GuideTagQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, gtq.ctx, "Count")
+	ctx = setContextOp(ctx, gtq.ctx, ent.OpQueryCount)
 	if err := gtq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -193,7 +194,7 @@ func (gtq *GuideTagQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (gtq *GuideTagQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, gtq.ctx, "Exist")
+	ctx = setContextOp(ctx, gtq.ctx, ent.OpQueryExist)
 	switch _, err := gtq.First(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -541,7 +542,7 @@ func (gtgb *GuideTagGroupBy) Aggregate(fns ...AggregateFunc) *GuideTagGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (gtgb *GuideTagGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, gtgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, gtgb.build.ctx, ent.OpQueryGroupBy)
 	if err := gtgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -589,7 +590,7 @@ func (gts *GuideTagSelect) Aggregate(fns ...AggregateFunc) *GuideTagSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (gts *GuideTagSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, gts.ctx, "Select")
+	ctx = setContextOp(ctx, gts.ctx, ent.OpQuerySelect)
 	if err := gts.prepareQuery(ctx); err != nil {
 		return err
 	}

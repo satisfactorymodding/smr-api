@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -86,7 +87,7 @@ func (usq *UserSessionQuery) QueryUser() *UserQuery {
 // First returns the first UserSession entity from the query.
 // Returns a *NotFoundError when no UserSession was found.
 func (usq *UserSessionQuery) First(ctx context.Context) (*UserSession, error) {
-	nodes, err := usq.Limit(1).All(setContextOp(ctx, usq.ctx, "First"))
+	nodes, err := usq.Limit(1).All(setContextOp(ctx, usq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +110,7 @@ func (usq *UserSessionQuery) FirstX(ctx context.Context) *UserSession {
 // Returns a *NotFoundError when no UserSession ID was found.
 func (usq *UserSessionQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = usq.Limit(1).IDs(setContextOp(ctx, usq.ctx, "FirstID")); err != nil {
+	if ids, err = usq.Limit(1).IDs(setContextOp(ctx, usq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -132,7 +133,7 @@ func (usq *UserSessionQuery) FirstIDX(ctx context.Context) string {
 // Returns a *NotSingularError when more than one UserSession entity is found.
 // Returns a *NotFoundError when no UserSession entities are found.
 func (usq *UserSessionQuery) Only(ctx context.Context) (*UserSession, error) {
-	nodes, err := usq.Limit(2).All(setContextOp(ctx, usq.ctx, "Only"))
+	nodes, err := usq.Limit(2).All(setContextOp(ctx, usq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +161,7 @@ func (usq *UserSessionQuery) OnlyX(ctx context.Context) *UserSession {
 // Returns a *NotFoundError when no entities are found.
 func (usq *UserSessionQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = usq.Limit(2).IDs(setContextOp(ctx, usq.ctx, "OnlyID")); err != nil {
+	if ids, err = usq.Limit(2).IDs(setContextOp(ctx, usq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -185,7 +186,7 @@ func (usq *UserSessionQuery) OnlyIDX(ctx context.Context) string {
 
 // All executes the query and returns a list of UserSessions.
 func (usq *UserSessionQuery) All(ctx context.Context) ([]*UserSession, error) {
-	ctx = setContextOp(ctx, usq.ctx, "All")
+	ctx = setContextOp(ctx, usq.ctx, ent.OpQueryAll)
 	if err := usq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -207,7 +208,7 @@ func (usq *UserSessionQuery) IDs(ctx context.Context) (ids []string, err error) 
 	if usq.ctx.Unique == nil && usq.path != nil {
 		usq.Unique(true)
 	}
-	ctx = setContextOp(ctx, usq.ctx, "IDs")
+	ctx = setContextOp(ctx, usq.ctx, ent.OpQueryIDs)
 	if err = usq.Select(usersession.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -225,7 +226,7 @@ func (usq *UserSessionQuery) IDsX(ctx context.Context) []string {
 
 // Count returns the count of the given query.
 func (usq *UserSessionQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, usq.ctx, "Count")
+	ctx = setContextOp(ctx, usq.ctx, ent.OpQueryCount)
 	if err := usq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +244,7 @@ func (usq *UserSessionQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (usq *UserSessionQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, usq.ctx, "Exist")
+	ctx = setContextOp(ctx, usq.ctx, ent.OpQueryExist)
 	switch _, err := usq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -552,7 +553,7 @@ func (usgb *UserSessionGroupBy) Aggregate(fns ...AggregateFunc) *UserSessionGrou
 
 // Scan applies the selector query and scans the result into the given value.
 func (usgb *UserSessionGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, usgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, usgb.build.ctx, ent.OpQueryGroupBy)
 	if err := usgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -600,7 +601,7 @@ func (uss *UserSessionSelect) Aggregate(fns ...AggregateFunc) *UserSessionSelect
 
 // Scan applies the selector query and scans the result into the given value.
 func (uss *UserSessionSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, uss.ctx, "Select")
+	ctx = setContextOp(ctx, uss.ctx, ent.OpQuerySelect)
 	if err := uss.prepareQuery(ctx); err != nil {
 		return err
 	}

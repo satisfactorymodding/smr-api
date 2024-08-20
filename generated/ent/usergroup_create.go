@@ -182,7 +182,7 @@ func (ugc *UserGroupCreate) check() error {
 			return &ValidationError{Name: "group_id", err: fmt.Errorf(`ent: validator failed for field "UserGroup.group_id": %w`, err)}
 		}
 	}
-	if _, ok := ugc.mutation.UserID(); !ok {
+	if len(ugc.mutation.UserIDs()) == 0 {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "UserGroup.user"`)}
 	}
 	return nil
