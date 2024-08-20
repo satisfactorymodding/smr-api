@@ -23,6 +23,7 @@ require (
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-migrate/migrate/v4 v4.17.1
+	github.com/google/uuid v1.6.0
 	github.com/grafana/otel-profiling-go v0.5.1
 	github.com/grafana/pyroscope-go v1.1.1
 	github.com/graph-gophers/dataloader/v7 v7.1.0
@@ -58,7 +59,7 @@ require (
 	golang.org/x/net v0.26.0
 	golang.org/x/oauth2 v0.21.0
 	golang.org/x/sync v0.7.0
-	google.golang.org/grpc v1.64.0
+	google.golang.org/grpc v1.64.1
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )
@@ -110,7 +111,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/pprof v0.0.0-20240227163752-401108e1b7e7 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
