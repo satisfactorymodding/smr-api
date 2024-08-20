@@ -35,7 +35,7 @@ func TestVersions(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
-	executeVirusCheck := viper.IsSet("virustotal.key")
+	executeVirusCheck := viper.IsSet("virustotal.key") && viper.GetString("virustotal.key") != ""
 	viper.Set("skip-virus-check", !executeVirusCheck)
 
 	token, _, err := makeUser(ctx)
