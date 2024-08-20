@@ -54,17 +54,12 @@ jobs:
         run: devbox run setup
 
       - name: Test
-        run: |
-          export CGO_ENABLED=1
-          export REPO_PASETO.PUBLIC_KEY=408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          export REPO_PASETO.PRIVATE_KEY=a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          export REPO_FEATURE_FLAGS.ALLOW_MULTI_TARGET_UPLOAD="true"
-          devbox run test:coverage
+        run: devbox run test:coverage
         env:
           CGO_ENABLED: 1
-          REPO_PASETO.PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          REPO_PASETO.PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          REPO_FEATURE_FLAGS.ALLOW_MULTI_TARGET_UPLOAD: "true"
+          REPO_PASETO__PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_PASETO__PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_FEATURE_FLAGS__ALLOW_MULTI_TARGET_UPLOAD: "true"
 
       - name: Codecov
         uses: codecov/codecov-action@v4
@@ -109,14 +104,14 @@ jobs:
         run: devbox run -- go test -v -run '^TestSetup$' ./...
         env:
           CGO_ENABLED: 1
-          REPO_PASETO.PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          REPO_PASETO.PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          REPO_FEATURE_FLAGS.ALLOW_MULTI_TARGET_UPLOAD: "true"
-          REPO_STORAGE.READER.TYPE: "s3"
-          REPO_STORAGE.READER.REGION: "us-west-002"
-          REPO_STORAGE.READER.BUCKET: "${{ matrix.s3_bucket }}"
-          REPO_STORAGE.READER.KEY: "${{ secrets[matrix.s3_key] }}"
-          REPO_STORAGE.READER.SECRET: "${{ secrets[matrix.s3_secret] }}"
-          REPO_STORAGE.READER.ENDPOINT: "https://s3.us-west-002.backblazeb2.com"
-          REPO_STORAGE.READER.BASE_URL: "${{ matrix.s3_base_url }}"
-          REPO_STORAGE.READER.KEYPATH: "%s/file/%s/%s"
+          REPO_PASETO__PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_PASETO__PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_FEATURE_FLAGS__ALLOW_MULTI_TARGET_UPLOAD: "true"
+          REPO_STORAGE__READER__TYPE: "s3"
+          REPO_STORAGE__READER__REGION: "us-west-002"
+          REPO_STORAGE__READER__BUCKET: "${{ matrix.s3_bucket }}"
+          REPO_STORAGE__READER__KEY: "${{ secrets[matrix.s3_key] }}"
+          REPO_STORAGE__READER__SECRET: "${{ secrets[matrix.s3_secret] }}"
+          REPO_STORAGE__READER__ENDPOINT: "https://s3.us-west-002.backblazeb2.com"
+          REPO_STORAGE__READER__BASE_URL: "${{ matrix.s3_base_url }}"
+          REPO_STORAGE__READER__KEYPATH: "%s/file/%s/%s"
