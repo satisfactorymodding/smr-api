@@ -1,4 +1,4 @@
-package gql
+package workflows
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"go.temporal.io/sdk/workflow"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/schema"
@@ -23,13 +24,65 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 	"github.com/satisfactorymodding/smr-api/integrations"
-	"github.com/satisfactorymodding/smr-api/redis/jobs"
+	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
-func FinalizeVersionUploadAsync(ctx context.Context, mod *ent.Mod, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
+func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, versionID string, version generated.NewVersion) error {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout: time.Minute * 30,
+	})
+
+	var data *generated.CreateVersionResponse
+	err := workflow.ExecuteActivity(ctx, finalizeVersionUploadActivity, modID, versionID, version).Get(ctx, &data)
+	if err != nil {
+		return err
+	}
+
+	err = workflow.ExecuteActivity(ctx, storeRedisStateActivity, versionID, data).Get(ctx, &data)
+	if err != nil {
+		return err
+	}
+
+	if !data.AutoApproved {
+		err = workflow.ExecuteActivity(ctx, scanModOnVirusTotalActivity, modID, data.Version.ID, true).Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func storeRedisStateActivity(ctx context.Context, versionID string, data *generated.CreateVersionResponse, err error) error {
+	if err2 := redis.StoreVersionUploadState(versionID, data, err); err2 != nil {
+		slox.Error(ctx, "error storing redis state", slog.Any("err", err2))
+		return err2
+	}
+
+	return nil
+}
+
+func finalizeVersionUploadActivity(ctx context.Context, modID string, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
+	data, err := finalizeVersionUpload(ctx, modID, versionID, version)
+	if err != nil {
+		slox.Error(ctx, "error completing version upload", slog.Any("err", err))
+		return nil, err
+	}
+
+	slox.Info(ctx, "completed version upload")
+
+	return data, nil
+}
+
+func finalizeVersionUpload(ctx context.Context, modID string, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
 
 	slox.Info(ctx, "Completing multipart upload")
@@ -253,8 +306,7 @@ func FinalizeVersionUploadAsync(ctx context.Context, mod *ent.Mod, versionID str
 
 		go integrations.NewVersion(db.ReWrapCtx(ctx), dbVersion)
 	} else {
-		slox.Info(ctx, "Submitting version job for virus scan")
-		jobs.SubmitJobScanModOnVirusTotalTask(ctx, mod.ID, dbVersion.ID, true)
+		slox.Info(ctx, "version will require virus scan")
 	}
 
 	return &generated.CreateVersionResponse{

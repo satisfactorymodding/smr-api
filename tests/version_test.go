@@ -35,7 +35,8 @@ func TestVersions(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
-	viper.Set("skip-virus-check", true)
+	executeVirusCheck := viper.IsSet("virustotal.key")
+	viper.Set("skip-virus-check", !executeVirusCheck)
 
 	token, _, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
@@ -215,7 +216,7 @@ func TestVersions(t *testing.T) {
 		request.Var("mod_id", modID)
 		request.Var("version_id", versionID)
 
-		end := time.Now().Add(time.Minute * 5)
+		end := time.Now().Add(time.Minute * 15)
 		for time.Now().Before(end) {
 			var response struct {
 				CheckVersionUploadState struct {
@@ -239,6 +240,33 @@ func TestVersions(t *testing.T) {
 			}
 
 			time.Sleep(time.Second * 3)
+		}
+
+		if executeVirusCheck {
+			for {
+				getModVersion := authRequest(`query GetModVersion($version_id: VersionID!) {
+					getVersion(versionId: $version_id) {
+						id
+						approved
+					}
+				}`, token)
+				getModVersion.Var("version_id", versionID)
+
+				var getModVersionResponse struct {
+					GetVersion generated.Version
+				}
+
+				err := client.Run(ctx, getModVersion, &getModVersionResponse)
+				testza.AssertNoError(t, err)
+				if err != nil {
+					return
+				}
+
+				if getModVersionResponse.GetVersion.Approved {
+					break
+				}
+				time.Sleep(time.Second * 3)
+			}
 		}
 
 		if time.Now().After(end) {

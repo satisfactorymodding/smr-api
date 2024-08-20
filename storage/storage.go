@@ -17,6 +17,7 @@ import (
 	"github.com/avast/retry-go/v3"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
 )
 
 type Storage interface {
@@ -249,15 +250,6 @@ func CompleteMultipartUpload(key string) error {
 	return nil
 }
 
-func CopyObjectFromOldBucket(_ string) error {
-	// Ignored
-	return nil
-}
-
-func ScheduleCopyAllObjectsFromOldBucket(_ func(string)) {
-	// Ignored
-}
-
 func Get(key string) (io.ReadCloser, error) {
 	if storage == nil {
 		return nil, errors.New("storage not initialized")
@@ -281,6 +273,9 @@ func GetMod(modID string, name string, versionID string) (io.ReadCloser, error) 
 }
 
 func RenameVersion(ctx context.Context, modID string, name string, versionID string, version string) (bool, string) {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "RenameVersion")
+	defer span.End()
+
 	if storage == nil {
 		return false, ""
 	}
@@ -384,6 +379,9 @@ func EncodeName(name string) string {
 }
 
 func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion, target string) (bool, string, string, int64) {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "SeparateModTarget")
+	defer span.End()
+
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
 		return false, "", "", 0

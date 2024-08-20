@@ -60,3 +60,37 @@ services:
     image: grafana/pyroscope
     ports:
       - "4040:4040"
+
+  temporal:
+    image: temporalio/auto-setup:1.24.2
+    depends_on:
+      - postgres
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=REPLACE_ME
+      - POSTGRES_SEEDS=postgres
+      - DBNAME=temporal
+    ports:
+      - 7233:7233
+
+  temporal-admin-tools:
+    image: temporalio/admin-tools:1.24.2-tctl-1.18.1-cli-0.13.0
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    image: temporalio/ui:2.26.2
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    ports:
+      - 8080:8080

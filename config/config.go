@@ -95,4 +95,6 @@ func initializeDefaults() {
 	viper.SetDefault("feature_flags.allow_multi_target_upload", false)
 
 	viper.SetDefault("extractor_host", "localhost:50051")
+
+	viper.SetDefault("temporal.host", "localhost:7233")
 }

@@ -216,7 +216,7 @@ func convertGuideFilter(query *ent.GuideQuery, filter *models.GuideFilter) *ent.
 			}).GuideQuery
 		}
 
-		if filter.TagIDs != nil && len(filter.TagIDs) > 0 {
+		if len(filter.TagIDs) > 0 {
 			query = query.Where(guide.HasTagsWith(tag.IDIn(filter.TagIDs...)))
 		}
 	}

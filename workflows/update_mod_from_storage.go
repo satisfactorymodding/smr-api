@@ -1,4 +1,4 @@
-package consumers
+package workflows
 
 import (
 	"context"
@@ -11,14 +11,18 @@ import (
 
 	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
+	"go.temporal.io/sdk/workflow"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
-func UpdateModDataFromStorage(ctx context.Context, modID string, versionID string, metadata bool) error {
-	// perform task
+func UpdateModDataFromStorageWorkflow(ctx workflow.Context, modID string, versionID string, metadata bool) error {
+	return workflow.ExecuteActivity(ctx, updateModDataFromStorageActivity, modID, versionID, metadata).Get(ctx, nil)
+}
+
+func updateModDataFromStorageActivity(ctx context.Context, modID string, versionID string, metadata bool) error {
 	slox.Info(ctx, "Updating DB for mod version with metadata", slog.String("mod", modID), slog.String("version", versionID), slog.Bool("metadata", metadata))
 	start := time.Now()
 

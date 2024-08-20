@@ -1,10 +1,9 @@
-package consumers
+package workflows
 
 import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -13,32 +12,25 @@ import (
 	"time"
 
 	"github.com/Vilsol/slox"
-	"github.com/vmihailenco/taskq/v3"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/integrations"
-	"github.com/satisfactorymodding/smr-api/redis/jobs/tasks"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
-func init() {
-	tasks.ScanModOnVirusTotalTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name:    "consumer_scan_mod_on_virus_total",
-		Handler: ScanModOnVirusTotalConsumer,
-	})
-}
+func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID string, approveAfter bool) error {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "ScanModOnVirusTotal")
+	defer span.End()
 
-func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
-	var task tasks.ScanModOnVirusTotalData
-	if err := json.Unmarshal(payload, &task); err != nil {
-		return fmt.Errorf("failed to unmarshal task data: %w", err)
-	}
+	slox.Info(ctx, "starting virus scan of mod", slog.String("mod", modID), slog.String("version", versionID))
 
-	slox.Info(ctx, "starting virus scan of mod", slog.String("mod", task.ModID), slog.String("version", task.VersionID))
-
-	version, err := db.From(ctx).Version.Get(ctx, task.VersionID)
+	version, err := db.From(ctx).Version.Get(ctx, versionID)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return err
 	}
 	link := storage.GenerateDownloadLink(version.Key)
@@ -47,11 +39,15 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 	fileData, err := io.ReadAll(response.Body)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return fmt.Errorf("failed to read mod file: %w", err)
 	}
 
 	archive, err := zip.NewReader(bytes.NewReader(fileData), int64(len(fileData)))
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return fmt.Errorf("failed to unzip mod file: %w", err)
 	}
 
@@ -61,6 +57,8 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 		if path.Ext(file.Name) == ".dll" || path.Ext(file.Name) == ".so" {
 			open, err := file.Open()
 			if err != nil {
+				span.SetStatus(codes.Error, err.Error())
+				span.RecordError(err)
 				return fmt.Errorf("failed to open mod file: %w", err)
 			}
 
@@ -71,22 +69,28 @@ func ScanModOnVirusTotalConsumer(ctx context.Context, payload []byte) error {
 
 	success, err := validation.ScanFiles(ctx, toScan, names)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return err
 	}
 
 	if !success {
-		slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", task.ModID), slog.String("version", task.VersionID))
+		slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", modID), slog.String("version", versionID))
 		return nil
 	}
 
-	if task.ApproveAfter {
-		slox.Info(ctx, "approving mod after successful virus scan", slog.String("mod", task.ModID), slog.String("version", task.VersionID))
+	if approveAfter {
+		slox.Info(ctx, "approving mod after successful virus scan", slog.String("mod", modID), slog.String("version", versionID))
 
 		if err := version.Update().SetApproved(true).Exec(ctx); err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			return err
 		}
 
-		if err := db.From(ctx).Mod.UpdateOneID(task.ModID).SetLastVersionDate(time.Now()).Exec(ctx); err != nil {
+		if err := db.From(ctx).Mod.UpdateOneID(modID).SetLastVersionDate(time.Now()).Exec(ctx); err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			return err
 		}
 

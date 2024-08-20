@@ -15,6 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/satisfactorymodding/smr-api/redis"
 )
@@ -65,6 +67,11 @@ func (s3o *S3) Get(key string) (io.ReadCloser, error) {
 }
 
 func (s3o *S3) Put(ctx context.Context, key string, body io.ReadSeeker) (string, error) {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "Put")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("key", key))
+
 	cleanedKey := strings.TrimPrefix(key, "/")
 
 	uploader := s3manager.NewUploader(s3o.S3Session)
@@ -75,6 +82,7 @@ func (s3o *S3) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 		Key:    aws.String(cleanedKey),
 	})
 	if err != nil {
+		span.RecordError(err)
 		return cleanedKey, fmt.Errorf("failed to upload file: %w", err)
 	}
 

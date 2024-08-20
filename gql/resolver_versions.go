@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"runtime/debug"
 	"strings"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/dgraph-io/ristretto"
 	"github.com/pkg/errors"
+	"go.temporal.io/sdk/client"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db"
@@ -27,6 +27,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
+	"github.com/satisfactorymodding/smr-api/workflows"
 )
 
 func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (string, error) {
@@ -109,33 +110,12 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 
 	slox.Info(ctx, "finalization gql call")
 
-	go func(ctx context.Context, mod *ent.Mod, versionID string, version generated.NewVersion) {
-		defer func() {
-			if r := recover(); r != nil {
-				slox.Error(ctx, "recovered from version finalization", slog.Any("recover", r), slog.String("stack", string(debug.Stack())))
-
-				if err := redis.StoreVersionUploadState(versionID, nil, errors.New("internal error, please try again, if it fails again, please report on discord")); err != nil {
-					slox.Error(ctx, "failed to store version upload state", slog.Any("err", err))
-				}
-			}
-		}()
-
-		slox.Info(ctx, "calling FinalizeVersionUploadAsync")
-
-		data, err := FinalizeVersionUploadAsync(ctx, mod, versionID, version)
-		if err2 := redis.StoreVersionUploadState(versionID, data, err); err2 != nil {
-			slox.Error(ctx, "error storing redis state", slog.Any("err", err))
-			return
-		}
-
-		slox.Info(ctx, "finished FinalizeVersionUploadAsync")
-
-		if err != nil {
-			slox.Error(ctx, "error completing version upload", slog.Any("err", err))
-		} else {
-			slox.Info(ctx, "completed version upload")
-		}
-	}(db.ReWrapCtx(ctx), mod, versionID, version)
+	if _, err := workflows.Client(ctx).ExecuteWorkflow(ctx, client.StartWorkflowOptions{
+		ID:        fmt.Sprintf("finalize-version-upload-%s-%s", modID, versionID),
+		TaskQueue: workflows.RepoTaskQueue,
+	}, workflows.FinalizeVersionUploadWorkflow, mod.ID, versionID, version); err != nil {
+		return false, fmt.Errorf("failed to start finalization workflow: %w", err)
+	}
 
 	return true, nil
 }

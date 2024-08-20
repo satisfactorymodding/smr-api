@@ -2,23 +2,28 @@ package utils
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/Vilsol/slox"
+	"go.temporal.io/sdk/client"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/schema"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
-	"github.com/satisfactorymodding/smr-api/redis/jobs"
+	"github.com/satisfactorymodding/smr-api/workflows"
 )
 
 func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(*ent.Mod) bool, versionFilter func(version *ent.Version) bool) error {
 	return ExecuteOnVersions(ctx, false, modFilter, versionFilter, func(m *ent.Mod, v *ent.Version) {
-		if withMetadata {
-			jobs.SubmitJobUpdateDBFromModVersionFileTask(ctx, m.ID, v.ID)
-		} else {
-			jobs.SubmitJobUpdateDBFromModVersionJSONFileTask(ctx, m.ID, v.ID)
+		if _, err := workflows.Client(ctx).ExecuteWorkflow(ctx, client.StartWorkflowOptions{
+			ID:        fmt.Sprintf("update-mod-data-from-storage-%s-%s", m.ID, v.ID),
+			TaskQueue: workflows.RepoTaskQueue,
+		}, workflows.UpdateModDataFromStorageWorkflow, m.ID, v.ID, withMetadata); err != nil {
+			slox.Error(ctx, "failed to start finalization workflow", slog.Any("err", err))
 		}
 	})
 }
@@ -26,11 +31,12 @@ func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(*
 func ExecuteOnVersions(ctx context.Context, withDeleted bool, modFilter func(*ent.Mod) bool, versionFilter func(version *ent.Version) bool, f func(mod *ent.Mod, version *ent.Version)) error {
 	offset := 0
 
+	if withDeleted {
+		ctx = schema.SkipSoftDelete(ctx)
+	}
+
 	for {
 		q := db.From(ctx).Mod.Query().Limit(100).Offset(offset).Order(mod.ByCreatedAt(sql.OrderDesc()))
-		if withDeleted {
-			ctx = schema.SkipSoftDelete(ctx)
-		}
 		mods, err := q.All(ctx)
 		if err != nil {
 			return err

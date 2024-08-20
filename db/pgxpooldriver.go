@@ -95,6 +95,8 @@ func (e *EntPgxpoolDriver) BeginTx(ctx context.Context, opts *sql.TxOptions) (di
 	}
 	tx, err := e.pool.BeginTx(ctx, *pgxOpts)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return nil, err // nolint
 	}
 	return &EntPgxPoolTx{

@@ -23,6 +23,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -47,20 +50,22 @@ const (
 	MultiTargetUEPlugin         = 2
 )
 
+type ModMetadata []map[string]map[string][]interface{}
+
 type ModInfo struct {
-	Dependencies         map[string]string                     `json:"dependencies"`
-	OptionalDependencies map[string]string                     `json:"optional_dependencies"`
-	Semver               *semver.Version                       `json:"-"`
-	ModReference         string                                `json:"mod_reference"`
-	Version              string                                `json:"version"`
-	Hash                 string                                `json:"-"`
-	SMLVersion           *string                               `json:"sml_version"`
-	GameVersion          string                                `json:"-"`
-	Objects              []ModObject                           `json:"objects"`
-	Metadata             []map[string]map[string][]interface{} `json:"-"`
-	Targets              []string                              `json:"-"`
-	Size                 int64                                 `json:"-"`
-	Type                 ModType                               `json:"-"`
+	Dependencies         map[string]string `json:"dependencies"`
+	OptionalDependencies map[string]string `json:"optional_dependencies"`
+	Semver               *semver.Version   `json:"-"`
+	ModReference         string            `json:"mod_reference"`
+	Version              string            `json:"version"`
+	Hash                 string            `json:"-"`
+	SMLVersion           *string           `json:"sml_version"`
+	GameVersion          string            `json:"-"`
+	Objects              []ModObject       `json:"objects"`
+	Metadata             ModMetadata       `json:"-"`
+	Targets              []string          `json:"-"`
+	Size                 int64             `json:"-"`
+	Type                 ModType           `json:"-"`
 }
 
 var (
@@ -87,12 +92,20 @@ func InitializeValidator() {
 }
 
 func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withValidation bool, modReference string) (*ModInfo, error) {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "ExtractModInfo")
+	defer span.End()
+
 	if len(body) > 1000000000 {
-		return nil, errors.New("mod archive must be < 1GB")
+		err := errors.New("mod archive must be < 1GB")
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		return nil, err
 	}
 
 	archive, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return nil, errors.New("invalid zip archive")
 	}
 
@@ -115,6 +128,8 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	if dataFile != nil {
 		modInfo, err = validateDataJSON(archive, dataFile, withValidation)
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			return nil, err
 		}
 	}
@@ -122,6 +137,8 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	if uPlugin != nil {
 		modInfo, err = validateUPluginJSON(ctx, archive, uPlugin, withValidation, modReference)
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			return nil, err
 		}
 	}
@@ -130,98 +147,25 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 		// Neither data.json nor .uplugin found, try multi-target .uplugin
 		modInfo, err = validateMultiTargetPlugin(ctx, archive, withValidation, modReference)
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			return nil, err
 		}
 	}
 
 	if modInfo == nil {
-		return nil, errors.New("missing " + modReference + ".uplugin or data.json")
+		err := errors.New("missing " + modReference + ".uplugin or data.json")
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		return nil, err
 	}
 
 	if withMetadata {
-		// Extract all possible metadata
-		conn, err := grpc.NewClient(viper.GetString("extractor_host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		modInfo.Metadata, err = extractMetadata(ctx, body, modInfo.GameVersion, modInfo.ModReference)
 		if err != nil {
-			return nil, fmt.Errorf("failed to connect to metadata server: %w", err)
-		}
-		defer conn.Close()
-
-		engineVersion := "4.26"
-
-		//nolint
-		if db.From(ctx) != nil {
-			engineVersion, err = db.GetEngineVersionForSatisfactoryVersion(ctx, modInfo.GameVersion)
-			if err != nil {
-				slox.Warn(ctx, "failed to get engine version", slog.Any("err", err))
-			}
-		} else {
-			slox.Warn(ctx, "no database context provided to validator")
-		}
-
-		slox.Info(ctx, "decided engine version", slog.String("version", engineVersion))
-
-		if err := retry.Do(func() error {
-			parserClient := parser.NewParserClient(conn)
-			stream, err := parserClient.Parse(ctx, &parser.ParseRequest{
-				ZipData:       body,
-				EngineVersion: engineVersion,
-			},
-				grpc.MaxCallSendMsgSize(1024*1024*1024), // 1GB
-				grpc.MaxCallRecvMsgSize(1024*1024*1024), // 1GB
-			)
-			if err != nil {
-				return fmt.Errorf("failed to parse mod: %w", err)
-			}
-
-			defer func(stream parser.Parser_ParseClient) {
-				err := stream.CloseSend()
-				if err != nil {
-					slox.Error(ctx, "failed closing parser stream", slog.Any("err", err))
-				}
-			}(stream)
-
-			beforeUpload := time.Now().Add(-time.Minute)
-
-			count := 0
-			for {
-				asset, err := stream.Recv()
-				if err != nil {
-					//nolint
-					if errors.Is(err, io.EOF) || err == io.EOF {
-						break
-					}
-					return fmt.Errorf("failed reading parser stream: %w", err)
-				}
-
-				slox.Info(ctx, "received asset from parser", slog.String("path", asset.GetPath()))
-
-				if asset.Path == "metadata.json" {
-					out, err := ExtractMetadata(asset.Data)
-					if err != nil {
-						return err
-					}
-					modInfo.Metadata = append(modInfo.Metadata, out)
-				}
-
-				storage.UploadModAsset(ctx, modInfo.ModReference, asset.GetPath(), asset.GetData())
-				count++
-			}
-
-			slox.Info(ctx, "all assets received", slog.Int("count", count))
-
-			storage.DeleteOldModAssets(ctx, modInfo.ModReference, beforeUpload)
-
-			return nil
-		},
-			retry.Attempts(10),
-			retry.Delay(time.Second*10),
-			retry.DelayType(retry.FixedDelay),
-			retry.OnRetry(func(n uint, err error) {
-				if n > 0 {
-					slox.Info(ctx, "retrying to extract metadata", slog.Uint64("n", uint64(n)), slog.Any("err", err))
-				}
-			})); err != nil {
-			return nil, err //nolint
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
+			return nil, err
 		}
 	}
 
@@ -230,6 +174,8 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	hash := sha256.New()
 	_, err = hash.Write(body)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		slox.Error(ctx, "error hashing pak", slog.Any("err", err))
 	}
 
@@ -237,6 +183,8 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 
 	version, err := semver.StrictNewVersion(modInfo.Version)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		slox.Error(ctx, "error parsing semver", slog.Any("err", err))
 		return nil, fmt.Errorf("error parsing semver: %w", err)
 	}
@@ -244,6 +192,108 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	modInfo.Semver = version
 
 	return modInfo, nil
+}
+
+func extractMetadata(ctx context.Context, data []byte, gameVersion string, modReference string) (ModMetadata, error) {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "extractMetadata")
+	defer span.End()
+
+	metadata := make(ModMetadata, 0)
+
+	// Extract all possible metadata
+	conn, err := grpc.NewClient(
+		viper.GetString("extractor_host"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+	)
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		return nil, fmt.Errorf("failed to connect to metadata server: %w", err)
+	}
+	defer conn.Close()
+
+	engineVersion := "4.26"
+
+	//nolint
+	if db.From(ctx) != nil {
+		engineVersion, err = db.GetEngineVersionForSatisfactoryVersion(ctx, gameVersion)
+		if err != nil {
+			slox.Warn(ctx, "failed to get engine version", slog.Any("err", err))
+		}
+	} else {
+		slox.Warn(ctx, "no database context provided to validator")
+	}
+
+	slox.Info(ctx, "decided engine version", slog.String("version", engineVersion))
+
+	if err := retry.Do(func() error {
+		parserClient := parser.NewParserClient(conn)
+		stream, err := parserClient.Parse(ctx, &parser.ParseRequest{
+			ZipData:       data,
+			EngineVersion: engineVersion,
+		},
+			grpc.MaxCallSendMsgSize(1024*1024*1024), // 1GB
+			grpc.MaxCallRecvMsgSize(1024*1024*1024), // 1GB
+		)
+		if err != nil {
+			return fmt.Errorf("failed to parse mod: %w", err)
+		}
+
+		defer func(stream parser.Parser_ParseClient) {
+			err := stream.CloseSend()
+			if err != nil {
+				slox.Error(ctx, "failed closing parser stream", slog.Any("err", err))
+			}
+		}(stream)
+
+		beforeUpload := time.Now().Add(-time.Minute)
+
+		count := 0
+		for {
+			asset, err := stream.Recv()
+			if err != nil {
+				//nolint
+				if errors.Is(err, io.EOF) || err == io.EOF {
+					break
+				}
+				return fmt.Errorf("failed reading parser stream: %w", err)
+			}
+
+			slox.Info(ctx, "received asset from parser", slog.String("path", asset.GetPath()))
+
+			if asset.Path == "metadata.json" {
+				out, err := ExtractMetadata(asset.Data)
+				if err != nil {
+					return err
+				}
+				metadata = append(metadata, out)
+			}
+
+			storage.UploadModAsset(ctx, modReference, asset.GetPath(), asset.GetData())
+			count++
+		}
+
+		slox.Info(ctx, "all assets received", slog.Int("count", count))
+
+		storage.DeleteOldModAssets(ctx, modReference, beforeUpload)
+
+		return nil
+	},
+		retry.Attempts(10),
+		retry.Delay(time.Second*10),
+		retry.DelayType(retry.FixedDelay),
+		retry.OnRetry(func(n uint, err error) {
+			if n > 0 {
+				slox.Info(ctx, "retrying to extract metadata", slog.Uint64("n", uint64(n)), slog.Any("err", err))
+			}
+		})); err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		return nil, err //nolint
+	}
+
+	return metadata, nil
 }
 
 func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bool) (*ModInfo, error) {
