@@ -46,9 +46,6 @@ jobs:
       - name: Setup
         run: devbox run setup
 
-      - name: Install junit reporter
-        run: go install github.com/jstemmer/go-junit-report/v2@latest
-
       - name: Test
         run: devbox run test:coverage:junit
         env:
