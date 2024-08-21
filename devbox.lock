@@ -49,6 +49,54 @@
         }
       }
     },
+    "go-junit-report@2.1.0": {
+      "last_modified": "2024-08-14T11:41:26Z",
+      "resolved": "github:NixOS/nixpkgs/0cb2fd7c59fed0cd82ef858cbcbdb552b9a33465#go-junit-report",
+      "source": "devbox-search",
+      "version": "2.1.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3i4fnhsrgpcwg2y7xvi6y9in370s4x9c-go-junit-report-2.1.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/3i4fnhsrgpcwg2y7xvi6y9in370s4x9c-go-junit-report-2.1.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/mb4brnqhkhx6zq0s3l11497lfpkrmiqp-go-junit-report-2.1.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/mb4brnqhkhx6zq0s3l11497lfpkrmiqp-go-junit-report-2.1.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ljnb7fymycrb92w0r7j9ajrs33k4z92q-go-junit-report-2.1.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/ljnb7fymycrb92w0r7j9ajrs33k4z92q-go-junit-report-2.1.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/qp20km6ig0h1f5f72m34fwsrh633x37r-go-junit-report-2.1.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/qp20km6ig0h1f5f72m34fwsrh633x37r-go-junit-report-2.1.0"
+        }
+      }
+    },
     "go@1.23.0": {
       "last_modified": "2024-08-18T12:44:29Z",
       "resolved": "github:NixOS/nixpkgs/ff1c2669bbb4d0dd9e62cc94f0968cfa652ceec1#go_1_23",
@@ -142,90 +190,6 @@
             }
           ],
           "store_path": "/nix/store/il2a9jd3kbh91yxbm90z0am3c34gfxgf-golangci-lint-1.60.1"
-        }
-      }
-    },
-    "libpng@1.6.43": {
-      "last_modified": "2024-08-18T12:44:29Z",
-      "resolved": "github:NixOS/nixpkgs/ff1c2669bbb4d0dd9e62cc94f0968cfa652ceec1#libpng",
-      "source": "devbox-search",
-      "version": "1.6.43",
-      "systems": {
-        "aarch64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/0636yhvrn507sa2qsdjlb7d4zgqzcp95-libpng-apng-1.6.43",
-              "default": true
-            },
-            {
-              "name": "man",
-              "path": "/nix/store/hszwzi3wcasw4q28vkx3r90jsncbml48-libpng-apng-1.6.43-man",
-              "default": true
-            },
-            {
-              "name": "dev",
-              "path": "/nix/store/rsvf51r4cki2p6p61m9bi1rv7kyf0k99-libpng-apng-1.6.43-dev"
-            }
-          ],
-          "store_path": "/nix/store/0636yhvrn507sa2qsdjlb7d4zgqzcp95-libpng-apng-1.6.43"
-        },
-        "aarch64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/zxd87gf3pkbfdggzvi9xfr4hxag0z061-libpng-apng-1.6.43",
-              "default": true
-            },
-            {
-              "name": "man",
-              "path": "/nix/store/zrkfrjmvs4nddh0b33hk09g4q9lrdvvb-libpng-apng-1.6.43-man",
-              "default": true
-            },
-            {
-              "name": "dev",
-              "path": "/nix/store/3zmbwraj3wzwyffpqz6r0as3pblllggx-libpng-apng-1.6.43-dev"
-            }
-          ],
-          "store_path": "/nix/store/zxd87gf3pkbfdggzvi9xfr4hxag0z061-libpng-apng-1.6.43"
-        },
-        "x86_64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/lvwzk8wjr0nyf0fxwdc7acv00p78yy55-libpng-apng-1.6.43",
-              "default": true
-            },
-            {
-              "name": "man",
-              "path": "/nix/store/1rd52r4vz9lmgzi52bhbfx41k4nswskj-libpng-apng-1.6.43-man",
-              "default": true
-            },
-            {
-              "name": "dev",
-              "path": "/nix/store/x8qmp1qq7fxjzqh3myakcsj1phiin8fn-libpng-apng-1.6.43-dev"
-            }
-          ],
-          "store_path": "/nix/store/lvwzk8wjr0nyf0fxwdc7acv00p78yy55-libpng-apng-1.6.43"
-        },
-        "x86_64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/3rmghpv8fapbmng692rm66b2d46px4bk-libpng-apng-1.6.43",
-              "default": true
-            },
-            {
-              "name": "man",
-              "path": "/nix/store/al6wl2r4fpbxgjsbl3wz1rx5zgngah3b-libpng-apng-1.6.43-man",
-              "default": true
-            },
-            {
-              "name": "dev",
-              "path": "/nix/store/0n0vsm5syicn4lz4fn00aaa7kq960x02-libpng-apng-1.6.43-dev"
-            }
-          ],
-          "store_path": "/nix/store/3rmghpv8fapbmng692rm66b2d46px4bk-libpng-apng-1.6.43"
         }
       }
     },
