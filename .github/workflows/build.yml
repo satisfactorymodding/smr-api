@@ -59,6 +59,8 @@ jobs:
           REPO_PASETO__PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
           REPO_FEATURE_FLAGS__ALLOW_MULTI_TARGET_UPLOAD: "true"
           REPO_VIRUSTOTAL__KEY: ${{ secrets.VIRUSTOTAL_KEY }}
+          REPO_STORAGE__REGION: "us-east-1"
+          REPO_STORAGE__KEYPATH: "%s/%s/%s"
 
       - name: Codecov
         uses: codecov/codecov-action@v4
