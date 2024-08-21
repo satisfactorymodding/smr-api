@@ -243,7 +243,7 @@ func TestVersions(t *testing.T) {
 		}
 
 		if executeVirusCheck {
-			for {
+			for time.Now().Before(end) {
 				getModVersion := authRequest(`query GetModVersion($version_id: VersionID!) {
 					getVersion(versionId: $version_id) {
 						id
