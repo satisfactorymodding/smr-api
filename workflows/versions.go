@@ -67,21 +67,27 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 		slog.Error("failed to extract metadata", slog.Any("err", err), slog.String("mod_id", modID), slog.String("upload_id", uploadID))
 	}
 
+	var fileKey *string
+	err = workflow.ExecuteActivity(ctx, renameVersionActivity, modID, uploadID, modInfo.Version).Get(ctx, &fileKey)
+	if err != nil {
+		return storeIfFatal(ctx, err, nil)
+	}
+
+	var targetsData *[]modTargetData
+	err = workflow.ExecuteActivity(ctx, separateModTargetsActivity, modID, modInfo, fileKey).Get(ctx, &targetsData)
+	if err != nil {
+		return storeIfFatal(ctx, err, nil)
+	}
+
 	var dbVersion *ent.Version
-	err = workflow.ExecuteActivity(ctx, createVersionInDatabaseActivity, modID, uploadID, modInfo, version, metadata).Get(ctx, &dbVersion)
+	err = workflow.ExecuteActivity(ctx, createVersionInDatabaseActivity, modID, modInfo, fileKey, targetsData, version, metadata).Get(ctx, &dbVersion)
 	if err != nil {
 		return storeIfFatal(ctx, err, nil)
 	}
 
-	err = workflow.ExecuteActivity(ctx, separateModTargetsActivity, modID, uploadID, modInfo, dbVersion).Get(ctx, nil)
-	if err != nil {
-		return storeIfFatal(ctx, err, nil)
-	}
-
-	var data *generated.CreateVersionResponse
-	err = workflow.ExecuteActivity(ctx, finalizeVersionUploadActivity, modID, uploadID, modInfo, dbVersion).Get(ctx, &data)
-	if err != nil {
-		return storeIfFatal(ctx, err, nil)
+	data := &generated.CreateVersionResponse{
+		AutoApproved: dbVersion.Approved,
+		Version:      (*conv.VersionImpl)(nil).Convert(dbVersion),
 	}
 
 	if data.AutoApproved {
@@ -213,13 +219,13 @@ func extractMetadataActivity(ctx context.Context, modID string, uploadID string,
 	return util.Ptr(string(jsonData)), nil
 }
 
-func createVersionInDatabaseActivity(ctx context.Context, modID string, uploadID string, modInfo *validation.ModInfo, version generated.NewVersion, metadata *string) (*ent.Version, error) {
+func createVersionInDatabaseActivity(ctx context.Context, modID string, modInfo *validation.ModInfo, fileKey string, targets []modTargetData, version generated.NewVersion, metadata *string) (*ent.Version, error) {
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("upload_id", uploadID))
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version", modInfo.Version))
 
 	autoApproved := true
 	for _, obj := range modInfo.Objects {
@@ -240,6 +246,7 @@ func createVersionInDatabaseActivity(ctx context.Context, modID string, uploadID
 			SetModID(modID).
 			SetStability(util.Stability(version.Stability)).
 			SetModReference(modInfo.ModReference).
+			SetKey(fileKey).
 			SetSize(modInfo.Size).
 			SetHash(modInfo.Hash).
 			SetVersionMajor(int(modInfo.Semver.Major())).
@@ -286,104 +293,90 @@ func createVersionInDatabaseActivity(ctx context.Context, modID string, uploadID
 			}
 		}
 
+		for _, target := range targets {
+			_, err = tx.VersionTarget.Create().
+				SetVersion(dbVersion).
+				SetTargetName(target.TargetName).
+				SetKey(target.Key).
+				SetHash(target.Hash).
+				SetSize(target.Size).
+				Save(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}, nil); err != nil {
-		_ = storage.DeleteMod(ctx, modID, mod.Name, uploadID)
+		_ = storage.DeleteMod(ctx, modID, mod.Name, modInfo.Version)
 		return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
 	}
 
 	return dbVersion, nil
 }
 
-func separateModTargetsActivity(ctx context.Context, modID string, uploadID string, modInfo *validation.ModInfo, dbVersion *ent.Version) error {
-	mod, err := db.From(ctx).Mod.Get(ctx, modID)
-	if err != nil {
-		return err
-	}
-
-	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("upload_id", uploadID))
-
-	fileData, err := downloadMod(ctx, mod, uploadID)
-	if err != nil {
-		return err
-	}
-
-	if modInfo.Type == validation.MultiTargetUEPlugin {
-		targets := make([]*ent.VersionTarget, 0)
-
-		for _, target := range modInfo.Targets {
-			dbVersionTarget, err := db.From(ctx).VersionTarget.Create().
-				SetVersionID(dbVersion.ID).
-				SetTargetName(target).
-				Save(ctx)
-			if err != nil {
-				_ = storage.DeleteMod(ctx, modID, mod.Name, uploadID)
-				return temporal.NewNonRetryableApplicationError("database error", "fatal", err)
-			}
-
-			targets = append(targets, dbVersionTarget)
-		}
-
-		var separateError error
-		for _, target := range targets {
-			slox.Info(ctx, "separating mod", slog.String("target", target.TargetName), slog.String("mod", mod.Name), slog.String("version", dbVersion.Version))
-			key, hash, size, err := storage.SeparateModTarget(ctx, fileData, mod.ID, mod.Name, dbVersion.Version, target.TargetName)
-			if err != nil {
-				separateError = err
-				break
-			}
-
-			if _, err := target.Update().SetKey(key).SetHash(hash).SetSize(size).Save(ctx); err != nil {
-				removeMod(ctx, modInfo, mod, dbVersion)
-				return temporal.NewNonRetryableApplicationError("database error", "fatal", err)
-			}
-		}
-
-		if separateError != nil {
-			removeMod(ctx, modInfo, mod, dbVersion)
-			return temporal.NewNonRetryableApplicationError("failed to separate mod", "fatal", err)
-		}
-	}
-
-	return nil
+type modTargetData struct {
+	TargetName string
+	Key        string
+	Hash       string
+	Size       int64
 }
 
-func finalizeVersionUploadActivity(ctx context.Context, modID string, uploadID string, modInfo *validation.ModInfo, dbVersion *ent.Version) (*generated.CreateVersionResponse, error) {
+func separateModTargetsActivity(ctx context.Context, modID string, modInfo *validation.ModInfo, fileKey string) ([]modTargetData, error) {
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("upload_id", uploadID))
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version", modInfo.Version))
 
-	key, err := storage.RenameVersion(ctx, mod.ID, mod.Name, uploadID, modInfo.Version)
+	fileData, err := downloadMod(ctx, mod, modInfo.Version)
 	if err != nil {
-		removeMod(ctx, modInfo, mod, dbVersion)
-		return nil, temporal.NewNonRetryableApplicationError("failed to upload mod", "fatal", err)
+		return nil, err
 	}
 
-	if modInfo.Type == validation.UEPlugin {
-		if _, err := db.From(ctx).VersionTarget.Create().
-			SetVersionID(dbVersion.ID).
-			SetTargetName("Windows").
-			SetKey(key).
-			SetHash(dbVersion.Hash).
-			SetSize(dbVersion.Size).
-			Save(ctx); err != nil {
-			removeMod(ctx, modInfo, mod, dbVersion)
-			return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
+	if modInfo.Type == validation.MultiTargetUEPlugin {
+		targets := make([]modTargetData, 0)
+
+		for _, target := range modInfo.Targets {
+			slox.Info(ctx, "separating mod", slog.String("target", target), slog.String("mod", mod.Name), slog.String("version", modInfo.Version))
+			key, hash, size, err := storage.SeparateModTarget(ctx, fileData, mod.ID, mod.Name, modInfo.Version, target)
+			if err != nil {
+				return nil, temporal.NewNonRetryableApplicationError("failed to separate mod", "fatal", err)
+			}
+			targets = append(targets, modTargetData{
+				TargetName: target,
+				Key:        key,
+				Hash:       hash,
+				Size:       size,
+			})
 		}
+
+		return targets, nil
 	}
 
-	if _, err := db.From(ctx).Version.Update().SetKey(key).Where(version2.ID(dbVersion.ID)).Save(ctx); err != nil {
-		removeMod(ctx, modInfo, mod, dbVersion)
-		return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
+	// A single Windows target for legacy mod formats
+	return []modTargetData{{
+		TargetName: "Windows",
+		Key:        fileKey,
+		Hash:       modInfo.Hash,
+		Size:       modInfo.Size,
+	}}, nil
+}
+
+func renameVersionActivity(ctx context.Context, modID string, uploadID string, version string) (string, error) {
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return "", err
 	}
 
-	return &generated.CreateVersionResponse{
-		AutoApproved: dbVersion.Approved,
-		Version:      (*conv.VersionImpl)(nil).Convert(dbVersion),
-	}, nil
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("upload_id", uploadID), slog.String("version", version))
+
+	key, err := storage.RenameVersion(ctx, mod.ID, mod.Name, uploadID, version)
+	if err != nil {
+		return "", temporal.NewNonRetryableApplicationError("failed to upload mod", "fatal", err)
+	}
+	return key, nil
 }
 
 func approveAndPublishModActivity(ctx context.Context, modID string, versionID string) error {
