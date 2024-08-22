@@ -84,9 +84,11 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 		return storeIfFatal(ctx, err, nil)
 	}
 
-	err = workflow.ExecuteActivity(ctx, approveAndPublishModActivity, modID, data.Version.ID).Get(ctx, nil)
-	if err != nil {
-		return storeIfFatal(ctx, err, nil)
+	if data.AutoApproved {
+		err = workflow.ExecuteActivity(ctx, approveAndPublishModActivity, modID, data.Version.ID).Get(ctx, nil)
+		if err != nil {
+			return storeIfFatal(ctx, err, nil)
+		}
 	}
 
 	err = workflow.ExecuteActivity(ctx, storeRedisStateActivity, uploadID, data).Get(ctx, nil)

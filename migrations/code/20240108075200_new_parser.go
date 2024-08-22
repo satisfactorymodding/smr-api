@@ -14,11 +14,8 @@ import (
 
 func init() {
 	migration.NewCodeMigration(
-		func(_ interface{}) error {
-			ctx, err := db.WithDB(context.Background())
-			if err != nil {
-				return err
-			}
+		func(ctxInt interface{}) error {
+			ctx := ctxInt.(context.Context)
 			return utils.ReindexAllModFiles(ctx, true, nil, func(version *ent.Version) bool {
 				smlDependency, err := db.From(ctx).VersionDependency.Query().Where(
 					versiondependency.VersionID(version.ID),

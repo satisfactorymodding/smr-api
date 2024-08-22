@@ -27,7 +27,7 @@ func (c codeMigrationLogger) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func codeMigrations(_ context.Context) {
+func codeMigrations(ctx context.Context) {
 	source := migration.DefaultCodeSource()
 
 	// TODO Custom reporter, this one's very ugly
@@ -47,5 +47,5 @@ func codeMigrations(_ context.Context) {
 
 	manager := migration.NewDefaultManager(migration.NewPostgreSQLTarget(db), source)
 	runner := migration.NewArgsRunnerCustom(reporter, manager, os.Exit, "migrate")
-	runner.Run(db)
+	runner.Run(ctx)
 }

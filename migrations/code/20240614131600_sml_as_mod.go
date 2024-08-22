@@ -28,13 +28,10 @@ import (
 
 func init() {
 	migration.NewCodeMigration(
-		func(_ interface{}) error {
-			ctx, err := db.WithDB(context.Background())
-			if err != nil {
-				return err
-			}
+		func(ctxInt interface{}) error {
+			ctx := ctxInt.(context.Context)
 
-			err = uploadAllSMLVersions(ctx)
+			err := uploadAllSMLVersions(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to upload all SML versions: %w", err)
 			}
