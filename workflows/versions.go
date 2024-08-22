@@ -103,9 +103,14 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 	}
 
 	if !data.AutoApproved {
-		err = workflow.ExecuteActivity(ctx, scanModOnVirusTotalActivity, modID, data.Version.ID).Get(ctx, nil)
+		var scanSuccess bool
+		err = workflow.ExecuteActivity(ctx, scanModOnVirusTotalActivity, modID, data.Version.ID).Get(ctx, &scanSuccess)
 		if err != nil {
 			return err
+		}
+
+		if !scanSuccess {
+			return nil
 		}
 
 		err = workflow.ExecuteActivity(ctx, approveAndPublishModActivity, modID, data.Version.ID).Get(ctx, nil)

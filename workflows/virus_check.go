@@ -19,7 +19,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
-func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID string) error {
+func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID string) (bool, error) {
 	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "ScanModOnVirusTotal")
 	defer span.End()
 
@@ -29,7 +29,7 @@ func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID st
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
-		return err
+		return false, err
 	}
 	link := storage.GenerateDownloadLink(ctx, version.Key)
 
@@ -39,14 +39,14 @@ func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID st
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
-		return fmt.Errorf("failed to read mod file: %w", err)
+		return false, fmt.Errorf("failed to read mod file: %w", err)
 	}
 
 	archive, err := zip.NewReader(bytes.NewReader(fileData), int64(len(fileData)))
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
-		return fmt.Errorf("failed to unzip mod file: %w", err)
+		return false, fmt.Errorf("failed to unzip mod file: %w", err)
 	}
 
 	toScan := make([]io.Reader, 0)
@@ -57,7 +57,7 @@ func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID st
 			if err != nil {
 				span.SetStatus(codes.Error, err.Error())
 				span.RecordError(err)
-				return fmt.Errorf("failed to open mod file: %w", err)
+				return false, fmt.Errorf("failed to open mod file: %w", err)
 			}
 
 			toScan = append(toScan, open)
@@ -69,13 +69,13 @@ func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID st
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
-		return err
+		return false, err
 	}
 
 	if !success {
 		slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", modID), slog.String("version", versionID))
-		return nil
+		return false, nil
 	}
 
-	return nil
+	return true, nil
 }
