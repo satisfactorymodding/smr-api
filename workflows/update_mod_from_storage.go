@@ -31,7 +31,7 @@ func updateModDataFromStorageActivity(ctx context.Context, modID string, version
 		return err
 	}
 
-	link := storage.GenerateDownloadLink(version.Key)
+	link := storage.GenerateDownloadLink(ctx, version.Key)
 
 	response, _ := http.Get(link)
 
@@ -49,11 +49,19 @@ func updateModDataFromStorageActivity(ctx context.Context, modID string, version
 		return errors.New("mod not found")
 	}
 
-	info, err := validation.ExtractModInfo(ctx, fileData, metadata, false, mod.ModReference)
+	info, err := validation.ExtractModInfo(ctx, fileData, false, mod.ModReference)
 	if err != nil {
 		slox.Warn(ctx, "failed updating mod, likely outdated", slog.Any("err", err), slog.String("version", versionID), slog.String("link", link), slog.Int("size", len(fileData)), slog.String("mod_reference", mod.ModReference))
 		// Outdated version
 		return nil
+	}
+
+	var extractedMetadata validation.ModMetadata
+	if metadata {
+		extractedMetadata, err = validation.ExtractMetadata(ctx, fileData, info.GameVersion, info.ModReference)
+		if err != nil {
+			slox.Warn(ctx, "failed extracting metadata", slog.Any("err", err), slog.String("version", versionID), slog.String("link", link), slog.Int("size", len(fileData)), slog.String("mod_reference", mod.ModReference))
+		}
 	}
 
 	for depModID, condition := range info.Dependencies {
@@ -82,8 +90,8 @@ func updateModDataFromStorageActivity(ctx context.Context, modID string, version
 		}
 	}
 
-	if metadata {
-		jsonData, err := json.Marshal(info.Metadata)
+	if extractedMetadata != nil {
+		jsonData, err := json.Marshal(extractedMetadata)
 		if err != nil {
 			slox.Error(ctx, "failed serializing", slog.Any("err", err), slog.String("version", versionID))
 		} else {

@@ -134,9 +134,9 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 	}
 
 	if logoData != nil {
-		success, logoKey := storage.UploadModLogo(ctx, resultMod.ID, bytes.NewReader(logoData))
-		if success {
-			resultMod, err = resultMod.Update().SetLogo(storage.GenerateDownloadLink(logoKey)).Save(ctx)
+		logoKey, err := storage.UploadModLogo(ctx, resultMod.ID, bytes.NewReader(logoData))
+		if err == nil {
+			resultMod, err = resultMod.Update().SetLogo(storage.GenerateDownloadLink(ctx, logoKey)).Save(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -195,9 +195,9 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 			return nil, err
 		}
 
-		success, logoKey := storage.UploadModLogo(ctx, dbMod.ID, bytes.NewReader(logoData))
-		if success {
-			dbMod.Logo = storage.GenerateDownloadLink(logoKey)
+		logoKey, err := storage.UploadModLogo(ctx, dbMod.ID, bytes.NewReader(logoData))
+		if err == nil {
+			dbMod.Logo = storage.GenerateDownloadLink(ctx, logoKey)
 		} else {
 			dbMod.Logo = ""
 		}

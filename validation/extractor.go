@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-func ExtractMetadata(raw []byte) (map[string]map[string][]interface{}, error) {
+func ExtractMetadataRaw(raw []byte) (map[string]map[string][]interface{}, error) {
 	meta := make(map[string][]map[string]interface{})
 
 	if err := json.Unmarshal(raw, &meta); err != nil {

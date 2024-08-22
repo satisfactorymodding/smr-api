@@ -138,7 +138,7 @@ func (s3o *S3) UploadPart(key string, part int64, data io.ReadSeeker) error {
 func (s3o *S3) CompleteMultipartUpload(key string) error {
 	cleanedKey := strings.TrimPrefix(key, "/")
 	id := redis.GetMultipartUploadID(cleanedKey)
-	parts := redis.GetAndClearMultipartCompletedParts(cleanedKey)
+	parts := redis.GetMultipartCompletedParts(cleanedKey)
 	completedParts := make([]*s3.CompletedPart, len(parts))
 
 	for part, etag := range parts {
@@ -155,6 +155,8 @@ func (s3o *S3) CompleteMultipartUpload(key string) error {
 	if err != nil {
 		return fmt.Errorf("failed to complete multipart upload: %w", err)
 	}
+
+	redis.ClearMultipartCompletedParts(cleanedKey)
 
 	return nil
 }

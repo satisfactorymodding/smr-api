@@ -48,14 +48,14 @@ func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (str
 		return "", errors.New("you must update your mod reference on the site to match your mod_reference in your data.json")
 	}
 
-	versionID := util.GenerateUniqueID()
+	uploadID := util.GenerateUniqueID()
 
-	storage.StartUploadMultipartMod(ctx, mod.ID, mod.Name, versionID)
+	_, _ = storage.StartUploadMultipartMod(ctx, mod.ID, mod.Name, uploadID)
 
-	return versionID, nil
+	return uploadID, nil
 }
 
-func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, versionID string, part int, file graphql.Upload) (bool, error) {
+func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, uploadID string, part int, file graphql.Upload) (bool, error) {
 	if part > 100 {
 		return false, errors.New("files can consist of max 41 chunks")
 	}
@@ -83,12 +83,12 @@ func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, 
 		return false, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	success, _ := storage.UploadMultipartMod(ctx, mod.ID, mod.Name, versionID, int64(part), bytes.NewReader(fileData))
+	_, err = storage.UploadMultipartMod(ctx, mod.ID, mod.Name, uploadID, int64(part), bytes.NewReader(fileData))
 
-	return success, nil
+	return err == nil, err
 }
 
-func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID string, versionID string, version generated.NewVersion) (bool, error) {
+func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID string, uploadID string, version generated.NewVersion) (bool, error) {
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return false, err
@@ -106,14 +106,14 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 		return false, errors.New("you must update your mod reference on the site to match your mod_reference in your data.json")
 	}
 
-	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", uploadID))
 
 	slox.Info(ctx, "finalization gql call")
 
 	if _, err := workflows.Client(ctx).ExecuteWorkflow(ctx, client.StartWorkflowOptions{
-		ID:        fmt.Sprintf("finalize-version-upload-%s-%s", modID, versionID),
+		ID:        fmt.Sprintf("finalize-version-upload-%s-%s", modID, uploadID),
 		TaskQueue: workflows.RepoTaskQueue,
-	}, workflows.FinalizeVersionUploadWorkflow, mod.ID, versionID, version); err != nil {
+	}, workflows.FinalizeVersionUploadWorkflow, mod.ID, uploadID, version); err != nil {
 		return false, fmt.Errorf("failed to start finalization workflow: %w", err)
 	}
 

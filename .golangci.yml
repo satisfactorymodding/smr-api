@@ -9,6 +9,7 @@ linters-settings:
       - .WithStack(
       - github.com/labstack/echo/v4.Context
       - (go.temporal.io/sdk/internal.Future).Get(
+      - .NewNonRetryableApplicationError(
 
     ignorePackageGlobs:
       - github.com/satisfactorymodding/smr-api/*

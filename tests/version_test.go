@@ -216,7 +216,7 @@ func TestVersions(t *testing.T) {
 		request.Var("mod_id", modID)
 		request.Var("version_id", versionID)
 
-		end := time.Now().Add(time.Minute * 15)
+		end := time.Now().Add(time.Minute * 30)
 		for time.Now().Before(end) {
 			var response struct {
 				CheckVersionUploadState struct {
@@ -271,6 +271,7 @@ func TestVersions(t *testing.T) {
 
 		if time.Now().After(end) {
 			testza.AssertNoError(t, errors.New("failed finishing mod"))
+			t.FailNow()
 		}
 	})
 

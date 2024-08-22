@@ -94,7 +94,7 @@ func Initialize(baseCtx context.Context) (context.Context, func()) {
 		panic(err)
 	}
 
-	storage.InitializeStorage(ctx)
+	ctx = storage.InitializeStorage(ctx)
 	oauth.InitializeOAuth()
 	util.InitializeSecurity()
 	validation.InitializeValidator()
@@ -232,6 +232,7 @@ func Setup(ctx context.Context) *echo.Echo {
 			req := c.Request()
 			newCtx := db.TransferContext(ctx, req.Context())
 			newCtx = workflows.TransferContext(ctx, newCtx)
+			newCtx = storage.TransferContext(ctx, newCtx)
 			c.SetRequest(req.WithContext(newCtx))
 			return next(c)
 		}

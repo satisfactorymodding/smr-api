@@ -33,7 +33,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/proto/parser"
 	"github.com/satisfactorymodding/smr-api/storage"
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
 var AllowedTargets = []string{"Windows", "WindowsServer", "LinuxServer"}
@@ -63,8 +62,6 @@ type ModInfo struct {
 	SMLVersion           *string           `json:"sml_version"`
 	GameVersion          string            `json:"game_version"`
 	Objects              []ModObject       `json:"objects"`
-	Metadata             ModMetadata       `json:"-"`
-	MetadataJSON         *string           `json:"metadata_json"`
 	Targets              []string          `json:"targets"`
 	Size                 int64             `json:"size"`
 	Type                 ModType           `json:"type"`
@@ -93,7 +90,7 @@ func InitializeValidator() {
 	uPluginJSONSchema = gojsonschema.NewReferenceLoader("file://" + strings.ReplaceAll(absPath, "\\", "/"))
 }
 
-func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withValidation bool, modReference string) (*ModInfo, error) {
+func ExtractModInfo(ctx context.Context, body []byte, withValidation bool, modReference string) (*ModInfo, error) {
 	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "ExtractModInfo")
 	defer span.End()
 
@@ -162,24 +159,6 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 		return nil, err
 	}
 
-	if withMetadata {
-		modInfo.Metadata, err = extractMetadata(ctx, body, modInfo.GameVersion, modInfo.ModReference)
-		if err != nil {
-			span.SetStatus(codes.Error, err.Error())
-			span.RecordError(err)
-			return nil, err
-		}
-
-		jsonData, err := json.Marshal(modInfo.Metadata)
-		if err != nil {
-			span.SetStatus(codes.Error, err.Error())
-			span.RecordError(err)
-			slox.Error(ctx, "failed serializing metadata", slog.Any("err", err))
-		}
-
-		modInfo.MetadataJSON = util.Ptr(string(jsonData))
-	}
-
 	modInfo.Size = int64(len(body))
 
 	hash := sha256.New()
@@ -205,7 +184,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 	return modInfo, nil
 }
 
-func extractMetadata(ctx context.Context, data []byte, gameVersion string, modReference string) (ModMetadata, error) {
+func ExtractMetadata(ctx context.Context, data []byte, gameVersion string, modReference string) (ModMetadata, error) {
 	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "extractMetadata")
 	defer span.End()
 
@@ -274,7 +253,7 @@ func extractMetadata(ctx context.Context, data []byte, gameVersion string, modRe
 			slox.Info(ctx, "received asset from parser", slog.String("path", asset.GetPath()))
 
 			if asset.Path == "metadata.json" {
-				out, err := ExtractMetadata(asset.Data)
+				out, err := ExtractMetadataRaw(asset.Data)
 				if err != nil {
 					return err
 				}

@@ -9,19 +9,17 @@ import (
 	"log/slog"
 	"net/http"
 	"path"
-	"time"
 
 	"github.com/Vilsol/slox"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
-func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID string, approveAfter bool) error {
+func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID string) error {
 	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "ScanModOnVirusTotal")
 	defer span.End()
 
@@ -33,7 +31,7 @@ func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID st
 		span.RecordError(err)
 		return err
 	}
-	link := storage.GenerateDownloadLink(version.Key)
+	link := storage.GenerateDownloadLink(ctx, version.Key)
 
 	response, _ := http.Get(link)
 
@@ -77,24 +75,6 @@ func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID st
 	if !success {
 		slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", modID), slog.String("version", versionID))
 		return nil
-	}
-
-	if approveAfter {
-		slox.Info(ctx, "approving mod after successful virus scan", slog.String("mod", modID), slog.String("version", versionID))
-
-		if err := version.Update().SetApproved(true).Exec(ctx); err != nil {
-			span.SetStatus(codes.Error, err.Error())
-			span.RecordError(err)
-			return err
-		}
-
-		if err := db.From(ctx).Mod.UpdateOneID(modID).SetLastVersionDate(time.Now()).Exec(ctx); err != nil {
-			span.SetStatus(codes.Error, err.Error())
-			span.RecordError(err)
-			return err
-		}
-
-		go integrations.NewVersion(db.ReWrapCtx(ctx), version)
 	}
 
 	return nil

@@ -75,11 +75,15 @@ func StoreMultipartCompletedPart(key string, etag string, part int) {
 	client.Expire(redisKey, time.Minute*60)
 }
 
-func GetAndClearMultipartCompletedParts(key string) map[string]string {
+func GetMultipartCompletedParts(key string) map[string]string {
 	encodedKey := base64.RawStdEncoding.EncodeToString([]byte(key))
 	all := client.HGetAll("s3:uploads:part:" + encodedKey)
-	client.Del("s3:uploads:part:" + encodedKey)
 	return all.Val()
+}
+
+func ClearMultipartCompletedParts(key string) {
+	encodedKey := base64.RawStdEncoding.EncodeToString([]byte(key))
+	client.Del("s3:uploads:part:" + encodedKey)
 }
 
 func StoreMultipartUploadID(key string, id string) {

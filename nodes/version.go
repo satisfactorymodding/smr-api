@@ -64,7 +64,7 @@ func downloadVersion(c echo.Context) error {
 		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
-	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))
+	return c.Redirect(302, storage.GenerateDownloadLink(c.Request().Context(), version.Key))
 }
 
 // @Summary Download a TargetName
@@ -106,5 +106,5 @@ func downloadModTarget(c echo.Context) error {
 		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
-	return c.Redirect(302, storage.GenerateDownloadLink(versionTarget.Key))
+	return c.Redirect(302, storage.GenerateDownloadLink(c.Request().Context(), versionTarget.Key))
 }

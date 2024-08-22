@@ -18,14 +18,6 @@ type workflowKey struct{}
 
 const RepoTaskQueue = "REPO_TASK_QUEUE"
 
-type UnrecoverableError struct {
-	Err error
-}
-
-func (u UnrecoverableError) Error() string {
-	return u.Err.Error()
-}
-
 func InitializeWorkflows(ctx context.Context) (context.Context, func()) {
 	tracingInterceptor, err := opentelemetry.NewTracingInterceptor(opentelemetry.TracerOptions{})
 	if err != nil {
@@ -52,10 +44,12 @@ func InitializeWorkflows(ctx context.Context) (context.Context, func()) {
 
 	w.RegisterWorkflow(FinalizeVersionUploadWorkflow)
 	w.RegisterActivity(completeUploadMultipartModActivity)
-	w.RegisterActivity(extractModInfo)
+	w.RegisterActivity(extractModInfoActivity)
+	w.RegisterActivity(extractMetadataActivity)
 	w.RegisterActivity(createVersionInDatabaseActivity)
 	w.RegisterActivity(separateModTargetsActivity)
 	w.RegisterActivity(finalizeVersionUploadActivity)
+	w.RegisterActivity(approveAndPublishModActivity)
 	w.RegisterActivity(storeRedisStateActivity)
 	w.RegisterActivity(scanModOnVirusTotalActivity)
 

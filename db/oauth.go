@@ -93,9 +93,9 @@ func CompleteOAuthFlow(ctx context.Context, u *oauth.UserData, userAgent string)
 			return nil, err
 		}
 
-		success, avatarKey := storage.UploadUserAvatar(ctx, found.ID, bytes.NewReader(avatarData))
-		if success {
-			if err := found.Update().SetAvatar(storage.GenerateDownloadLink(avatarKey)).Exec(ctx); err != nil {
+		avatarKey, err := storage.UploadUserAvatar(ctx, found.ID, bytes.NewReader(avatarData))
+		if err == nil {
+			if err := found.Update().SetAvatar(storage.GenerateDownloadLink(ctx, avatarKey)).Exec(ctx); err != nil {
 				return nil, err
 			}
 		}
