@@ -52,6 +52,7 @@ func InitializeWorkflows(ctx context.Context) (context.Context, func()) {
 	w.RegisterActivity(approveAndPublishModActivity)
 	w.RegisterActivity(storeRedisStateActivity)
 	w.RegisterActivity(scanModOnVirusTotalActivity)
+	w.RegisterActivity(removeModActivity)
 
 	w.RegisterWorkflow(UpdateModDataFromStorageWorkflow)
 	w.RegisterActivity(updateModDataFromStorageActivity)

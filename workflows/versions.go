@@ -3,7 +3,6 @@ package workflows
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -16,14 +15,11 @@ import (
 	"go.temporal.io/sdk/workflow"
 
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/schema"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/generated/conv"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	mod2 "github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	version2 "github.com/satisfactorymodding/smr-api/generated/ent/version"
-	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
-	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/storage"
@@ -39,25 +35,26 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 		},
 	})
 
-	storeIfFatal := func(ctx workflow.Context, err error, data *generated.CreateVersionResponse) error {
+	fatalError := func(ctx workflow.Context, err error, modInfo *validation.ModInfo) error {
 		if err != nil {
-			var appError *temporal.ApplicationError
-			if errors.As(err, &appError) && appError.NonRetryable() {
-				return workflow.ExecuteActivity(ctx, storeRedisStateActivity, uploadID, data, err).Get(ctx, nil)
+			err2 := workflow.ExecuteActivity(ctx, removeModActivity, modID, modInfo, uploadID).Get(ctx, nil)
+			if err2 != nil {
+				slog.Error("failed to remove mod", slog.Any("err", err2))
 			}
+			return workflow.ExecuteActivity(ctx, storeRedisStateActivity, uploadID, nil, err).Get(ctx, nil)
 		}
 		return err
 	}
 
 	err := workflow.ExecuteActivity(ctx, completeUploadMultipartModActivity, modID, uploadID).Get(ctx, nil)
 	if err != nil {
-		return storeIfFatal(ctx, err, nil)
+		return fatalError(ctx, err, nil)
 	}
 
 	var modInfo *validation.ModInfo
 	err = workflow.ExecuteActivity(ctx, extractModInfoActivity, modID, uploadID).Get(ctx, &modInfo)
 	if err != nil {
-		return storeIfFatal(ctx, err, nil)
+		return fatalError(ctx, err, nil)
 	}
 
 	var metadata *string
@@ -70,19 +67,19 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 	var fileKey *string
 	err = workflow.ExecuteActivity(ctx, renameVersionActivity, modID, uploadID, modInfo.Version).Get(ctx, &fileKey)
 	if err != nil {
-		return storeIfFatal(ctx, err, nil)
+		return fatalError(ctx, err, modInfo)
 	}
 
 	var targetsData *[]modTargetData
 	err = workflow.ExecuteActivity(ctx, separateModTargetsActivity, modID, modInfo, fileKey).Get(ctx, &targetsData)
 	if err != nil {
-		return storeIfFatal(ctx, err, nil)
+		return fatalError(ctx, err, modInfo)
 	}
 
 	var dbVersion *ent.Version
 	err = workflow.ExecuteActivity(ctx, createVersionInDatabaseActivity, modID, modInfo, fileKey, targetsData, version, metadata).Get(ctx, &dbVersion)
 	if err != nil {
-		return storeIfFatal(ctx, err, nil)
+		return fatalError(ctx, err, modInfo)
 	}
 
 	data := &generated.CreateVersionResponse{
@@ -93,7 +90,7 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 	if data.AutoApproved {
 		err = workflow.ExecuteActivity(ctx, approveAndPublishModActivity, modID, data.Version.ID).Get(ctx, nil)
 		if err != nil {
-			return storeIfFatal(ctx, err, nil)
+			return fatalError(ctx, err, modInfo)
 		}
 	}
 
@@ -154,17 +151,14 @@ func extractModInfoActivity(ctx context.Context, modID string, uploadID string) 
 	}
 
 	if modInfo.ModReference != mod.ModReference {
-		_ = storage.DeleteMod(ctx, mod.ID, mod.Name, uploadID)
 		return nil, temporal.NewNonRetryableApplicationError("data.json mod_reference does not match mod reference", "fatal", nil)
 	}
 
 	if modInfo.Type == validation.DataJSON {
-		_ = storage.DeleteMod(ctx, mod.ID, mod.Name, uploadID)
 		return nil, temporal.NewNonRetryableApplicationError("data.json mods are obsolete and not allowed", "fatal", nil)
 	}
 
 	if modInfo.Type == validation.MultiTargetUEPlugin && !util.FlagEnabled(util.FeatureFlagAllowMultiTargetUpload) {
-		_ = storage.DeleteMod(ctx, mod.ID, mod.Name, uploadID)
 		return nil, temporal.NewNonRetryableApplicationError("multi-target mods are not allowed", "fatal", nil)
 	}
 
@@ -176,7 +170,6 @@ func extractModInfoActivity(ctx context.Context, modID string, uploadID string) 
 	}
 
 	if count > 0 {
-		_ = storage.DeleteMod(ctx, mod.ID, mod.Name, uploadID)
 		return nil, temporal.NewNonRetryableApplicationError("this mod already has a version with this name", "fatal", nil)
 	}
 
@@ -190,7 +183,6 @@ func extractModInfoActivity(ctx context.Context, modID string, uploadID string) 
 	}
 
 	if len(versions) >= 5 {
-		_ = storage.DeleteMod(ctx, mod.ID, mod.Name, uploadID)
 		timeToWait := time.Until(versions[0].CreatedAt.Add(time.Hour * 24)).Minutes()
 		return nil, temporal.NewNonRetryableApplicationError(fmt.Sprintf("please wait %.0f minutes to post another version", timeToWait), "fatal", nil)
 	}
@@ -313,7 +305,6 @@ func createVersionInDatabaseActivity(ctx context.Context, modID string, modInfo 
 
 		return nil
 	}, nil); err != nil {
-		_ = storage.DeleteMod(ctx, modID, mod.Name, modInfo.Version)
 		return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
 	}
 
@@ -416,53 +407,22 @@ func storeRedisStateActivity(ctx context.Context, uploadID string, data *generat
 	return nil
 }
 
-func removeMod(ctx context.Context, modInfo *validation.ModInfo, mod *ent.Mod, dbVersion *ent.Version) {
-	for modID, condition := range modInfo.Dependencies {
-		if _, err := db.From(ctx).VersionDependency.Delete().Where(
-			versiondependency.VersionID(dbVersion.ID),
-			versiondependency.ModID(modID),
-			versiondependency.Condition(condition),
-			versiondependency.Optional(false),
-		).Exec(schema.SkipSoftDelete(ctx)); err != nil {
-			slox.Error(ctx, "failed deleting version dependency", slog.Any("err", err))
-			return
+func removeModActivity(ctx context.Context, modID string, modInfo *validation.ModInfo, uploadID string) error {
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return err
+	}
+
+	// TODO: cleanup file parts if failure happened before completing multipart upload
+
+	_ = storage.DeleteMod(ctx, mod.ID, mod.Name, uploadID)
+	if modInfo != nil {
+		_ = storage.DeleteMod(ctx, mod.ID, mod.Name, modInfo.Version)
+		for _, target := range modInfo.Targets {
+			_ = storage.DeleteModTarget(ctx, mod.ID, mod.Name, modInfo.Version, target)
 		}
 	}
-
-	for modID, condition := range modInfo.OptionalDependencies {
-		if _, err := db.From(ctx).VersionDependency.Delete().Where(
-			versiondependency.VersionID(dbVersion.ID),
-			versiondependency.ModID(modID),
-			versiondependency.Condition(condition),
-			versiondependency.Optional(true),
-		).Exec(schema.SkipSoftDelete(ctx)); err != nil {
-			slox.Error(ctx, "failed deleting version dependency", slog.Any("err", err))
-			return
-		}
-	}
-
-	for _, target := range modInfo.Targets {
-		if _, err := db.From(ctx).VersionTarget.Delete().Where(
-			versiontarget.VersionID(dbVersion.ID),
-			versiontarget.TargetName(target),
-		).Exec(schema.SkipSoftDelete(ctx)); err != nil {
-			slox.Error(ctx, "failed deleting version target", slog.Any("err", err))
-			return
-		}
-	}
-
-	// For UEPlugin mods, a Windows target is created.
-	// However, that happens after the last possible call to this function, therefore we can ignore it
-
-	if err := db.From(ctx).Version.DeleteOneID(dbVersion.ID).Exec(schema.SkipSoftDelete(ctx)); err != nil {
-		slox.Error(ctx, "failed deleting version", slog.Any("err", err))
-		return
-	}
-
-	_ = storage.DeleteMod(ctx, mod.ID, mod.Name, dbVersion.ID)
-	for _, target := range modInfo.Targets {
-		_ = storage.DeleteModTarget(ctx, mod.ID, mod.Name, dbVersion.ID, target)
-	}
+	return nil
 }
 
 func downloadMod(ctx context.Context, mod *ent.Mod, uploadID string) ([]byte, error) {
