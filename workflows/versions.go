@@ -43,7 +43,7 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 		if err != nil {
 			var appError *temporal.ApplicationError
 			if errors.As(err, &appError) && appError.NonRetryable() {
-				return workflow.ExecuteActivity(ctx, storeRedisStateActivity, uploadID, data).Get(ctx, nil)
+				return workflow.ExecuteActivity(ctx, storeRedisStateActivity, uploadID, data, err).Get(ctx, nil)
 			}
 		}
 		return err
