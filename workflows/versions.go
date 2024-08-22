@@ -83,7 +83,7 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 	}
 
 	data := &generated.CreateVersionResponse{
-		AutoApproved: dbVersion.Approved,
+		AutoApproved: shouldAutoApprove(modInfo),
 		Version:      (*conv.VersionImpl)(nil).Convert(dbVersion),
 	}
 
@@ -224,16 +224,6 @@ func createVersionInDatabaseActivity(ctx context.Context, modID string, modInfo 
 
 	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version", modInfo.Version))
 
-	autoApproved := true
-	for _, obj := range modInfo.Objects {
-		if obj.Type != "pak" {
-			autoApproved = false
-			break
-		}
-	}
-
-	autoApproved = autoApproved || viper.GetBool("skip-virus-check")
-
 	var dbVersion *ent.Version
 	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
 		dbVersion, err = tx.Version.Create().
@@ -249,7 +239,6 @@ func createVersionInDatabaseActivity(ctx context.Context, modID string, modInfo 
 			SetVersionMajor(int(modInfo.Semver.Major())).
 			SetVersionMinor(int(modInfo.Semver.Minor())).
 			SetVersionPatch(int(modInfo.Semver.Patch())).
-			SetApproved(autoApproved).
 			SetNillableMetadata(metadata).
 			Save(ctx)
 		if err != nil {
@@ -438,4 +427,18 @@ func downloadMod(ctx context.Context, mod *ent.Mod, uploadID string) ([]byte, er
 	}
 
 	return fileData, nil
+}
+
+func shouldAutoApprove(modInfo *validation.ModInfo) bool {
+	if viper.GetBool("skip-virus-check") {
+		return true
+	}
+
+	for _, obj := range modInfo.Objects {
+		if obj.Type != "pak" {
+			return false
+		}
+	}
+
+	return true
 }
