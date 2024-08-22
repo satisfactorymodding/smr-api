@@ -126,7 +126,7 @@ func Tx(ctx context.Context, f func(newCtx context.Context, tx *ent.Tx) error, o
 				finalError = errors.Join(finalError, fmt.Errorf("failed rolling back transaction: %w", rollbackErr))
 			}
 
-			if onError() != nil {
+			if onError != nil {
 				onErrorErr := onError()
 				if onErrorErr != nil {
 					finalError = errors.Join(finalError, onErrorErr)

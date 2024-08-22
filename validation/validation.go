@@ -33,6 +33,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/proto/parser"
 	"github.com/satisfactorymodding/smr-api/storage"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 var AllowedTargets = []string{"Windows", "WindowsServer", "LinuxServer"}
@@ -55,17 +56,18 @@ type ModMetadata []map[string]map[string][]interface{}
 type ModInfo struct {
 	Dependencies         map[string]string `json:"dependencies"`
 	OptionalDependencies map[string]string `json:"optional_dependencies"`
-	Semver               *semver.Version   `json:"-"`
+	Semver               *semver.Version   `json:"semver"`
 	ModReference         string            `json:"mod_reference"`
 	Version              string            `json:"version"`
-	Hash                 string            `json:"-"`
+	Hash                 string            `json:"hash"`
 	SMLVersion           *string           `json:"sml_version"`
-	GameVersion          string            `json:"-"`
+	GameVersion          string            `json:"game_version"`
 	Objects              []ModObject       `json:"objects"`
 	Metadata             ModMetadata       `json:"-"`
-	Targets              []string          `json:"-"`
-	Size                 int64             `json:"-"`
-	Type                 ModType           `json:"-"`
+	MetadataJSON         *string           `json:"metadata_json"`
+	Targets              []string          `json:"targets"`
+	Size                 int64             `json:"size"`
+	Type                 ModType           `json:"type"`
 }
 
 var (
@@ -167,6 +169,15 @@ func ExtractModInfo(ctx context.Context, body []byte, withMetadata bool, withVal
 			span.RecordError(err)
 			return nil, err
 		}
+
+		jsonData, err := json.Marshal(modInfo.Metadata)
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
+			slox.Error(ctx, "failed serializing metadata", slog.Any("err", err))
+		}
+
+		modInfo.MetadataJSON = util.Ptr(string(jsonData))
 	}
 
 	modInfo.Size = int64(len(body))

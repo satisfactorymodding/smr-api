@@ -16,7 +16,7 @@
   "shell": {
     "scripts": {
       "api": "go run cmd/api/serve.go",
-      "test": "go test -v ./...",
+      "test": "go test -p 1 -v ./...",
       "test:coverage": "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... ./...",
       "test:coverage:junit": "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out junit.xml",
       "migrate:diff": [

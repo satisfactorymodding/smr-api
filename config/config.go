@@ -103,4 +103,6 @@ func initializeDefaults() {
 	viper.SetDefault("extractor_host", "localhost:50051")
 
 	viper.SetDefault("temporal.host", "localhost:7233")
+
+	viper.SetDefault("statistics.enabled", true)
 }

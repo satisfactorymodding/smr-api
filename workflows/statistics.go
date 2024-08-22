@@ -10,6 +10,7 @@ import (
 
 	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -23,6 +24,10 @@ import (
 var keyRegex = regexp.MustCompile(`^([^:]+):([^:]+):([^:]+):([^:]+)$`)
 
 func initializeStatisticsWorkflow(ctx context.Context, c client.Client) {
+	if !viper.GetBool("statistics.enabled") {
+		return
+	}
+
 	scheduleHandle, err := c.ScheduleClient().Create(ctx, client.ScheduleOptions{
 		ID: "statistics_update_minutely",
 		Spec: client.ScheduleSpec{

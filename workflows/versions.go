@@ -2,7 +2,6 @@ package workflows
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -12,6 +11,7 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 
 	"github.com/satisfactorymodding/smr-api/db"
@@ -33,10 +33,35 @@ import (
 func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, versionID string, version generated.NewVersion) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 30,
+		RetryPolicy: &temporal.RetryPolicy{
+			NonRetryableErrorTypes: []string{"UnrecoverableError"},
+		},
 	})
 
+	err := workflow.ExecuteActivity(ctx, completeUploadMultipartModActivity, modID, versionID).Get(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	var modInfo *validation.ModInfo
+	err = workflow.ExecuteActivity(ctx, extractModInfo, modID, versionID).Get(ctx, &modInfo)
+	if err != nil {
+		return err
+	}
+
+	var dbVersion *ent.Version
+	err = workflow.ExecuteActivity(ctx, createVersionInDatabaseActivity, modID, versionID, modInfo, version).Get(ctx, &dbVersion)
+	if err != nil {
+		return err
+	}
+
+	err = workflow.ExecuteActivity(ctx, separateModTargetsActivity, modID, versionID, modInfo, dbVersion).Get(ctx, nil)
+	if err != nil {
+		return err
+	}
+
 	var data *generated.CreateVersionResponse
-	err := workflow.ExecuteActivity(ctx, finalizeVersionUploadActivity, modID, versionID, version).Get(ctx, &data)
+	err = workflow.ExecuteActivity(ctx, finalizeVersionUploadActivity, modID, versionID, modInfo, dbVersion).Get(ctx, &data)
 	if err != nil {
 		return err
 	}
@@ -57,6 +82,8 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, versionID
 }
 
 func storeRedisStateActivity(ctx context.Context, versionID string, data *generated.CreateVersionResponse, err error) error {
+	ctx = slox.With(ctx, slog.String("version_id", versionID))
+
 	if err2 := redis.StoreVersionUploadState(versionID, data, err); err2 != nil {
 		slox.Error(ctx, "error storing redis state", slog.Any("err", err2))
 		return err2
@@ -65,22 +92,10 @@ func storeRedisStateActivity(ctx context.Context, versionID string, data *genera
 	return nil
 }
 
-func finalizeVersionUploadActivity(ctx context.Context, modID string, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
-	data, err := finalizeVersionUpload(ctx, modID, versionID, version)
-	if err != nil {
-		slox.Error(ctx, "error completing version upload", slog.Any("err", err))
-		return nil, err
-	}
-
-	slox.Info(ctx, "completed version upload")
-
-	return data, nil
-}
-
-func finalizeVersionUpload(ctx context.Context, modID string, versionID string, version generated.NewVersion) (*generated.CreateVersionResponse, error) {
+func completeUploadMultipartModActivity(ctx context.Context, modID string, versionID string) error {
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
@@ -89,64 +104,44 @@ func finalizeVersionUpload(ctx context.Context, modID string, versionID string, 
 	success, _ := storage.CompleteUploadMultipartMod(ctx, mod.ID, mod.Name, versionID)
 
 	if !success {
-		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		slox.Error(ctx, "failed uploading mod")
-		return nil, errors.New("failed uploading mod")
+		return errors.New("failed uploading mod")
 	}
 
-	modFile, err := storage.GetMod(mod.ID, mod.Name, versionID)
+	return nil
+}
+
+func extractModInfo(ctx context.Context, modID string, versionID string) (*validation.ModInfo, error) {
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
-		slox.Error(ctx, "failed getting mod", slog.Any("err", err))
-		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 		return nil, err
 	}
 
-	// TODO Optimize
-	fileData, err := io.ReadAll(modFile)
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
+
+	fileData, err := downloadMod(mod, versionID)
 	if err != nil {
-		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		slox.Error(ctx, "failed reading mod file", slog.Any("err", err))
-		return nil, fmt.Errorf("failed reading mod file: %w", err)
+		return nil, err
 	}
 
 	modInfo, err := validation.ExtractModInfo(ctx, fileData, true, true, mod.ModReference)
 	if err != nil {
-		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		slox.Error(ctx, "failed extracting mod info", slog.Any("err", err))
 		return nil, fmt.Errorf("failed extracting mod info: %w", err)
 	}
 
 	if modInfo.ModReference != mod.ModReference {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		slox.Error(ctx, "data.json mod_reference does not match mod reference", slog.Any("err", err))
-		return nil, errors.New("data.json mod_reference does not match mod reference")
+		return nil, UnrecoverableError{errors.New("data.json mod_reference does not match mod reference")}
 	}
 
 	if modInfo.Type == validation.DataJSON {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		slox.Error(ctx, "data.json mods are obsolete and not allowed", slog.Any("err", err))
-		return nil, errors.New("data.json mods are obsolete and not allowed")
+		return nil, UnrecoverableError{errors.New("data.json mods are obsolete and not allowed")}
 	}
 
 	if modInfo.Type == validation.MultiTargetUEPlugin && !util.FlagEnabled(util.FeatureFlagAllowMultiTargetUpload) {
 		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
-		slox.Error(ctx, "multi-target mods are not allowed", slog.Any("err", err))
-		return nil, errors.New("multi-target mods are not allowed")
+		return nil, UnrecoverableError{errors.New("multi-target mods are not allowed")}
 	}
-
-	versionMajor := int(modInfo.Semver.Major())
-	versionMinor := int(modInfo.Semver.Minor())
-	versionPatch := int(modInfo.Semver.Patch())
-
-	autoApproved := true
-	for _, obj := range modInfo.Objects {
-		if obj.Type != "pak" {
-			autoApproved = false
-			break
-		}
-	}
-
-	autoApproved = autoApproved || viper.GetBool("skip-virus-check")
 
 	count, err := db.From(ctx).Version.Query().
 		Where(version2.ModID(mod.ID), version2.Version(modInfo.Version)).
@@ -156,7 +151,8 @@ func finalizeVersionUpload(ctx context.Context, modID string, versionID string, 
 	}
 
 	if count > 0 {
-		return nil, errors.New("this mod already has a version with this name")
+		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
+		return nil, UnrecoverableError{errors.New("this mod already has a version with this name")}
 	}
 
 	// Allow only new 5 versions per 24h
@@ -169,71 +165,107 @@ func finalizeVersionUpload(ctx context.Context, modID string, versionID string, 
 	}
 
 	if len(versions) >= 5 {
+		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 		timeToWait := time.Until(versions[0].CreatedAt.Add(time.Hour * 24)).Minutes()
-		return nil, fmt.Errorf("please wait %.0f minutes to post another version", timeToWait)
+		return nil, UnrecoverableError{fmt.Errorf("please wait %.0f minutes to post another version", timeToWait)}
 	}
 
-	dbVersion, err := db.From(ctx).Version.Create().
-		SetVersion(modInfo.Version).
-		SetGameVersion(modInfo.GameVersion).
-		SetChangelog(version.Changelog).
-		SetModID(mod.ID).
-		SetStability(util.Stability(version.Stability)).
-		SetModReference(modInfo.ModReference).
-		SetSize(modInfo.Size).
-		SetHash(modInfo.Hash).
-		SetVersionMajor(versionMajor).
-		SetVersionMinor(versionMinor).
-		SetVersionPatch(versionPatch).
-		SetApproved(autoApproved).
-		Save(ctx)
+	return modInfo, nil
+}
+
+func createVersionInDatabaseActivity(ctx context.Context, modID string, versionID string, modInfo *validation.ModInfo, version generated.NewVersion) (*ent.Version, error) {
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
-		storage.DeleteMod(ctx, mod.ID, mod.Name, versionID)
 		return nil, err
 	}
 
-	for modReference, condition := range modInfo.Dependencies {
-		modDependency, err := db.From(ctx).Mod.Query().Where(mod2.ModReference(modReference)).First(ctx)
-		if err != nil {
-			return nil, err
-		}
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
 
-		_, err = db.From(ctx).VersionDependency.Create().
-			SetVersion(dbVersion).
-			SetModID(modDependency.ID).
-			SetCondition(condition).
-			SetOptional(false).
-			Save(ctx)
-		if err != nil {
-			return nil, err
+	autoApproved := true
+	for _, obj := range modInfo.Objects {
+		if obj.Type != "pak" {
+			autoApproved = false
+			break
 		}
 	}
 
-	for modReference, condition := range modInfo.OptionalDependencies {
-		modDependency, err := db.From(ctx).Mod.Query().Where(mod2.ModReference(modReference)).First(ctx)
-		if err != nil {
-			return nil, err
-		}
+	autoApproved = autoApproved || viper.GetBool("skip-virus-check")
 
-		_, err = db.From(ctx).VersionDependency.Create().
-			SetVersion(dbVersion).
-			SetModID(modDependency.ID).
-			SetCondition(condition).
-			SetOptional(true).
+	var dbVersion *ent.Version
+	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+		dbVersion, err = tx.Version.Create().
+			SetVersion(modInfo.Version).
+			SetGameVersion(modInfo.GameVersion).
+			SetChangelog(version.Changelog).
+			SetModID(modID).
+			SetStability(util.Stability(version.Stability)).
+			SetModReference(modInfo.ModReference).
+			SetSize(modInfo.Size).
+			SetHash(modInfo.Hash).
+			SetVersionMajor(int(modInfo.Semver.Major())).
+			SetVersionMinor(int(modInfo.Semver.Minor())).
+			SetVersionPatch(int(modInfo.Semver.Patch())).
+			SetApproved(autoApproved).
+			SetNillableMetadata(modInfo.MetadataJSON).
 			Save(ctx)
 		if err != nil {
-			return nil, err
+			return err
 		}
+
+		for modReference, condition := range modInfo.Dependencies {
+			modDependency, err := tx.Mod.Query().Where(mod2.ModReference(modReference)).First(ctx)
+			if err != nil {
+				return err
+			}
+
+			_, err = tx.VersionDependency.Create().
+				SetVersion(dbVersion).
+				SetModID(modDependency.ID).
+				SetCondition(condition).
+				SetOptional(false).
+				Save(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		for modReference, condition := range modInfo.OptionalDependencies {
+			modDependency, err := tx.Mod.Query().Where(mod2.ModReference(modReference)).First(ctx)
+			if err != nil {
+				return err
+			}
+
+			_, err = tx.VersionDependency.Create().
+				SetVersion(dbVersion).
+				SetModID(modDependency.ID).
+				SetCondition(condition).
+				SetOptional(true).
+				Save(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}, nil); err != nil {
+		storage.DeleteMod(ctx, modID, mod.Name, versionID)
+		return nil, UnrecoverableError{err}
 	}
 
-	jsonData, err := json.Marshal(modInfo.Metadata)
+	return dbVersion, nil
+}
+
+func separateModTargetsActivity(ctx context.Context, modID string, versionID string, modInfo *validation.ModInfo, dbVersion *ent.Version) error {
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
-		slox.Error(ctx, "failed serializing", slog.Any("err", err), slog.String("version_id", dbVersion.ID))
-	} else {
-		metadata := string(jsonData)
-		if _, err := dbVersion.Update().SetMetadata(metadata).Save(ctx); err != nil {
-			return nil, err
-		}
+		return err
+	}
+
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
+
+	fileData, err := downloadMod(mod, versionID)
+	if err != nil {
+		return err
 	}
 
 	if modInfo.Type == validation.MultiTargetUEPlugin {
@@ -245,7 +277,8 @@ func finalizeVersionUpload(ctx context.Context, modID string, versionID string, 
 				SetTargetName(target).
 				Save(ctx)
 			if err != nil {
-				return nil, err
+				storage.DeleteMod(ctx, modID, mod.Name, versionID)
+				return UnrecoverableError{err}
 			}
 
 			targets = append(targets, dbVersionTarget)
@@ -262,25 +295,33 @@ func finalizeVersionUpload(ctx context.Context, modID string, versionID string, 
 			}
 
 			if _, err := target.Update().SetKey(key).SetHash(hash).SetSize(size).Save(ctx); err != nil {
-				return nil, err
+				removeMod(ctx, modInfo, mod, dbVersion)
+				return UnrecoverableError{err}
 			}
 		}
 
 		if !separateSuccess {
 			removeMod(ctx, modInfo, mod, dbVersion)
-
-			slox.Error(ctx, "failed to separate mod")
-			return nil, errors.New("failed to separate mod")
+			return UnrecoverableError{errors.New("failed to separate mod")}
 		}
 	}
+
+	return nil
+}
+
+func finalizeVersionUploadActivity(ctx context.Context, modID string, versionID string, modInfo *validation.ModInfo, dbVersion *ent.Version) (*generated.CreateVersionResponse, error) {
+	mod, err := db.From(ctx).Mod.Get(ctx, modID)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
 
 	success, key := storage.RenameVersion(ctx, mod.ID, mod.Name, versionID, modInfo.Version)
 
 	if !success {
 		removeMod(ctx, modInfo, mod, dbVersion)
-
-		slox.Error(ctx, "failed to upload mod")
-		return nil, errors.New("failed to upload mod")
+		return nil, UnrecoverableError{errors.New("failed to upload mod")}
 	}
 
 	if modInfo.Type == validation.UEPlugin {
@@ -291,17 +332,20 @@ func finalizeVersionUpload(ctx context.Context, modID string, versionID string, 
 			SetHash(dbVersion.Hash).
 			SetSize(dbVersion.Size).
 			Save(ctx); err != nil {
-			return nil, err
+			removeMod(ctx, modInfo, mod, dbVersion)
+			return nil, UnrecoverableError{err}
 		}
 	}
 
-	if _, err := dbVersion.Update().SetKey(key).Save(ctx); err != nil {
-		return nil, err
+	if _, err := db.From(ctx).Version.Update().SetKey(key).Where(version2.ID(dbVersion.ID)).Save(ctx); err != nil {
+		removeMod(ctx, modInfo, mod, dbVersion)
+		return nil, UnrecoverableError{err}
 	}
 
-	if autoApproved {
-		if _, err := mod.Update().SetLastVersionDate(time.Now()).Save(ctx); err != nil {
-			return nil, err
+	if dbVersion.Approved {
+		if _, err := db.From(ctx).Mod.Update().SetLastVersionDate(time.Now()).Where(mod2.ID(mod.ID)).Save(ctx); err != nil {
+			removeMod(ctx, modInfo, mod, dbVersion)
+			return nil, UnrecoverableError{err}
 		}
 
 		go integrations.NewVersion(db.ReWrapCtx(ctx), dbVersion)
@@ -310,7 +354,7 @@ func finalizeVersionUpload(ctx context.Context, modID string, versionID string, 
 	}
 
 	return &generated.CreateVersionResponse{
-		AutoApproved: autoApproved,
+		AutoApproved: dbVersion.Approved,
 		Version:      (*conv.VersionImpl)(nil).Convert(dbVersion),
 	}, nil
 }
@@ -362,4 +406,19 @@ func removeMod(ctx context.Context, modInfo *validation.ModInfo, mod *ent.Mod, d
 	for _, target := range modInfo.Targets {
 		storage.DeleteModTarget(ctx, mod.ID, mod.Name, dbVersion.ID, target)
 	}
+}
+
+func downloadMod(mod *ent.Mod, versionID string) ([]byte, error) {
+	modFile, err := storage.GetMod(mod.ID, mod.Name, versionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting mod: %w", err)
+	}
+
+	// TODO Optimize
+	fileData, err := io.ReadAll(modFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed reading mod file: %w", err)
+	}
+
+	return fileData, nil
 }
