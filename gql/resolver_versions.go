@@ -14,6 +14,7 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/dgraph-io/ristretto"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	"go.temporal.io/sdk/client"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
@@ -113,7 +114,7 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 	if _, err := workflows.Client(ctx).ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 		ID:        fmt.Sprintf("finalize-version-upload-%s-%s-%s", modID, uploadID, mod.ModReference),
 		TaskQueue: workflows.RepoTaskQueue,
-	}, workflows.FinalizeVersionUploadWorkflow, mod.ID, uploadID, version); err != nil {
+	}, workflows.FinalizeVersionUploadWorkflow, mod.ID, uploadID, version, viper.GetString("skip-virus-check")); err != nil {
 		return false, fmt.Errorf("failed to start finalization workflow: %w", err)
 	}
 

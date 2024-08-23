@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/Vilsol/slox"
-	"github.com/spf13/viper"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 
@@ -27,7 +26,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
-func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID string, version generated.NewVersion) error {
+func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID string, version generated.NewVersion, skipVirusCheck bool) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 30,
 		RetryPolicy: &temporal.RetryPolicy{
@@ -37,10 +36,7 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 
 	fatalError := func(ctx workflow.Context, err error, modInfo *validation.ModInfo) error {
 		if err != nil {
-			err2 := workflow.ExecuteActivity(ctx, removeModActivity, modID, modInfo, uploadID).Get(ctx, nil)
-			if err2 != nil {
-				slog.Error("failed to remove mod", slog.Any("err", err2))
-			}
+			_ = workflow.ExecuteActivity(ctx, removeModActivity, modID, modInfo, uploadID).Get(ctx, nil)
 			return workflow.ExecuteActivity(ctx, storeRedisStateActivity, uploadID, nil, err.Error()).Get(ctx, nil)
 		}
 		return err
@@ -58,11 +54,7 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 	}
 
 	var metadata *string
-	err = workflow.ExecuteActivity(ctx, extractMetadataActivity, modID, uploadID, modInfo).Get(ctx, &metadata)
-	if err != nil {
-		// Do not retry extracting metadata again
-		slog.Error("failed to extract metadata", slog.Any("err", err), slog.String("mod_id", modID), slog.String("upload_id", uploadID))
-	}
+	_ = workflow.ExecuteActivity(ctx, extractMetadataActivity, modID, uploadID, modInfo).Get(ctx, &metadata)
 
 	var fileKey *string
 	err = workflow.ExecuteActivity(ctx, renameVersionActivity, modID, uploadID, modInfo.Version).Get(ctx, &fileKey)
@@ -83,7 +75,7 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 	}
 
 	data := &generated.CreateVersionResponse{
-		AutoApproved: shouldAutoApprove(modInfo),
+		AutoApproved: shouldAutoApprove(modInfo, skipVirusCheck),
 		Version:      (*conv.VersionImpl)(nil).Convert(dbVersion),
 	}
 
@@ -190,7 +182,16 @@ func extractModInfoActivity(ctx context.Context, modID string, uploadID string) 
 	return modInfo, nil
 }
 
-func extractMetadataActivity(ctx context.Context, modID string, uploadID string, modInfo *validation.ModInfo) (*string, error) {
+func extractMetadataActivity(ctx context.Context, modID string, uploadID string, modInfo *validation.ModInfo) *string {
+	metadata, err := extractMetadata(ctx, modID, uploadID, modInfo)
+	if err != nil {
+		slog.Error("failed to extract metadata", slog.Any("err", err), slog.String("mod_id", modID), slog.String("upload_id", uploadID))
+		return nil
+	}
+	return metadata
+}
+
+func extractMetadata(ctx context.Context, modID string, uploadID string, modInfo *validation.ModInfo) (*string, error) {
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return nil, err
@@ -396,10 +397,11 @@ func storeRedisStateActivity(ctx context.Context, uploadID string, data *generat
 	return nil
 }
 
-func removeModActivity(ctx context.Context, modID string, modInfo *validation.ModInfo, uploadID string) error {
+func removeModActivity(ctx context.Context, modID string, modInfo *validation.ModInfo, uploadID string) {
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
-		return err
+		slog.Error("failed to retrieve mod", slog.Any("err", err))
+		return
 	}
 
 	// TODO: cleanup file parts if failure happened before completing multipart upload
@@ -411,7 +413,6 @@ func removeModActivity(ctx context.Context, modID string, modInfo *validation.Mo
 			_ = storage.DeleteModTarget(ctx, mod.ID, mod.Name, modInfo.Version, target)
 		}
 	}
-	return nil
 }
 
 func downloadMod(ctx context.Context, mod *ent.Mod, uploadID string) ([]byte, error) {
@@ -429,8 +430,8 @@ func downloadMod(ctx context.Context, mod *ent.Mod, uploadID string) ([]byte, er
 	return fileData, nil
 }
 
-func shouldAutoApprove(modInfo *validation.ModInfo) bool {
-	if viper.GetBool("skip-virus-check") {
+func shouldAutoApprove(modInfo *validation.ModInfo, skipVirusCheck bool) bool {
+	if skipVirusCheck {
 		return true
 	}
 

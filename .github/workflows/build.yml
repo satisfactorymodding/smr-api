@@ -33,6 +33,19 @@ jobs:
           version: v1.60.1
           args: --timeout 5m
 
+  workflowcheck:
+    name: Workflow Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jetify-com/devbox-install-action@v0.11.0
+        with:
+          enable-cache: true
+
+      - name: Workflow Check
+        run: devbox run -- go run go.temporal.io/sdk/contrib/tools/workflowcheck@latest ./...
+
   test:
     name: Test
     runs-on: ubuntu-latest

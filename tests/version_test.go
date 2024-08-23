@@ -119,8 +119,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 		})
 	}
 
-	var versionID string
-
+	var uploadID string
 	t.Run("Create Version", func(t *testing.T) {
 		createRequest := authRequest(`mutation CreateVersion($mod_id: ModID!) {
 			createVersion(modId: $mod_id)
@@ -133,7 +132,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
 		testza.AssertNotEqual(t, "", createResponse.CreateVersion)
 
-		versionID = createResponse.CreateVersion
+		uploadID = createResponse.CreateVersion
 	})
 
 	t.Run("Upload Parts", func(t *testing.T) {
@@ -167,7 +166,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 					}`,
 					"variables": map[string]interface{}{
 						"mod_id":     modID,
-						"version_id": versionID,
+						"version_id": uploadID,
 						"part":       i + 1,
 						"file":       nil,
 					},
@@ -230,7 +229,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 			})
 		}`, token)
 		finalizeRequest.Var("mod_id", modID)
-		finalizeRequest.Var("version_id", versionID)
+		finalizeRequest.Var("version_id", uploadID)
 
 		var finalizeResponse struct {
 			FinalizeCreateVersion bool
@@ -239,6 +238,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 		testza.AssertTrue(t, finalizeResponse.FinalizeCreateVersion)
 	})
 
+	var versionID string
 	t.Run("Wait For Version", func(t *testing.T) {
 		request := authRequest(`query CheckVersionUploadState($mod_id: ModID!, $version_id: VersionID!) {
 			checkVersionUploadState(modId: $mod_id, versionId: $version_id) {
@@ -249,7 +249,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 			}
 		}`, token)
 		request.Var("mod_id", modID)
-		request.Var("version_id", versionID)
+		request.Var("version_id", uploadID)
 
 		end := time.Now().Add(time.Minute * 30)
 		for time.Now().Before(end) {
@@ -288,6 +288,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 			return
 		}
 
+		// TODO wait on workflow instead of poll
 		if executeVirusCheck {
 			for time.Now().Before(end) {
 				getModVersion := authRequest(`query GetModVersion($version_id: VersionID!) {
