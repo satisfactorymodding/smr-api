@@ -1,21 +1,13 @@
-package versionupload
+package removemod
 
 import (
 	"context"
 	"log/slog"
 
 	"github.com/Vilsol/slox"
-
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/storage"
-	"github.com/satisfactorymodding/smr-api/validation"
 )
-
-type RemoveModArgs struct {
-	ModID    string              `json:"mod_id"`
-	ModInfo  *validation.ModInfo `json:"mod_info"`
-	UploadID string              `json:"upload_id"`
-}
 
 func (*A) RemoveModActivity(ctx context.Context, args RemoveModArgs) error {
 	mod, err := db.From(ctx).Mod.Get(ctx, args.ModID)

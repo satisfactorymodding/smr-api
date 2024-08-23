@@ -3,6 +3,8 @@ package versionupload
 import (
 	"time"
 
+	"github.com/satisfactorymodding/smr-api/workflows/removemod"
+	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 
@@ -33,11 +35,14 @@ func (*A) FinalizeVersionUploadWorkflow(ctx workflow.Context, args FinalizeVersi
 
 	fatalError := func(ctx workflow.Context, err error, modInfo *validation.ModInfo) error {
 		if err != nil {
-			_ = workflow.ExecuteActivity(ctx, VersionUpload.RemoveModActivity, RemoveModArgs{
+			workflow.ExecuteChildWorkflow(workflow.WithChildOptions(ctx, workflow.ChildWorkflowOptions{
+				WorkflowID:        workflow.GetInfo(ctx).WorkflowExecution.ID + "-cleanup",
+				ParentClosePolicy: enums.PARENT_CLOSE_POLICY_ABANDON,
+			}), removemod.RemoveMod.RemoveModWorkflow, removemod.RemoveModArgs{
 				ModID:    args.ModID,
 				ModInfo:  modInfo,
 				UploadID: args.UploadID,
-			}).Get(ctx, nil)
+			}).GetChildWorkflowExecution()
 
 			return workflow.ExecuteActivity(ctx, VersionUpload.StoreRedisStateActivity, StoreRedisStateArgs{
 				UploadID: args.UploadID,

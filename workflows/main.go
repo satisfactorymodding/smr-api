@@ -52,10 +52,12 @@ func InitializeWorkflows(ctx context.Context) (context.Context, func()) {
 	w.RegisterActivity(Workflows.VersionUpload.ApproveAndPublishModActivity)
 	w.RegisterActivity(Workflows.VersionUpload.StoreRedisStateActivity)
 	w.RegisterActivity(Workflows.VersionUpload.ScanModOnVirusTotalActivity)
-	w.RegisterActivity(Workflows.VersionUpload.RemoveModActivity)
 
 	w.RegisterWorkflow(Workflows.UpdateModFromStorage.UpdateModDataFromStorageWorkflow)
 	w.RegisterActivity(Workflows.UpdateModFromStorage.UpdateModDataFromStorageActivity)
+
+	w.RegisterWorkflow(Workflows.RemoveMod.RemoveModWorkflow)
+	w.RegisterActivity(Workflows.RemoveMod.RemoveModActivity)
 
 	if err := w.Start(); err != nil {
 		slox.Error(ctx, "unable to start worker", slog.Any("err", err))
