@@ -3,6 +3,7 @@ package workflows
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -35,26 +36,29 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 		},
 	})
 
-	fatalError := func(ctx workflow.Context, err error, modInfo *validation.ModInfo) error {
+	checkFatalError := func(ctx workflow.Context, err error, modInfo *validation.ModInfo) error {
 		if err != nil {
-			err2 := workflow.ExecuteActivity(ctx, removeModActivity, modID, modInfo, uploadID).Get(ctx, nil)
-			if err2 != nil {
-				slog.Error("failed to remove mod", slog.Any("err", err2))
+			var appError *temporal.ApplicationError
+			if errors.As(err, &appError) && appError.NonRetryable() {
+				err2 := workflow.ExecuteActivity(ctx, removeModActivity, modID, modInfo, uploadID).Get(ctx, nil)
+				if err2 != nil {
+					slog.Error("failed to remove mod", slog.Any("err", err2))
+				}
+				return workflow.ExecuteActivity(ctx, storeRedisStateActivity, uploadID, nil, err.Error()).Get(ctx, nil)
 			}
-			return workflow.ExecuteActivity(ctx, storeRedisStateActivity, uploadID, nil, err).Get(ctx, nil)
 		}
 		return err
 	}
 
 	err := workflow.ExecuteActivity(ctx, completeUploadMultipartModActivity, modID, uploadID).Get(ctx, nil)
 	if err != nil {
-		return fatalError(ctx, err, nil)
+		return checkFatalError(ctx, err, nil)
 	}
 
 	var modInfo *validation.ModInfo
 	err = workflow.ExecuteActivity(ctx, extractModInfoActivity, modID, uploadID).Get(ctx, &modInfo)
 	if err != nil {
-		return fatalError(ctx, err, nil)
+		return checkFatalError(ctx, err, nil)
 	}
 
 	var metadata *string
@@ -67,19 +71,19 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 	var fileKey *string
 	err = workflow.ExecuteActivity(ctx, renameVersionActivity, modID, uploadID, modInfo.Version).Get(ctx, &fileKey)
 	if err != nil {
-		return fatalError(ctx, err, modInfo)
+		return checkFatalError(ctx, err, modInfo)
 	}
 
 	var targetsData *[]modTargetData
 	err = workflow.ExecuteActivity(ctx, separateModTargetsActivity, modID, modInfo, fileKey).Get(ctx, &targetsData)
 	if err != nil {
-		return fatalError(ctx, err, modInfo)
+		return checkFatalError(ctx, err, modInfo)
 	}
 
 	var dbVersion *ent.Version
 	err = workflow.ExecuteActivity(ctx, createVersionInDatabaseActivity, modID, modInfo, fileKey, targetsData, version, metadata).Get(ctx, &dbVersion)
 	if err != nil {
-		return fatalError(ctx, err, modInfo)
+		return checkFatalError(ctx, err, modInfo)
 	}
 
 	data := &generated.CreateVersionResponse{
@@ -90,7 +94,7 @@ func FinalizeVersionUploadWorkflow(ctx workflow.Context, modID string, uploadID 
 	if data.AutoApproved {
 		err = workflow.ExecuteActivity(ctx, approveAndPublishModActivity, modID, data.Version.ID).Get(ctx, nil)
 		if err != nil {
-			return fatalError(ctx, err, modInfo)
+			return checkFatalError(ctx, err, modInfo)
 		}
 	}
 
@@ -151,7 +155,7 @@ func extractModInfoActivity(ctx context.Context, modID string, uploadID string) 
 	}
 
 	if modInfo.ModReference != mod.ModReference {
-		return nil, temporal.NewNonRetryableApplicationError("data.json mod_reference does not match mod reference", "fatal", nil)
+		return nil, temporal.NewNonRetryableApplicationError(".uplugin mod_reference does not match mod reference", "fatal", nil)
 	}
 
 	if modInfo.Type == validation.DataJSON {
@@ -385,7 +389,7 @@ func approveAndPublishModActivity(ctx context.Context, modID string, versionID s
 	return nil
 }
 
-func storeRedisStateActivity(ctx context.Context, uploadID string, data *generated.CreateVersionResponse, err error) error {
+func storeRedisStateActivity(ctx context.Context, uploadID string, data *generated.CreateVersionResponse, err string) error {
 	ctx = slox.With(ctx, slog.String("upload_id", uploadID))
 
 	if err2 := redis.StoreVersionUploadState(uploadID, data, err); err2 != nil {

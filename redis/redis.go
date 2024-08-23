@@ -103,19 +103,16 @@ type StoredVersionUploadState struct {
 	Err  string                           `json:"err"`
 }
 
-func StoreVersionUploadState(versionID string, data *generated.CreateVersionResponse, err error) error {
+func StoreVersionUploadState(versionID string, data *generated.CreateVersionResponse, err string) error {
 	state := StoredVersionUploadState{
 		Data: data,
-	}
-
-	if err != nil {
-		state.Err = err.Error()
+		Err:  err,
 	}
 
 	marshaled, e := json.Marshal(state)
 
 	if e != nil {
-		return fmt.Errorf("failed to marshal version upload state: %w", err)
+		return fmt.Errorf("failed to marshal version upload state: %s", err)
 	}
 
 	redisKey := "version:upload:state:" + versionID

@@ -111,7 +111,7 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 	slox.Info(ctx, "finalization gql call")
 
 	if _, err := workflows.Client(ctx).ExecuteWorkflow(ctx, client.StartWorkflowOptions{
-		ID:        fmt.Sprintf("finalize-version-upload-%s-%s", modID, uploadID),
+		ID:        fmt.Sprintf("finalize-version-upload-%s-%s-%s", modID, uploadID, mod.ModReference),
 		TaskQueue: workflows.RepoTaskQueue,
 	}, workflows.FinalizeVersionUploadWorkflow, mod.ID, uploadID, version); err != nil {
 		return false, fmt.Errorf("failed to start finalization workflow: %w", err)
