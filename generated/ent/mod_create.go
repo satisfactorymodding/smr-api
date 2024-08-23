@@ -251,6 +251,34 @@ func (mc *ModCreate) SetCompatibility(ui *util.CompatibilityInfo) *ModCreate {
 	return mc
 }
 
+// SetToggleNetworkUse sets the "toggle_network_use" field.
+func (mc *ModCreate) SetToggleNetworkUse(b bool) *ModCreate {
+	mc.mutation.SetToggleNetworkUse(b)
+	return mc
+}
+
+// SetNillableToggleNetworkUse sets the "toggle_network_use" field if the given value is not nil.
+func (mc *ModCreate) SetNillableToggleNetworkUse(b *bool) *ModCreate {
+	if b != nil {
+		mc.SetToggleNetworkUse(*b)
+	}
+	return mc
+}
+
+// SetToggleExplicitContent sets the "toggle_explicit_content" field.
+func (mc *ModCreate) SetToggleExplicitContent(b bool) *ModCreate {
+	mc.mutation.SetToggleExplicitContent(b)
+	return mc
+}
+
+// SetNillableToggleExplicitContent sets the "toggle_explicit_content" field if the given value is not nil.
+func (mc *ModCreate) SetNillableToggleExplicitContent(b *bool) *ModCreate {
+	if b != nil {
+		mc.SetToggleExplicitContent(*b)
+	}
+	return mc
+}
+
 // SetID sets the "id" field.
 func (mc *ModCreate) SetID(s string) *ModCreate {
 	mc.mutation.SetID(s)
@@ -404,6 +432,14 @@ func (mc *ModCreate) defaults() error {
 		v := mod.DefaultHidden
 		mc.mutation.SetHidden(v)
 	}
+	if _, ok := mc.mutation.ToggleNetworkUse(); !ok {
+		v := mod.DefaultToggleNetworkUse
+		mc.mutation.SetToggleNetworkUse(v)
+	}
+	if _, ok := mc.mutation.ToggleExplicitContent(); !ok {
+		v := mod.DefaultToggleExplicitContent
+		mc.mutation.SetToggleExplicitContent(v)
+	}
 	if _, ok := mc.mutation.ID(); !ok {
 		if mod.DefaultID == nil {
 			return fmt.Errorf("ent: uninitialized mod.DefaultID (forgotten import ent/runtime?)")
@@ -475,6 +511,12 @@ func (mc *ModCreate) check() error {
 	}
 	if _, ok := mc.mutation.Hidden(); !ok {
 		return &ValidationError{Name: "hidden", err: errors.New(`ent: missing required field "Mod.hidden"`)}
+	}
+	if _, ok := mc.mutation.ToggleNetworkUse(); !ok {
+		return &ValidationError{Name: "toggle_network_use", err: errors.New(`ent: missing required field "Mod.toggle_network_use"`)}
+	}
+	if _, ok := mc.mutation.ToggleExplicitContent(); !ok {
+		return &ValidationError{Name: "toggle_explicit_content", err: errors.New(`ent: missing required field "Mod.toggle_explicit_content"`)}
 	}
 	return nil
 }
@@ -591,6 +633,14 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 	if value, ok := mc.mutation.Compatibility(); ok {
 		_spec.SetField(mod.FieldCompatibility, field.TypeJSON, value)
 		_node.Compatibility = value
+	}
+	if value, ok := mc.mutation.ToggleNetworkUse(); ok {
+		_spec.SetField(mod.FieldToggleNetworkUse, field.TypeBool, value)
+		_node.ToggleNetworkUse = value
+	}
+	if value, ok := mc.mutation.ToggleExplicitContent(); ok {
+		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
+		_node.ToggleExplicitContent = value
 	}
 	if nodes := mc.mutation.VersionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -994,6 +1044,30 @@ func (u *ModUpsert) ClearCompatibility() *ModUpsert {
 	return u
 }
 
+// SetToggleNetworkUse sets the "toggle_network_use" field.
+func (u *ModUpsert) SetToggleNetworkUse(v bool) *ModUpsert {
+	u.Set(mod.FieldToggleNetworkUse, v)
+	return u
+}
+
+// UpdateToggleNetworkUse sets the "toggle_network_use" field to the value that was provided on create.
+func (u *ModUpsert) UpdateToggleNetworkUse() *ModUpsert {
+	u.SetExcluded(mod.FieldToggleNetworkUse)
+	return u
+}
+
+// SetToggleExplicitContent sets the "toggle_explicit_content" field.
+func (u *ModUpsert) SetToggleExplicitContent(v bool) *ModUpsert {
+	u.Set(mod.FieldToggleExplicitContent, v)
+	return u
+}
+
+// UpdateToggleExplicitContent sets the "toggle_explicit_content" field to the value that was provided on create.
+func (u *ModUpsert) UpdateToggleExplicitContent() *ModUpsert {
+	u.SetExcluded(mod.FieldToggleExplicitContent)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1371,6 +1445,34 @@ func (u *ModUpsertOne) UpdateCompatibility() *ModUpsertOne {
 func (u *ModUpsertOne) ClearCompatibility() *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.ClearCompatibility()
+	})
+}
+
+// SetToggleNetworkUse sets the "toggle_network_use" field.
+func (u *ModUpsertOne) SetToggleNetworkUse(v bool) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetToggleNetworkUse(v)
+	})
+}
+
+// UpdateToggleNetworkUse sets the "toggle_network_use" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateToggleNetworkUse() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateToggleNetworkUse()
+	})
+}
+
+// SetToggleExplicitContent sets the "toggle_explicit_content" field.
+func (u *ModUpsertOne) SetToggleExplicitContent(v bool) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetToggleExplicitContent(v)
+	})
+}
+
+// UpdateToggleExplicitContent sets the "toggle_explicit_content" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateToggleExplicitContent() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateToggleExplicitContent()
 	})
 }
 
@@ -1918,6 +2020,34 @@ func (u *ModUpsertBulk) UpdateCompatibility() *ModUpsertBulk {
 func (u *ModUpsertBulk) ClearCompatibility() *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.ClearCompatibility()
+	})
+}
+
+// SetToggleNetworkUse sets the "toggle_network_use" field.
+func (u *ModUpsertBulk) SetToggleNetworkUse(v bool) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetToggleNetworkUse(v)
+	})
+}
+
+// UpdateToggleNetworkUse sets the "toggle_network_use" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateToggleNetworkUse() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateToggleNetworkUse()
+	})
+}
+
+// SetToggleExplicitContent sets the "toggle_explicit_content" field.
+func (u *ModUpsertBulk) SetToggleExplicitContent(v bool) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetToggleExplicitContent(v)
+	})
+}
+
+// UpdateToggleExplicitContent sets the "toggle_explicit_content" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateToggleExplicitContent() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateToggleExplicitContent()
 	})
 }
 

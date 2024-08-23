@@ -341,6 +341,34 @@ func (mu *ModUpdate) ClearCompatibility() *ModUpdate {
 	return mu
 }
 
+// SetToggleNetworkUse sets the "toggle_network_use" field.
+func (mu *ModUpdate) SetToggleNetworkUse(b bool) *ModUpdate {
+	mu.mutation.SetToggleNetworkUse(b)
+	return mu
+}
+
+// SetNillableToggleNetworkUse sets the "toggle_network_use" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableToggleNetworkUse(b *bool) *ModUpdate {
+	if b != nil {
+		mu.SetToggleNetworkUse(*b)
+	}
+	return mu
+}
+
+// SetToggleExplicitContent sets the "toggle_explicit_content" field.
+func (mu *ModUpdate) SetToggleExplicitContent(b bool) *ModUpdate {
+	mu.mutation.SetToggleExplicitContent(b)
+	return mu
+}
+
+// SetNillableToggleExplicitContent sets the "toggle_explicit_content" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableToggleExplicitContent(b *bool) *ModUpdate {
+	if b != nil {
+		mu.SetToggleExplicitContent(*b)
+	}
+	return mu
+}
+
 // AddVersionIDs adds the "versions" edge to the Version entity by IDs.
 func (mu *ModUpdate) AddVersionIDs(ids ...string) *ModUpdate {
 	mu.mutation.AddVersionIDs(ids...)
@@ -653,6 +681,12 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if mu.mutation.CompatibilityCleared() {
 		_spec.ClearField(mod.FieldCompatibility, field.TypeJSON)
+	}
+	if value, ok := mu.mutation.ToggleNetworkUse(); ok {
+		_spec.SetField(mod.FieldToggleNetworkUse, field.TypeBool, value)
+	}
+	if value, ok := mu.mutation.ToggleExplicitContent(); ok {
+		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
 	}
 	if mu.mutation.VersionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1176,6 +1210,34 @@ func (muo *ModUpdateOne) ClearCompatibility() *ModUpdateOne {
 	return muo
 }
 
+// SetToggleNetworkUse sets the "toggle_network_use" field.
+func (muo *ModUpdateOne) SetToggleNetworkUse(b bool) *ModUpdateOne {
+	muo.mutation.SetToggleNetworkUse(b)
+	return muo
+}
+
+// SetNillableToggleNetworkUse sets the "toggle_network_use" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableToggleNetworkUse(b *bool) *ModUpdateOne {
+	if b != nil {
+		muo.SetToggleNetworkUse(*b)
+	}
+	return muo
+}
+
+// SetToggleExplicitContent sets the "toggle_explicit_content" field.
+func (muo *ModUpdateOne) SetToggleExplicitContent(b bool) *ModUpdateOne {
+	muo.mutation.SetToggleExplicitContent(b)
+	return muo
+}
+
+// SetNillableToggleExplicitContent sets the "toggle_explicit_content" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableToggleExplicitContent(b *bool) *ModUpdateOne {
+	if b != nil {
+		muo.SetToggleExplicitContent(*b)
+	}
+	return muo
+}
+
 // AddVersionIDs adds the "versions" edge to the Version entity by IDs.
 func (muo *ModUpdateOne) AddVersionIDs(ids ...string) *ModUpdateOne {
 	muo.mutation.AddVersionIDs(ids...)
@@ -1518,6 +1580,12 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	}
 	if muo.mutation.CompatibilityCleared() {
 		_spec.ClearField(mod.FieldCompatibility, field.TypeJSON)
+	}
+	if value, ok := muo.mutation.ToggleNetworkUse(); ok {
+		_spec.SetField(mod.FieldToggleNetworkUse, field.TypeBool, value)
+	}
+	if value, ok := muo.mutation.ToggleExplicitContent(); ok {
+		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
 	}
 	if muo.mutation.VersionsCleared() {
 		edge := &sqlgraph.EdgeSpec{

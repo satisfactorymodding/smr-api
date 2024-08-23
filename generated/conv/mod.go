@@ -48,6 +48,8 @@ func (c *ModImpl) Convert(source *ent.Mod) *generated.Mod {
 		}
 		generatedMod.Tags = pGeneratedTagList
 		generatedMod.Compatibility = c.pUtilCompatibilityInfoToPGeneratedCompatibilityInfo((*source).Compatibility)
+		generatedMod.ToggleNetworkUse = (*source).ToggleNetworkUse
+		generatedMod.ToggleExplicitContent = (*source).ToggleExplicitContent
 		pGeneratedMod = &generatedMod
 	}
 	return pGeneratedMod

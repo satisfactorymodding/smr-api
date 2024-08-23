@@ -96,30 +96,32 @@ type LatestVersions struct {
 }
 
 type Mod struct {
-	ID               string             `json:"id"`
-	Name             string             `json:"name"`
-	ShortDescription string             `json:"short_description"`
-	FullDescription  *string            `json:"full_description,omitempty"`
-	Logo             *string            `json:"logo,omitempty"`
-	LogoThumbhash    *string            `json:"logo_thumbhash,omitempty"`
-	SourceURL        *string            `json:"source_url,omitempty"`
-	CreatorID        string             `json:"creator_id"`
-	Approved         bool               `json:"approved"`
-	Views            int                `json:"views"`
-	Downloads        int                `json:"downloads"`
-	Hotness          int                `json:"hotness"`
-	Popularity       int                `json:"popularity"`
-	UpdatedAt        string             `json:"updated_at"`
-	CreatedAt        string             `json:"created_at"`
-	LastVersionDate  *string            `json:"last_version_date,omitempty"`
-	ModReference     string             `json:"mod_reference"`
-	Hidden           bool               `json:"hidden"`
-	Tags             []*Tag             `json:"tags,omitempty"`
-	Compatibility    *CompatibilityInfo `json:"compatibility,omitempty"`
-	Authors          []*UserMod         `json:"authors"`
-	Version          *Version           `json:"version,omitempty"`
-	Versions         []*Version         `json:"versions"`
-	LatestVersions   *LatestVersions    `json:"latestVersions"`
+	ID                    string             `json:"id"`
+	Name                  string             `json:"name"`
+	ShortDescription      string             `json:"short_description"`
+	FullDescription       *string            `json:"full_description,omitempty"`
+	Logo                  *string            `json:"logo,omitempty"`
+	LogoThumbhash         *string            `json:"logo_thumbhash,omitempty"`
+	SourceURL             *string            `json:"source_url,omitempty"`
+	CreatorID             string             `json:"creator_id"`
+	Approved              bool               `json:"approved"`
+	Views                 int                `json:"views"`
+	Downloads             int                `json:"downloads"`
+	Hotness               int                `json:"hotness"`
+	Popularity            int                `json:"popularity"`
+	UpdatedAt             string             `json:"updated_at"`
+	CreatedAt             string             `json:"created_at"`
+	LastVersionDate       *string            `json:"last_version_date,omitempty"`
+	ModReference          string             `json:"mod_reference"`
+	Hidden                bool               `json:"hidden"`
+	Tags                  []*Tag             `json:"tags,omitempty"`
+	Compatibility         *CompatibilityInfo `json:"compatibility,omitempty"`
+	ToggleNetworkUse      bool               `json:"toggle_network_use"`
+	ToggleExplicitContent bool               `json:"toggle_explicit_content"`
+	Authors               []*UserMod         `json:"authors"`
+	Version               *Version           `json:"version,omitempty"`
+	Versions              []*Version         `json:"versions"`
+	LatestVersions        *LatestVersions    `json:"latestVersions"`
 }
 
 type ModVersion struct {

@@ -1932,49 +1932,51 @@ func (m *GuideTagMutation) ResetEdge(name string) error {
 // ModMutation represents an operation that mutates the Mod nodes in the graph.
 type ModMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *string
-	created_at        *time.Time
-	updated_at        *time.Time
-	deleted_at        *time.Time
-	name              *string
-	short_description *string
-	full_description  *string
-	logo              *string
-	logo_thumbhash    *string
-	source_url        *string
-	creator_id        *string
-	approved          *bool
-	views             *uint
-	addviews          *int
-	hotness           *uint
-	addhotness        *int
-	popularity        *uint
-	addpopularity     *int
-	downloads         *uint
-	adddownloads      *int
-	denied            *bool
-	last_version_date *time.Time
-	mod_reference     *string
-	hidden            *bool
-	compatibility     **util.CompatibilityInfo
-	clearedFields     map[string]struct{}
-	versions          map[string]struct{}
-	removedversions   map[string]struct{}
-	clearedversions   bool
-	authors           map[string]struct{}
-	removedauthors    map[string]struct{}
-	clearedauthors    bool
-	tags              map[string]struct{}
-	removedtags       map[string]struct{}
-	clearedtags       bool
-	dependents        map[string]struct{}
-	removeddependents map[string]struct{}
-	cleareddependents bool
-	done              bool
-	oldValue          func(context.Context) (*Mod, error)
-	predicates        []predicate.Mod
+	op                      Op
+	typ                     string
+	id                      *string
+	created_at              *time.Time
+	updated_at              *time.Time
+	deleted_at              *time.Time
+	name                    *string
+	short_description       *string
+	full_description        *string
+	logo                    *string
+	logo_thumbhash          *string
+	source_url              *string
+	creator_id              *string
+	approved                *bool
+	views                   *uint
+	addviews                *int
+	hotness                 *uint
+	addhotness              *int
+	popularity              *uint
+	addpopularity           *int
+	downloads               *uint
+	adddownloads            *int
+	denied                  *bool
+	last_version_date       *time.Time
+	mod_reference           *string
+	hidden                  *bool
+	compatibility           **util.CompatibilityInfo
+	toggle_network_use      *bool
+	toggle_explicit_content *bool
+	clearedFields           map[string]struct{}
+	versions                map[string]struct{}
+	removedversions         map[string]struct{}
+	clearedversions         bool
+	authors                 map[string]struct{}
+	removedauthors          map[string]struct{}
+	clearedauthors          bool
+	tags                    map[string]struct{}
+	removedtags             map[string]struct{}
+	clearedtags             bool
+	dependents              map[string]struct{}
+	removeddependents       map[string]struct{}
+	cleareddependents       bool
+	done                    bool
+	oldValue                func(context.Context) (*Mod, error)
+	predicates              []predicate.Mod
 }
 
 var _ ent.Mutation = (*ModMutation)(nil)
@@ -2946,6 +2948,78 @@ func (m *ModMutation) ResetCompatibility() {
 	delete(m.clearedFields, mod.FieldCompatibility)
 }
 
+// SetToggleNetworkUse sets the "toggle_network_use" field.
+func (m *ModMutation) SetToggleNetworkUse(b bool) {
+	m.toggle_network_use = &b
+}
+
+// ToggleNetworkUse returns the value of the "toggle_network_use" field in the mutation.
+func (m *ModMutation) ToggleNetworkUse() (r bool, exists bool) {
+	v := m.toggle_network_use
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldToggleNetworkUse returns the old "toggle_network_use" field's value of the Mod entity.
+// If the Mod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModMutation) OldToggleNetworkUse(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldToggleNetworkUse is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldToggleNetworkUse requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldToggleNetworkUse: %w", err)
+	}
+	return oldValue.ToggleNetworkUse, nil
+}
+
+// ResetToggleNetworkUse resets all changes to the "toggle_network_use" field.
+func (m *ModMutation) ResetToggleNetworkUse() {
+	m.toggle_network_use = nil
+}
+
+// SetToggleExplicitContent sets the "toggle_explicit_content" field.
+func (m *ModMutation) SetToggleExplicitContent(b bool) {
+	m.toggle_explicit_content = &b
+}
+
+// ToggleExplicitContent returns the value of the "toggle_explicit_content" field in the mutation.
+func (m *ModMutation) ToggleExplicitContent() (r bool, exists bool) {
+	v := m.toggle_explicit_content
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldToggleExplicitContent returns the old "toggle_explicit_content" field's value of the Mod entity.
+// If the Mod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModMutation) OldToggleExplicitContent(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldToggleExplicitContent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldToggleExplicitContent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldToggleExplicitContent: %w", err)
+	}
+	return oldValue.ToggleExplicitContent, nil
+}
+
+// ResetToggleExplicitContent resets all changes to the "toggle_explicit_content" field.
+func (m *ModMutation) ResetToggleExplicitContent() {
+	m.toggle_explicit_content = nil
+}
+
 // AddVersionIDs adds the "versions" edge to the Version entity by ids.
 func (m *ModMutation) AddVersionIDs(ids ...string) {
 	if m.versions == nil {
@@ -3196,7 +3270,7 @@ func (m *ModMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ModMutation) Fields() []string {
-	fields := make([]string, 0, 20)
+	fields := make([]string, 0, 22)
 	if m.created_at != nil {
 		fields = append(fields, mod.FieldCreatedAt)
 	}
@@ -3257,6 +3331,12 @@ func (m *ModMutation) Fields() []string {
 	if m.compatibility != nil {
 		fields = append(fields, mod.FieldCompatibility)
 	}
+	if m.toggle_network_use != nil {
+		fields = append(fields, mod.FieldToggleNetworkUse)
+	}
+	if m.toggle_explicit_content != nil {
+		fields = append(fields, mod.FieldToggleExplicitContent)
+	}
 	return fields
 }
 
@@ -3305,6 +3385,10 @@ func (m *ModMutation) Field(name string) (ent.Value, bool) {
 		return m.Hidden()
 	case mod.FieldCompatibility:
 		return m.Compatibility()
+	case mod.FieldToggleNetworkUse:
+		return m.ToggleNetworkUse()
+	case mod.FieldToggleExplicitContent:
+		return m.ToggleExplicitContent()
 	}
 	return nil, false
 }
@@ -3354,6 +3438,10 @@ func (m *ModMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldHidden(ctx)
 	case mod.FieldCompatibility:
 		return m.OldCompatibility(ctx)
+	case mod.FieldToggleNetworkUse:
+		return m.OldToggleNetworkUse(ctx)
+	case mod.FieldToggleExplicitContent:
+		return m.OldToggleExplicitContent(ctx)
 	}
 	return nil, fmt.Errorf("unknown Mod field %s", name)
 }
@@ -3502,6 +3590,20 @@ func (m *ModMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCompatibility(v)
+		return nil
+	case mod.FieldToggleNetworkUse:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetToggleNetworkUse(v)
+		return nil
+	case mod.FieldToggleExplicitContent:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetToggleExplicitContent(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Mod field %s", name)
@@ -3695,6 +3797,12 @@ func (m *ModMutation) ResetField(name string) error {
 		return nil
 	case mod.FieldCompatibility:
 		m.ResetCompatibility()
+		return nil
+	case mod.FieldToggleNetworkUse:
+		m.ResetToggleNetworkUse()
+		return nil
+	case mod.FieldToggleExplicitContent:
+		m.ResetToggleExplicitContent()
 		return nil
 	}
 	return fmt.Errorf("unknown Mod field %s", name)
