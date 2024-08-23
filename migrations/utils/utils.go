@@ -22,7 +22,7 @@ func ReindexAllModFiles(ctx context.Context, withMetadata bool, modFilter func(*
 		if _, err := workflows.Client(ctx).ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 			ID:        fmt.Sprintf("update-mod-data-from-storage-%s-%s", m.ID, v.ID),
 			TaskQueue: workflows.RepoTaskQueue,
-		}, workflows.UpdateModDataFromStorageWorkflow, m.ID, v.ID, withMetadata); err != nil {
+		}, workflows.Workflows.UpdateModFromStorage.UpdateModDataFromStorageWorkflow, m.ID, v.ID, withMetadata); err != nil {
 			slox.Error(ctx, "failed to start finalization workflow", slog.Any("err", err))
 		}
 	})

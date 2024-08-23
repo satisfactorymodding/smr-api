@@ -1,19 +1,13 @@
-package workflows
+package statistics
 
 import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"regexp"
 	"time"
 
 	"github.com/Vilsol/slox"
-	"github.com/pkg/errors"
-	"github.com/spf13/viper"
-	"go.temporal.io/sdk/client"
-	"go.temporal.io/sdk/temporal"
-	"go.temporal.io/sdk/workflow"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
@@ -23,50 +17,7 @@ import (
 
 var keyRegex = regexp.MustCompile(`^([^:]+):([^:]+):([^:]+):([^:]+)$`)
 
-func initializeStatisticsWorkflow(ctx context.Context, c client.Client) {
-	if !viper.GetBool("statistics.enabled") {
-		return
-	}
-
-	scheduleHandle, err := c.ScheduleClient().Create(ctx, client.ScheduleOptions{
-		ID: "statistics_update_minutely",
-		Spec: client.ScheduleSpec{
-			Intervals: []client.ScheduleIntervalSpec{
-				{
-					Every: time.Minute,
-				},
-			},
-		},
-		Action: &client.ScheduleWorkflowAction{
-			ID:        "statistics_update",
-			Workflow:  statisticsWorkflow,
-			TaskQueue: RepoTaskQueue,
-		},
-	})
-	if err != nil {
-		if !errors.Is(err, temporal.ErrScheduleAlreadyRunning) {
-			slox.Error(ctx, "unable to create statistics schedule", slog.Any("err", err))
-			os.Exit(1)
-		}
-
-		scheduleHandle = c.ScheduleClient().GetHandle(ctx, "statistics_update_minutely")
-	}
-
-	if _, err := scheduleHandle.Describe(ctx); err != nil {
-		slox.Error(ctx, "unable to register statistics schedule", slog.Any("err", err))
-		os.Exit(1)
-	}
-}
-
-func statisticsWorkflow(ctx workflow.Context) error {
-	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-		StartToCloseTimeout: time.Minute,
-	})
-
-	return workflow.ExecuteActivity(ctx, updateStatisticsActivity).Get(ctx, nil)
-}
-
-func updateStatisticsActivity(ctx context.Context) error {
+func (*A) UpdateStatisticsActivity(ctx context.Context) error {
 	start := time.Now()
 	keys := redis.GetAllKeys()
 	slox.Info(ctx, "statistics fetched", slog.Int("keys", len(keys)), slog.Duration("took", time.Since(start)))

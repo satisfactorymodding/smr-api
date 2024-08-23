@@ -33,29 +33,29 @@ func InitializeWorkflows(ctx context.Context) (context.Context, func()) {
 		log.Fatalln("unable to create Temporal client", err)
 	}
 
-	initializeStatisticsWorkflow(ctx, c)
+	Workflows.Statistics.InitializeStatisticsWorkflow(ctx, c, RepoTaskQueue)
 
 	w := worker.New(c, RepoTaskQueue, worker.Options{
 		BackgroundActivityContext: ctx,
 	})
 
-	w.RegisterWorkflow(statisticsWorkflow)
-	w.RegisterActivity(updateStatisticsActivity)
+	w.RegisterWorkflow(Workflows.Statistics.StatisticsWorkflow)
+	w.RegisterActivity(Workflows.Statistics.UpdateStatisticsActivity)
 
-	w.RegisterWorkflow(FinalizeVersionUploadWorkflow)
-	w.RegisterActivity(completeUploadMultipartModActivity)
-	w.RegisterActivity(extractModInfoActivity)
-	w.RegisterActivity(extractMetadataActivity)
-	w.RegisterActivity(renameVersionActivity)
-	w.RegisterActivity(separateModTargetsActivity)
-	w.RegisterActivity(createVersionInDatabaseActivity)
-	w.RegisterActivity(approveAndPublishModActivity)
-	w.RegisterActivity(storeRedisStateActivity)
-	w.RegisterActivity(scanModOnVirusTotalActivity)
-	w.RegisterActivity(removeModActivity)
+	w.RegisterWorkflow(Workflows.VersionUpload.FinalizeVersionUploadWorkflow)
+	w.RegisterActivity(Workflows.VersionUpload.CompleteUploadMultipartModActivity)
+	w.RegisterActivity(Workflows.VersionUpload.ExtractModInfoActivity)
+	w.RegisterActivity(Workflows.VersionUpload.ExtractMetadataActivity)
+	w.RegisterActivity(Workflows.VersionUpload.RenameVersionActivity)
+	w.RegisterActivity(Workflows.VersionUpload.SeparateModTargetsActivity)
+	w.RegisterActivity(Workflows.VersionUpload.CreateVersionInDatabaseActivity)
+	w.RegisterActivity(Workflows.VersionUpload.ApproveAndPublishModActivity)
+	w.RegisterActivity(Workflows.VersionUpload.StoreRedisStateActivity)
+	w.RegisterActivity(Workflows.VersionUpload.ScanModOnVirusTotalActivity)
+	w.RegisterActivity(Workflows.VersionUpload.RemoveModActivity)
 
-	w.RegisterWorkflow(UpdateModDataFromStorageWorkflow)
-	w.RegisterActivity(updateModDataFromStorageActivity)
+	w.RegisterWorkflow(Workflows.UpdateModFromStorage.UpdateModDataFromStorageWorkflow)
+	w.RegisterActivity(Workflows.UpdateModFromStorage.UpdateModDataFromStorageActivity)
 
 	if err := w.Start(); err != nil {
 		slox.Error(ctx, "unable to start worker", slog.Any("err", err))

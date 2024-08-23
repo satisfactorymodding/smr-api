@@ -29,6 +29,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/workflows"
+	"github.com/satisfactorymodding/smr-api/workflows/versionupload"
 )
 
 func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (string, error) {
@@ -114,7 +115,12 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 	if _, err := workflows.Client(ctx).ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 		ID:        fmt.Sprintf("finalize-version-upload-%s-%s-%s", modID, uploadID, mod.ModReference),
 		TaskQueue: workflows.RepoTaskQueue,
-	}, workflows.FinalizeVersionUploadWorkflow, mod.ID, uploadID, version, viper.GetString("skip-virus-check")); err != nil {
+	}, workflows.Workflows.VersionUpload.FinalizeVersionUploadWorkflow, versionupload.FinalizeVersionUploadArgs{
+		ModID:          mod.ID,
+		UploadID:       uploadID,
+		Version:        version,
+		SkipVirusCheck: viper.GetBool("skip-virus-check"),
+	}); err != nil {
 		return false, fmt.Errorf("failed to start finalization workflow: %w", err)
 	}
 

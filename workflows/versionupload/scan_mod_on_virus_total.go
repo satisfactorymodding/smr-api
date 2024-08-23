@@ -1,4 +1,4 @@
-package workflows
+package versionupload
 
 import (
 	"archive/zip"
@@ -19,13 +19,18 @@ import (
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
-func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID string) (bool, error) {
+type ScanModOnVirusTotalArgs struct {
+	ModID     string `json:"mod_id"`
+	VersionID string `json:"version_id"`
+}
+
+func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTotalArgs) (bool, error) {
 	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "ScanModOnVirusTotal")
 	defer span.End()
 
-	slox.Info(ctx, "starting virus scan of mod", slog.String("mod", modID), slog.String("version", versionID))
+	slox.Info(ctx, "starting virus scan of mod", slog.String("mod", args.ModID), slog.String("version", args.VersionID))
 
-	version, err := db.From(ctx).Version.Get(ctx, versionID)
+	version, err := db.From(ctx).Version.Get(ctx, args.VersionID)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
@@ -73,7 +78,7 @@ func scanModOnVirusTotalActivity(ctx context.Context, modID string, versionID st
 	}
 
 	if !success {
-		slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", modID), slog.String("version", versionID))
+		slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", args.ModID), slog.String("version", args.VersionID))
 		return false, nil
 	}
 
