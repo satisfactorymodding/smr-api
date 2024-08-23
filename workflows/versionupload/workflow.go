@@ -3,7 +3,6 @@ package versionupload
 import (
 	"time"
 
-	"github.com/satisfactorymodding/smr-api/workflows/removemod"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -12,6 +11,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/conv"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/validation"
+	"github.com/satisfactorymodding/smr-api/workflows/removemod"
 )
 
 type A struct{}
@@ -38,7 +38,7 @@ func (*A) FinalizeVersionUploadWorkflow(ctx workflow.Context, args FinalizeVersi
 			workflow.ExecuteChildWorkflow(workflow.WithChildOptions(ctx, workflow.ChildWorkflowOptions{
 				WorkflowID:        workflow.GetInfo(ctx).WorkflowExecution.ID + "-cleanup",
 				ParentClosePolicy: enums.PARENT_CLOSE_POLICY_ABANDON,
-			}), removemod.RemoveMod.RemoveModWorkflow, removemod.RemoveModArgs{
+			}), removemod.RemoveMod.RemoveModWorkflow, removemod.WorkflowArgs{
 				ModID:    args.ModID,
 				ModInfo:  modInfo,
 				UploadID: args.UploadID,

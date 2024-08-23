@@ -5,11 +5,12 @@ import (
 	"log/slog"
 
 	"github.com/Vilsol/slox"
+
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/storage"
 )
 
-func (*A) RemoveModActivity(ctx context.Context, args RemoveModArgs) error {
+func (*A) RemoveModActivity(ctx context.Context, args WorkflowArgs) error {
 	mod, err := db.From(ctx).Mod.Get(ctx, args.ModID)
 	if err != nil {
 		slox.Error(ctx, "failed to retrieve mod", slog.Any("err", err))
