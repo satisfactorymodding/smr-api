@@ -185,7 +185,7 @@ func extractModInfoActivity(ctx context.Context, modID string, uploadID string) 
 func extractMetadataActivity(ctx context.Context, modID string, uploadID string, modInfo *validation.ModInfo) *string {
 	metadata, err := extractMetadata(ctx, modID, uploadID, modInfo)
 	if err != nil {
-		slog.Error("failed to extract metadata", slog.Any("err", err), slog.String("mod_id", modID), slog.String("upload_id", uploadID))
+		slox.Error(ctx, "failed to extract metadata", slog.Any("err", err), slog.String("mod_id", modID), slog.String("upload_id", uploadID))
 		return nil
 	}
 	return metadata
@@ -400,7 +400,7 @@ func storeRedisStateActivity(ctx context.Context, uploadID string, data *generat
 func removeModActivity(ctx context.Context, modID string, modInfo *validation.ModInfo, uploadID string) {
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
-		slog.Error("failed to retrieve mod", slog.Any("err", err))
+		slox.Error(ctx, "failed to retrieve mod", slog.Any("err", err))
 		return
 	}
 
