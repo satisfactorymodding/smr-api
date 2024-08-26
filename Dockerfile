@@ -1,8 +1,6 @@
 FROM golang:1.23.0-alpine AS builder
 
-RUN apk add --no-cache git build-base libpng-dev protoc
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+RUN apk add --no-cache git build-base libpng-dev
 
 WORKDIR $GOPATH/src/github.com/satisfactorymodding/smr-api/
 
@@ -14,7 +12,6 @@ RUN go mod download
 
 COPY . .
 
-RUN go generate -tags tools -x ./...
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -v -a -installsuffix cgo -o /go/bin/api cmd/api/serve.go
 
 
