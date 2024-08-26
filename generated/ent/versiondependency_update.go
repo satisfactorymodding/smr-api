@@ -189,10 +189,10 @@ func (vdu *VersionDependencyUpdate) check() error {
 			return &ValidationError{Name: "condition", err: fmt.Errorf(`ent: validator failed for field "VersionDependency.condition": %w`, err)}
 		}
 	}
-	if _, ok := vdu.mutation.VersionID(); vdu.mutation.VersionCleared() && !ok {
+	if vdu.mutation.VersionCleared() && len(vdu.mutation.VersionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "VersionDependency.version"`)
 	}
-	if _, ok := vdu.mutation.ModID(); vdu.mutation.ModCleared() && !ok {
+	if vdu.mutation.ModCleared() && len(vdu.mutation.ModIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "VersionDependency.mod"`)
 	}
 	return nil
@@ -482,10 +482,10 @@ func (vduo *VersionDependencyUpdateOne) check() error {
 			return &ValidationError{Name: "condition", err: fmt.Errorf(`ent: validator failed for field "VersionDependency.condition": %w`, err)}
 		}
 	}
-	if _, ok := vduo.mutation.VersionID(); vduo.mutation.VersionCleared() && !ok {
+	if vduo.mutation.VersionCleared() && len(vduo.mutation.VersionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "VersionDependency.version"`)
 	}
-	if _, ok := vduo.mutation.ModID(); vduo.mutation.ModCleared() && !ok {
+	if vduo.mutation.ModCleared() && len(vduo.mutation.ModIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "VersionDependency.mod"`)
 	}
 	return nil

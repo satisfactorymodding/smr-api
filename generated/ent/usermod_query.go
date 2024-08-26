@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
@@ -108,7 +109,7 @@ func (umq *UserModQuery) QueryMod() *ModQuery {
 // First returns the first UserMod entity from the query.
 // Returns a *NotFoundError when no UserMod was found.
 func (umq *UserModQuery) First(ctx context.Context) (*UserMod, error) {
-	nodes, err := umq.Limit(1).All(setContextOp(ctx, umq.ctx, "First"))
+	nodes, err := umq.Limit(1).All(setContextOp(ctx, umq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +132,7 @@ func (umq *UserModQuery) FirstX(ctx context.Context) *UserMod {
 // Returns a *NotSingularError when more than one UserMod entity is found.
 // Returns a *NotFoundError when no UserMod entities are found.
 func (umq *UserModQuery) Only(ctx context.Context) (*UserMod, error) {
-	nodes, err := umq.Limit(2).All(setContextOp(ctx, umq.ctx, "Only"))
+	nodes, err := umq.Limit(2).All(setContextOp(ctx, umq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +157,7 @@ func (umq *UserModQuery) OnlyX(ctx context.Context) *UserMod {
 
 // All executes the query and returns a list of UserMods.
 func (umq *UserModQuery) All(ctx context.Context) ([]*UserMod, error) {
-	ctx = setContextOp(ctx, umq.ctx, "All")
+	ctx = setContextOp(ctx, umq.ctx, ent.OpQueryAll)
 	if err := umq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -175,7 +176,7 @@ func (umq *UserModQuery) AllX(ctx context.Context) []*UserMod {
 
 // Count returns the count of the given query.
 func (umq *UserModQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, umq.ctx, "Count")
+	ctx = setContextOp(ctx, umq.ctx, ent.OpQueryCount)
 	if err := umq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -193,7 +194,7 @@ func (umq *UserModQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (umq *UserModQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, umq.ctx, "Exist")
+	ctx = setContextOp(ctx, umq.ctx, ent.OpQueryExist)
 	switch _, err := umq.First(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -541,7 +542,7 @@ func (umgb *UserModGroupBy) Aggregate(fns ...AggregateFunc) *UserModGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (umgb *UserModGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, umgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, umgb.build.ctx, ent.OpQueryGroupBy)
 	if err := umgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -589,7 +590,7 @@ func (ums *UserModSelect) Aggregate(fns ...AggregateFunc) *UserModSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (ums *UserModSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ums.ctx, "Select")
+	ctx = setContextOp(ctx, ums.ctx, ent.OpQuerySelect)
 	if err := ums.prepareQuery(ctx); err != nil {
 		return err
 	}

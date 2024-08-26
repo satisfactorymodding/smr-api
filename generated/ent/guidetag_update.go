@@ -114,10 +114,10 @@ func (gtu *GuideTagUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (gtu *GuideTagUpdate) check() error {
-	if _, ok := gtu.mutation.GuideID(); gtu.mutation.GuideCleared() && !ok {
+	if gtu.mutation.GuideCleared() && len(gtu.mutation.GuideIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "GuideTag.guide"`)
 	}
-	if _, ok := gtu.mutation.TagID(); gtu.mutation.TagCleared() && !ok {
+	if gtu.mutation.TagCleared() && len(gtu.mutation.TagIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "GuideTag.tag"`)
 	}
 	return nil
@@ -318,10 +318,10 @@ func (gtuo *GuideTagUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (gtuo *GuideTagUpdateOne) check() error {
-	if _, ok := gtuo.mutation.GuideID(); gtuo.mutation.GuideCleared() && !ok {
+	if gtuo.mutation.GuideCleared() && len(gtuo.mutation.GuideIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "GuideTag.guide"`)
 	}
-	if _, ok := gtuo.mutation.TagID(); gtuo.mutation.TagCleared() && !ok {
+	if gtuo.mutation.TagCleared() && len(gtuo.mutation.TagIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "GuideTag.tag"`)
 	}
 	return nil

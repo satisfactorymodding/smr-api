@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/MarvinJWendt/testza"
+	"github.com/machinebox/graphql"
 	"github.com/spf13/viper"
 
 	"github.com/satisfactorymodding/smr-api/config"
@@ -31,60 +33,93 @@ const testModPath = "testdata/FicsitRemoteMonitoring-0.10.3.smod"
 
 // TODO Add rate limit test
 
-func TestVersions(t *testing.T) {
+func TestVersionSuccess(t *testing.T) {
+	RunVersionTestWrapper(t, testModPath, viper.IsSet("virustotal.key") && viper.GetString("virustotal.key") != "", "FicsitRemoteMonitoring", "")
+}
+
+func TestVersionWrongModReference(t *testing.T) {
+	RunVersionTestWrapper(t, testModPath, false, "FluffyUnicorns", "multi-target plugin contains file outside of target directories")
+}
+
+func TestNotZipFile(t *testing.T) {
+	RunVersionTestWrapper(t, "testdata/.gitignore", false, "NotZipFile", "invalid zip archive")
+}
+
+func TestEmptyMod(t *testing.T) {
+	RunVersionTestWrapper(t, "testdata/Empty.smod", false, "Empty", "multi-target plugin doesn't contain any .uplugin files")
+}
+
+func TestSameVersion(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
-	viper.Set("skip-virus-check", true)
+	modID := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "")
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this name")
+}
+
+func TestModWithMissingDependency(t *testing.T) {
+	RunVersionTestWrapper(t, "testdata/ModWithMissingDependency.smod", false, "ModWithMissingDependency", "ent: mod not found")
+}
+
+func TestModMalformedJSON(t *testing.T) {
+	RunVersionTestWrapper(t, "testdata/ModWithMalformedJSON.smod", false, "ModWithMalformedJSON", "doesn't follow schema")
+}
+
+func RunVersionTestWrapper(t *testing.T, modFilePath string, executeVirusCheck bool, modReference string, expectError string) {
+	ctx, client, stop := setup()
+	defer stop()
+	RunVersionTest(ctx, t, client, modFilePath, executeVirusCheck, modReference, "", expectError)
+}
+
+func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, modFilePath string, executeVirusCheck bool, modReference string, reuseModID string, expectError string) string {
+	viper.Set("skip-virus-check", !executeVirusCheck)
 
 	token, _, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
 
-	var modID string
-
-	modReference := "FicsitRemoteMonitoring"
-
-	t.Run("Create Satisfactory Version", func(t *testing.T) {
-		createRequest := authRequest(`mutation {
-		  createSatisfactoryVersion(input: {
-			version: 123456,
-			engine_version: "5.2"
-		  }) {
-			id
-		  }
-		}`, token)
-
-		var createResponse struct {
-			CreateSatisfactoryVersion generated.SatisfactoryVersion
-		}
-		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-		testza.AssertNotEqual(t, "", createResponse.CreateSatisfactoryVersion.ID)
-	})
-
-	t.Run("Create Mod", func(t *testing.T) {
-		createRequest := authRequest(`mutation CreateMod($mod_reference: ModReference!) {
-			createMod(mod: {
-				name: "Hello World",
-				short_description: "Foo Bar 123 Foo Bar 123",
-				full_description: "Lorem ipsum dolor sit amet",
-				mod_reference: $mod_reference
-			}) {
+	modID := reuseModID
+	if modID == "" {
+		t.Run("Create Satisfactory Version", func(t *testing.T) {
+			createRequest := authRequest(`mutation {
+			  createSatisfactoryVersion(input: {
+				version: 123456,
+				engine_version: "5.2"
+			  }) {
 				id
+			  }
+			}`, token)
+
+			var createResponse struct {
+				CreateSatisfactoryVersion generated.SatisfactoryVersion
 			}
-		}`, token)
-		createRequest.Var("mod_reference", modReference)
+			testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
+			testza.AssertNotEqual(t, "", createResponse.CreateSatisfactoryVersion.ID)
+		})
 
-		var createResponse struct {
-			CreateMod generated.Mod
-		}
-		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-		testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
+		t.Run("Create Mod", func(t *testing.T) {
+			createRequest := authRequest(`mutation CreateMod($mod_reference: ModReference!) {
+				createMod(mod: {
+					name: "Hello World",
+					short_description: "Foo Bar 123 Foo Bar 123",
+					full_description: "Lorem ipsum dolor sit amet",
+					mod_reference: $mod_reference
+				}) {
+					id
+				}
+			}`, token)
+			createRequest.Var("mod_reference", modReference)
 
-		modID = createResponse.CreateMod.ID
-	})
+			var createResponse struct {
+				CreateMod generated.Mod
+			}
+			testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
+			testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
 
-	var versionID string
+			modID = createResponse.CreateMod.ID
+		})
+	}
 
+	var uploadID string
 	t.Run("Create Version", func(t *testing.T) {
 		createRequest := authRequest(`mutation CreateVersion($mod_id: ModID!) {
 			createVersion(modId: $mod_id)
@@ -97,11 +132,11 @@ func TestVersions(t *testing.T) {
 		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
 		testza.AssertNotEqual(t, "", createResponse.CreateVersion)
 
-		versionID = createResponse.CreateVersion
+		uploadID = createResponse.CreateVersion
 	})
 
 	t.Run("Upload Parts", func(t *testing.T) {
-		f, err := os.Open(testModPath)
+		f, err := os.Open(modFilePath)
 		testza.AssertNoError(t, err)
 
 		stat, err := f.Stat()
@@ -131,7 +166,7 @@ func TestVersions(t *testing.T) {
 					}`,
 					"variables": map[string]interface{}{
 						"mod_id":     modID,
-						"version_id": versionID,
+						"version_id": uploadID,
 						"part":       i + 1,
 						"file":       nil,
 					},
@@ -158,7 +193,7 @@ func TestVersions(t *testing.T) {
 				_, err = mapField.Write(mapBody)
 				testza.AssertNoError(t, err)
 
-				part, err := writer.CreateFormFile("0", path.Base(testModPath))
+				part, err := writer.CreateFormFile("0", path.Base(modFilePath))
 				testza.AssertNoError(t, err)
 
 				_, err = io.Copy(part, bytes.NewReader(chunk))
@@ -194,7 +229,7 @@ func TestVersions(t *testing.T) {
 			})
 		}`, token)
 		finalizeRequest.Var("mod_id", modID)
-		finalizeRequest.Var("version_id", versionID)
+		finalizeRequest.Var("version_id", uploadID)
 
 		var finalizeResponse struct {
 			FinalizeCreateVersion bool
@@ -203,6 +238,7 @@ func TestVersions(t *testing.T) {
 		testza.AssertTrue(t, finalizeResponse.FinalizeCreateVersion)
 	})
 
+	var versionID string
 	t.Run("Wait For Version", func(t *testing.T) {
 		request := authRequest(`query CheckVersionUploadState($mod_id: ModID!, $version_id: VersionID!) {
 			checkVersionUploadState(modId: $mod_id, versionId: $version_id) {
@@ -213,9 +249,9 @@ func TestVersions(t *testing.T) {
 			}
 		}`, token)
 		request.Var("mod_id", modID)
-		request.Var("version_id", versionID)
+		request.Var("version_id", uploadID)
 
-		end := time.Now().Add(time.Minute * 5)
+		end := time.Now().Add(time.Minute * 30)
 		for time.Now().Before(end) {
 			var response struct {
 				CheckVersionUploadState struct {
@@ -227,7 +263,13 @@ func TestVersions(t *testing.T) {
 			}
 
 			err := client.Run(ctx, request, &response)
-			testza.AssertNoError(t, err)
+
+			if expectError == "" {
+				testza.AssertNoError(t, err)
+			} else if err != nil {
+				testza.AssertContains(t, err.Error(), expectError)
+				return
+			}
 
 			if err != nil {
 				break
@@ -241,68 +283,106 @@ func TestVersions(t *testing.T) {
 			time.Sleep(time.Second * 3)
 		}
 
+		if expectError != "" && !t.Failed() {
+			t.Fail()
+			return
+		}
+
+		// TODO wait on workflow instead of poll
+		if executeVirusCheck {
+			for time.Now().Before(end) {
+				getModVersion := authRequest(`query GetModVersion($version_id: VersionID!) {
+					getVersion(versionId: $version_id) {
+						id
+						approved
+					}
+				}`, token)
+				getModVersion.Var("version_id", versionID)
+
+				var getModVersionResponse struct {
+					GetVersion generated.Version
+				}
+
+				err := client.Run(ctx, getModVersion, &getModVersionResponse)
+				testza.AssertNoError(t, err)
+				if err != nil {
+					return
+				}
+
+				if getModVersionResponse.GetVersion.Approved {
+					break
+				}
+				time.Sleep(time.Second * 3)
+			}
+		}
+
 		if time.Now().After(end) {
 			testza.AssertNoError(t, errors.New("failed finishing mod"))
+			t.FailNow()
 		}
 	})
 
-	t.Run("Check uploaded data", func(t *testing.T) {
-		getModVersion := authRequest(`query GetModVersion($version_id: VersionID!) {
-		  	getVersion(versionId: $version_id) {
-				id
-				version
-				sml_version
-				dependencies {
-				  	condition
-				  	mod_id
-				}
-		  	}
-		}`, token)
-		getModVersion.Var("version_id", versionID)
-
-		var getModVersionResponse struct {
-			GetVersion generated.Version
-		}
-		testza.AssertNoError(t, client.Run(ctx, getModVersion, &getModVersionResponse))
-		testza.AssertEqual(t, versionID, getModVersionResponse.GetVersion.ID)
-		testza.AssertEqual(t, "0.10.3", getModVersionResponse.GetVersion.Version)
-		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.SmlVersion)
-		testza.AssertEqual(t, 1, len(getModVersionResponse.GetVersion.Dependencies))
-		testza.AssertEqual(t, "SML", getModVersionResponse.GetVersion.Dependencies[0].ModID)
-		testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.Dependencies[0].Condition)
-	})
-
-	t.Run("List Dependencies", func(t *testing.T) {
-		listRequest := authRequest(`query getMods($mod_reference: String!) {
-		  getMods(filter: {references: [$mod_reference]}) {
-			count
-			mods {
-			  id
-			  mod_reference
-			  versions {
-				id
-				version
-				dependencies {
-				  version_id
-				  mod_id
-				  mod {
+	if expectError == "" {
+		t.Run("Check uploaded data", func(t *testing.T) {
+			getModVersion := authRequest(`query GetModVersion($version_id: VersionID!) {
+				getVersion(versionId: $version_id) {
 					id
-					name
-					mod_reference
+					version
+					sml_version
+					dependencies {
+						condition
+						mod_id
+					}
+				}
+			}`, token)
+			getModVersion.Var("version_id", versionID)
+
+			var getModVersionResponse struct {
+				GetVersion generated.Version
+			}
+			testza.AssertNoError(t, client.Run(ctx, getModVersion, &getModVersionResponse))
+			testza.AssertEqual(t, versionID, getModVersionResponse.GetVersion.ID)
+			testza.AssertEqual(t, "0.10.3", getModVersionResponse.GetVersion.Version)
+			testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.SmlVersion)
+			testza.AssertEqual(t, 1, len(getModVersionResponse.GetVersion.Dependencies))
+			testza.AssertEqual(t, "SML", getModVersionResponse.GetVersion.Dependencies[0].ModID)
+			testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.Dependencies[0].Condition)
+		})
+
+		t.Run("List Dependencies", func(t *testing.T) {
+			listRequest := authRequest(`query getMods($mod_reference: String!) {
+			  getMods(filter: {references: [$mod_reference]}) {
+				count
+				mods {
+				  id
+				  mod_reference
+				  versions {
+					id
+					version
+					dependencies {
+					  version_id
+					  mod_id
+					  mod {
+						id
+						name
+						mod_reference
+					  }
+					}
 				  }
 				}
 			  }
+			}`, token)
+			listRequest.Var("mod_reference", modReference)
+
+			var listResponse struct {
+				GetMods *generated.GetMods
 			}
-		  }
-		}`, token)
-		listRequest.Var("mod_reference", modReference)
 
-		var listResponse struct {
-			GetMods *generated.GetMods
-		}
+			testza.AssertNoError(t, client.Run(ctx, listRequest, &listResponse))
 
-		testza.AssertNoError(t, client.Run(ctx, listRequest, &listResponse))
+			testza.AssertEqual(t, "SML", listResponse.GetMods.Mods[0].Versions[0].Dependencies[0].Mod.ModReference)
+		})
+	}
 
-		testza.AssertEqual(t, "SML", listResponse.GetMods.Mods[0].Versions[0].Dependencies[0].Mod.ModReference)
-	})
+	return modID
 }

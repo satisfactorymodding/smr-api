@@ -145,7 +145,7 @@ func (vtc *VersionTargetCreate) check() error {
 	if _, ok := vtc.mutation.TargetName(); !ok {
 		return &ValidationError{Name: "target_name", err: errors.New(`ent: missing required field "VersionTarget.target_name"`)}
 	}
-	if _, ok := vtc.mutation.VersionID(); !ok {
+	if len(vtc.mutation.VersionIDs()) == 0 {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required edge "VersionTarget.version"`)}
 	}
 	return nil

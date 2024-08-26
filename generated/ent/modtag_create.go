@@ -85,10 +85,10 @@ func (mtc *ModTagCreate) check() error {
 	if _, ok := mtc.mutation.TagID(); !ok {
 		return &ValidationError{Name: "tag_id", err: errors.New(`ent: missing required field "ModTag.tag_id"`)}
 	}
-	if _, ok := mtc.mutation.ModID(); !ok {
+	if len(mtc.mutation.ModIDs()) == 0 {
 		return &ValidationError{Name: "mod", err: errors.New(`ent: missing required edge "ModTag.mod"`)}
 	}
-	if _, ok := mtc.mutation.TagID(); !ok {
+	if len(mtc.mutation.TagIDs()) == 0 {
 		return &ValidationError{Name: "tag", err: errors.New(`ent: missing required edge "ModTag.tag"`)}
 	}
 	return nil

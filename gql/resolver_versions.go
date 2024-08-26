@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"runtime/debug"
 	"strings"
 	"time"
 
@@ -15,6 +14,8 @@ import (
 	"github.com/Vilsol/slox"
 	"github.com/dgraph-io/ristretto"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
+	"go.temporal.io/sdk/client"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db"
@@ -27,6 +28,8 @@ import (
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
+	"github.com/satisfactorymodding/smr-api/workflows"
+	"github.com/satisfactorymodding/smr-api/workflows/versionupload"
 )
 
 func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (string, error) {
@@ -47,14 +50,14 @@ func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (str
 		return "", errors.New("you must update your mod reference on the site to match your mod_reference in your data.json")
 	}
 
-	versionID := util.GenerateUniqueID()
+	uploadID := util.GenerateUniqueID()
 
-	storage.StartUploadMultipartMod(ctx, mod.ID, mod.Name, versionID)
+	_, _ = storage.StartUploadMultipartMod(ctx, mod.ID, mod.Name, uploadID)
 
-	return versionID, nil
+	return uploadID, nil
 }
 
-func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, versionID string, part int, file graphql.Upload) (bool, error) {
+func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, uploadID string, part int, file graphql.Upload) (bool, error) {
 	if part > 100 {
 		return false, errors.New("files can consist of max 41 chunks")
 	}
@@ -82,12 +85,12 @@ func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, 
 		return false, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	success, _ := storage.UploadMultipartMod(ctx, mod.ID, mod.Name, versionID, int64(part), bytes.NewReader(fileData))
+	_, err = storage.UploadMultipartMod(ctx, mod.ID, mod.Name, uploadID, int64(part), bytes.NewReader(fileData))
 
-	return success, nil
+	return err == nil, err
 }
 
-func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID string, versionID string, version generated.NewVersion) (bool, error) {
+func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID string, uploadID string, version generated.NewVersion) (bool, error) {
 	mod, err := db.From(ctx).Mod.Get(ctx, modID)
 	if err != nil {
 		return false, err
@@ -105,37 +108,21 @@ func (r *mutationResolver) FinalizeCreateVersion(ctx context.Context, modID stri
 		return false, errors.New("you must update your mod reference on the site to match your mod_reference in your data.json")
 	}
 
-	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", versionID))
+	ctx = slox.With(ctx, slog.String("mod_id", mod.ID), slog.String("version_id", uploadID))
 
 	slox.Info(ctx, "finalization gql call")
 
-	go func(ctx context.Context, mod *ent.Mod, versionID string, version generated.NewVersion) {
-		defer func() {
-			if r := recover(); r != nil {
-				slox.Error(ctx, "recovered from version finalization", slog.Any("recover", r), slog.String("stack", string(debug.Stack())))
-
-				if err := redis.StoreVersionUploadState(versionID, nil, errors.New("internal error, please try again, if it fails again, please report on discord")); err != nil {
-					slox.Error(ctx, "failed to store version upload state", slog.Any("err", err))
-				}
-			}
-		}()
-
-		slox.Info(ctx, "calling FinalizeVersionUploadAsync")
-
-		data, err := FinalizeVersionUploadAsync(ctx, mod, versionID, version)
-		if err2 := redis.StoreVersionUploadState(versionID, data, err); err2 != nil {
-			slox.Error(ctx, "error storing redis state", slog.Any("err", err))
-			return
-		}
-
-		slox.Info(ctx, "finished FinalizeVersionUploadAsync")
-
-		if err != nil {
-			slox.Error(ctx, "error completing version upload", slog.Any("err", err))
-		} else {
-			slox.Info(ctx, "completed version upload")
-		}
-	}(db.ReWrapCtx(ctx), mod, versionID, version)
+	if _, err := workflows.Client(ctx).ExecuteWorkflow(ctx, client.StartWorkflowOptions{
+		ID:        fmt.Sprintf("finalize-version-upload-%s-%s-%s", modID, uploadID, mod.ModReference),
+		TaskQueue: workflows.RepoTaskQueue,
+	}, workflows.Workflows.VersionUpload.FinalizeVersionUploadWorkflow, versionupload.FinalizeVersionUploadArgs{
+		ModID:          mod.ID,
+		UploadID:       uploadID,
+		Version:        version,
+		SkipVirusCheck: viper.GetBool("skip-virus-check"),
+	}); err != nil {
+		return false, fmt.Errorf("failed to start finalization workflow: %w", err)
+	}
 
 	return true, nil
 }

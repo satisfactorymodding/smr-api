@@ -169,7 +169,7 @@ func (vtu *VersionTargetUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (vtu *VersionTargetUpdate) check() error {
-	if _, ok := vtu.mutation.VersionID(); vtu.mutation.VersionCleared() && !ok {
+	if vtu.mutation.VersionCleared() && len(vtu.mutation.VersionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "VersionTarget.version"`)
 	}
 	return nil
@@ -421,7 +421,7 @@ func (vtuo *VersionTargetUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (vtuo *VersionTargetUpdateOne) check() error {
-	if _, ok := vtuo.mutation.VersionID(); vtuo.mutation.VersionCleared() && !ok {
+	if vtuo.mutation.VersionCleared() && len(vtuo.mutation.VersionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "VersionTarget.version"`)
 	}
 	return nil

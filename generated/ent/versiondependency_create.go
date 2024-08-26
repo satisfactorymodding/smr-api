@@ -179,10 +179,10 @@ func (vdc *VersionDependencyCreate) check() error {
 	if _, ok := vdc.mutation.Optional(); !ok {
 		return &ValidationError{Name: "optional", err: errors.New(`ent: missing required field "VersionDependency.optional"`)}
 	}
-	if _, ok := vdc.mutation.VersionID(); !ok {
+	if len(vdc.mutation.VersionIDs()) == 0 {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required edge "VersionDependency.version"`)}
 	}
-	if _, ok := vdc.mutation.ModID(); !ok {
+	if len(vdc.mutation.ModIDs()) == 0 {
 		return &ValidationError{Name: "mod", err: errors.New(`ent: missing required edge "VersionDependency.mod"`)}
 	}
 	return nil

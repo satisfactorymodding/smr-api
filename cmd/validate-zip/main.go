@@ -15,7 +15,11 @@ func main() {
 	f, _ := os.ReadFile(os.Args[1])
 
 	validation.InitializeValidator()
-	_, err := validation.ExtractModInfo(context.Background(), f, true, true, "N/A")
+	info, err := validation.ExtractModInfo(context.Background(), f, true, "N/A")
+	if err != nil {
+		panic(err)
+	}
+	_, err = validation.ExtractMetadata(context.Background(), f, info.GameVersion, info.ModReference)
 	if err != nil {
 		panic(err)
 	}

@@ -17,6 +17,8 @@ import (
 	"github.com/avast/retry-go/v3"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
 
 type Storage interface {
@@ -54,9 +56,9 @@ type Config struct {
 	Keypath  string `json:"keypath"`
 }
 
-var storage Storage
+type storageKey struct{}
 
-func InitializeStorage(ctx context.Context) {
+func InitializeStorage(ctx context.Context) context.Context {
 	baseConfig := Config{
 		Type:     viper.GetString("storage.type"),
 		Bucket:   viper.GetString("storage.bucket"),
@@ -68,7 +70,7 @@ func InitializeStorage(ctx context.Context) {
 		Keypath:  viper.GetString("storage.keypath"),
 	}
 
-	storage = configToStorage(ctx, baseConfig)
+	storage := configToStorage(ctx, baseConfig)
 
 	if storage == nil {
 		panic("Failed to initialize storage!")
@@ -90,6 +92,24 @@ func InitializeStorage(ctx context.Context) {
 	}
 
 	slox.Info(ctx, "storage initialized", slog.String("type", baseConfig.Type))
+
+	return context.WithValue(ctx, storageKey{}, storage)
+}
+
+func Client(ctx context.Context) Storage {
+	c := ctx.Value(storageKey{})
+	if c == nil {
+		return nil
+	}
+	return c.(Storage)
+}
+
+func TransferContext(source context.Context, target context.Context) context.Context {
+	c := source.Value(storageKey{})
+	if c == nil {
+		return target
+	}
+	return context.WithValue(target, storageKey{}, c)
 }
 
 func configToStorage(ctx context.Context, config Config) Storage {
@@ -100,87 +120,67 @@ func configToStorage(ctx context.Context, config Config) Storage {
 	panic("Unknown storage type: " + viper.GetString("storage.type"))
 }
 
-func StartUploadMultipartMod(ctx context.Context, modID string, name string, versionID string) (bool, string) {
-	if storage == nil {
-		return false, ""
-	}
-
+func StartUploadMultipartMod(ctx context.Context, modID string, name string, versionID string) (string, error) {
 	cleanName := cleanModName(name)
 
 	filename := cleanName + "-" + versionID
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
-	if err := StartMultipartUpload(key); err != nil {
+	if err := StartMultipartUpload(ctx, key); err != nil {
 		slox.Error(ctx, "failed to upload mod", slog.Any("err", err))
-		return false, ""
+		return "", fmt.Errorf("failed to upload mod: %w", err)
 	}
 
-	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename))
+	return fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename)), nil
 }
 
-func UploadMultipartMod(ctx context.Context, modID string, name string, versionID string, part int64, data io.ReadSeeker) (bool, string) {
-	if storage == nil {
-		return false, ""
-	}
-
+func UploadMultipartMod(ctx context.Context, modID string, name string, versionID string, part int64, data io.ReadSeeker) (string, error) {
 	cleanName := cleanModName(name)
 
 	filename := cleanName + "-" + versionID
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
-	if err := UploadPart(key, part, data); err != nil {
+	if err := UploadPart(ctx, key, part, data); err != nil {
 		slox.Error(ctx, "failed to upload mod", slog.Any("err", err))
-		return false, ""
+		return "", fmt.Errorf("failed to upload mod: %w", err)
 	}
 
-	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename))
+	return fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename)), nil
 }
 
-func CompleteUploadMultipartMod(ctx context.Context, modID string, name string, versionID string) (bool, string) {
-	if storage == nil {
-		return false, ""
-	}
-
+func CompleteUploadMultipartMod(ctx context.Context, modID string, name string, versionID string) (string, error) {
 	cleanName := cleanModName(name)
 
 	filename := cleanName + "-" + versionID
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
-	if err := CompleteMultipartUpload(key); err != nil {
+	if err := CompleteMultipartUpload(ctx, key); err != nil {
 		slox.Error(ctx, "failed to upload mod", slog.Any("err", err))
-		return false, ""
+		return "", fmt.Errorf("failed to upload mod: %w", err)
 	}
 
-	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename))
+	return fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename)), nil
 }
 
-func UploadModLogo(ctx context.Context, modID string, data io.ReadSeeker) (bool, string) {
-	if storage == nil {
-		return false, ""
-	}
-
+func UploadModLogo(ctx context.Context, modID string, data io.ReadSeeker) (string, error) {
 	key := fmt.Sprintf("/images/mods/%s/logo.webp", modID)
 
-	key, err := storage.Put(ctx, key, data)
+	key, err := Client(ctx).Put(ctx, key, data)
 	if err != nil {
 		slox.Error(ctx, "failed to upload mod logo", slog.Any("err", err))
-		return false, ""
+		return "", fmt.Errorf("failed to upload mod logo: %w", err)
 	}
 
-	return true, key
+	return key, nil
 }
 
-func UploadUserAvatar(ctx context.Context, userID string, data io.ReadSeeker) (bool, string) {
-	if storage == nil {
-		return false, ""
-	}
-
+func UploadUserAvatar(ctx context.Context, userID string, data io.ReadSeeker) (string, error) {
 	key := fmt.Sprintf("/images/users/%s/avatar.webp", userID)
 
 	err := retry.Do(
 		func() error {
 			var err error
-			key, err = storage.Put(ctx, key, data)
+			key, err = Client(ctx).Put(ctx, key, data)
 			if err != nil {
 				return fmt.Errorf("failed to upload user avatar: %w", err)
 			}
@@ -194,18 +194,14 @@ func UploadUserAvatar(ctx context.Context, userID string, data io.ReadSeeker) (b
 	)
 	if err != nil {
 		slox.Error(ctx, "failed to upload user avatar", slog.Any("err", err))
-		return false, ""
+		return "", fmt.Errorf("failed to upload user avatar: %w", err)
 	}
 
-	return true, key
+	return key, nil
 }
 
-func GenerateDownloadLink(key string) string {
-	if storage == nil {
-		return ""
-	}
-
-	url, err := storage.SignGet(key)
+func GenerateDownloadLink(ctx context.Context, key string) string {
+	url, err := Client(ctx).SignGet(key)
 	if err != nil {
 		return ""
 	}
@@ -213,57 +209,32 @@ func GenerateDownloadLink(key string) string {
 	return url
 }
 
-func StartMultipartUpload(key string) error {
-	if storage == nil {
-		return errors.New("storage not initialized")
-	}
-
-	if err := storage.StartMultipartUpload(key); err != nil {
+func StartMultipartUpload(ctx context.Context, key string) error {
+	if err := Client(ctx).StartMultipartUpload(key); err != nil {
 		return fmt.Errorf("failed to start multipart upload: %w", err)
 	}
 
 	return nil
 }
 
-func UploadPart(key string, part int64, data io.ReadSeeker) error {
-	if storage == nil {
-		return errors.New("storage not initialized")
-	}
-
-	if err := storage.UploadPart(key, part, data); err != nil {
+func UploadPart(ctx context.Context, key string, part int64, data io.ReadSeeker) error {
+	if err := Client(ctx).UploadPart(key, part, data); err != nil {
 		return fmt.Errorf("failed to upload part: %w", err)
 	}
 
 	return nil
 }
 
-func CompleteMultipartUpload(key string) error {
-	if storage == nil {
-		return errors.New("storage not initialized")
-	}
-
-	if err := storage.CompleteMultipartUpload(key); err != nil {
+func CompleteMultipartUpload(ctx context.Context, key string) error {
+	if err := Client(ctx).CompleteMultipartUpload(key); err != nil {
 		return fmt.Errorf("failed to complete multipart upload: %w", err)
 	}
 
 	return nil
 }
 
-func CopyObjectFromOldBucket(_ string) error {
-	// Ignored
-	return nil
-}
-
-func ScheduleCopyAllObjectsFromOldBucket(_ func(string)) {
-	// Ignored
-}
-
-func Get(key string) (io.ReadCloser, error) {
-	if storage == nil {
-		return nil, errors.New("storage not initialized")
-	}
-
-	get, err := storage.Get(key)
+func Get(ctx context.Context, key string) (io.ReadCloser, error) {
+	get, err := Client(ctx).Get(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get object: %w", err)
 	}
@@ -271,19 +242,18 @@ func Get(key string) (io.ReadCloser, error) {
 	return get, nil
 }
 
-func GetMod(modID string, name string, versionID string) (io.ReadCloser, error) {
+func GetMod(ctx context.Context, modID string, name string, versionID string) (io.ReadCloser, error) {
 	cleanName := cleanModName(name)
 
 	filename := cleanName + "-" + versionID
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
-	return Get(key)
+	return Get(ctx, key)
 }
 
-func RenameVersion(ctx context.Context, modID string, name string, versionID string, version string) (bool, string) {
-	if storage == nil {
-		return false, ""
-	}
+func RenameVersion(ctx context.Context, modID string, name string, versionID string, version string) (string, error) {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "RenameVersion")
+	defer span.End()
 
 	cleanName := cleanModName(name)
 
@@ -292,53 +262,49 @@ func RenameVersion(ctx context.Context, modID string, name string, versionID str
 
 	slox.Info(ctx, "renaming file", slog.String("from", from), slog.String("to", to))
 
-	if err := storage.Rename(from, to); err != nil {
+	if err := Client(ctx).Rename(from, to); err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		slox.Error(ctx, "failed to rename version", slog.Any("err", err))
-		return false, ""
+		return "", fmt.Errorf("failed to rename version: %w", err)
 	}
 
 	fromUnescaped := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
-	if err := storage.Delete(fromUnescaped); err != nil {
+	if err := Client(ctx).Delete(fromUnescaped); err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		slox.Error(ctx, "failed to delete version", slog.Any("err", err))
-		return false, ""
+		return "", fmt.Errorf("failed to delete version: %w", err)
 	}
 
-	return true, fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(cleanName+"-"+version))
+	return fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(cleanName+"-"+version)), nil
 }
 
-func DeleteMod(ctx context.Context, modID string, name string, versionID string) bool {
-	if storage == nil {
-		return false
-	}
-
+func DeleteMod(ctx context.Context, modID string, name string, versionID string) error {
 	cleanName := cleanModName(name)
 
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+versionID)
 
 	slox.Info(ctx, "deleting version", slog.String("key", key))
-	if err := storage.Delete(key); err != nil {
+	if err := Client(ctx).Delete(key); err != nil {
 		slox.Error(ctx, "failed to delete version", slog.Any("err", err))
-		return false
+		return fmt.Errorf("failed to delete version: %w", err)
 	}
 
-	return true
+	return nil
 }
 
-func DeleteModTarget(ctx context.Context, modID string, name string, versionID string, target string) bool {
-	if storage == nil {
-		return false
-	}
-
+func DeleteModTarget(ctx context.Context, modID string, name string, versionID string, target string) error {
 	cleanName := cleanModName(name)
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, cleanName+"-"+target+"-"+versionID)
 
 	slox.Info(ctx, "deleting mod target", slog.String("key", key))
-	if err := storage.Delete(key); err != nil {
+	if err := Client(ctx).Delete(key); err != nil {
 		slox.Error(ctx, "failed to delete version target", slog.Any("err", err))
-		return false
+		return fmt.Errorf("failed to delete version target: %w", err)
 	}
 
-	return true
+	return nil
 }
 
 func cleanModName(name string) string {
@@ -383,10 +349,15 @@ func EncodeName(name string) string {
 	return result
 }
 
-func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion, target string) (bool, string, string, int64) {
+func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion, target string) (string, string, int64, error) {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "SeparateModTarget")
+	defer span.End()
+
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
-		return false, "", "", 0
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		return "", "", 0, fmt.Errorf("failed to create zip reader: %w", err)
 	}
 
 	cleanName := cleanModName(name)
@@ -405,8 +376,10 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 
 		err = copyModFileToArchZip(file, zipWriter, trimmedName)
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			slox.Error(ctx, "failed to add file to archive", slog.Any("err", err), slog.String("target", target))
-			return false, "", "", 0
+			return "", "", 0, fmt.Errorf("failed to add file to archive: %w", err)
 		}
 	}
 
@@ -415,17 +388,19 @@ func SeparateModTarget(ctx context.Context, body []byte, modID, name, modVersion
 	filename := cleanName + "-" + target + "-" + modVersion
 	key := fmt.Sprintf("/mods/%s/%s.smod", modID, filename)
 
-	_, err = storage.Put(ctx, key, bytes.NewReader(buf.Bytes()))
+	_, err = Client(ctx).Put(ctx, key, bytes.NewReader(buf.Bytes()))
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		slox.Error(ctx, "failed to save archive", slog.Any("err", err), slog.String("target", target))
-		return false, "", "", 0
+		return "", "", 0, fmt.Errorf("failed to save archive: %w", err)
 	}
 
 	hash := sha256.New()
 	hash.Write(buf.Bytes())
 
 	encodedKey := fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename))
-	return true, encodedKey, hex.EncodeToString(hash.Sum(nil)), int64(buf.Len())
+	return encodedKey, hex.EncodeToString(hash.Sum(nil)), int64(buf.Len()), nil
 }
 
 func copyModFileToArchZip(file *zip.File, zipWriter *zip.Writer, newName string) error {
@@ -458,7 +433,7 @@ func copyModFileToArchZip(file *zip.File, zipWriter *zip.Writer, newName string)
 }
 
 func DeleteOldModAssets(ctx context.Context, modReference string, before time.Time) {
-	list, err := storage.List(fmt.Sprintf("assets/mods/%s", modReference))
+	list, err := Client(ctx).List(fmt.Sprintf("assets/mods/%s", modReference))
 	if err != nil {
 		slox.Error(ctx, "failed to list assets", slog.Any("err", err))
 		return
@@ -470,7 +445,7 @@ func DeleteOldModAssets(ctx context.Context, modReference string, before time.Ti
 		}
 
 		if object.LastModified == nil || object.LastModified.Before(before) {
-			if err := storage.Delete(*object.Key); err != nil {
+			if err := Client(ctx).Delete(*object.Key); err != nil {
 				slox.Error(ctx, "failed deleting old asset", slog.Any("err", err), slog.String("key", *object.Key))
 				return
 			}
@@ -479,28 +454,20 @@ func DeleteOldModAssets(ctx context.Context, modReference string, before time.Ti
 }
 
 func UploadModAsset(ctx context.Context, modReference string, path string, data []byte) {
-	if storage == nil {
-		return
-	}
-
 	slox.Info(ctx, "uploading asset", slog.String("mod_reference", modReference), slog.String("asset", path), slog.Int("size", len(data)))
 
 	key := fmt.Sprintf("/assets/mods/%s/%s", modReference, strings.TrimPrefix(path, "/"))
 
-	_, err := storage.Put(ctx, key, bytes.NewReader(data))
+	_, err := Client(ctx).Put(ctx, key, bytes.NewReader(data))
 	if err != nil {
 		slox.Error(ctx, "failed to upload mod asset", slog.Any("err", err), slog.String("path", path))
 	}
 }
 
 func ListModAssets(ctx context.Context, modReference string) ([]string, error) {
-	if storage == nil {
-		return nil, errors.New("no storage defined")
-	}
-
 	slox.Info(ctx, "listing assets", slog.String("mod_reference", modReference))
 
-	list, err := storage.List(fmt.Sprintf("assets/mods/%s", modReference))
+	list, err := Client(ctx).List(fmt.Sprintf("assets/mods/%s", modReference))
 	if err != nil {
 		return nil, errors.New("failed to list assets")
 	}

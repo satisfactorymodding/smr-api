@@ -403,7 +403,7 @@ func downloadModVersion(c echo.Context) error {
 		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
-	return c.Redirect(302, storage.GenerateDownloadLink(version.Key))
+	return c.Redirect(302, storage.GenerateDownloadLink(c.Request().Context(), version.Key))
 }
 
 // @Summary Download a Mod Version by TargetName
@@ -459,7 +459,7 @@ func downloadModVersionTarget(c echo.Context) error {
 		_ = version.Update().AddDownloads(1).Exec(c.Request().Context())
 	}
 
-	return c.Redirect(302, storage.GenerateDownloadLink(versionTarget.Key))
+	return c.Redirect(302, storage.GenerateDownloadLink(c.Request().Context(), versionTarget.Key))
 }
 
 // @Summary Retrieve all Mod Versions

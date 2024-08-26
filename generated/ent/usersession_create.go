@@ -188,7 +188,7 @@ func (usc *UserSessionCreate) check() error {
 			return &ValidationError{Name: "token", err: fmt.Errorf(`ent: validator failed for field "UserSession.token": %w`, err)}
 		}
 	}
-	if _, ok := usc.mutation.UserID(); !ok {
+	if len(usc.mutation.UserIDs()) == 0 {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "UserSession.user"`)}
 	}
 	return nil

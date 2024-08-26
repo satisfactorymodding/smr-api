@@ -7,25 +7,14 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: jetify-com/devbox-install-action@v0.11.0
         with:
-          go-version-file: go.mod
-
-      - name: Download dependencies
-        run: |
-          sudo apt update && sudo apt install -y build-essential libpng-dev protobuf-compiler
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-
-      - name: Go Generate
-        run: go generate -tags tools -x ./...
+          enable-cache: true
 
       - name: Build
-        run: go build -v -o api-linux-amd64 cmd/api/serve.go
+        run: devbox run -- go build -v -o api-linux-amd64 cmd/api/serve.go
         env:
           CGO_ENABLED: 1
 
@@ -33,72 +22,59 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
 
-      - name: Download dependencies
-        run: |
-          sudo apt update && sudo apt install -y build-essential libpng-dev protobuf-compiler
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-
-      - name: Go Generate
-        run: go generate -tags tools -x ./...
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.59.1
-          skip-pkg-cache: true
-          skip-build-cache: true
+          version: v1.60.1
           args: --timeout 5m
+
+  workflowcheck:
+    name: Workflow Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jetify-com/devbox-install-action@v0.11.0
+        with:
+          enable-cache: true
+
+      - name: Workflow Check
+        run: devbox run -- go run go.temporal.io/sdk/contrib/tools/workflowcheck@latest ./...
 
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: jetify-com/devbox-install-action@v0.11.0
         with:
-          go-version-file: go.mod
+          enable-cache: true
 
-      - name: Download dependencies
-        run: |
-          sudo apt update && sudo apt install -y build-essential libpng-dev protobuf-compiler
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-
-      - name: Go Generate
-        run: go generate -tags tools -x ./...
-
-      - name: Start stack
-        run: docker compose up -d
-
-      - name: Setup Minio
-        run: |
-          go install github.com/minio/mc@latest
-          mc alias set local http://localhost:9000 minio minio123
-          mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET
-          mc anonymous set public local/smr
+      - name: Setup
+        run: devbox run setup
 
       - name: Test
-        run: go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... ./...
+        run: devbox run test:coverage:junit
         env:
           CGO_ENABLED: 1
-          REPO_PASETO.PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          REPO_PASETO.PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          REPO_FEATURE_FLAGS.ALLOW_MULTI_TARGET_UPLOAD: "true"
+          REPO_PASETO__PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_PASETO__PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_FEATURE_FLAGS__ALLOW_MULTI_TARGET_UPLOAD: "true"
+          REPO_VIRUSTOTAL__KEY: ${{ secrets.VIRUSTOTAL_KEY }}
+          REPO_STORAGE__REGION: "us-east-1"
+          REPO_STORAGE__KEYPATH: "%s/%s/%s"
 
-      - name: Codecov
-        uses: codecov/codecov-action@v4
+      - uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -120,32 +96,14 @@ jobs:
             s3_secret: "S3_SECRET_STAGING"
             s3_base_url: "https://storage-staging.ficsit.app"
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: jetify-com/devbox-install-action@v0.11.0
         with:
-          go-version-file: go.mod
+          enable-cache: true
 
-      - name: Download dependencies
-        run: |
-          sudo apt update && sudo apt install -y build-essential libpng-dev protobuf-compiler
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-
-      - name: Go Generate
-        run: go generate -tags tools -x ./...
-
-      - name: Start stack
-        run: docker compose up -d
-
-      - name: Setup Minio
-        run: |
-          go install github.com/minio/mc@latest
-          mc alias set local http://localhost:9000 minio minio123
-          mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET
-          mc anonymous set public local/smr
+      - name: Setup
+        run: devbox run setup
 
       - name: Download and seed database
         run: |
@@ -154,17 +112,17 @@ jobs:
           PGPASSWORD: REPLACE_ME
 
       - name: Test
-        run: go test -v -run '^TestSetup$' ./...
+        run: devbox run -- go test -v -run '^TestSetup$' ./...
         env:
           CGO_ENABLED: 1
-          REPO_PASETO.PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          REPO_PASETO.PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
-          REPO_FEATURE_FLAGS.ALLOW_MULTI_TARGET_UPLOAD: "true"
-          REPO_STORAGE.READER.TYPE: "s3"
-          REPO_STORAGE.READER.REGION: "us-west-002"
-          REPO_STORAGE.READER.BUCKET: "${{ matrix.s3_bucket }}"
-          REPO_STORAGE.READER.KEY: "${{ secrets[matrix.s3_key] }}"
-          REPO_STORAGE.READER.SECRET: "${{ secrets[matrix.s3_secret] }}"
-          REPO_STORAGE.READER.ENDPOINT: "https://s3.us-west-002.backblazeb2.com"
-          REPO_STORAGE.READER.BASE_URL: "${{ matrix.s3_base_url }}"
-          REPO_STORAGE.READER.KEYPATH: "%s/file/%s/%s"
+          REPO_PASETO__PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_PASETO__PRIVATE_KEY: a5f7409588f6b72d443db0d432f37f1214a5ec88cb55a70e24b90194ed549465408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
+          REPO_FEATURE_FLAGS__ALLOW_MULTI_TARGET_UPLOAD: "true"
+          REPO_STORAGE__READER__TYPE: "s3"
+          REPO_STORAGE__READER__REGION: "us-west-002"
+          REPO_STORAGE__READER__BUCKET: "${{ matrix.s3_bucket }}"
+          REPO_STORAGE__READER__KEY: "${{ secrets[matrix.s3_key] }}"
+          REPO_STORAGE__READER__SECRET: "${{ secrets[matrix.s3_secret] }}"
+          REPO_STORAGE__READER__ENDPOINT: "https://s3.us-west-002.backblazeb2.com"
+          REPO_STORAGE__READER__BASE_URL: "${{ matrix.s3_base_url }}"
+          REPO_STORAGE__READER__KEYPATH: "%s/file/%s/%s"

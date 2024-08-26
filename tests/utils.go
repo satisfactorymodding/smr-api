@@ -24,6 +24,8 @@ import (
 )
 
 func setup() (context.Context, *graphql.Client, func()) {
+	viper.Set("statistics.enabled", false)
+
 	validation.StaticPath = "../static"
 
 	client := graphql.NewClient("http://localhost:5020/v2/query")

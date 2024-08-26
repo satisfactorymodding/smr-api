@@ -108,7 +108,7 @@ func (r *queryResolver) GetTags(ctx context.Context, filter *generated.TagFilter
 			}).TagQuery
 		}
 
-		if filter.Ids != nil && len(filter.Ids) > 0 {
+		if len(filter.Ids) > 0 {
 			query.Where(tag.IDIn(filter.Ids...))
 		}
 	}

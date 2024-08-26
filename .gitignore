@@ -58,9 +58,11 @@ modules.xml
 
 # End of https://www.gitignore.io/api/go,jetbrains
 
-config.json
 vendor/
 /paks/
 *.smod
 
 /.direnv
+
+/config*.json
+!config.sample.json

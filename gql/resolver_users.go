@@ -51,9 +51,9 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 			return nil, err
 		}
 
-		success, avatarKey := storage.UploadUserAvatar(ctx, u.ID, bytes.NewReader(avatarData))
-		if success {
-			update = update.SetAvatar(storage.GenerateDownloadLink(avatarKey))
+		avatarKey, err := storage.UploadUserAvatar(ctx, u.ID, bytes.NewReader(avatarData))
+		if err == nil {
+			update = update.SetAvatar(storage.GenerateDownloadLink(ctx, avatarKey))
 		}
 	}
 

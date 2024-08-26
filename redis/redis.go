@@ -75,11 +75,15 @@ func StoreMultipartCompletedPart(key string, etag string, part int) {
 	client.Expire(redisKey, time.Minute*60)
 }
 
-func GetAndClearMultipartCompletedParts(key string) map[string]string {
+func GetMultipartCompletedParts(key string) map[string]string {
 	encodedKey := base64.RawStdEncoding.EncodeToString([]byte(key))
 	all := client.HGetAll("s3:uploads:part:" + encodedKey)
-	client.Del("s3:uploads:part:" + encodedKey)
 	return all.Val()
+}
+
+func ClearMultipartCompletedParts(key string) {
+	encodedKey := base64.RawStdEncoding.EncodeToString([]byte(key))
+	client.Del("s3:uploads:part:" + encodedKey)
 }
 
 func StoreMultipartUploadID(key string, id string) {
@@ -99,19 +103,16 @@ type StoredVersionUploadState struct {
 	Err  string                           `json:"err"`
 }
 
-func StoreVersionUploadState(versionID string, data *generated.CreateVersionResponse, err error) error {
+func StoreVersionUploadState(versionID string, data *generated.CreateVersionResponse, err string) error {
 	state := StoredVersionUploadState{
 		Data: data,
-	}
-
-	if err != nil {
-		state.Err = err.Error()
+		Err:  err,
 	}
 
 	marshaled, e := json.Marshal(state)
 
 	if e != nil {
-		return fmt.Errorf("failed to marshal version upload state: %w", err)
+		return fmt.Errorf("failed to marshal version upload state: %s", err)
 	}
 
 	redisKey := "version:upload:state:" + versionID

@@ -114,10 +114,10 @@ func (mtu *ModTagUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mtu *ModTagUpdate) check() error {
-	if _, ok := mtu.mutation.ModID(); mtu.mutation.ModCleared() && !ok {
+	if mtu.mutation.ModCleared() && len(mtu.mutation.ModIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ModTag.mod"`)
 	}
-	if _, ok := mtu.mutation.TagID(); mtu.mutation.TagCleared() && !ok {
+	if mtu.mutation.TagCleared() && len(mtu.mutation.TagIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ModTag.tag"`)
 	}
 	return nil
@@ -318,10 +318,10 @@ func (mtuo *ModTagUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mtuo *ModTagUpdateOne) check() error {
-	if _, ok := mtuo.mutation.ModID(); mtuo.mutation.ModCleared() && !ok {
+	if mtuo.mutation.ModCleared() && len(mtuo.mutation.ModIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ModTag.mod"`)
 	}
-	if _, ok := mtuo.mutation.TagID(); mtuo.mutation.TagCleared() && !ok {
+	if mtuo.mutation.TagCleared() && len(mtuo.mutation.TagIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ModTag.tag"`)
 	}
 	return nil

@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/viper"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/vektah/gqlparser/v2/ast"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho" //nolint
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -47,17 +47,15 @@ import (
 	"github.com/satisfactorymodding/smr-api/oauth"
 	"github.com/satisfactorymodding/smr-api/profiling"
 	"github.com/satisfactorymodding/smr-api/redis"
-	"github.com/satisfactorymodding/smr-api/redis/jobs"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
+	"github.com/satisfactorymodding/smr-api/workflows"
 
 	// Load REST docs
 	_ "github.com/satisfactorymodding/smr-api/generated/docs"
 	// Load ent
 	_ "github.com/satisfactorymodding/smr-api/generated/ent/runtime"
-	// Load redis consumers
-	_ "github.com/satisfactorymodding/smr-api/redis/jobs/consumers"
 )
 
 type CustomValidator struct {
@@ -81,9 +79,10 @@ func Initialize(baseCtx context.Context) (context.Context, func()) {
 		}
 	}
 
-	var cleanup func()
+	toCleanup := make([]func(), 0)
+
 	if os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != "" {
-		cleanup = installExportPipeline(ctx)
+		toCleanup = append(toCleanup, installExportPipeline(ctx))
 	}
 
 	profiling.SetupProfiling()
@@ -95,16 +94,22 @@ func Initialize(baseCtx context.Context) (context.Context, func()) {
 		panic(err)
 	}
 
-	storage.InitializeStorage(ctx)
+	ctx = storage.InitializeStorage(ctx)
 	oauth.InitializeOAuth()
 	util.InitializeSecurity()
 	validation.InitializeValidator()
 	auth.InitializeAuth()
-	jobs.InitializeJobs(ctx)
 	validation.InitializeVirusTotal()
 	util.PrintFeatureFlags(ctx)
 
-	return ctx, cleanup
+	ctx, cleanupWorkflows := workflows.InitializeWorkflows(ctx)
+	toCleanup = append(toCleanup, cleanupWorkflows)
+
+	return ctx, func() {
+		for _, f := range toCleanup {
+			f()
+		}
+	}
 }
 
 func Migrate(ctx context.Context) {
@@ -124,8 +129,6 @@ func Setup(ctx context.Context) *echo.Echo {
 			debugServer.Logger.Fatal(debugServer.Start(address))
 		}()
 	}
-
-	db.RunAsyncStatisticLoop(ctx)
 
 	dataValidator := validator.New()
 
@@ -227,7 +230,10 @@ func Setup(ctx context.Context) *echo.Echo {
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			req := c.Request()
-			c.SetRequest(req.WithContext(db.TransferContext(ctx, req.Context())))
+			newCtx := db.TransferContext(ctx, req.Context())
+			newCtx = workflows.TransferContext(ctx, newCtx)
+			newCtx = storage.TransferContext(ctx, newCtx)
+			c.SetRequest(req.WithContext(newCtx))
 			return next(c)
 		}
 	})

@@ -3,6 +3,8 @@ package config
 import (
 	"context"
 	"log/slog"
+	"os"
+	"strings"
 
 	"github.com/Vilsol/slox"
 	"github.com/spf13/viper"
@@ -17,6 +19,10 @@ func SetConfigDir(newConfigDir string) {
 }
 
 func InitializeConfig(baseCtx context.Context) context.Context {
+	if os.Getenv("CI") == "true" {
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "__"))
+	}
+
 	viper.SetConfigName("config")
 	viper.AddConfigPath(configDir)
 	viper.AutomaticEnv()
@@ -95,4 +101,8 @@ func initializeDefaults() {
 	viper.SetDefault("feature_flags.allow_multi_target_upload", false)
 
 	viper.SetDefault("extractor_host", "localhost:50051")
+
+	viper.SetDefault("temporal.host", "localhost:7233")
+
+	viper.SetDefault("statistics.enabled", true)
 }

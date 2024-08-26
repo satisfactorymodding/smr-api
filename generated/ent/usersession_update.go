@@ -161,7 +161,7 @@ func (usu *UserSessionUpdate) check() error {
 			return &ValidationError{Name: "token", err: fmt.Errorf(`ent: validator failed for field "UserSession.token": %w`, err)}
 		}
 	}
-	if _, ok := usu.mutation.UserID(); usu.mutation.UserCleared() && !ok {
+	if usu.mutation.UserCleared() && len(usu.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserSession.user"`)
 	}
 	return nil
@@ -398,7 +398,7 @@ func (usuo *UserSessionUpdateOne) check() error {
 			return &ValidationError{Name: "token", err: fmt.Errorf(`ent: validator failed for field "UserSession.token": %w`, err)}
 		}
 	}
-	if _, ok := usuo.mutation.UserID(); usuo.mutation.UserCleared() && !ok {
+	if usuo.mutation.UserCleared() && len(usuo.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserSession.user"`)
 	}
 	return nil

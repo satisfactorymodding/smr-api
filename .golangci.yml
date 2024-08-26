@@ -8,6 +8,8 @@ linters-settings:
       - .WithMessagef(
       - .WithStack(
       - github.com/labstack/echo/v4.Context
+      - (go.temporal.io/sdk/internal.Future).Get(
+      - .NewNonRetryableApplicationError(
 
     ignorePackageGlobs:
       - github.com/satisfactorymodding/smr-api/*
@@ -42,10 +44,6 @@ linters-settings:
     checks:
       - end
       - record-error
-      - set-status
-    extra-start-span-signatures:
-      - github.com/satisfactorymodding/smr-api/gql.WrapQueryTrace:opentelemetry
-      - github.com/satisfactorymodding/smr-api/gql.WrapMutationTrace:opentelemetry
 
 
 issues:

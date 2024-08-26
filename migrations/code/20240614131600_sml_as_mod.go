@@ -16,7 +16,6 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/Vilsol/slox"
 	"github.com/lab259/go-migration"
-	"github.com/pkg/errors"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
@@ -29,13 +28,10 @@ import (
 
 func init() {
 	migration.NewCodeMigration(
-		func(_ interface{}) error {
-			ctx, err := db.WithDB(context.Background())
-			if err != nil {
-				return err
-			}
+		func(ctxInt interface{}) error {
+			ctx := ctxInt.(context.Context)
 
-			err = uploadAllSMLVersions(ctx)
+			err := uploadAllSMLVersions(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to upload all SML versions: %w", err)
 			}
@@ -156,28 +152,28 @@ func uploadAllSMLVersions(ctx context.Context) error {
 }
 
 func uploadSMLVersion(ctx context.Context, version *ent.Version, archive []byte, extractInfo bool) error {
-	ok, _ := storage.StartUploadMultipartMod(ctx, version.ModID, "SML", version.ID)
-	if !ok {
-		return errors.New("failed to start upload")
+	_, err := storage.StartUploadMultipartMod(ctx, version.ModID, "SML", version.ID)
+	if err != nil {
+		return fmt.Errorf("failed to start upload: %w", err)
 	}
 
-	ok, _ = storage.UploadMultipartMod(ctx, version.ModID, "SML", version.ID, 1, bytes.NewReader(archive))
-	if !ok {
-		return errors.New("failed to upload")
+	_, err = storage.UploadMultipartMod(ctx, version.ModID, "SML", version.ID, 1, bytes.NewReader(archive))
+	if err != nil {
+		return fmt.Errorf("failed to upload: %w", err)
 	}
 
-	ok, _ = storage.CompleteUploadMultipartMod(ctx, version.ModID, "SML", version.ID)
-	if !ok {
-		return errors.New("failed to complete upload")
+	_, err = storage.CompleteUploadMultipartMod(ctx, version.ModID, "SML", version.ID)
+	if err != nil {
+		return fmt.Errorf("failed to complete upload: %w", err)
 	}
 
 	for _, target := range version.Edges.Targets {
-		success, key, hash, size := storage.SeparateModTarget(ctx, archive, version.ModID, "SML", version.Version, target.TargetName)
-		if !success {
-			return errors.New("failed to separate target")
+		key, hash, size, err := storage.SeparateModTarget(ctx, archive, version.ModID, "SML", version.Version, target.TargetName)
+		if err != nil {
+			return fmt.Errorf("failed to separate target: %w", err)
 		}
 
-		err := db.From(ctx).VersionTarget.UpdateOneID(target.ID).
+		err = db.From(ctx).VersionTarget.UpdateOneID(target.ID).
 			SetKey(key).
 			SetHash(hash).
 			SetSize(size).
@@ -187,12 +183,12 @@ func uploadSMLVersion(ctx context.Context, version *ent.Version, archive []byte,
 		}
 	}
 
-	ok, key := storage.RenameVersion(ctx, version.ModID, "SML", version.ID, version.Version)
-	if !ok {
-		return errors.New("failed to rename version")
+	key, err := storage.RenameVersion(ctx, version.ModID, "SML", version.ID, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to rename version: %w", err)
 	}
 
-	err := db.From(ctx).Version.UpdateOneID(version.ID).
+	err = db.From(ctx).Version.UpdateOneID(version.ID).
 		SetKey(key).
 		Exec(ctx)
 	if err != nil {
@@ -203,7 +199,7 @@ func uploadSMLVersion(ctx context.Context, version *ent.Version, archive []byte,
 		return nil
 	}
 
-	modInfo, err := validation.ExtractModInfo(ctx, archive, false, false, "SML")
+	modInfo, err := validation.ExtractModInfo(ctx, archive, false, "SML")
 	if err != nil {
 		return fmt.Errorf("failed to extract mod info: %w", err)
 	}

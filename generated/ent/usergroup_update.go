@@ -154,7 +154,7 @@ func (ugu *UserGroupUpdate) check() error {
 			return &ValidationError{Name: "group_id", err: fmt.Errorf(`ent: validator failed for field "UserGroup.group_id": %w`, err)}
 		}
 	}
-	if _, ok := ugu.mutation.UserID(); ugu.mutation.UserCleared() && !ok {
+	if ugu.mutation.UserCleared() && len(ugu.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserGroup.user"`)
 	}
 	return nil
@@ -378,7 +378,7 @@ func (uguo *UserGroupUpdateOne) check() error {
 			return &ValidationError{Name: "group_id", err: fmt.Errorf(`ent: validator failed for field "UserGroup.group_id": %w`, err)}
 		}
 	}
-	if _, ok := uguo.mutation.UserID(); uguo.mutation.UserCleared() && !ok {
+	if uguo.mutation.UserCleared() && len(uguo.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserGroup.user"`)
 	}
 	return nil

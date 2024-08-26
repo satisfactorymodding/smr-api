@@ -94,10 +94,10 @@ func (umc *UserModCreate) check() error {
 	if _, ok := umc.mutation.Role(); !ok {
 		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "UserMod.role"`)}
 	}
-	if _, ok := umc.mutation.UserID(); !ok {
+	if len(umc.mutation.UserIDs()) == 0 {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "UserMod.user"`)}
 	}
-	if _, ok := umc.mutation.ModID(); !ok {
+	if len(umc.mutation.ModIDs()) == 0 {
 		return &ValidationError{Name: "mod", err: errors.New(`ent: missing required edge "UserMod.mod"`)}
 	}
 	return nil

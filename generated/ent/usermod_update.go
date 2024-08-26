@@ -128,10 +128,10 @@ func (umu *UserModUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (umu *UserModUpdate) check() error {
-	if _, ok := umu.mutation.UserID(); umu.mutation.UserCleared() && !ok {
+	if umu.mutation.UserCleared() && len(umu.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserMod.user"`)
 	}
-	if _, ok := umu.mutation.ModID(); umu.mutation.ModCleared() && !ok {
+	if umu.mutation.ModCleared() && len(umu.mutation.ModIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserMod.mod"`)
 	}
 	return nil
@@ -349,10 +349,10 @@ func (umuo *UserModUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (umuo *UserModUpdateOne) check() error {
-	if _, ok := umuo.mutation.UserID(); umuo.mutation.UserCleared() && !ok {
+	if umuo.mutation.UserCleared() && len(umuo.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserMod.user"`)
 	}
-	if _, ok := umuo.mutation.ModID(); umuo.mutation.ModCleared() && !ok {
+	if umuo.mutation.ModCleared() && len(umuo.mutation.ModIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserMod.mod"`)
 	}
 	return nil

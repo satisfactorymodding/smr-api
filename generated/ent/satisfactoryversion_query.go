@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -61,7 +62,7 @@ func (svq *SatisfactoryVersionQuery) Order(o ...satisfactoryversion.OrderOption)
 // First returns the first SatisfactoryVersion entity from the query.
 // Returns a *NotFoundError when no SatisfactoryVersion was found.
 func (svq *SatisfactoryVersionQuery) First(ctx context.Context) (*SatisfactoryVersion, error) {
-	nodes, err := svq.Limit(1).All(setContextOp(ctx, svq.ctx, "First"))
+	nodes, err := svq.Limit(1).All(setContextOp(ctx, svq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +85,7 @@ func (svq *SatisfactoryVersionQuery) FirstX(ctx context.Context) *SatisfactoryVe
 // Returns a *NotFoundError when no SatisfactoryVersion ID was found.
 func (svq *SatisfactoryVersionQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = svq.Limit(1).IDs(setContextOp(ctx, svq.ctx, "FirstID")); err != nil {
+	if ids, err = svq.Limit(1).IDs(setContextOp(ctx, svq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -107,7 +108,7 @@ func (svq *SatisfactoryVersionQuery) FirstIDX(ctx context.Context) string {
 // Returns a *NotSingularError when more than one SatisfactoryVersion entity is found.
 // Returns a *NotFoundError when no SatisfactoryVersion entities are found.
 func (svq *SatisfactoryVersionQuery) Only(ctx context.Context) (*SatisfactoryVersion, error) {
-	nodes, err := svq.Limit(2).All(setContextOp(ctx, svq.ctx, "Only"))
+	nodes, err := svq.Limit(2).All(setContextOp(ctx, svq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +136,7 @@ func (svq *SatisfactoryVersionQuery) OnlyX(ctx context.Context) *SatisfactoryVer
 // Returns a *NotFoundError when no entities are found.
 func (svq *SatisfactoryVersionQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = svq.Limit(2).IDs(setContextOp(ctx, svq.ctx, "OnlyID")); err != nil {
+	if ids, err = svq.Limit(2).IDs(setContextOp(ctx, svq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -160,7 +161,7 @@ func (svq *SatisfactoryVersionQuery) OnlyIDX(ctx context.Context) string {
 
 // All executes the query and returns a list of SatisfactoryVersions.
 func (svq *SatisfactoryVersionQuery) All(ctx context.Context) ([]*SatisfactoryVersion, error) {
-	ctx = setContextOp(ctx, svq.ctx, "All")
+	ctx = setContextOp(ctx, svq.ctx, ent.OpQueryAll)
 	if err := svq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -182,7 +183,7 @@ func (svq *SatisfactoryVersionQuery) IDs(ctx context.Context) (ids []string, err
 	if svq.ctx.Unique == nil && svq.path != nil {
 		svq.Unique(true)
 	}
-	ctx = setContextOp(ctx, svq.ctx, "IDs")
+	ctx = setContextOp(ctx, svq.ctx, ent.OpQueryIDs)
 	if err = svq.Select(satisfactoryversion.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -200,7 +201,7 @@ func (svq *SatisfactoryVersionQuery) IDsX(ctx context.Context) []string {
 
 // Count returns the count of the given query.
 func (svq *SatisfactoryVersionQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, svq.ctx, "Count")
+	ctx = setContextOp(ctx, svq.ctx, ent.OpQueryCount)
 	if err := svq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -218,7 +219,7 @@ func (svq *SatisfactoryVersionQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (svq *SatisfactoryVersionQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, svq.ctx, "Exist")
+	ctx = setContextOp(ctx, svq.ctx, ent.OpQueryExist)
 	switch _, err := svq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -465,7 +466,7 @@ func (svgb *SatisfactoryVersionGroupBy) Aggregate(fns ...AggregateFunc) *Satisfa
 
 // Scan applies the selector query and scans the result into the given value.
 func (svgb *SatisfactoryVersionGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, svgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, svgb.build.ctx, ent.OpQueryGroupBy)
 	if err := svgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -513,7 +514,7 @@ func (svs *SatisfactoryVersionSelect) Aggregate(fns ...AggregateFunc) *Satisfact
 
 // Scan applies the selector query and scans the result into the given value.
 func (svs *SatisfactoryVersionSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, svs.ctx, "Select")
+	ctx = setContextOp(ctx, svs.ctx, ent.OpQuerySelect)
 	if err := svs.prepareQuery(ctx); err != nil {
 		return err
 	}

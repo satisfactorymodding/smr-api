@@ -72,7 +72,7 @@ func ConvertModFilter(query *ent.ModQuery, filter *models.ModFilter, count bool,
 			query = query.Where(mod.Hidden(false))
 		}
 
-		if filter.TagIDs != nil && len(filter.TagIDs) > 0 {
+		if len(filter.TagIDs) > 0 {
 			query = query.Where(mod.HasModTagsWith(modtag.TagIDIn(filter.TagIDs...)))
 		}
 	}
