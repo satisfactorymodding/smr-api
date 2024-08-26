@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image"
-
 	"log/slog"
 
 	"github.com/Vilsol/slox"
