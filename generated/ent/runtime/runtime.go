@@ -115,35 +115,35 @@ func init() {
 	// mod.ShortDescriptionValidator is a validator for the "short_description" field. It is called by the builders before save.
 	mod.ShortDescriptionValidator = modDescShortDescription.Validators[0].(func(string) error)
 	// modDescApproved is the schema descriptor for approved field.
-	modDescApproved := modFields[6].Descriptor()
+	modDescApproved := modFields[7].Descriptor()
 	// mod.DefaultApproved holds the default value on creation for the approved field.
 	mod.DefaultApproved = modDescApproved.Default.(bool)
 	// modDescViews is the schema descriptor for views field.
-	modDescViews := modFields[7].Descriptor()
+	modDescViews := modFields[8].Descriptor()
 	// mod.DefaultViews holds the default value on creation for the views field.
 	mod.DefaultViews = modDescViews.Default.(uint)
 	// modDescHotness is the schema descriptor for hotness field.
-	modDescHotness := modFields[8].Descriptor()
+	modDescHotness := modFields[9].Descriptor()
 	// mod.DefaultHotness holds the default value on creation for the hotness field.
 	mod.DefaultHotness = modDescHotness.Default.(uint)
 	// modDescPopularity is the schema descriptor for popularity field.
-	modDescPopularity := modFields[9].Descriptor()
+	modDescPopularity := modFields[10].Descriptor()
 	// mod.DefaultPopularity holds the default value on creation for the popularity field.
 	mod.DefaultPopularity = modDescPopularity.Default.(uint)
 	// modDescDownloads is the schema descriptor for downloads field.
-	modDescDownloads := modFields[10].Descriptor()
+	modDescDownloads := modFields[11].Descriptor()
 	// mod.DefaultDownloads holds the default value on creation for the downloads field.
 	mod.DefaultDownloads = modDescDownloads.Default.(uint)
 	// modDescDenied is the schema descriptor for denied field.
-	modDescDenied := modFields[11].Descriptor()
+	modDescDenied := modFields[12].Descriptor()
 	// mod.DefaultDenied holds the default value on creation for the denied field.
 	mod.DefaultDenied = modDescDenied.Default.(bool)
 	// modDescModReference is the schema descriptor for mod_reference field.
-	modDescModReference := modFields[13].Descriptor()
+	modDescModReference := modFields[14].Descriptor()
 	// mod.ModReferenceValidator is a validator for the "mod_reference" field. It is called by the builders before save.
 	mod.ModReferenceValidator = modDescModReference.Validators[0].(func(string) error)
 	// modDescHidden is the schema descriptor for hidden field.
-	modDescHidden := modFields[14].Descriptor()
+	modDescHidden := modFields[15].Descriptor()
 	// mod.DefaultHidden holds the default value on creation for the hidden field.
 	mod.DefaultHidden = modDescHidden.Default.(bool)
 	// modDescID is the schema descriptor for id field.
@@ -228,23 +228,23 @@ func init() {
 	// user.UsernameValidator is a validator for the "username" field. It is called by the builders before save.
 	user.UsernameValidator = userDescUsername.Validators[0].(func(string) error)
 	// userDescBanned is the schema descriptor for banned field.
-	userDescBanned := userFields[4].Descriptor()
+	userDescBanned := userFields[5].Descriptor()
 	// user.DefaultBanned holds the default value on creation for the banned field.
 	user.DefaultBanned = userDescBanned.Default.(bool)
 	// userDescRank is the schema descriptor for rank field.
-	userDescRank := userFields[5].Descriptor()
+	userDescRank := userFields[6].Descriptor()
 	// user.DefaultRank holds the default value on creation for the rank field.
 	user.DefaultRank = userDescRank.Default.(int)
 	// userDescGithubID is the schema descriptor for github_id field.
-	userDescGithubID := userFields[6].Descriptor()
+	userDescGithubID := userFields[7].Descriptor()
 	// user.GithubIDValidator is a validator for the "github_id" field. It is called by the builders before save.
 	user.GithubIDValidator = userDescGithubID.Validators[0].(func(string) error)
 	// userDescGoogleID is the schema descriptor for google_id field.
-	userDescGoogleID := userFields[7].Descriptor()
+	userDescGoogleID := userFields[8].Descriptor()
 	// user.GoogleIDValidator is a validator for the "google_id" field. It is called by the builders before save.
 	user.GoogleIDValidator = userDescGoogleID.Validators[0].(func(string) error)
 	// userDescFacebookID is the schema descriptor for facebook_id field.
-	userDescFacebookID := userFields[8].Descriptor()
+	userDescFacebookID := userFields[9].Descriptor()
 	// user.FacebookIDValidator is a validator for the "facebook_id" field. It is called by the builders before save.
 	user.FacebookIDValidator = userDescFacebookID.Validators[0].(func(string) error)
 	// userDescID is the schema descriptor for id field.

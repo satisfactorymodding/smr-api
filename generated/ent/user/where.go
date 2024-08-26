@@ -95,6 +95,11 @@ func Avatar(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAvatar, v))
 }
 
+// AvatarThumbhash applies equality check predicate on the "avatar_thumbhash" field. It's identical to AvatarThumbhashEQ.
+func AvatarThumbhash(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAvatarThumbhash, v))
+}
+
 // JoinedFrom applies equality check predicate on the "joined_from" field. It's identical to JoinedFromEQ.
 func JoinedFrom(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldJoinedFrom, v))
@@ -458,6 +463,81 @@ func AvatarEqualFold(v string) predicate.User {
 // AvatarContainsFold applies the ContainsFold predicate on the "avatar" field.
 func AvatarContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldAvatar, v))
+}
+
+// AvatarThumbhashEQ applies the EQ predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashNEQ applies the NEQ predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashIn applies the In predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldAvatarThumbhash, vs...))
+}
+
+// AvatarThumbhashNotIn applies the NotIn predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldAvatarThumbhash, vs...))
+}
+
+// AvatarThumbhashGT applies the GT predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashGTE applies the GTE predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashLT applies the LT predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashLTE applies the LTE predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashContains applies the Contains predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashHasPrefix applies the HasPrefix predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashHasSuffix applies the HasSuffix predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashIsNil applies the IsNil predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldAvatarThumbhash))
+}
+
+// AvatarThumbhashNotNil applies the NotNil predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldAvatarThumbhash))
+}
+
+// AvatarThumbhashEqualFold applies the EqualFold predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldAvatarThumbhash, v))
+}
+
+// AvatarThumbhashContainsFold applies the ContainsFold predicate on the "avatar_thumbhash" field.
+func AvatarThumbhashContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldAvatarThumbhash, v))
 }
 
 // JoinedFromEQ applies the EQ predicate on the "joined_from" field.

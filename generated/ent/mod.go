@@ -33,6 +33,8 @@ type Mod struct {
 	FullDescription string `json:"full_description,omitempty"`
 	// Logo holds the value of the "logo" field.
 	Logo string `json:"logo,omitempty"`
+	// LogoThumbhash holds the value of the "logo_thumbhash" field.
+	LogoThumbhash string `json:"logo_thumbhash,omitempty"`
 	// SourceURL holds the value of the "source_url" field.
 	SourceURL string `json:"source_url,omitempty"`
 	// CreatorID holds the value of the "creator_id" field.
@@ -158,7 +160,7 @@ func (*Mod) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case mod.FieldViews, mod.FieldHotness, mod.FieldPopularity, mod.FieldDownloads:
 			values[i] = new(sql.NullInt64)
-		case mod.FieldID, mod.FieldName, mod.FieldShortDescription, mod.FieldFullDescription, mod.FieldLogo, mod.FieldSourceURL, mod.FieldCreatorID, mod.FieldModReference:
+		case mod.FieldID, mod.FieldName, mod.FieldShortDescription, mod.FieldFullDescription, mod.FieldLogo, mod.FieldLogoThumbhash, mod.FieldSourceURL, mod.FieldCreatorID, mod.FieldModReference:
 			values[i] = new(sql.NullString)
 		case mod.FieldCreatedAt, mod.FieldUpdatedAt, mod.FieldDeletedAt, mod.FieldLastVersionDate:
 			values[i] = new(sql.NullTime)
@@ -224,6 +226,12 @@ func (m *Mod) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field logo", values[i])
 			} else if value.Valid {
 				m.Logo = value.String
+			}
+		case mod.FieldLogoThumbhash:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field logo_thumbhash", values[i])
+			} else if value.Valid {
+				m.LogoThumbhash = value.String
 			}
 		case mod.FieldSourceURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -390,6 +398,9 @@ func (m *Mod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("logo=")
 	builder.WriteString(m.Logo)
+	builder.WriteString(", ")
+	builder.WriteString("logo_thumbhash=")
+	builder.WriteString(m.LogoThumbhash)
 	builder.WriteString(", ")
 	builder.WriteString("source_url=")
 	builder.WriteString(m.SourceURL)

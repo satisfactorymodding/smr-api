@@ -1942,6 +1942,7 @@ type ModMutation struct {
 	short_description *string
 	full_description  *string
 	logo              *string
+	logo_thumbhash    *string
 	source_url        *string
 	creator_id        *string
 	approved          *bool
@@ -2343,6 +2344,55 @@ func (m *ModMutation) OldLogo(ctx context.Context) (v string, err error) {
 // ResetLogo resets all changes to the "logo" field.
 func (m *ModMutation) ResetLogo() {
 	m.logo = nil
+}
+
+// SetLogoThumbhash sets the "logo_thumbhash" field.
+func (m *ModMutation) SetLogoThumbhash(s string) {
+	m.logo_thumbhash = &s
+}
+
+// LogoThumbhash returns the value of the "logo_thumbhash" field in the mutation.
+func (m *ModMutation) LogoThumbhash() (r string, exists bool) {
+	v := m.logo_thumbhash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLogoThumbhash returns the old "logo_thumbhash" field's value of the Mod entity.
+// If the Mod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModMutation) OldLogoThumbhash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLogoThumbhash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLogoThumbhash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLogoThumbhash: %w", err)
+	}
+	return oldValue.LogoThumbhash, nil
+}
+
+// ClearLogoThumbhash clears the value of the "logo_thumbhash" field.
+func (m *ModMutation) ClearLogoThumbhash() {
+	m.logo_thumbhash = nil
+	m.clearedFields[mod.FieldLogoThumbhash] = struct{}{}
+}
+
+// LogoThumbhashCleared returns if the "logo_thumbhash" field was cleared in this mutation.
+func (m *ModMutation) LogoThumbhashCleared() bool {
+	_, ok := m.clearedFields[mod.FieldLogoThumbhash]
+	return ok
+}
+
+// ResetLogoThumbhash resets all changes to the "logo_thumbhash" field.
+func (m *ModMutation) ResetLogoThumbhash() {
+	m.logo_thumbhash = nil
+	delete(m.clearedFields, mod.FieldLogoThumbhash)
 }
 
 // SetSourceURL sets the "source_url" field.
@@ -3146,7 +3196,7 @@ func (m *ModMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ModMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 20)
 	if m.created_at != nil {
 		fields = append(fields, mod.FieldCreatedAt)
 	}
@@ -3167,6 +3217,9 @@ func (m *ModMutation) Fields() []string {
 	}
 	if m.logo != nil {
 		fields = append(fields, mod.FieldLogo)
+	}
+	if m.logo_thumbhash != nil {
+		fields = append(fields, mod.FieldLogoThumbhash)
 	}
 	if m.source_url != nil {
 		fields = append(fields, mod.FieldSourceURL)
@@ -3226,6 +3279,8 @@ func (m *ModMutation) Field(name string) (ent.Value, bool) {
 		return m.FullDescription()
 	case mod.FieldLogo:
 		return m.Logo()
+	case mod.FieldLogoThumbhash:
+		return m.LogoThumbhash()
 	case mod.FieldSourceURL:
 		return m.SourceURL()
 	case mod.FieldCreatorID:
@@ -3273,6 +3328,8 @@ func (m *ModMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldFullDescription(ctx)
 	case mod.FieldLogo:
 		return m.OldLogo(ctx)
+	case mod.FieldLogoThumbhash:
+		return m.OldLogoThumbhash(ctx)
 	case mod.FieldSourceURL:
 		return m.OldSourceURL(ctx)
 	case mod.FieldCreatorID:
@@ -3354,6 +3411,13 @@ func (m *ModMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetLogo(v)
+		return nil
+	case mod.FieldLogoThumbhash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLogoThumbhash(v)
 		return nil
 	case mod.FieldSourceURL:
 		v, ok := value.(string)
@@ -3523,6 +3587,9 @@ func (m *ModMutation) ClearedFields() []string {
 	if m.FieldCleared(mod.FieldDeletedAt) {
 		fields = append(fields, mod.FieldDeletedAt)
 	}
+	if m.FieldCleared(mod.FieldLogoThumbhash) {
+		fields = append(fields, mod.FieldLogoThumbhash)
+	}
 	if m.FieldCleared(mod.FieldSourceURL) {
 		fields = append(fields, mod.FieldSourceURL)
 	}
@@ -3548,6 +3615,9 @@ func (m *ModMutation) ClearField(name string) error {
 	switch name {
 	case mod.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case mod.FieldLogoThumbhash:
+		m.ClearLogoThumbhash()
 		return nil
 	case mod.FieldSourceURL:
 		m.ClearSourceURL()
@@ -3586,6 +3656,9 @@ func (m *ModMutation) ResetField(name string) error {
 		return nil
 	case mod.FieldLogo:
 		m.ResetLogo()
+		return nil
+	case mod.FieldLogoThumbhash:
+		m.ResetLogoThumbhash()
 		return nil
 	case mod.FieldSourceURL:
 		m.ResetSourceURL()
@@ -5358,38 +5431,39 @@ func (m *TagMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *string
-	created_at      *time.Time
-	updated_at      *time.Time
-	deleted_at      *time.Time
-	email           *string
-	username        *string
-	avatar          *string
-	joined_from     *string
-	banned          *bool
-	rank            *int
-	addrank         *int
-	github_id       *string
-	google_id       *string
-	facebook_id     *string
-	clearedFields   map[string]struct{}
-	guides          map[string]struct{}
-	removedguides   map[string]struct{}
-	clearedguides   bool
-	sessions        map[string]struct{}
-	removedsessions map[string]struct{}
-	clearedsessions bool
-	mods            map[string]struct{}
-	removedmods     map[string]struct{}
-	clearedmods     bool
-	groups          map[string]struct{}
-	removedgroups   map[string]struct{}
-	clearedgroups   bool
-	done            bool
-	oldValue        func(context.Context) (*User, error)
-	predicates      []predicate.User
+	op               Op
+	typ              string
+	id               *string
+	created_at       *time.Time
+	updated_at       *time.Time
+	deleted_at       *time.Time
+	email            *string
+	username         *string
+	avatar           *string
+	avatar_thumbhash *string
+	joined_from      *string
+	banned           *bool
+	rank             *int
+	addrank          *int
+	github_id        *string
+	google_id        *string
+	facebook_id      *string
+	clearedFields    map[string]struct{}
+	guides           map[string]struct{}
+	removedguides    map[string]struct{}
+	clearedguides    bool
+	sessions         map[string]struct{}
+	removedsessions  map[string]struct{}
+	clearedsessions  bool
+	mods             map[string]struct{}
+	removedmods      map[string]struct{}
+	clearedmods      bool
+	groups           map[string]struct{}
+	removedgroups    map[string]struct{}
+	clearedgroups    bool
+	done             bool
+	oldValue         func(context.Context) (*User, error)
+	predicates       []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -5736,6 +5810,55 @@ func (m *UserMutation) AvatarCleared() bool {
 func (m *UserMutation) ResetAvatar() {
 	m.avatar = nil
 	delete(m.clearedFields, user.FieldAvatar)
+}
+
+// SetAvatarThumbhash sets the "avatar_thumbhash" field.
+func (m *UserMutation) SetAvatarThumbhash(s string) {
+	m.avatar_thumbhash = &s
+}
+
+// AvatarThumbhash returns the value of the "avatar_thumbhash" field in the mutation.
+func (m *UserMutation) AvatarThumbhash() (r string, exists bool) {
+	v := m.avatar_thumbhash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAvatarThumbhash returns the old "avatar_thumbhash" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldAvatarThumbhash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAvatarThumbhash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAvatarThumbhash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAvatarThumbhash: %w", err)
+	}
+	return oldValue.AvatarThumbhash, nil
+}
+
+// ClearAvatarThumbhash clears the value of the "avatar_thumbhash" field.
+func (m *UserMutation) ClearAvatarThumbhash() {
+	m.avatar_thumbhash = nil
+	m.clearedFields[user.FieldAvatarThumbhash] = struct{}{}
+}
+
+// AvatarThumbhashCleared returns if the "avatar_thumbhash" field was cleared in this mutation.
+func (m *UserMutation) AvatarThumbhashCleared() bool {
+	_, ok := m.clearedFields[user.FieldAvatarThumbhash]
+	return ok
+}
+
+// ResetAvatarThumbhash resets all changes to the "avatar_thumbhash" field.
+func (m *UserMutation) ResetAvatarThumbhash() {
+	m.avatar_thumbhash = nil
+	delete(m.clearedFields, user.FieldAvatarThumbhash)
 }
 
 // SetJoinedFrom sets the "joined_from" field.
@@ -6276,7 +6399,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 13)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -6294,6 +6417,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.avatar != nil {
 		fields = append(fields, user.FieldAvatar)
+	}
+	if m.avatar_thumbhash != nil {
+		fields = append(fields, user.FieldAvatarThumbhash)
 	}
 	if m.joined_from != nil {
 		fields = append(fields, user.FieldJoinedFrom)
@@ -6333,6 +6459,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Username()
 	case user.FieldAvatar:
 		return m.Avatar()
+	case user.FieldAvatarThumbhash:
+		return m.AvatarThumbhash()
 	case user.FieldJoinedFrom:
 		return m.JoinedFrom()
 	case user.FieldBanned:
@@ -6366,6 +6494,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldUsername(ctx)
 	case user.FieldAvatar:
 		return m.OldAvatar(ctx)
+	case user.FieldAvatarThumbhash:
+		return m.OldAvatarThumbhash(ctx)
 	case user.FieldJoinedFrom:
 		return m.OldJoinedFrom(ctx)
 	case user.FieldBanned:
@@ -6428,6 +6558,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAvatar(v)
+		return nil
+	case user.FieldAvatarThumbhash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAvatarThumbhash(v)
 		return nil
 	case user.FieldJoinedFrom:
 		v, ok := value.(string)
@@ -6522,6 +6659,9 @@ func (m *UserMutation) ClearedFields() []string {
 	if m.FieldCleared(user.FieldAvatar) {
 		fields = append(fields, user.FieldAvatar)
 	}
+	if m.FieldCleared(user.FieldAvatarThumbhash) {
+		fields = append(fields, user.FieldAvatarThumbhash)
+	}
 	if m.FieldCleared(user.FieldJoinedFrom) {
 		fields = append(fields, user.FieldJoinedFrom)
 	}
@@ -6553,6 +6693,9 @@ func (m *UserMutation) ClearField(name string) error {
 		return nil
 	case user.FieldAvatar:
 		m.ClearAvatar()
+		return nil
+	case user.FieldAvatarThumbhash:
+		m.ClearAvatarThumbhash()
 		return nil
 	case user.FieldJoinedFrom:
 		m.ClearJoinedFrom()
@@ -6591,6 +6734,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldAvatar:
 		m.ResetAvatar()
+		return nil
+	case user.FieldAvatarThumbhash:
+		m.ResetAvatarThumbhash()
 		return nil
 	case user.FieldJoinedFrom:
 		m.ResetJoinedFrom()

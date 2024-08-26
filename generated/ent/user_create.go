@@ -95,6 +95,20 @@ func (uc *UserCreate) SetNillableAvatar(s *string) *UserCreate {
 	return uc
 }
 
+// SetAvatarThumbhash sets the "avatar_thumbhash" field.
+func (uc *UserCreate) SetAvatarThumbhash(s string) *UserCreate {
+	uc.mutation.SetAvatarThumbhash(s)
+	return uc
+}
+
+// SetNillableAvatarThumbhash sets the "avatar_thumbhash" field if the given value is not nil.
+func (uc *UserCreate) SetNillableAvatarThumbhash(s *string) *UserCreate {
+	if s != nil {
+		uc.SetAvatarThumbhash(*s)
+	}
+	return uc
+}
+
 // SetJoinedFrom sets the "joined_from" field.
 func (uc *UserCreate) SetJoinedFrom(s string) *UserCreate {
 	uc.mutation.SetJoinedFrom(s)
@@ -427,6 +441,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldAvatar, field.TypeString, value)
 		_node.Avatar = value
 	}
+	if value, ok := uc.mutation.AvatarThumbhash(); ok {
+		_spec.SetField(user.FieldAvatarThumbhash, field.TypeString, value)
+		_node.AvatarThumbhash = value
+	}
 	if value, ok := uc.mutation.JoinedFrom(); ok {
 		_spec.SetField(user.FieldJoinedFrom, field.TypeString, value)
 		_node.JoinedFrom = value
@@ -636,6 +654,24 @@ func (u *UserUpsert) UpdateAvatar() *UserUpsert {
 // ClearAvatar clears the value of the "avatar" field.
 func (u *UserUpsert) ClearAvatar() *UserUpsert {
 	u.SetNull(user.FieldAvatar)
+	return u
+}
+
+// SetAvatarThumbhash sets the "avatar_thumbhash" field.
+func (u *UserUpsert) SetAvatarThumbhash(v string) *UserUpsert {
+	u.Set(user.FieldAvatarThumbhash, v)
+	return u
+}
+
+// UpdateAvatarThumbhash sets the "avatar_thumbhash" field to the value that was provided on create.
+func (u *UserUpsert) UpdateAvatarThumbhash() *UserUpsert {
+	u.SetExcluded(user.FieldAvatarThumbhash)
+	return u
+}
+
+// ClearAvatarThumbhash clears the value of the "avatar_thumbhash" field.
+func (u *UserUpsert) ClearAvatarThumbhash() *UserUpsert {
+	u.SetNull(user.FieldAvatarThumbhash)
 	return u
 }
 
@@ -873,6 +909,27 @@ func (u *UserUpsertOne) UpdateAvatar() *UserUpsertOne {
 func (u *UserUpsertOne) ClearAvatar() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearAvatar()
+	})
+}
+
+// SetAvatarThumbhash sets the "avatar_thumbhash" field.
+func (u *UserUpsertOne) SetAvatarThumbhash(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAvatarThumbhash(v)
+	})
+}
+
+// UpdateAvatarThumbhash sets the "avatar_thumbhash" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateAvatarThumbhash() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAvatarThumbhash()
+	})
+}
+
+// ClearAvatarThumbhash clears the value of the "avatar_thumbhash" field.
+func (u *UserUpsertOne) ClearAvatarThumbhash() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAvatarThumbhash()
 	})
 }
 
@@ -1294,6 +1351,27 @@ func (u *UserUpsertBulk) UpdateAvatar() *UserUpsertBulk {
 func (u *UserUpsertBulk) ClearAvatar() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearAvatar()
+	})
+}
+
+// SetAvatarThumbhash sets the "avatar_thumbhash" field.
+func (u *UserUpsertBulk) SetAvatarThumbhash(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAvatarThumbhash(v)
+	})
+}
+
+// UpdateAvatarThumbhash sets the "avatar_thumbhash" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateAvatarThumbhash() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAvatarThumbhash()
+	})
+}
+
+// ClearAvatarThumbhash clears the value of the "avatar_thumbhash" field.
+func (u *UserUpsertBulk) ClearAvatarThumbhash() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAvatarThumbhash()
 	})
 }
 

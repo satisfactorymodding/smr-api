@@ -93,6 +93,20 @@ func (mc *ModCreate) SetLogo(s string) *ModCreate {
 	return mc
 }
 
+// SetLogoThumbhash sets the "logo_thumbhash" field.
+func (mc *ModCreate) SetLogoThumbhash(s string) *ModCreate {
+	mc.mutation.SetLogoThumbhash(s)
+	return mc
+}
+
+// SetNillableLogoThumbhash sets the "logo_thumbhash" field if the given value is not nil.
+func (mc *ModCreate) SetNillableLogoThumbhash(s *string) *ModCreate {
+	if s != nil {
+		mc.SetLogoThumbhash(*s)
+	}
+	return mc
+}
+
 // SetSourceURL sets the "source_url" field.
 func (mc *ModCreate) SetSourceURL(s string) *ModCreate {
 	mc.mutation.SetSourceURL(s)
@@ -526,6 +540,10 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 		_spec.SetField(mod.FieldLogo, field.TypeString, value)
 		_node.Logo = value
 	}
+	if value, ok := mc.mutation.LogoThumbhash(); ok {
+		_spec.SetField(mod.FieldLogoThumbhash, field.TypeString, value)
+		_node.LogoThumbhash = value
+	}
 	if value, ok := mc.mutation.SourceURL(); ok {
 		_spec.SetField(mod.FieldSourceURL, field.TypeString, value)
 		_node.SourceURL = value
@@ -769,6 +787,24 @@ func (u *ModUpsert) SetLogo(v string) *ModUpsert {
 // UpdateLogo sets the "logo" field to the value that was provided on create.
 func (u *ModUpsert) UpdateLogo() *ModUpsert {
 	u.SetExcluded(mod.FieldLogo)
+	return u
+}
+
+// SetLogoThumbhash sets the "logo_thumbhash" field.
+func (u *ModUpsert) SetLogoThumbhash(v string) *ModUpsert {
+	u.Set(mod.FieldLogoThumbhash, v)
+	return u
+}
+
+// UpdateLogoThumbhash sets the "logo_thumbhash" field to the value that was provided on create.
+func (u *ModUpsert) UpdateLogoThumbhash() *ModUpsert {
+	u.SetExcluded(mod.FieldLogoThumbhash)
+	return u
+}
+
+// ClearLogoThumbhash clears the value of the "logo_thumbhash" field.
+func (u *ModUpsert) ClearLogoThumbhash() *ModUpsert {
+	u.SetNull(mod.FieldLogoThumbhash)
 	return u
 }
 
@@ -1097,6 +1133,27 @@ func (u *ModUpsertOne) SetLogo(v string) *ModUpsertOne {
 func (u *ModUpsertOne) UpdateLogo() *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateLogo()
+	})
+}
+
+// SetLogoThumbhash sets the "logo_thumbhash" field.
+func (u *ModUpsertOne) SetLogoThumbhash(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetLogoThumbhash(v)
+	})
+}
+
+// UpdateLogoThumbhash sets the "logo_thumbhash" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateLogoThumbhash() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateLogoThumbhash()
+	})
+}
+
+// ClearLogoThumbhash clears the value of the "logo_thumbhash" field.
+func (u *ModUpsertOne) ClearLogoThumbhash() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearLogoThumbhash()
 	})
 }
 
@@ -1623,6 +1680,27 @@ func (u *ModUpsertBulk) SetLogo(v string) *ModUpsertBulk {
 func (u *ModUpsertBulk) UpdateLogo() *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateLogo()
+	})
+}
+
+// SetLogoThumbhash sets the "logo_thumbhash" field.
+func (u *ModUpsertBulk) SetLogoThumbhash(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetLogoThumbhash(v)
+	})
+}
+
+// UpdateLogoThumbhash sets the "logo_thumbhash" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateLogoThumbhash() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateLogoThumbhash()
+	})
+}
+
+// ClearLogoThumbhash clears the value of the "logo_thumbhash" field.
+func (u *ModUpsertBulk) ClearLogoThumbhash() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearLogoThumbhash()
 	})
 }
 

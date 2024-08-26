@@ -107,6 +107,26 @@ func (uu *UserUpdate) ClearAvatar() *UserUpdate {
 	return uu
 }
 
+// SetAvatarThumbhash sets the "avatar_thumbhash" field.
+func (uu *UserUpdate) SetAvatarThumbhash(s string) *UserUpdate {
+	uu.mutation.SetAvatarThumbhash(s)
+	return uu
+}
+
+// SetNillableAvatarThumbhash sets the "avatar_thumbhash" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableAvatarThumbhash(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetAvatarThumbhash(*s)
+	}
+	return uu
+}
+
+// ClearAvatarThumbhash clears the value of the "avatar_thumbhash" field.
+func (uu *UserUpdate) ClearAvatarThumbhash() *UserUpdate {
+	uu.mutation.ClearAvatarThumbhash()
+	return uu
+}
+
 // SetJoinedFrom sets the "joined_from" field.
 func (uu *UserUpdate) SetJoinedFrom(s string) *UserUpdate {
 	uu.mutation.SetJoinedFrom(s)
@@ -482,6 +502,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if uu.mutation.AvatarCleared() {
 		_spec.ClearField(user.FieldAvatar, field.TypeString)
 	}
+	if value, ok := uu.mutation.AvatarThumbhash(); ok {
+		_spec.SetField(user.FieldAvatarThumbhash, field.TypeString, value)
+	}
+	if uu.mutation.AvatarThumbhashCleared() {
+		_spec.ClearField(user.FieldAvatarThumbhash, field.TypeString)
+	}
 	if value, ok := uu.mutation.JoinedFrom(); ok {
 		_spec.SetField(user.FieldJoinedFrom, field.TypeString, value)
 	}
@@ -788,6 +814,26 @@ func (uuo *UserUpdateOne) SetNillableAvatar(s *string) *UserUpdateOne {
 // ClearAvatar clears the value of the "avatar" field.
 func (uuo *UserUpdateOne) ClearAvatar() *UserUpdateOne {
 	uuo.mutation.ClearAvatar()
+	return uuo
+}
+
+// SetAvatarThumbhash sets the "avatar_thumbhash" field.
+func (uuo *UserUpdateOne) SetAvatarThumbhash(s string) *UserUpdateOne {
+	uuo.mutation.SetAvatarThumbhash(s)
+	return uuo
+}
+
+// SetNillableAvatarThumbhash sets the "avatar_thumbhash" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableAvatarThumbhash(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetAvatarThumbhash(*s)
+	}
+	return uuo
+}
+
+// ClearAvatarThumbhash clears the value of the "avatar_thumbhash" field.
+func (uuo *UserUpdateOne) ClearAvatarThumbhash() *UserUpdateOne {
+	uuo.mutation.ClearAvatarThumbhash()
 	return uuo
 }
 
@@ -1195,6 +1241,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if uuo.mutation.AvatarCleared() {
 		_spec.ClearField(user.FieldAvatar, field.TypeString)
+	}
+	if value, ok := uuo.mutation.AvatarThumbhash(); ok {
+		_spec.SetField(user.FieldAvatarThumbhash, field.TypeString, value)
+	}
+	if uuo.mutation.AvatarThumbhashCleared() {
+		_spec.ClearField(user.FieldAvatarThumbhash, field.TypeString)
 	}
 	if value, ok := uuo.mutation.JoinedFrom(); ok {
 		_spec.SetField(user.FieldJoinedFrom, field.TypeString, value)

@@ -21,6 +21,7 @@ type Mod {
     short_description: String!
     full_description: String
     logo: String
+    logo_thumbhash: String
     source_url: String
     creator_id: UserID!
     approved: Boolean!

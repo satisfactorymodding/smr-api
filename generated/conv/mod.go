@@ -24,8 +24,10 @@ func (c *ModImpl) Convert(source *ent.Mod) *generated.Mod {
 		generatedMod.FullDescription = &pString
 		pString2 := (*source).Logo
 		generatedMod.Logo = &pString2
-		pString3 := (*source).SourceURL
-		generatedMod.SourceURL = &pString3
+		pString3 := (*source).LogoThumbhash
+		generatedMod.LogoThumbhash = &pString3
+		pString4 := (*source).SourceURL
+		generatedMod.SourceURL = &pString4
 		generatedMod.CreatorID = (*source).CreatorID
 		generatedMod.Approved = (*source).Approved
 		generatedMod.Views = conversion.UIntToInt((*source).Views)

@@ -98,6 +98,7 @@ var (
 		{Name: "short_description", Type: field.TypeString, Size: 128},
 		{Name: "full_description", Type: field.TypeString},
 		{Name: "logo", Type: field.TypeString},
+		{Name: "logo_thumbhash", Type: field.TypeString, Nullable: true},
 		{Name: "source_url", Type: field.TypeString, Nullable: true},
 		{Name: "creator_id", Type: field.TypeString},
 		{Name: "approved", Type: field.TypeBool, Default: false},
@@ -125,12 +126,12 @@ var (
 			{
 				Name:    "mod_last_version_date",
 				Unique:  false,
-				Columns: []*schema.Column{ModsColumns[16]},
+				Columns: []*schema.Column{ModsColumns[17]},
 			},
 			{
 				Name:    "mod_mod_reference",
 				Unique:  true,
-				Columns: []*schema.Column{ModsColumns[17]},
+				Columns: []*schema.Column{ModsColumns[18]},
 			},
 		},
 	}
@@ -202,6 +203,7 @@ var (
 		{Name: "email", Type: field.TypeString, Size: 256},
 		{Name: "username", Type: field.TypeString, Size: 32},
 		{Name: "avatar", Type: field.TypeString, Nullable: true},
+		{Name: "avatar_thumbhash", Type: field.TypeString, Nullable: true},
 		{Name: "joined_from", Type: field.TypeString, Nullable: true},
 		{Name: "banned", Type: field.TypeBool, Default: false},
 		{Name: "rank", Type: field.TypeInt, Default: 1},
@@ -228,17 +230,17 @@ var (
 			{
 				Name:    "user_github_id",
 				Unique:  true,
-				Columns: []*schema.Column{UsersColumns[10]},
+				Columns: []*schema.Column{UsersColumns[11]},
 			},
 			{
 				Name:    "user_google_id",
 				Unique:  true,
-				Columns: []*schema.Column{UsersColumns[11]},
+				Columns: []*schema.Column{UsersColumns[12]},
 			},
 			{
 				Name:    "user_facebook_id",
 				Unique:  true,
-				Columns: []*schema.Column{UsersColumns[12]},
+				Columns: []*schema.Column{UsersColumns[13]},
 			},
 		},
 	}

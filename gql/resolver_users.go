@@ -46,14 +46,14 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 			return nil, fmt.Errorf("failed to read avatar file: %w", err)
 		}
 
-		avatarData, err := converter.ConvertAnyImageToWebp(ctx, file)
+		avatarData, thumbHash, err := converter.ConvertAnyImageToWebp(ctx, file)
 		if err != nil {
 			return nil, err
 		}
 
 		avatarKey, err := storage.UploadUserAvatar(ctx, u.ID, bytes.NewReader(avatarData))
 		if err == nil {
-			update = update.SetAvatar(storage.GenerateDownloadLink(ctx, avatarKey))
+			update = update.SetAvatar(storage.GenerateDownloadLink(ctx, avatarKey)).SetNillableAvatarThumbhash(util.ContainsOrNil(thumbHash))
 		}
 	}
 

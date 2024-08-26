@@ -88,14 +88,17 @@ func CompleteOAuthFlow(ctx context.Context, u *oauth.UserData, userAgent string)
 	}
 
 	if avatarURL != "" && newUser {
-		avatarData, err := util.LinkToWebp(ctx, avatarURL)
+		avatarData, thumbHash, err := util.LinkToWebp(ctx, avatarURL)
 		if err != nil {
 			return nil, err
 		}
 
 		avatarKey, err := storage.UploadUserAvatar(ctx, found.ID, bytes.NewReader(avatarData))
 		if err == nil {
-			if err := found.Update().SetAvatar(storage.GenerateDownloadLink(ctx, avatarKey)).Exec(ctx); err != nil {
+			if err := found.Update().
+				SetAvatar(storage.GenerateDownloadLink(ctx, avatarKey)).
+				SetNillableAvatarThumbhash(util.ContainsOrNil(thumbHash)).
+				Exec(ctx); err != nil {
 				return nil, err
 			}
 		}

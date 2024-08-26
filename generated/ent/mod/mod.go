@@ -29,6 +29,8 @@ const (
 	FieldFullDescription = "full_description"
 	// FieldLogo holds the string denoting the logo field in the database.
 	FieldLogo = "logo"
+	// FieldLogoThumbhash holds the string denoting the logo_thumbhash field in the database.
+	FieldLogoThumbhash = "logo_thumbhash"
 	// FieldSourceURL holds the string denoting the source_url field in the database.
 	FieldSourceURL = "source_url"
 	// FieldCreatorID holds the string denoting the creator_id field in the database.
@@ -124,6 +126,7 @@ var Columns = []string{
 	FieldShortDescription,
 	FieldFullDescription,
 	FieldLogo,
+	FieldLogoThumbhash,
 	FieldSourceURL,
 	FieldCreatorID,
 	FieldApproved,
@@ -239,6 +242,11 @@ func ByFullDescription(opts ...sql.OrderTermOption) OrderOption {
 // ByLogo orders the results by the logo field.
 func ByLogo(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLogo, opts...).ToFunc()
+}
+
+// ByLogoThumbhash orders the results by the logo_thumbhash field.
+func ByLogoThumbhash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLogoThumbhash, opts...).ToFunc()
 }
 
 // BySourceURL orders the results by the source_url field.
