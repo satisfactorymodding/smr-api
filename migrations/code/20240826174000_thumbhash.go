@@ -14,18 +14,13 @@ import (
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
-	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util/converter"
 )
 
 func init() {
 	migration.NewCodeMigration(
-		func(_ interface{}) error {
-			ctx, err := db.WithDB(context.Background())
-			if err != nil {
-				return err
-			}
-			storage.InitializeStorage(ctx)
+		func(ctxInt interface{}) error {
+			ctx := ctxInt.(context.Context)
 
 			// Calculate for all mods
 			mods, err := db.From(ctx).Mod.Query().Select(mod.FieldID, mod.FieldLogo).Where(mod.LogoThumbhashIsNil()).All(ctx)
@@ -37,8 +32,6 @@ func init() {
 				if m.Logo == "" {
 					continue
 				}
-
-				slox.From(ctx).Info("calculating thumbhash", slog.String("mod_id", m.ID), slog.String("logo", m.Logo))
 
 				resp, err := http.Get(m.Logo)
 				if err != nil {
@@ -82,8 +75,6 @@ func init() {
 				if u.Avatar == "" {
 					continue
 				}
-
-				slox.From(ctx).Info("calculating thumbhash", slog.String("user_id", u.ID), slog.String("avatar", u.Avatar))
 
 				resp, err := http.Get(u.Avatar)
 				if err != nil {
