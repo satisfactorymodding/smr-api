@@ -148,3 +148,7 @@ func Tx(ctx context.Context, f func(newCtx context.Context, tx *ent.Tx) error, o
 func EnableDebug() {
 	debugEnabled = true
 }
+
+func DisableDebug() {
+	debugEnabled = false
+}

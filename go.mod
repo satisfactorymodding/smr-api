@@ -10,6 +10,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Vilsol/slox v0.0.1
 	github.com/VirusTotal/vt-go v1.0.1
+	github.com/alitto/pond v1.9.1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.55.5
