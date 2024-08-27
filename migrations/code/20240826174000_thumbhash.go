@@ -23,7 +23,7 @@ func init() {
 		func(ctxInt interface{}) error {
 			ctx := ctxInt.(context.Context)
 
-			pool := pond.New(256, 0, pond.MinWorkers(256))
+			pool := pond.New(64, 0, pond.MinWorkers(64))
 
 			// Calculate for all mods
 			mods, err := db.From(ctx).Mod.Query().Select(mod.FieldID, mod.FieldLogo).Where(mod.LogoThumbhashIsNil()).All(ctx)
