@@ -1,6 +1,6 @@
 FROM golang:1.23.0-alpine AS builder
 
-RUN apk add --no-cache git build-base libpng-dev
+RUN apk add --no-cache git build-base libpng-dev libwebp-dev
 
 WORKDIR $GOPATH/src/github.com/satisfactorymodding/smr-api/
 
