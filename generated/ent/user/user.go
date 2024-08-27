@@ -27,6 +27,8 @@ const (
 	FieldUsername = "username"
 	// FieldAvatar holds the string denoting the avatar field in the database.
 	FieldAvatar = "avatar"
+	// FieldAvatarThumbhash holds the string denoting the avatar_thumbhash field in the database.
+	FieldAvatarThumbhash = "avatar_thumbhash"
 	// FieldJoinedFrom holds the string denoting the joined_from field in the database.
 	FieldJoinedFrom = "joined_from"
 	// FieldBanned holds the string denoting the banned field in the database.
@@ -95,6 +97,7 @@ var Columns = []string{
 	FieldEmail,
 	FieldUsername,
 	FieldAvatar,
+	FieldAvatarThumbhash,
 	FieldJoinedFrom,
 	FieldBanned,
 	FieldRank,
@@ -187,6 +190,11 @@ func ByUsername(opts ...sql.OrderTermOption) OrderOption {
 // ByAvatar orders the results by the avatar field.
 func ByAvatar(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAvatar, opts...).ToFunc()
+}
+
+// ByAvatarThumbhash orders the results by the avatar_thumbhash field.
+func ByAvatarThumbhash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAvatarThumbhash, opts...).ToFunc()
 }
 
 // ByJoinedFrom orders the results by the joined_from field.

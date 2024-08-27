@@ -24,14 +24,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - uses: jetify-com/devbox-install-action@v0.11.0
         with:
-          go-version-file: go.mod
+          enable-cache: true
 
-      - uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.60.1
-          args: --timeout 5m
+      - name: Lint
+        run: |
+          devbox run -- curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.60.1
+          devbox run -- $(go env GOPATH)/bin/golangci-lint run --timeout 30m
 
   workflowcheck:
     name: Workflow Check
@@ -112,7 +112,7 @@ jobs:
           PGPASSWORD: REPLACE_ME
 
       - name: Test
-        run: devbox run -- go test -v -run '^TestSetup$' ./...
+        run: devbox run -- go test -v -p 1 -timeout 1h -run '^TestSetup$' ./...
         env:
           CGO_ENABLED: 1
           REPO_PASETO__PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a

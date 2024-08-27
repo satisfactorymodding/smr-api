@@ -10,6 +10,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Vilsol/slox v0.0.1
 	github.com/VirusTotal/vt-go v1.0.1
+	github.com/alitto/pond v1.9.1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.55.5
@@ -20,6 +21,7 @@ require (
 	github.com/exaring/otelpgx v0.6.2
 	github.com/felixge/fgprof v0.9.4
 	github.com/finnbear/moderation v0.11.4
+	github.com/galdor/go-thumbhash v1.0.0
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/google/uuid v1.6.0
@@ -44,6 +46,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.3
+	github.com/tidbyt/go-libwebp v0.0.0-20230922075150-fb11063b2a6a
 	github.com/vektah/gqlparser/v2 v2.5.16
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.53.0
@@ -53,6 +56,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.28.0
 	go.opentelemetry.io/otel/sdk v1.28.0
 	go.opentelemetry.io/otel/trace v1.28.0
+	go.temporal.io/api v1.37.0
 	go.temporal.io/sdk v1.28.1
 	go.temporal.io/sdk/contrib/opentelemetry v0.6.0
 	golang.org/x/crypto v0.26.0
@@ -179,7 +183,6 @@ require (
 	go.opentelemetry.io/contrib v1.28.0 // indirect
 	go.opentelemetry.io/otel/metric v1.28.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
-	go.temporal.io/api v1.37.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa // indirect

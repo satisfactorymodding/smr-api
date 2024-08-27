@@ -79,6 +79,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 	dbMod.SetCreatorID(user.ID)
 
 	var logoData []byte
+	var thumbHash string
 
 	if newMod.Logo != nil {
 		file, err := io.ReadAll(newMod.Logo.File)
@@ -86,7 +87,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 			return nil, fmt.Errorf("failed to read logo file: %w", err)
 		}
 
-		logoData, err = converter.ConvertAnyImageToWebp(ctx, file)
+		logoData, thumbHash, err = converter.ConvertAnyImageToWebp(ctx, file)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert logo file: %w", err)
 		}
@@ -136,7 +137,10 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 	if logoData != nil {
 		logoKey, err := storage.UploadModLogo(ctx, resultMod.ID, bytes.NewReader(logoData))
 		if err == nil {
-			resultMod, err = resultMod.Update().SetLogo(storage.GenerateDownloadLink(ctx, logoKey)).Save(ctx)
+			resultMod, err = resultMod.Update().
+				SetLogo(storage.GenerateDownloadLink(ctx, logoKey)).
+				SetNillableLogoThumbhash(util.ContainsOrNil(thumbHash)).
+				Save(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -190,16 +194,18 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 			return nil, fmt.Errorf("failed to read logo file: %w", err)
 		}
 
-		logoData, err := converter.ConvertAnyImageToWebp(ctx, file)
+		logoData, thumbHash, err := converter.ConvertAnyImageToWebp(ctx, file)
 		if err != nil {
 			return nil, err
 		}
 
 		logoKey, err := storage.UploadModLogo(ctx, dbMod.ID, bytes.NewReader(logoData))
 		if err == nil {
-			dbMod.Logo = storage.GenerateDownloadLink(ctx, logoKey)
+			dbUpdate.SetLogo(storage.GenerateDownloadLink(ctx, logoKey))
+			dbUpdate.SetLogoThumbhash(thumbHash)
 		} else {
-			dbMod.Logo = ""
+			dbUpdate.SetLogo("")
+			dbUpdate.ClearLogoThumbhash()
 		}
 	}
 

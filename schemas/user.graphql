@@ -23,6 +23,7 @@ type User {
     email: String @canEditUser(field: "ID", object: true) @isLoggedIn
     username: String!
     avatar: String
+    avatar_thumbhash: String
     created_at: Date!
 
     github_id: String @canEditUser(field: "ID", object: true) @isLoggedIn

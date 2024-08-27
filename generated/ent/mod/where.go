@@ -100,6 +100,11 @@ func Logo(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldLogo, v))
 }
 
+// LogoThumbhash applies equality check predicate on the "logo_thumbhash" field. It's identical to LogoThumbhashEQ.
+func LogoThumbhash(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldEQ(FieldLogoThumbhash, v))
+}
+
 // SourceURL applies equality check predicate on the "source_url" field. It's identical to SourceURLEQ.
 func SourceURL(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldSourceURL, v))
@@ -543,6 +548,81 @@ func LogoEqualFold(v string) predicate.Mod {
 // LogoContainsFold applies the ContainsFold predicate on the "logo" field.
 func LogoContainsFold(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldContainsFold(FieldLogo, v))
+}
+
+// LogoThumbhashEQ applies the EQ predicate on the "logo_thumbhash" field.
+func LogoThumbhashEQ(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldEQ(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashNEQ applies the NEQ predicate on the "logo_thumbhash" field.
+func LogoThumbhashNEQ(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldNEQ(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashIn applies the In predicate on the "logo_thumbhash" field.
+func LogoThumbhashIn(vs ...string) predicate.Mod {
+	return predicate.Mod(sql.FieldIn(FieldLogoThumbhash, vs...))
+}
+
+// LogoThumbhashNotIn applies the NotIn predicate on the "logo_thumbhash" field.
+func LogoThumbhashNotIn(vs ...string) predicate.Mod {
+	return predicate.Mod(sql.FieldNotIn(FieldLogoThumbhash, vs...))
+}
+
+// LogoThumbhashGT applies the GT predicate on the "logo_thumbhash" field.
+func LogoThumbhashGT(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldGT(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashGTE applies the GTE predicate on the "logo_thumbhash" field.
+func LogoThumbhashGTE(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldGTE(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashLT applies the LT predicate on the "logo_thumbhash" field.
+func LogoThumbhashLT(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldLT(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashLTE applies the LTE predicate on the "logo_thumbhash" field.
+func LogoThumbhashLTE(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldLTE(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashContains applies the Contains predicate on the "logo_thumbhash" field.
+func LogoThumbhashContains(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldContains(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashHasPrefix applies the HasPrefix predicate on the "logo_thumbhash" field.
+func LogoThumbhashHasPrefix(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldHasPrefix(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashHasSuffix applies the HasSuffix predicate on the "logo_thumbhash" field.
+func LogoThumbhashHasSuffix(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldHasSuffix(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashIsNil applies the IsNil predicate on the "logo_thumbhash" field.
+func LogoThumbhashIsNil() predicate.Mod {
+	return predicate.Mod(sql.FieldIsNull(FieldLogoThumbhash))
+}
+
+// LogoThumbhashNotNil applies the NotNil predicate on the "logo_thumbhash" field.
+func LogoThumbhashNotNil() predicate.Mod {
+	return predicate.Mod(sql.FieldNotNull(FieldLogoThumbhash))
+}
+
+// LogoThumbhashEqualFold applies the EqualFold predicate on the "logo_thumbhash" field.
+func LogoThumbhashEqualFold(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldEqualFold(FieldLogoThumbhash, v))
+}
+
+// LogoThumbhashContainsFold applies the ContainsFold predicate on the "logo_thumbhash" field.
+func LogoThumbhashContainsFold(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldContainsFold(FieldLogoThumbhash, v))
 }
 
 // SourceURLEQ applies the EQ predicate on the "source_url" field.

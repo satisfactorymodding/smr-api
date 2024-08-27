@@ -24,6 +24,7 @@ func (User) Fields() []ent.Field {
 		field.String("email").MaxLen(256),
 		field.String("username").MaxLen(32),
 		field.String("avatar").Optional(),
+		field.String("avatar_thumbhash").Optional(),
 		field.String("joined_from").Optional(),
 		field.Bool("banned").Default(false),
 		field.Int("rank").Default(1),

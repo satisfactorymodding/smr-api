@@ -1,4 +1,4 @@
-h1:jK63b8w0c9g+PnSyhF6TU9wnMyjt22iOXdgDCpBTLNA=
+h1:3i3Sd2hTQaV9LPD/x8rJDvWaiv5oNZ6NXIRBNrCrWrY=
 000001_create_initial_tables.down.sql h1:QcXXwE8ir3PM3vZjQfBihY55WiuLYjN8pbbk/L6U+bs=
 000001_create_initial_tables.up.sql h1:EfAqETefs7TW9BDVS4ukiB7wUFs+HQzVdc3qHhdAFd4=
 000002_create_user_group_table.down.sql h1:uJjRbQ3H7yvPGNXLD5iSPmderEoWhCNGdsqN8yqBIRY=
@@ -67,3 +67,5 @@ h1:jK63b8w0c9g+PnSyhF6TU9wnMyjt22iOXdgDCpBTLNA=
 20240818235330_index_fixes.up.sql h1:xTw9pSSWkMcjZeIC+npdWT2nk+bvcjVMHHvyB2cDz5g=
 20240819092347_user_indexes.down.sql h1:a+LhZ3NoCFBFWrBDcZAKjh8szFZsKWSLFd9LfsoDWbs=
 20240819092347_user_indexes.up.sql h1:Ei9ma1Kd/88nB4QOKmSfjz+gSs/sW1rB7LM3+3bY71s=
+20240826153722_add_thumbhash.down.sql h1:EgkPIIvMiAoB9pioXm9NPynRD/zGj/tv9rJAO1NheKc=
+20240826153722_add_thumbhash.up.sql h1:RsG3xVeVtUVuX9+w0I+yuqC+yEV4EwLQ1v9dusIqZMU=

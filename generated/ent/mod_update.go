@@ -115,6 +115,26 @@ func (mu *ModUpdate) SetNillableLogo(s *string) *ModUpdate {
 	return mu
 }
 
+// SetLogoThumbhash sets the "logo_thumbhash" field.
+func (mu *ModUpdate) SetLogoThumbhash(s string) *ModUpdate {
+	mu.mutation.SetLogoThumbhash(s)
+	return mu
+}
+
+// SetNillableLogoThumbhash sets the "logo_thumbhash" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableLogoThumbhash(s *string) *ModUpdate {
+	if s != nil {
+		mu.SetLogoThumbhash(*s)
+	}
+	return mu
+}
+
+// ClearLogoThumbhash clears the value of the "logo_thumbhash" field.
+func (mu *ModUpdate) ClearLogoThumbhash() *ModUpdate {
+	mu.mutation.ClearLogoThumbhash()
+	return mu
+}
+
 // SetSourceURL sets the "source_url" field.
 func (mu *ModUpdate) SetSourceURL(s string) *ModUpdate {
 	mu.mutation.SetSourceURL(s)
@@ -571,6 +591,12 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := mu.mutation.Logo(); ok {
 		_spec.SetField(mod.FieldLogo, field.TypeString, value)
 	}
+	if value, ok := mu.mutation.LogoThumbhash(); ok {
+		_spec.SetField(mod.FieldLogoThumbhash, field.TypeString, value)
+	}
+	if mu.mutation.LogoThumbhashCleared() {
+		_spec.ClearField(mod.FieldLogoThumbhash, field.TypeString)
+	}
 	if value, ok := mu.mutation.SourceURL(); ok {
 		_spec.SetField(mod.FieldSourceURL, field.TypeString, value)
 	}
@@ -921,6 +947,26 @@ func (muo *ModUpdateOne) SetNillableLogo(s *string) *ModUpdateOne {
 	if s != nil {
 		muo.SetLogo(*s)
 	}
+	return muo
+}
+
+// SetLogoThumbhash sets the "logo_thumbhash" field.
+func (muo *ModUpdateOne) SetLogoThumbhash(s string) *ModUpdateOne {
+	muo.mutation.SetLogoThumbhash(s)
+	return muo
+}
+
+// SetNillableLogoThumbhash sets the "logo_thumbhash" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableLogoThumbhash(s *string) *ModUpdateOne {
+	if s != nil {
+		muo.SetLogoThumbhash(*s)
+	}
+	return muo
+}
+
+// ClearLogoThumbhash clears the value of the "logo_thumbhash" field.
+func (muo *ModUpdateOne) ClearLogoThumbhash() *ModUpdateOne {
+	muo.mutation.ClearLogoThumbhash()
 	return muo
 }
 
@@ -1409,6 +1455,12 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	}
 	if value, ok := muo.mutation.Logo(); ok {
 		_spec.SetField(mod.FieldLogo, field.TypeString, value)
+	}
+	if value, ok := muo.mutation.LogoThumbhash(); ok {
+		_spec.SetField(mod.FieldLogoThumbhash, field.TypeString, value)
+	}
+	if muo.mutation.LogoThumbhashCleared() {
+		_spec.ClearField(mod.FieldLogoThumbhash, field.TypeString)
 	}
 	if value, ok := muo.mutation.SourceURL(); ok {
 		_spec.SetField(mod.FieldSourceURL, field.TypeString, value)

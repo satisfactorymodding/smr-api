@@ -29,6 +29,8 @@ type User struct {
 	Username string `json:"username,omitempty"`
 	// Avatar holds the value of the "avatar" field.
 	Avatar string `json:"avatar,omitempty"`
+	// AvatarThumbhash holds the value of the "avatar_thumbhash" field.
+	AvatarThumbhash string `json:"avatar_thumbhash,omitempty"`
 	// JoinedFrom holds the value of the "joined_from" field.
 	JoinedFrom string `json:"joined_from,omitempty"`
 	// Banned holds the value of the "banned" field.
@@ -118,7 +120,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case user.FieldRank:
 			values[i] = new(sql.NullInt64)
-		case user.FieldID, user.FieldEmail, user.FieldUsername, user.FieldAvatar, user.FieldJoinedFrom, user.FieldGithubID, user.FieldGoogleID, user.FieldFacebookID:
+		case user.FieldID, user.FieldEmail, user.FieldUsername, user.FieldAvatar, user.FieldAvatarThumbhash, user.FieldJoinedFrom, user.FieldGithubID, user.FieldGoogleID, user.FieldFacebookID:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -178,6 +180,12 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field avatar", values[i])
 			} else if value.Valid {
 				u.Avatar = value.String
+			}
+		case user.FieldAvatarThumbhash:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field avatar_thumbhash", values[i])
+			} else if value.Valid {
+				u.AvatarThumbhash = value.String
 			}
 		case user.FieldJoinedFrom:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -293,6 +301,9 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("avatar=")
 	builder.WriteString(u.Avatar)
+	builder.WriteString(", ")
+	builder.WriteString("avatar_thumbhash=")
+	builder.WriteString(u.AvatarThumbhash)
 	builder.WriteString(", ")
 	builder.WriteString("joined_from=")
 	builder.WriteString(u.JoinedFrom)

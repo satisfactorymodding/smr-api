@@ -3,7 +3,7 @@
   "packages": [
     "delve@1.23.0",
     "go@1.23.0",
-    "golangci-lint@1.60.1",
+    "golangci-lint@1.60.2",
     "go-junit-report@2.1.0",
     "libwebp@1.4.0",
     "minio-client@2024-07-31T15-58-33Z",

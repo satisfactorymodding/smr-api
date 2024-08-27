@@ -21,13 +21,15 @@ func (c *UserImpl) Convert(source *ent.User) *generated.User {
 		generatedUser.Username = (*source).Username
 		pString2 := (*source).Avatar
 		generatedUser.Avatar = &pString2
+		pString3 := (*source).AvatarThumbhash
+		generatedUser.AvatarThumbhash = &pString3
 		generatedUser.CreatedAt = conversion.TimeToString((*source).CreatedAt)
-		pString3 := (*source).GithubID
-		generatedUser.GithubID = &pString3
-		pString4 := (*source).GoogleID
-		generatedUser.GoogleID = &pString4
-		pString5 := (*source).FacebookID
-		generatedUser.FacebookID = &pString5
+		pString4 := (*source).GithubID
+		generatedUser.GithubID = &pString4
+		pString5 := (*source).GoogleID
+		generatedUser.GoogleID = &pString5
+		pString6 := (*source).FacebookID
+		generatedUser.FacebookID = &pString6
 		pGeneratedUser = &generatedUser
 	}
 	return pGeneratedUser

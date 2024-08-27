@@ -162,6 +162,7 @@ type ComplexityRoot struct {
 		LastVersionDate  func(childComplexity int) int
 		LatestVersions   func(childComplexity int) int
 		Logo             func(childComplexity int) int
+		LogoThumbhash    func(childComplexity int) int
 		ModReference     func(childComplexity int) int
 		Name             func(childComplexity int) int
 		Popularity       func(childComplexity int) int
@@ -289,18 +290,19 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Avatar     func(childComplexity int) int
-		CreatedAt  func(childComplexity int) int
-		Email      func(childComplexity int) int
-		FacebookID func(childComplexity int) int
-		GithubID   func(childComplexity int) int
-		GoogleID   func(childComplexity int) int
-		Groups     func(childComplexity int) int
-		Guides     func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Mods       func(childComplexity int) int
-		Roles      func(childComplexity int) int
-		Username   func(childComplexity int) int
+		Avatar          func(childComplexity int) int
+		AvatarThumbhash func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		Email           func(childComplexity int) int
+		FacebookID      func(childComplexity int) int
+		GithubID        func(childComplexity int) int
+		GoogleID        func(childComplexity int) int
+		Groups          func(childComplexity int) int
+		Guides          func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Mods            func(childComplexity int) int
+		Roles           func(childComplexity int) int
+		Username        func(childComplexity int) int
 	}
 
 	UserMod struct {
@@ -863,6 +865,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mod.Logo(childComplexity), true
+
+	case "Mod.logo_thumbhash":
+		if e.complexity.Mod.LogoThumbhash == nil {
+			break
+		}
+
+		return e.complexity.Mod.LogoThumbhash(childComplexity), true
 
 	case "Mod.mod_reference":
 		if e.complexity.Mod.ModReference == nil {
@@ -1876,6 +1885,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Avatar(childComplexity), true
 
+	case "User.avatar_thumbhash":
+		if e.complexity.User.AvatarThumbhash == nil {
+			break
+		}
+
+		return e.complexity.User.AvatarThumbhash(childComplexity), true
+
 	case "User.created_at":
 		if e.complexity.User.CreatedAt == nil {
 			break
@@ -2593,6 +2609,7 @@ type Mod {
     short_description: String!
     full_description: String
     logo: String
+    logo_thumbhash: String
     source_url: String
     creator_id: UserID!
     approved: Boolean!
@@ -2862,6 +2879,7 @@ type User {
     email: String @canEditUser(field: "ID", object: true) @isLoggedIn
     username: String!
     avatar: String
+    avatar_thumbhash: String
     created_at: Date!
 
     github_id: String @canEditUser(field: "ID", object: true) @isLoggedIn
@@ -4891,6 +4909,8 @@ func (ec *executionContext) fieldContext_GetMods_mods(_ context.Context, field g
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -5027,6 +5047,8 @@ func (ec *executionContext) fieldContext_GetMyMods_mods(_ context.Context, field
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -6019,6 +6041,8 @@ func (ec *executionContext) fieldContext_Guide_user(_ context.Context, field gra
 				return ec.fieldContext_User_username(ctx, field)
 			case "avatar":
 				return ec.fieldContext_User_avatar(ctx, field)
+			case "avatar_thumbhash":
+				return ec.fieldContext_User_avatar_thumbhash(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "github_id":
@@ -6481,6 +6505,47 @@ func (ec *executionContext) _Mod_logo(ctx context.Context, field graphql.Collect
 }
 
 func (ec *executionContext) fieldContext_Mod_logo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mod",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mod_logo_thumbhash(ctx context.Context, field graphql.CollectedField, obj *Mod) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mod_logo_thumbhash(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoThumbhash, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mod_logo_thumbhash(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mod",
 		Field:      field,
@@ -8418,6 +8483,8 @@ func (ec *executionContext) fieldContext_Mutation_createMod(ctx context.Context,
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -8551,6 +8618,8 @@ func (ec *executionContext) fieldContext_Mutation_updateMod(ctx context.Context,
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -9537,6 +9606,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_username(ctx, field)
 			case "avatar":
 				return ec.fieldContext_User_avatar(ctx, field)
+			case "avatar_thumbhash":
+				return ec.fieldContext_User_avatar_thumbhash(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "github_id":
@@ -11039,6 +11110,8 @@ func (ec *executionContext) fieldContext_Query_getMod(ctx context.Context, field
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -11139,6 +11212,8 @@ func (ec *executionContext) fieldContext_Query_getModByReference(ctx context.Con
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -11239,6 +11314,8 @@ func (ec *executionContext) fieldContext_Query_getModByIdOrReference(ctx context
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -12159,6 +12236,8 @@ func (ec *executionContext) fieldContext_Query_getMe(_ context.Context, field gr
 				return ec.fieldContext_User_username(ctx, field)
 			case "avatar":
 				return ec.fieldContext_User_avatar(ctx, field)
+			case "avatar_thumbhash":
+				return ec.fieldContext_User_avatar_thumbhash(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "github_id":
@@ -12226,6 +12305,8 @@ func (ec *executionContext) fieldContext_Query_getUser(ctx context.Context, fiel
 				return ec.fieldContext_User_username(ctx, field)
 			case "avatar":
 				return ec.fieldContext_User_avatar(ctx, field)
+			case "avatar_thumbhash":
+				return ec.fieldContext_User_avatar_thumbhash(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "github_id":
@@ -12307,6 +12388,8 @@ func (ec *executionContext) fieldContext_Query_getUsers(ctx context.Context, fie
 				return ec.fieldContext_User_username(ctx, field)
 			case "avatar":
 				return ec.fieldContext_User_avatar(ctx, field)
+			case "avatar_thumbhash":
+				return ec.fieldContext_User_avatar_thumbhash(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "github_id":
@@ -14091,6 +14174,47 @@ func (ec *executionContext) fieldContext_User_avatar(_ context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _User_avatar_thumbhash(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_avatar_thumbhash(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AvatarThumbhash, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_avatar_thumbhash(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_created_at(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_created_at(ctx, field)
 	if err != nil {
@@ -14841,6 +14965,8 @@ func (ec *executionContext) fieldContext_UserMod_user(_ context.Context, field g
 				return ec.fieldContext_User_username(ctx, field)
 			case "avatar":
 				return ec.fieldContext_User_avatar(ctx, field)
+			case "avatar_thumbhash":
+				return ec.fieldContext_User_avatar_thumbhash(ctx, field)
 			case "created_at":
 				return ec.fieldContext_User_created_at(ctx, field)
 			case "github_id":
@@ -14913,6 +15039,8 @@ func (ec *executionContext) fieldContext_UserMod_mod(_ context.Context, field gr
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -16108,6 +16236,8 @@ func (ec *executionContext) fieldContext_Version_mod(_ context.Context, field gr
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -16477,6 +16607,8 @@ func (ec *executionContext) fieldContext_VersionDependency_mod(_ context.Context
 				return ec.fieldContext_Mod_full_description(ctx, field)
 			case "logo":
 				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
 			case "source_url":
 				return ec.fieldContext_Mod_source_url(ctx, field)
 			case "creator_id":
@@ -20663,6 +20795,8 @@ func (ec *executionContext) _Mod(ctx context.Context, sel ast.SelectionSet, obj 
 			out.Values[i] = ec._Mod_full_description(ctx, field, obj)
 		case "logo":
 			out.Values[i] = ec._Mod_logo(ctx, field, obj)
+		case "logo_thumbhash":
+			out.Values[i] = ec._Mod_logo_thumbhash(ctx, field, obj)
 		case "source_url":
 			out.Values[i] = ec._Mod_source_url(ctx, field, obj)
 		case "creator_id":
@@ -22293,6 +22427,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "avatar":
 			out.Values[i] = ec._User_avatar(ctx, field, obj)
+		case "avatar_thumbhash":
+			out.Values[i] = ec._User_avatar_thumbhash(ctx, field, obj)
 		case "created_at":
 			out.Values[i] = ec._User_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

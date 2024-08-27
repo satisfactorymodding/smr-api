@@ -101,6 +101,7 @@ type Mod struct {
 	ShortDescription string             `json:"short_description"`
 	FullDescription  *string            `json:"full_description,omitempty"`
 	Logo             *string            `json:"logo,omitempty"`
+	LogoThumbhash    *string            `json:"logo_thumbhash,omitempty"`
 	SourceURL        *string            `json:"source_url,omitempty"`
 	CreatorID        string             `json:"creator_id"`
 	Approved         bool               `json:"approved"`
@@ -246,18 +247,19 @@ type UpdateVersion struct {
 }
 
 type User struct {
-	ID         string     `json:"id"`
-	Email      *string    `json:"email,omitempty"`
-	Username   string     `json:"username"`
-	Avatar     *string    `json:"avatar,omitempty"`
-	CreatedAt  string     `json:"created_at"`
-	GithubID   *string    `json:"github_id,omitempty"`
-	GoogleID   *string    `json:"google_id,omitempty"`
-	FacebookID *string    `json:"facebook_id,omitempty"`
-	Roles      *UserRoles `json:"roles"`
-	Groups     []*Group   `json:"groups"`
-	Mods       []*UserMod `json:"mods"`
-	Guides     []*Guide   `json:"guides"`
+	ID              string     `json:"id"`
+	Email           *string    `json:"email,omitempty"`
+	Username        string     `json:"username"`
+	Avatar          *string    `json:"avatar,omitempty"`
+	AvatarThumbhash *string    `json:"avatar_thumbhash,omitempty"`
+	CreatedAt       string     `json:"created_at"`
+	GithubID        *string    `json:"github_id,omitempty"`
+	GoogleID        *string    `json:"google_id,omitempty"`
+	FacebookID      *string    `json:"facebook_id,omitempty"`
+	Roles           *UserRoles `json:"roles"`
+	Groups          []*Group   `json:"groups"`
+	Mods            []*UserMod `json:"mods"`
+	Guides          []*Guide   `json:"guides"`
 }
 
 type UserMod struct {
