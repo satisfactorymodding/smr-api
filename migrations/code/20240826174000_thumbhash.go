@@ -23,7 +23,7 @@ func init() {
 		func(ctxInt interface{}) error {
 			ctx := ctxInt.(context.Context)
 
-			pool := pond.New(32, 0, pond.MinWorkers(32))
+			pool := pond.New(256, 0, pond.MinWorkers(256))
 
 			// Calculate for all mods
 			mods, err := db.From(ctx).Mod.Query().Select(mod.FieldID, mod.FieldLogo).Where(mod.LogoThumbhashIsNil()).All(ctx)
@@ -82,7 +82,7 @@ func init() {
 			}
 
 			for i, u := range users {
-				if i%50 == 0 {
+				if i%100 == 0 {
 					slox.Info(ctx, "generated thumbhash for n users", slog.Int("n", i))
 				}
 
