@@ -3,19 +3,21 @@ package converter
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"image"
+	"log/slog"
+
+	"github.com/Vilsol/slox"
+	"github.com/chai2010/webp"
+	"github.com/galdor/go-thumbhash"
+
 	// GIF Support
 	_ "image/gif"
 	// JPEG Support
 	_ "image/jpeg"
 	// PNG Support
 	_ "image/png"
-	"log/slog"
-
-	"github.com/Vilsol/slox"
-	"github.com/chai2010/webp"
-	"github.com/galdor/go-thumbhash"
 )
 
 func ConvertAnyImageToWebp(ctx context.Context, imageAsBytes []byte) ([]byte, string, error) {
