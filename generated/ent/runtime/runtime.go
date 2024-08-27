@@ -146,6 +146,14 @@ func init() {
 	modDescHidden := modFields[15].Descriptor()
 	// mod.DefaultHidden holds the default value on creation for the hidden field.
 	mod.DefaultHidden = modDescHidden.Default.(bool)
+	// modDescToggleNetworkUse is the schema descriptor for toggle_network_use field.
+	modDescToggleNetworkUse := modFields[17].Descriptor()
+	// mod.DefaultToggleNetworkUse holds the default value on creation for the toggle_network_use field.
+	mod.DefaultToggleNetworkUse = modDescToggleNetworkUse.Default.(bool)
+	// modDescToggleExplicitContent is the schema descriptor for toggle_explicit_content field.
+	modDescToggleExplicitContent := modFields[18].Descriptor()
+	// mod.DefaultToggleExplicitContent holds the default value on creation for the toggle_explicit_content field.
+	mod.DefaultToggleExplicitContent = modDescToggleExplicitContent.Default.(bool)
 	// modDescID is the schema descriptor for id field.
 	modDescID := modMixinFields0[0].Descriptor()
 	// mod.DefaultID holds the default value on creation for the id field.

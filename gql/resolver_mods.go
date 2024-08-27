@@ -70,6 +70,8 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 	SetINNF(newMod.SourceURL, dbMod.SetSourceURL)
 	SetINNF(newMod.FullDescription, dbMod.SetFullDescription)
 	SetINNF(newMod.Hidden, dbMod.SetHidden)
+	SetINNF(newMod.ToggleNetworkUse, dbMod.SetToggleNetworkUse)
+	SetINNF(newMod.ToggleExplicitContent, dbMod.SetToggleExplicitContent)
 
 	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
@@ -187,6 +189,8 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 	SetINNF(updateMod.ModReference, dbUpdate.SetModReference)
 	SetINNF(updateMod.Hidden, dbUpdate.SetHidden)
 	SetCompatibilityINNF(updateMod.Compatibility, dbUpdate.SetCompatibility)
+	SetINNF(updateMod.ToggleNetworkUse, dbUpdate.SetToggleNetworkUse)
+	SetINNF(updateMod.ToggleExplicitContent, dbUpdate.SetToggleExplicitContent)
 
 	if updateMod.Logo != nil {
 		file, err := io.ReadAll(updateMod.Logo.File)

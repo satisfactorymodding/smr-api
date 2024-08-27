@@ -40,6 +40,8 @@ func (Mod) Fields() []ent.Field {
 		field.String("mod_reference").MaxLen(32),
 		field.Bool("hidden").Default(false),
 		field.JSON("compatibility", &util.CompatibilityInfo{}).Optional(),
+		field.Bool("toggle_network_use").Default(false),
+		field.Bool("toggle_explicit_content").Default(false),
 	}
 }
 

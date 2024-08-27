@@ -160,6 +160,16 @@ func Hidden(v bool) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldHidden, v))
 }
 
+// ToggleNetworkUse applies equality check predicate on the "toggle_network_use" field. It's identical to ToggleNetworkUseEQ.
+func ToggleNetworkUse(v bool) predicate.Mod {
+	return predicate.Mod(sql.FieldEQ(FieldToggleNetworkUse, v))
+}
+
+// ToggleExplicitContent applies equality check predicate on the "toggle_explicit_content" field. It's identical to ToggleExplicitContentEQ.
+func ToggleExplicitContent(v bool) predicate.Mod {
+	return predicate.Mod(sql.FieldEQ(FieldToggleExplicitContent, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldCreatedAt, v))
@@ -1078,6 +1088,26 @@ func CompatibilityIsNil() predicate.Mod {
 // CompatibilityNotNil applies the NotNil predicate on the "compatibility" field.
 func CompatibilityNotNil() predicate.Mod {
 	return predicate.Mod(sql.FieldNotNull(FieldCompatibility))
+}
+
+// ToggleNetworkUseEQ applies the EQ predicate on the "toggle_network_use" field.
+func ToggleNetworkUseEQ(v bool) predicate.Mod {
+	return predicate.Mod(sql.FieldEQ(FieldToggleNetworkUse, v))
+}
+
+// ToggleNetworkUseNEQ applies the NEQ predicate on the "toggle_network_use" field.
+func ToggleNetworkUseNEQ(v bool) predicate.Mod {
+	return predicate.Mod(sql.FieldNEQ(FieldToggleNetworkUse, v))
+}
+
+// ToggleExplicitContentEQ applies the EQ predicate on the "toggle_explicit_content" field.
+func ToggleExplicitContentEQ(v bool) predicate.Mod {
+	return predicate.Mod(sql.FieldEQ(FieldToggleExplicitContent, v))
+}
+
+// ToggleExplicitContentNEQ applies the NEQ predicate on the "toggle_explicit_content" field.
+func ToggleExplicitContentNEQ(v bool) predicate.Mod {
+	return predicate.Mod(sql.FieldNEQ(FieldToggleExplicitContent, v))
 }
 
 // HasVersions applies the HasEdge predicate on the "versions" edge.

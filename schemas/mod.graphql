@@ -36,6 +36,8 @@ type Mod {
     hidden: Boolean!
     tags: [Tag!]
     compatibility: CompatibilityInfo
+    toggle_network_use: Boolean!
+    toggle_explicit_content: Boolean!
 
     authors: [UserMod!]!
     version(version: String!): Version
@@ -82,6 +84,8 @@ input NewMod {
     mod_reference: ModReference!
     hidden: Boolean
     tagIDs: [TagID!]
+    toggle_network_use: Boolean
+    toggle_explicit_content: Boolean
 }
 
 input UpdateMod {
@@ -95,6 +99,8 @@ input UpdateMod {
     hidden: Boolean
     tagIDs: [TagID!]
     compatibility: CompatibilityInfoInput
+    toggle_network_use: Boolean
+    toggle_explicit_content: Boolean
 }
 
 input UpdateUserMod {

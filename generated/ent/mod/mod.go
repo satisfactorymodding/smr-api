@@ -55,6 +55,10 @@ const (
 	FieldHidden = "hidden"
 	// FieldCompatibility holds the string denoting the compatibility field in the database.
 	FieldCompatibility = "compatibility"
+	// FieldToggleNetworkUse holds the string denoting the toggle_network_use field in the database.
+	FieldToggleNetworkUse = "toggle_network_use"
+	// FieldToggleExplicitContent holds the string denoting the toggle_explicit_content field in the database.
+	FieldToggleExplicitContent = "toggle_explicit_content"
 	// EdgeVersions holds the string denoting the versions edge name in mutations.
 	EdgeVersions = "versions"
 	// EdgeAuthors holds the string denoting the authors edge name in mutations.
@@ -139,6 +143,8 @@ var Columns = []string{
 	FieldModReference,
 	FieldHidden,
 	FieldCompatibility,
+	FieldToggleNetworkUse,
+	FieldToggleExplicitContent,
 }
 
 var (
@@ -197,6 +203,10 @@ var (
 	ModReferenceValidator func(string) error
 	// DefaultHidden holds the default value on creation for the "hidden" field.
 	DefaultHidden bool
+	// DefaultToggleNetworkUse holds the default value on creation for the "toggle_network_use" field.
+	DefaultToggleNetworkUse bool
+	// DefaultToggleExplicitContent holds the default value on creation for the "toggle_explicit_content" field.
+	DefaultToggleExplicitContent bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() string
 )
@@ -302,6 +312,16 @@ func ByModReference(opts ...sql.OrderTermOption) OrderOption {
 // ByHidden orders the results by the hidden field.
 func ByHidden(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldHidden, opts...).ToFunc()
+}
+
+// ByToggleNetworkUse orders the results by the toggle_network_use field.
+func ByToggleNetworkUse(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldToggleNetworkUse, opts...).ToFunc()
+}
+
+// ByToggleExplicitContent orders the results by the toggle_explicit_content field.
+func ByToggleExplicitContent(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldToggleExplicitContent, opts...).ToFunc()
 }
 
 // ByVersionsCount orders the results by versions count.

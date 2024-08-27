@@ -111,6 +111,8 @@ var (
 		{Name: "mod_reference", Type: field.TypeString, Size: 32},
 		{Name: "hidden", Type: field.TypeBool, Default: false},
 		{Name: "compatibility", Type: field.TypeJSON, Nullable: true},
+		{Name: "toggle_network_use", Type: field.TypeBool, Default: false},
+		{Name: "toggle_explicit_content", Type: field.TypeBool, Default: false},
 	}
 	// ModsTable holds the schema information for the "mods" table.
 	ModsTable = &schema.Table{

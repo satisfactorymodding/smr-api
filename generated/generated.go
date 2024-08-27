@@ -149,30 +149,32 @@ type ComplexityRoot struct {
 	}
 
 	Mod struct {
-		Approved         func(childComplexity int) int
-		Authors          func(childComplexity int) int
-		Compatibility    func(childComplexity int) int
-		CreatedAt        func(childComplexity int) int
-		CreatorID        func(childComplexity int) int
-		Downloads        func(childComplexity int) int
-		FullDescription  func(childComplexity int) int
-		Hidden           func(childComplexity int) int
-		Hotness          func(childComplexity int) int
-		ID               func(childComplexity int) int
-		LastVersionDate  func(childComplexity int) int
-		LatestVersions   func(childComplexity int) int
-		Logo             func(childComplexity int) int
-		LogoThumbhash    func(childComplexity int) int
-		ModReference     func(childComplexity int) int
-		Name             func(childComplexity int) int
-		Popularity       func(childComplexity int) int
-		ShortDescription func(childComplexity int) int
-		SourceURL        func(childComplexity int) int
-		Tags             func(childComplexity int) int
-		UpdatedAt        func(childComplexity int) int
-		Version          func(childComplexity int, version string) int
-		Versions         func(childComplexity int, filter map[string]interface{}) int
-		Views            func(childComplexity int) int
+		Approved              func(childComplexity int) int
+		Authors               func(childComplexity int) int
+		Compatibility         func(childComplexity int) int
+		CreatedAt             func(childComplexity int) int
+		CreatorID             func(childComplexity int) int
+		Downloads             func(childComplexity int) int
+		FullDescription       func(childComplexity int) int
+		Hidden                func(childComplexity int) int
+		Hotness               func(childComplexity int) int
+		ID                    func(childComplexity int) int
+		LastVersionDate       func(childComplexity int) int
+		LatestVersions        func(childComplexity int) int
+		Logo                  func(childComplexity int) int
+		LogoThumbhash         func(childComplexity int) int
+		ModReference          func(childComplexity int) int
+		Name                  func(childComplexity int) int
+		Popularity            func(childComplexity int) int
+		ShortDescription      func(childComplexity int) int
+		SourceURL             func(childComplexity int) int
+		Tags                  func(childComplexity int) int
+		ToggleExplicitContent func(childComplexity int) int
+		ToggleNetworkUse      func(childComplexity int) int
+		UpdatedAt             func(childComplexity int) int
+		Version               func(childComplexity int, version string) int
+		Versions              func(childComplexity int, filter map[string]interface{}) int
+		Views                 func(childComplexity int) int
 	}
 
 	ModVersion struct {
@@ -914,6 +916,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mod.Tags(childComplexity), true
+
+	case "Mod.toggle_explicit_content":
+		if e.complexity.Mod.ToggleExplicitContent == nil {
+			break
+		}
+
+		return e.complexity.Mod.ToggleExplicitContent(childComplexity), true
+
+	case "Mod.toggle_network_use":
+		if e.complexity.Mod.ToggleNetworkUse == nil {
+			break
+		}
+
+		return e.complexity.Mod.ToggleNetworkUse(childComplexity), true
 
 	case "Mod.updated_at":
 		if e.complexity.Mod.UpdatedAt == nil {
@@ -2624,6 +2640,8 @@ type Mod {
     hidden: Boolean!
     tags: [Tag!]
     compatibility: CompatibilityInfo
+    toggle_network_use: Boolean!
+    toggle_explicit_content: Boolean!
 
     authors: [UserMod!]!
     version(version: String!): Version
@@ -2670,6 +2688,8 @@ input NewMod {
     mod_reference: ModReference!
     hidden: Boolean
     tagIDs: [TagID!]
+    toggle_network_use: Boolean
+    toggle_explicit_content: Boolean
 }
 
 input UpdateMod {
@@ -2683,6 +2703,8 @@ input UpdateMod {
     hidden: Boolean
     tagIDs: [TagID!]
     compatibility: CompatibilityInfoInput
+    toggle_network_use: Boolean
+    toggle_explicit_content: Boolean
 }
 
 input UpdateUserMod {
@@ -4939,6 +4961,10 @@ func (ec *executionContext) fieldContext_GetMods_mods(_ context.Context, field g
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -5077,6 +5103,10 @@ func (ec *executionContext) fieldContext_GetMyMods_mods(_ context.Context, field
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -7176,6 +7206,94 @@ func (ec *executionContext) fieldContext_Mod_compatibility(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Mod_toggle_network_use(ctx context.Context, field graphql.CollectedField, obj *Mod) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mod_toggle_network_use(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ToggleNetworkUse, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mod_toggle_network_use(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mod",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mod_toggle_explicit_content(ctx context.Context, field graphql.CollectedField, obj *Mod) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ToggleExplicitContent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mod_toggle_explicit_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mod",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mod_authors(ctx context.Context, field graphql.CollectedField, obj *Mod) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mod_authors(ctx, field)
 	if err != nil {
@@ -8513,6 +8631,10 @@ func (ec *executionContext) fieldContext_Mutation_createMod(ctx context.Context,
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -8648,6 +8770,10 @@ func (ec *executionContext) fieldContext_Mutation_updateMod(ctx context.Context,
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -11140,6 +11266,10 @@ func (ec *executionContext) fieldContext_Query_getMod(ctx context.Context, field
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -11242,6 +11372,10 @@ func (ec *executionContext) fieldContext_Query_getModByReference(ctx context.Con
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -11344,6 +11478,10 @@ func (ec *executionContext) fieldContext_Query_getModByIdOrReference(ctx context
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -15069,6 +15207,10 @@ func (ec *executionContext) fieldContext_UserMod_mod(_ context.Context, field gr
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -16266,6 +16408,10 @@ func (ec *executionContext) fieldContext_Version_mod(_ context.Context, field gr
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -16637,6 +16783,10 @@ func (ec *executionContext) fieldContext_VersionDependency_mod(_ context.Context
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
 				return ec.fieldContext_Mod_authors(ctx, field)
 			case "version":
@@ -19061,7 +19211,7 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "hidden", "tagIDs"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "hidden", "tagIDs", "toggle_network_use", "toggle_explicit_content"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19124,6 +19274,20 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 				return it, err
 			}
 			it.TagIDs = data
+		case "toggle_network_use":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toggle_network_use"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ToggleNetworkUse = data
+		case "toggle_explicit_content":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toggle_explicit_content"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ToggleExplicitContent = data
 		}
 	}
 
@@ -19438,7 +19602,7 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "authors", "hidden", "tagIDs", "compatibility"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "authors", "hidden", "tagIDs", "compatibility", "toggle_network_use", "toggle_explicit_content"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19515,6 +19679,20 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 				return it, err
 			}
 			it.Compatibility = data
+		case "toggle_network_use":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toggle_network_use"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ToggleNetworkUse = data
+		case "toggle_explicit_content":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toggle_explicit_content"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ToggleExplicitContent = data
 		}
 	}
 
@@ -20855,6 +21033,16 @@ func (ec *executionContext) _Mod(ctx context.Context, sel ast.SelectionSet, obj 
 			out.Values[i] = ec._Mod_tags(ctx, field, obj)
 		case "compatibility":
 			out.Values[i] = ec._Mod_compatibility(ctx, field, obj)
+		case "toggle_network_use":
+			out.Values[i] = ec._Mod_toggle_network_use(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "toggle_explicit_content":
+			out.Values[i] = ec._Mod_toggle_explicit_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "authors":
 			field := field
 
