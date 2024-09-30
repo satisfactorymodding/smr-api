@@ -15,6 +15,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -323,6 +324,21 @@ func (vc *VersionCreate) AddTargets(v ...*VersionTarget) *VersionCreate {
 	return vc.AddTargetIDs(ids...)
 }
 
+// AddVirustotalResultIDs adds the "virustotalResults" edge to the VirustotalResult entity by IDs.
+func (vc *VersionCreate) AddVirustotalResultIDs(ids ...string) *VersionCreate {
+	vc.mutation.AddVirustotalResultIDs(ids...)
+	return vc
+}
+
+// AddVirustotalResults adds the "virustotalResults" edges to the VirustotalResult entity.
+func (vc *VersionCreate) AddVirustotalResults(v ...*VirustotalResult) *VersionCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vc.AddVirustotalResultIDs(ids...)
+}
+
 // Mutation returns the VersionMutation object of the builder.
 func (vc *VersionCreate) Mutation() *VersionMutation {
 	return vc.mutation
@@ -620,6 +636,22 @@ func (vc *VersionCreate) createSpec() (*Version, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := vc.mutation.VirustotalResultsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.VirustotalResultsTable,
+			Columns: []string{version.VirustotalResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(virustotalresult.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

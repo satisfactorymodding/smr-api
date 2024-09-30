@@ -29,6 +29,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
 
 	stdsql "database/sql"
 )
@@ -66,6 +67,8 @@ type Client struct {
 	VersionDependency *VersionDependencyClient
 	// VersionTarget is the client for interacting with the VersionTarget builders.
 	VersionTarget *VersionTargetClient
+	// VirustotalResult is the client for interacting with the VirustotalResult builders.
+	VirustotalResult *VirustotalResultClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -91,6 +94,7 @@ func (c *Client) init() {
 	c.Version = NewVersionClient(c.config)
 	c.VersionDependency = NewVersionDependencyClient(c.config)
 	c.VersionTarget = NewVersionTargetClient(c.config)
+	c.VirustotalResult = NewVirustotalResultClient(c.config)
 }
 
 type (
@@ -197,6 +201,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Version:             NewVersionClient(cfg),
 		VersionDependency:   NewVersionDependencyClient(cfg),
 		VersionTarget:       NewVersionTargetClient(cfg),
+		VirustotalResult:    NewVirustotalResultClient(cfg),
 	}, nil
 }
 
@@ -230,6 +235,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Version:             NewVersionClient(cfg),
 		VersionDependency:   NewVersionDependencyClient(cfg),
 		VersionTarget:       NewVersionTargetClient(cfg),
+		VirustotalResult:    NewVirustotalResultClient(cfg),
 	}, nil
 }
 
@@ -261,7 +267,7 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.SatisfactoryVersion,
 		c.Tag, c.User, c.UserGroup, c.UserMod, c.UserSession, c.Version,
-		c.VersionDependency, c.VersionTarget,
+		c.VersionDependency, c.VersionTarget, c.VirustotalResult,
 	} {
 		n.Use(hooks...)
 	}
@@ -273,7 +279,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.SatisfactoryVersion,
 		c.Tag, c.User, c.UserGroup, c.UserMod, c.UserSession, c.Version,
-		c.VersionDependency, c.VersionTarget,
+		c.VersionDependency, c.VersionTarget, c.VirustotalResult,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -310,6 +316,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.VersionDependency.mutate(ctx, m)
 	case *VersionTargetMutation:
 		return c.VersionTarget.mutate(ctx, m)
+	case *VirustotalResultMutation:
+		return c.VirustotalResult.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -2233,6 +2241,22 @@ func (c *VersionClient) QueryTargets(v *Version) *VersionTargetQuery {
 	return query
 }
 
+// QueryVirustotalResults queries the virustotalResults edge of a Version.
+func (c *VersionClient) QueryVirustotalResults(v *Version) *VirustotalResultQuery {
+	query := (&VirustotalResultClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(version.Table, version.FieldID, id),
+			sqlgraph.To(virustotalresult.Table, virustotalresult.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, version.VirustotalResultsTable, version.VirustotalResultsColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryVersionDependencies queries the version_dependencies edge of a Version.
 func (c *VersionClient) QueryVersionDependencies(v *Version) *VersionDependencyQuery {
 	query := (&VersionDependencyClient{config: c.config}).Query()
@@ -2543,17 +2567,166 @@ func (c *VersionTargetClient) mutate(ctx context.Context, m *VersionTargetMutati
 	}
 }
 
+// VirustotalResultClient is a client for the VirustotalResult schema.
+type VirustotalResultClient struct {
+	config
+}
+
+// NewVirustotalResultClient returns a client for the VirustotalResult from the given config.
+func NewVirustotalResultClient(c config) *VirustotalResultClient {
+	return &VirustotalResultClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `virustotalresult.Hooks(f(g(h())))`.
+func (c *VirustotalResultClient) Use(hooks ...Hook) {
+	c.hooks.VirustotalResult = append(c.hooks.VirustotalResult, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `virustotalresult.Intercept(f(g(h())))`.
+func (c *VirustotalResultClient) Intercept(interceptors ...Interceptor) {
+	c.inters.VirustotalResult = append(c.inters.VirustotalResult, interceptors...)
+}
+
+// Create returns a builder for creating a VirustotalResult entity.
+func (c *VirustotalResultClient) Create() *VirustotalResultCreate {
+	mutation := newVirustotalResultMutation(c.config, OpCreate)
+	return &VirustotalResultCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of VirustotalResult entities.
+func (c *VirustotalResultClient) CreateBulk(builders ...*VirustotalResultCreate) *VirustotalResultCreateBulk {
+	return &VirustotalResultCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *VirustotalResultClient) MapCreateBulk(slice any, setFunc func(*VirustotalResultCreate, int)) *VirustotalResultCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &VirustotalResultCreateBulk{err: fmt.Errorf("calling to VirustotalResultClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*VirustotalResultCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &VirustotalResultCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for VirustotalResult.
+func (c *VirustotalResultClient) Update() *VirustotalResultUpdate {
+	mutation := newVirustotalResultMutation(c.config, OpUpdate)
+	return &VirustotalResultUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VirustotalResultClient) UpdateOne(vr *VirustotalResult) *VirustotalResultUpdateOne {
+	mutation := newVirustotalResultMutation(c.config, OpUpdateOne, withVirustotalResult(vr))
+	return &VirustotalResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VirustotalResultClient) UpdateOneID(id string) *VirustotalResultUpdateOne {
+	mutation := newVirustotalResultMutation(c.config, OpUpdateOne, withVirustotalResultID(id))
+	return &VirustotalResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for VirustotalResult.
+func (c *VirustotalResultClient) Delete() *VirustotalResultDelete {
+	mutation := newVirustotalResultMutation(c.config, OpDelete)
+	return &VirustotalResultDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *VirustotalResultClient) DeleteOne(vr *VirustotalResult) *VirustotalResultDeleteOne {
+	return c.DeleteOneID(vr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *VirustotalResultClient) DeleteOneID(id string) *VirustotalResultDeleteOne {
+	builder := c.Delete().Where(virustotalresult.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VirustotalResultDeleteOne{builder}
+}
+
+// Query returns a query builder for VirustotalResult.
+func (c *VirustotalResultClient) Query() *VirustotalResultQuery {
+	return &VirustotalResultQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeVirustotalResult},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a VirustotalResult entity by its id.
+func (c *VirustotalResultClient) Get(ctx context.Context, id string) (*VirustotalResult, error) {
+	return c.Query().Where(virustotalresult.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VirustotalResultClient) GetX(ctx context.Context, id string) *VirustotalResult {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVersion queries the version edge of a VirustotalResult.
+func (c *VirustotalResultClient) QueryVersion(vr *VirustotalResult) *VersionQuery {
+	query := (&VersionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := vr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(virustotalresult.Table, virustotalresult.FieldID, id),
+			sqlgraph.To(version.Table, version.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, virustotalresult.VersionTable, virustotalresult.VersionColumn),
+		)
+		fromV = sqlgraph.Neighbors(vr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *VirustotalResultClient) Hooks() []Hook {
+	return c.hooks.VirustotalResult
+}
+
+// Interceptors returns the client interceptors.
+func (c *VirustotalResultClient) Interceptors() []Interceptor {
+	return c.inters.VirustotalResult
+}
+
+func (c *VirustotalResultClient) mutate(ctx context.Context, m *VirustotalResultMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VirustotalResultCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VirustotalResultUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VirustotalResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VirustotalResultDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown VirustotalResult mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
 		Announcement, Guide, GuideTag, Mod, ModTag, SatisfactoryVersion, Tag, User,
-		UserGroup, UserMod, UserSession, Version, VersionDependency,
-		VersionTarget []ent.Hook
+		UserGroup, UserMod, UserSession, Version, VersionDependency, VersionTarget,
+		VirustotalResult []ent.Hook
 	}
 	inters struct {
 		Announcement, Guide, GuideTag, Mod, ModTag, SatisfactoryVersion, Tag, User,
-		UserGroup, UserMod, UserSession, Version, VersionDependency,
-		VersionTarget []ent.Interceptor
+		UserGroup, UserMod, UserSession, Version, VersionDependency, VersionTarget,
+		VirustotalResult []ent.Interceptor
 	}
 )
 

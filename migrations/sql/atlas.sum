@@ -1,4 +1,4 @@
-h1:2EEkTJ5/cFJukKW9EvHqF3JZQyc3QpeBvHJsZBnAH9U=
+h1:ADa8If2Im89+HGH5+3CDPGHmApUGfTFBBRPv2OiRBFw=
 000001_create_initial_tables.down.sql h1:QcXXwE8ir3PM3vZjQfBihY55WiuLYjN8pbbk/L6U+bs=
 000001_create_initial_tables.up.sql h1:EfAqETefs7TW9BDVS4ukiB7wUFs+HQzVdc3qHhdAFd4=
 000002_create_user_group_table.down.sql h1:uJjRbQ3H7yvPGNXLD5iSPmderEoWhCNGdsqN8yqBIRY=
@@ -71,3 +71,5 @@ h1:2EEkTJ5/cFJukKW9EvHqF3JZQyc3QpeBvHJsZBnAH9U=
 20240823233610_add_mod_toggles.up.sql h1:GuKMUrlGo1PppjX0uiw3OTyi2nziRI+o/LVtWfcjyLc=
 20240826153722_add_thumbhash.down.sql h1:FN73gi6XvAkodHxFuE4oDU73FfchoyonlyroQTrwCW0=
 20240826153722_add_thumbhash.up.sql h1:7a9d40zpOnKMamxW14ql3WFXiwXD4O6AjwMlAOVE7ik=
+20240924122249_create_mod_virustotal_table.down.sql h1:N4lhxX9Q/D9/Ta5vf+65y12qO7eF9ggdw34ku7EIPxw=
+20240924122249_create_mod_virustotal_table.up.sql h1:XisN/RjEgpELOdQSx1y7crbSNt51mKXi6hWESdVkvpk=

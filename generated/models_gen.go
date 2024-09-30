@@ -71,6 +71,11 @@ type GetVersions struct {
 	Count    int        `json:"count"`
 }
 
+type GetVirustotalResults struct {
+	VirustotalResults []*VirustotalResult `json:"virustotal_results"`
+	Count             int                 `json:"count"`
+}
+
 type Group struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -288,24 +293,25 @@ type UserSession struct {
 }
 
 type Version struct {
-	ID           string               `json:"id"`
-	ModID        string               `json:"mod_id"`
-	Version      string               `json:"version"`
-	SmlVersion   string               `json:"sml_version"`
-	GameVersion  string               `json:"game_version"`
-	Changelog    string               `json:"changelog"`
-	Downloads    int                  `json:"downloads"`
-	Stability    VersionStabilities   `json:"stability"`
-	Approved     bool                 `json:"approved"`
-	UpdatedAt    string               `json:"updated_at"`
-	CreatedAt    string               `json:"created_at"`
-	Link         string               `json:"link"`
-	Targets      []*VersionTarget     `json:"targets"`
-	Metadata     *string              `json:"metadata,omitempty"`
-	Size         *int                 `json:"size,omitempty"`
-	Hash         *string              `json:"hash,omitempty"`
-	Mod          *Mod                 `json:"mod"`
-	Dependencies []*VersionDependency `json:"dependencies"`
+	ID                string               `json:"id"`
+	ModID             string               `json:"mod_id"`
+	Version           string               `json:"version"`
+	SmlVersion        string               `json:"sml_version"`
+	GameVersion       string               `json:"game_version"`
+	Changelog         string               `json:"changelog"`
+	Downloads         int                  `json:"downloads"`
+	Stability         VersionStabilities   `json:"stability"`
+	Approved          bool                 `json:"approved"`
+	UpdatedAt         string               `json:"updated_at"`
+	CreatedAt         string               `json:"created_at"`
+	Link              string               `json:"link"`
+	Targets           []*VersionTarget     `json:"targets"`
+	Metadata          *string              `json:"metadata,omitempty"`
+	Size              *int                 `json:"size,omitempty"`
+	Hash              *string              `json:"hash,omitempty"`
+	Mod               *Mod                 `json:"mod"`
+	Dependencies      []*VersionDependency `json:"dependencies"`
+	VirustotalResults []*VirustotalResult  `json:"virustotalResults"`
 }
 
 type VersionDependency struct {
@@ -324,6 +330,18 @@ type VersionTarget struct {
 	Link       string     `json:"link"`
 	Size       *int       `json:"size,omitempty"`
 	Hash       *string    `json:"hash,omitempty"`
+	ID         string     `json:"id"`
+}
+
+type VirustotalResult struct {
+	ID        *string `json:"id,omitempty"`
+	Hash      string  `json:"hash"`
+	URL       string  `json:"url"`
+	Safe      bool    `json:"safe"`
+	FileName  string  `json:"file_name"`
+	VersionID string  `json:"version_id"`
+	CreatedAt string  `json:"created_at"`
+	UpdatedAt *string `json:"updated_at,omitempty"`
 }
 
 type AnnouncementImportance string
@@ -728,5 +746,54 @@ func (e *VersionStabilities) UnmarshalGQL(v interface{}) error {
 }
 
 func (e VersionStabilities) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type VirustotalResultFields string
+
+const (
+	VirustotalResultFieldsID        VirustotalResultFields = "id"
+	VirustotalResultFieldsHash      VirustotalResultFields = "hash"
+	VirustotalResultFieldsSafe      VirustotalResultFields = "safe"
+	VirustotalResultFieldsVersionID VirustotalResultFields = "version_id"
+	VirustotalResultFieldsCreatedAt VirustotalResultFields = "created_at"
+	VirustotalResultFieldsUpdatedAt VirustotalResultFields = "updated_at"
+)
+
+var AllVirustotalResultFields = []VirustotalResultFields{
+	VirustotalResultFieldsID,
+	VirustotalResultFieldsHash,
+	VirustotalResultFieldsSafe,
+	VirustotalResultFieldsVersionID,
+	VirustotalResultFieldsCreatedAt,
+	VirustotalResultFieldsUpdatedAt,
+}
+
+func (e VirustotalResultFields) IsValid() bool {
+	switch e {
+	case VirustotalResultFieldsID, VirustotalResultFieldsHash, VirustotalResultFieldsSafe, VirustotalResultFieldsVersionID, VirustotalResultFieldsCreatedAt, VirustotalResultFieldsUpdatedAt:
+		return true
+	}
+	return false
+}
+
+func (e VirustotalResultFields) String() string {
+	return string(e)
+}
+
+func (e *VirustotalResultFields) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = VirustotalResultFields(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid VirustotalResultFields", str)
+	}
+	return nil
+}
+
+func (e VirustotalResultFields) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

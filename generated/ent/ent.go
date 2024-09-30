@@ -26,6 +26,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -100,6 +101,7 @@ func checkColumn(table, column string) error {
 			version.Table:             version.ValidColumn,
 			versiondependency.Table:   versiondependency.ValidColumn,
 			versiontarget.Table:       versiontarget.ValidColumn,
+			virustotalresult.Table:    virustotalresult.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

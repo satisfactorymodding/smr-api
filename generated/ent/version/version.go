@@ -63,6 +63,8 @@ const (
 	EdgeDependencies = "dependencies"
 	// EdgeTargets holds the string denoting the targets edge name in mutations.
 	EdgeTargets = "targets"
+	// EdgeVirustotalResults holds the string denoting the virustotalresults edge name in mutations.
+	EdgeVirustotalResults = "virustotalResults"
 	// EdgeVersionDependencies holds the string denoting the version_dependencies edge name in mutations.
 	EdgeVersionDependencies = "version_dependencies"
 	// Table holds the table name of the version in the database.
@@ -86,6 +88,13 @@ const (
 	TargetsInverseTable = "version_targets"
 	// TargetsColumn is the table column denoting the targets relation/edge.
 	TargetsColumn = "version_id"
+	// VirustotalResultsTable is the table that holds the virustotalResults relation/edge.
+	VirustotalResultsTable = "virustotal_results"
+	// VirustotalResultsInverseTable is the table name for the VirustotalResult entity.
+	// It exists in this package in order to avoid circular dependency with the "virustotalresult" package.
+	VirustotalResultsInverseTable = "virustotal_results"
+	// VirustotalResultsColumn is the table column denoting the virustotalResults relation/edge.
+	VirustotalResultsColumn = "version_id"
 	// VersionDependenciesTable is the table that holds the version_dependencies relation/edge.
 	VersionDependenciesTable = "version_dependencies"
 	// VersionDependenciesInverseTable is the table name for the VersionDependency entity.
@@ -323,6 +332,20 @@ func ByTargets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByVirustotalResultsCount orders the results by virustotalResults count.
+func ByVirustotalResultsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newVirustotalResultsStep(), opts...)
+	}
+}
+
+// ByVirustotalResults orders the results by virustotalResults terms.
+func ByVirustotalResults(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVirustotalResultsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByVersionDependenciesCount orders the results by version_dependencies count.
 func ByVersionDependenciesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -355,6 +378,13 @@ func newTargetsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TargetsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, TargetsTable, TargetsColumn),
+	)
+}
+func newVirustotalResultsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VirustotalResultsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, VirustotalResultsTable, VirustotalResultsColumn),
 	)
 }
 func newVersionDependenciesStep() *sqlgraph.Step {

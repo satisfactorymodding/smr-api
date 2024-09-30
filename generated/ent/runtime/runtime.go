@@ -17,6 +17,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -420,6 +421,47 @@ func init() {
 	versiontargetDescID := versiontargetMixinFields0[0].Descriptor()
 	// versiontarget.DefaultID holds the default value on creation for the id field.
 	versiontarget.DefaultID = versiontargetDescID.Default.(func() string)
+	virustotalresultMixin := schema.VirustotalResult{}.Mixin()
+	virustotalresultMixinFields0 := virustotalresultMixin[0].Fields()
+	_ = virustotalresultMixinFields0
+	virustotalresultMixinFields1 := virustotalresultMixin[1].Fields()
+	_ = virustotalresultMixinFields1
+	virustotalresultFields := schema.VirustotalResult{}.Fields()
+	_ = virustotalresultFields
+	// virustotalresultDescCreatedAt is the schema descriptor for created_at field.
+	virustotalresultDescCreatedAt := virustotalresultMixinFields1[0].Descriptor()
+	// virustotalresult.DefaultCreatedAt holds the default value on creation for the created_at field.
+	virustotalresult.DefaultCreatedAt = virustotalresultDescCreatedAt.Default.(func() time.Time)
+	// virustotalresultDescUpdatedAt is the schema descriptor for updated_at field.
+	virustotalresultDescUpdatedAt := virustotalresultMixinFields1[1].Descriptor()
+	// virustotalresult.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	virustotalresult.DefaultUpdatedAt = virustotalresultDescUpdatedAt.Default.(func() time.Time)
+	// virustotalresult.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	virustotalresult.UpdateDefaultUpdatedAt = virustotalresultDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// virustotalresultDescSafe is the schema descriptor for safe field.
+	virustotalresultDescSafe := virustotalresultFields[0].Descriptor()
+	// virustotalresult.DefaultSafe holds the default value on creation for the safe field.
+	virustotalresult.DefaultSafe = virustotalresultDescSafe.Default.(bool)
+	// virustotalresultDescURL is the schema descriptor for url field.
+	virustotalresultDescURL := virustotalresultFields[1].Descriptor()
+	// virustotalresult.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	virustotalresult.URLValidator = virustotalresultDescURL.Validators[0].(func(string) error)
+	// virustotalresultDescHash is the schema descriptor for hash field.
+	virustotalresultDescHash := virustotalresultFields[2].Descriptor()
+	// virustotalresult.HashValidator is a validator for the "hash" field. It is called by the builders before save.
+	virustotalresult.HashValidator = virustotalresultDescHash.Validators[0].(func(string) error)
+	// virustotalresultDescFileName is the schema descriptor for file_name field.
+	virustotalresultDescFileName := virustotalresultFields[3].Descriptor()
+	// virustotalresult.FileNameValidator is a validator for the "file_name" field. It is called by the builders before save.
+	virustotalresult.FileNameValidator = virustotalresultDescFileName.Validators[0].(func(string) error)
+	// virustotalresultDescVersionID is the schema descriptor for version_id field.
+	virustotalresultDescVersionID := virustotalresultFields[4].Descriptor()
+	// virustotalresult.VersionIDValidator is a validator for the "version_id" field. It is called by the builders before save.
+	virustotalresult.VersionIDValidator = virustotalresultDescVersionID.Validators[0].(func(string) error)
+	// virustotalresultDescID is the schema descriptor for id field.
+	virustotalresultDescID := virustotalresultMixinFields0[0].Descriptor()
+	// virustotalresult.DefaultID holds the default value on creation for the id field.
+	virustotalresult.DefaultID = virustotalresultDescID.Default.(func() string)
 }
 
 const (

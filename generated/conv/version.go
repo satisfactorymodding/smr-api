@@ -129,6 +129,7 @@ func (c *VersionImpl) ConvertTarget(source *ent.VersionTarget) *generated.Versio
 		generatedVersionTarget.Size = &pInt
 		pString := (*source).Hash
 		generatedVersionTarget.Hash = &pString
+		generatedVersionTarget.ID = (*source).ID
 		pGeneratedVersionTarget = &generatedVersionTarget
 	}
 	return pGeneratedVersionTarget

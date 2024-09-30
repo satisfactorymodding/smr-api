@@ -74,6 +74,10 @@ func (r *Resolver) VersionDependency() generated.VersionDependencyResolver {
 	return &versionDependencyResolver{r}
 }
 
+// func (r *Resolver) GetVirustotalResults() generated.GetVirustotalResults {
+// 	return &getVirustotalResultsResolver{r}
+// }
+
 type mutationResolver struct{ *Resolver }
 
 type queryResolver struct{ *Resolver }

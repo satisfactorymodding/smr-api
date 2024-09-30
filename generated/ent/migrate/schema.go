@@ -3,6 +3,7 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
@@ -470,6 +471,31 @@ var (
 			},
 		},
 	}
+	// VirustotalResultsColumns holds the columns for the "virustotal_results" table.
+	VirustotalResultsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "safe", Type: field.TypeBool, Default: false},
+		{Name: "url", Type: field.TypeString},
+		{Name: "hash", Type: field.TypeString, Unique: true},
+		{Name: "file_name", Type: field.TypeString},
+		{Name: "version_id", Type: field.TypeString},
+	}
+	// VirustotalResultsTable holds the schema information for the "virustotal_results" table.
+	VirustotalResultsTable = &schema.Table{
+		Name:       "virustotal_results",
+		Columns:    VirustotalResultsColumns,
+		PrimaryKey: []*schema.Column{VirustotalResultsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "virustotal_results_versions_virustotalResults",
+				Columns:    []*schema.Column{VirustotalResultsColumns[7]},
+				RefColumns: []*schema.Column{VersionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AnnouncementsTable,
@@ -486,6 +512,7 @@ var (
 		VersionsTable,
 		VersionDependenciesTable,
 		VersionTargetsTable,
+		VirustotalResultsTable,
 	}
 )
 
@@ -503,4 +530,8 @@ func init() {
 	VersionDependenciesTable.ForeignKeys[0].RefTable = VersionsTable
 	VersionDependenciesTable.ForeignKeys[1].RefTable = ModsTable
 	VersionTargetsTable.ForeignKeys[0].RefTable = VersionsTable
+	VirustotalResultsTable.ForeignKeys[0].RefTable = VersionsTable
+	VirustotalResultsTable.Annotation = &entsql.Annotation{
+		Table: "virustotal_results",
+	}
 }

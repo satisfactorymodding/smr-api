@@ -23,6 +23,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
 )
 
 // The Query interface represents an operation that queries a graph.
@@ -459,6 +460,33 @@ func (f TraverseVersionTarget) Traverse(ctx context.Context, q ent.Query) error 
 	return fmt.Errorf("unexpected query type %T. expect *ent.VersionTargetQuery", q)
 }
 
+// The VirustotalResultFunc type is an adapter to allow the use of ordinary function as a Querier.
+type VirustotalResultFunc func(context.Context, *ent.VirustotalResultQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f VirustotalResultFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.VirustotalResultQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.VirustotalResultQuery", q)
+}
+
+// The TraverseVirustotalResult type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseVirustotalResult func(context.Context, *ent.VirustotalResultQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseVirustotalResult) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseVirustotalResult) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.VirustotalResultQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.VirustotalResultQuery", q)
+}
+
 // NewQuery returns the generic Query interface for the given typed query.
 func NewQuery(q ent.Query) (Query, error) {
 	switch q := q.(type) {
@@ -490,6 +518,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.VersionDependencyQuery, predicate.VersionDependency, versiondependency.OrderOption]{typ: ent.TypeVersionDependency, tq: q}, nil
 	case *ent.VersionTargetQuery:
 		return &query[*ent.VersionTargetQuery, predicate.VersionTarget, versiontarget.OrderOption]{typ: ent.TypeVersionTarget, tq: q}, nil
+	case *ent.VirustotalResultQuery:
+		return &query[*ent.VirustotalResultQuery, predicate.VirustotalResult, virustotalresult.OrderOption]{typ: ent.TypeVirustotalResult, tq: q}, nil
 	default:
 		return nil, fmt.Errorf("unknown query type %T", q)
 	}
