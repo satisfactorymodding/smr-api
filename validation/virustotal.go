@@ -16,9 +16,6 @@ import (
 
 var client *vt.Client
 
-var requestLimit = 4
-var dailyRequestLimit = 500
-var monthlyRequestLimit = 15500
 var analysisURL = "https://www.virustotal.com/gui/file/%s"
 
 func InitializeVirusTotal() {
