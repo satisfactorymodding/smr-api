@@ -19,7 +19,6 @@ func (c *VirustotalResultImpl) Convert(source *ent.VirustotalResult) *generated.
 		pString := (*source).ID
 		generatedVirustotalResult.ID = &pString
 		generatedVirustotalResult.Hash = (*source).Hash
-		generatedVirustotalResult.URL = (*source).URL
 		generatedVirustotalResult.Safe = (*source).Safe
 		generatedVirustotalResult.FileName = (*source).FileName
 		generatedVirustotalResult.VersionID = (*source).VersionID

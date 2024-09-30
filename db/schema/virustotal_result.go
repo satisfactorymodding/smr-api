@@ -22,8 +22,6 @@ func (VirustotalResult) Mixin() []ent.Mixin {
 func (VirustotalResult) Fields() []ent.Field {
 	return []ent.Field{
 		field.Bool("safe").Default(false),
-		field.String("url").
-			NotEmpty(),
 		field.String("hash").Unique().NotEmpty(),
 		field.String("file_name").NotEmpty(),
 		field.String("version_id").NotEmpty(),

@@ -50,20 +50,6 @@ func (vru *VirustotalResultUpdate) SetNillableSafe(b *bool) *VirustotalResultUpd
 	return vru
 }
 
-// SetURL sets the "url" field.
-func (vru *VirustotalResultUpdate) SetURL(s string) *VirustotalResultUpdate {
-	vru.mutation.SetURL(s)
-	return vru
-}
-
-// SetNillableURL sets the "url" field if the given value is not nil.
-func (vru *VirustotalResultUpdate) SetNillableURL(s *string) *VirustotalResultUpdate {
-	if s != nil {
-		vru.SetURL(*s)
-	}
-	return vru
-}
-
 // SetHash sets the "hash" field.
 func (vru *VirustotalResultUpdate) SetHash(s string) *VirustotalResultUpdate {
 	vru.mutation.SetHash(s)
@@ -160,11 +146,6 @@ func (vru *VirustotalResultUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (vru *VirustotalResultUpdate) check() error {
-	if v, ok := vru.mutation.URL(); ok {
-		if err := virustotalresult.URLValidator(v); err != nil {
-			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "VirustotalResult.url": %w`, err)}
-		}
-	}
 	if v, ok := vru.mutation.Hash(); ok {
 		if err := virustotalresult.HashValidator(v); err != nil {
 			return &ValidationError{Name: "hash", err: fmt.Errorf(`ent: validator failed for field "VirustotalResult.hash": %w`, err)}
@@ -209,9 +190,6 @@ func (vru *VirustotalResultUpdate) sqlSave(ctx context.Context) (n int, err erro
 	}
 	if value, ok := vru.mutation.Safe(); ok {
 		_spec.SetField(virustotalresult.FieldSafe, field.TypeBool, value)
-	}
-	if value, ok := vru.mutation.URL(); ok {
-		_spec.SetField(virustotalresult.FieldURL, field.TypeString, value)
 	}
 	if value, ok := vru.mutation.Hash(); ok {
 		_spec.SetField(virustotalresult.FieldHash, field.TypeString, value)
@@ -286,20 +264,6 @@ func (vruo *VirustotalResultUpdateOne) SetSafe(b bool) *VirustotalResultUpdateOn
 func (vruo *VirustotalResultUpdateOne) SetNillableSafe(b *bool) *VirustotalResultUpdateOne {
 	if b != nil {
 		vruo.SetSafe(*b)
-	}
-	return vruo
-}
-
-// SetURL sets the "url" field.
-func (vruo *VirustotalResultUpdateOne) SetURL(s string) *VirustotalResultUpdateOne {
-	vruo.mutation.SetURL(s)
-	return vruo
-}
-
-// SetNillableURL sets the "url" field if the given value is not nil.
-func (vruo *VirustotalResultUpdateOne) SetNillableURL(s *string) *VirustotalResultUpdateOne {
-	if s != nil {
-		vruo.SetURL(*s)
 	}
 	return vruo
 }
@@ -413,11 +377,6 @@ func (vruo *VirustotalResultUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (vruo *VirustotalResultUpdateOne) check() error {
-	if v, ok := vruo.mutation.URL(); ok {
-		if err := virustotalresult.URLValidator(v); err != nil {
-			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "VirustotalResult.url": %w`, err)}
-		}
-	}
 	if v, ok := vruo.mutation.Hash(); ok {
 		if err := virustotalresult.HashValidator(v); err != nil {
 			return &ValidationError{Name: "hash", err: fmt.Errorf(`ent: validator failed for field "VirustotalResult.hash": %w`, err)}
@@ -479,9 +438,6 @@ func (vruo *VirustotalResultUpdateOne) sqlSave(ctx context.Context) (_node *Viru
 	}
 	if value, ok := vruo.mutation.Safe(); ok {
 		_spec.SetField(virustotalresult.FieldSafe, field.TypeBool, value)
-	}
-	if value, ok := vruo.mutation.URL(); ok {
-		_spec.SetField(virustotalresult.FieldURL, field.TypeString, value)
 	}
 	if value, ok := vruo.mutation.Hash(); ok {
 		_spec.SetField(virustotalresult.FieldHash, field.TypeString, value)

@@ -6,7 +6,6 @@ scalar VirustotalID
 type VirustotalResult {
     id: VirustotalID
     hash: VirustotalHash!
-    url: String!
     safe: Boolean!
     file_name: String!
     version_id: String!

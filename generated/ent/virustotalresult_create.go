@@ -66,12 +66,6 @@ func (vrc *VirustotalResultCreate) SetNillableSafe(b *bool) *VirustotalResultCre
 	return vrc
 }
 
-// SetURL sets the "url" field.
-func (vrc *VirustotalResultCreate) SetURL(s string) *VirustotalResultCreate {
-	vrc.mutation.SetURL(s)
-	return vrc
-}
-
 // SetHash sets the "hash" field.
 func (vrc *VirustotalResultCreate) SetHash(s string) *VirustotalResultCreate {
 	vrc.mutation.SetHash(s)
@@ -173,14 +167,6 @@ func (vrc *VirustotalResultCreate) check() error {
 	if _, ok := vrc.mutation.Safe(); !ok {
 		return &ValidationError{Name: "safe", err: errors.New(`ent: missing required field "VirustotalResult.safe"`)}
 	}
-	if _, ok := vrc.mutation.URL(); !ok {
-		return &ValidationError{Name: "url", err: errors.New(`ent: missing required field "VirustotalResult.url"`)}
-	}
-	if v, ok := vrc.mutation.URL(); ok {
-		if err := virustotalresult.URLValidator(v); err != nil {
-			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "VirustotalResult.url": %w`, err)}
-		}
-	}
 	if _, ok := vrc.mutation.Hash(); !ok {
 		return &ValidationError{Name: "hash", err: errors.New(`ent: missing required field "VirustotalResult.hash"`)}
 	}
@@ -255,10 +241,6 @@ func (vrc *VirustotalResultCreate) createSpec() (*VirustotalResult, *sqlgraph.Cr
 	if value, ok := vrc.mutation.Safe(); ok {
 		_spec.SetField(virustotalresult.FieldSafe, field.TypeBool, value)
 		_node.Safe = value
-	}
-	if value, ok := vrc.mutation.URL(); ok {
-		_spec.SetField(virustotalresult.FieldURL, field.TypeString, value)
-		_node.URL = value
 	}
 	if value, ok := vrc.mutation.Hash(); ok {
 		_spec.SetField(virustotalresult.FieldHash, field.TypeString, value)
@@ -358,18 +340,6 @@ func (u *VirustotalResultUpsert) SetSafe(v bool) *VirustotalResultUpsert {
 // UpdateSafe sets the "safe" field to the value that was provided on create.
 func (u *VirustotalResultUpsert) UpdateSafe() *VirustotalResultUpsert {
 	u.SetExcluded(virustotalresult.FieldSafe)
-	return u
-}
-
-// SetURL sets the "url" field.
-func (u *VirustotalResultUpsert) SetURL(v string) *VirustotalResultUpsert {
-	u.Set(virustotalresult.FieldURL, v)
-	return u
-}
-
-// UpdateURL sets the "url" field to the value that was provided on create.
-func (u *VirustotalResultUpsert) UpdateURL() *VirustotalResultUpsert {
-	u.SetExcluded(virustotalresult.FieldURL)
 	return u
 }
 
@@ -485,20 +455,6 @@ func (u *VirustotalResultUpsertOne) SetSafe(v bool) *VirustotalResultUpsertOne {
 func (u *VirustotalResultUpsertOne) UpdateSafe() *VirustotalResultUpsertOne {
 	return u.Update(func(s *VirustotalResultUpsert) {
 		s.UpdateSafe()
-	})
-}
-
-// SetURL sets the "url" field.
-func (u *VirustotalResultUpsertOne) SetURL(v string) *VirustotalResultUpsertOne {
-	return u.Update(func(s *VirustotalResultUpsert) {
-		s.SetURL(v)
-	})
-}
-
-// UpdateURL sets the "url" field to the value that was provided on create.
-func (u *VirustotalResultUpsertOne) UpdateURL() *VirustotalResultUpsertOne {
-	return u.Update(func(s *VirustotalResultUpsert) {
-		s.UpdateURL()
 	})
 }
 
@@ -787,20 +743,6 @@ func (u *VirustotalResultUpsertBulk) SetSafe(v bool) *VirustotalResultUpsertBulk
 func (u *VirustotalResultUpsertBulk) UpdateSafe() *VirustotalResultUpsertBulk {
 	return u.Update(func(s *VirustotalResultUpsert) {
 		s.UpdateSafe()
-	})
-}
-
-// SetURL sets the "url" field.
-func (u *VirustotalResultUpsertBulk) SetURL(v string) *VirustotalResultUpsertBulk {
-	return u.Update(func(s *VirustotalResultUpsert) {
-		s.SetURL(v)
-	})
-}
-
-// UpdateURL sets the "url" field to the value that was provided on create.
-func (u *VirustotalResultUpsertBulk) UpdateURL() *VirustotalResultUpsertBulk {
-	return u.Update(func(s *VirustotalResultUpsert) {
-		s.UpdateURL()
 	})
 }
 

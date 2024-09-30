@@ -83,13 +83,12 @@ func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTo
 	for _, scanResult := range scanResults {
 		if !scanResult.Safe {
 			success = false
-			slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", args.ModID), slog.String("version", args.VersionID), slog.String("analysis_url", *scanResult.URL))
+			slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", args.ModID), slog.String("version", args.VersionID))
 		}
 	}
 	_, err = db.From(ctx).VirustotalResult.MapCreateBulk(scanResults,
 		func(c *ent.VirustotalResultCreate, i int) {
-			c.SetURL(*scanResults[i].URL).
-				SetSafe(scanResults[i].Safe).
+			c.SetSafe(scanResults[i].Safe).
 				SetVersionID(args.VersionID).
 				SetFileName(scanResults[i].FileName).
 				OnConflict().

@@ -24,8 +24,6 @@ type VirustotalResult struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Safe holds the value of the "safe" field.
 	Safe bool `json:"safe,omitempty"`
-	// URL holds the value of the "url" field.
-	URL string `json:"url,omitempty"`
 	// Hash holds the value of the "hash" field.
 	Hash string `json:"hash,omitempty"`
 	// FileName holds the value of the "file_name" field.
@@ -65,7 +63,7 @@ func (*VirustotalResult) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case virustotalresult.FieldSafe:
 			values[i] = new(sql.NullBool)
-		case virustotalresult.FieldID, virustotalresult.FieldURL, virustotalresult.FieldHash, virustotalresult.FieldFileName, virustotalresult.FieldVersionID:
+		case virustotalresult.FieldID, virustotalresult.FieldHash, virustotalresult.FieldFileName, virustotalresult.FieldVersionID:
 			values[i] = new(sql.NullString)
 		case virustotalresult.FieldCreatedAt, virustotalresult.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -107,12 +105,6 @@ func (vr *VirustotalResult) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field safe", values[i])
 			} else if value.Valid {
 				vr.Safe = value.Bool
-			}
-		case virustotalresult.FieldURL:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field url", values[i])
-			} else if value.Valid {
-				vr.URL = value.String
 			}
 		case virustotalresult.FieldHash:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -181,9 +173,6 @@ func (vr *VirustotalResult) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("safe=")
 	builder.WriteString(fmt.Sprintf("%v", vr.Safe))
-	builder.WriteString(", ")
-	builder.WriteString("url=")
-	builder.WriteString(vr.URL)
 	builder.WriteString(", ")
 	builder.WriteString("hash=")
 	builder.WriteString(vr.Hash)

@@ -20,8 +20,6 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldSafe holds the string denoting the safe field in the database.
 	FieldSafe = "safe"
-	// FieldURL holds the string denoting the url field in the database.
-	FieldURL = "url"
 	// FieldHash holds the string denoting the hash field in the database.
 	FieldHash = "hash"
 	// FieldFileName holds the string denoting the file_name field in the database.
@@ -47,7 +45,6 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldSafe,
-	FieldURL,
 	FieldHash,
 	FieldFileName,
 	FieldVersionID,
@@ -72,8 +69,6 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultSafe holds the default value on creation for the "safe" field.
 	DefaultSafe bool
-	// URLValidator is a validator for the "url" field. It is called by the builders before save.
-	URLValidator func(string) error
 	// HashValidator is a validator for the "hash" field. It is called by the builders before save.
 	HashValidator func(string) error
 	// FileNameValidator is a validator for the "file_name" field. It is called by the builders before save.
@@ -105,11 +100,6 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 // BySafe orders the results by the safe field.
 func BySafe(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSafe, opts...).ToFunc()
-}
-
-// ByURL orders the results by the url field.
-func ByURL(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldURL, opts...).ToFunc()
 }
 
 // ByHash orders the results by the hash field.

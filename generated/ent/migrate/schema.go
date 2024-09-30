@@ -477,7 +477,6 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "safe", Type: field.TypeBool, Default: false},
-		{Name: "url", Type: field.TypeString},
 		{Name: "hash", Type: field.TypeString, Unique: true},
 		{Name: "file_name", Type: field.TypeString},
 		{Name: "version_id", Type: field.TypeString},
@@ -490,7 +489,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "virustotal_results_versions_virustotal_results",
-				Columns:    []*schema.Column{VirustotalResultsColumns[7]},
+				Columns:    []*schema.Column{VirustotalResultsColumns[6]},
 				RefColumns: []*schema.Column{VersionsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

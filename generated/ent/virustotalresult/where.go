@@ -80,11 +80,6 @@ func Safe(v bool) predicate.VirustotalResult {
 	return predicate.VirustotalResult(sql.FieldEQ(FieldSafe, v))
 }
 
-// URL applies equality check predicate on the "url" field. It's identical to URLEQ.
-func URL(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldEQ(FieldURL, v))
-}
-
 // Hash applies equality check predicate on the "hash" field. It's identical to HashEQ.
 func Hash(v string) predicate.VirustotalResult {
 	return predicate.VirustotalResult(sql.FieldEQ(FieldHash, v))
@@ -188,71 +183,6 @@ func SafeEQ(v bool) predicate.VirustotalResult {
 // SafeNEQ applies the NEQ predicate on the "safe" field.
 func SafeNEQ(v bool) predicate.VirustotalResult {
 	return predicate.VirustotalResult(sql.FieldNEQ(FieldSafe, v))
-}
-
-// URLEQ applies the EQ predicate on the "url" field.
-func URLEQ(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldEQ(FieldURL, v))
-}
-
-// URLNEQ applies the NEQ predicate on the "url" field.
-func URLNEQ(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldNEQ(FieldURL, v))
-}
-
-// URLIn applies the In predicate on the "url" field.
-func URLIn(vs ...string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldIn(FieldURL, vs...))
-}
-
-// URLNotIn applies the NotIn predicate on the "url" field.
-func URLNotIn(vs ...string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldNotIn(FieldURL, vs...))
-}
-
-// URLGT applies the GT predicate on the "url" field.
-func URLGT(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldGT(FieldURL, v))
-}
-
-// URLGTE applies the GTE predicate on the "url" field.
-func URLGTE(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldGTE(FieldURL, v))
-}
-
-// URLLT applies the LT predicate on the "url" field.
-func URLLT(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldLT(FieldURL, v))
-}
-
-// URLLTE applies the LTE predicate on the "url" field.
-func URLLTE(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldLTE(FieldURL, v))
-}
-
-// URLContains applies the Contains predicate on the "url" field.
-func URLContains(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldContains(FieldURL, v))
-}
-
-// URLHasPrefix applies the HasPrefix predicate on the "url" field.
-func URLHasPrefix(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldHasPrefix(FieldURL, v))
-}
-
-// URLHasSuffix applies the HasSuffix predicate on the "url" field.
-func URLHasSuffix(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldHasSuffix(FieldURL, v))
-}
-
-// URLEqualFold applies the EqualFold predicate on the "url" field.
-func URLEqualFold(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldEqualFold(FieldURL, v))
-}
-
-// URLContainsFold applies the ContainsFold predicate on the "url" field.
-func URLContainsFold(v string) predicate.VirustotalResult {
-	return predicate.VirustotalResult(sql.FieldContainsFold(FieldURL, v))
 }
 
 // HashEQ applies the EQ predicate on the "hash" field.

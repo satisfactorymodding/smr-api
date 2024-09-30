@@ -331,7 +331,6 @@ type VersionTarget struct {
 type VirustotalResult struct {
 	ID        *string `json:"id,omitempty"`
 	Hash      string  `json:"hash"`
-	URL       string  `json:"url"`
 	Safe      bool    `json:"safe"`
 	FileName  string  `json:"file_name"`
 	VersionID string  `json:"version_id"`

@@ -442,20 +442,16 @@ func init() {
 	virustotalresultDescSafe := virustotalresultFields[0].Descriptor()
 	// virustotalresult.DefaultSafe holds the default value on creation for the safe field.
 	virustotalresult.DefaultSafe = virustotalresultDescSafe.Default.(bool)
-	// virustotalresultDescURL is the schema descriptor for url field.
-	virustotalresultDescURL := virustotalresultFields[1].Descriptor()
-	// virustotalresult.URLValidator is a validator for the "url" field. It is called by the builders before save.
-	virustotalresult.URLValidator = virustotalresultDescURL.Validators[0].(func(string) error)
 	// virustotalresultDescHash is the schema descriptor for hash field.
-	virustotalresultDescHash := virustotalresultFields[2].Descriptor()
+	virustotalresultDescHash := virustotalresultFields[1].Descriptor()
 	// virustotalresult.HashValidator is a validator for the "hash" field. It is called by the builders before save.
 	virustotalresult.HashValidator = virustotalresultDescHash.Validators[0].(func(string) error)
 	// virustotalresultDescFileName is the schema descriptor for file_name field.
-	virustotalresultDescFileName := virustotalresultFields[3].Descriptor()
+	virustotalresultDescFileName := virustotalresultFields[2].Descriptor()
 	// virustotalresult.FileNameValidator is a validator for the "file_name" field. It is called by the builders before save.
 	virustotalresult.FileNameValidator = virustotalresultDescFileName.Validators[0].(func(string) error)
 	// virustotalresultDescVersionID is the schema descriptor for version_id field.
-	virustotalresultDescVersionID := virustotalresultFields[4].Descriptor()
+	virustotalresultDescVersionID := virustotalresultFields[3].Descriptor()
 	// virustotalresult.VersionIDValidator is a validator for the "version_id" field. It is called by the builders before save.
 	virustotalresult.VersionIDValidator = virustotalresultDescVersionID.Validators[0].(func(string) error)
 	// virustotalresultDescID is the schema descriptor for id field.

@@ -12052,7 +12052,6 @@ type VirustotalResultMutation struct {
 	created_at     *time.Time
 	updated_at     *time.Time
 	safe           *bool
-	url            *string
 	hash           *string
 	file_name      *string
 	clearedFields  map[string]struct{}
@@ -12275,42 +12274,6 @@ func (m *VirustotalResultMutation) ResetSafe() {
 	m.safe = nil
 }
 
-// SetURL sets the "url" field.
-func (m *VirustotalResultMutation) SetURL(s string) {
-	m.url = &s
-}
-
-// URL returns the value of the "url" field in the mutation.
-func (m *VirustotalResultMutation) URL() (r string, exists bool) {
-	v := m.url
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldURL returns the old "url" field's value of the VirustotalResult entity.
-// If the VirustotalResult object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *VirustotalResultMutation) OldURL(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldURL is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldURL requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldURL: %w", err)
-	}
-	return oldValue.URL, nil
-}
-
-// ResetURL resets all changes to the "url" field.
-func (m *VirustotalResultMutation) ResetURL() {
-	m.url = nil
-}
-
 // SetHash sets the "hash" field.
 func (m *VirustotalResultMutation) SetHash(s string) {
 	m.hash = &s
@@ -12480,7 +12443,7 @@ func (m *VirustotalResultMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VirustotalResultMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 6)
 	if m.created_at != nil {
 		fields = append(fields, virustotalresult.FieldCreatedAt)
 	}
@@ -12489,9 +12452,6 @@ func (m *VirustotalResultMutation) Fields() []string {
 	}
 	if m.safe != nil {
 		fields = append(fields, virustotalresult.FieldSafe)
-	}
-	if m.url != nil {
-		fields = append(fields, virustotalresult.FieldURL)
 	}
 	if m.hash != nil {
 		fields = append(fields, virustotalresult.FieldHash)
@@ -12516,8 +12476,6 @@ func (m *VirustotalResultMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdatedAt()
 	case virustotalresult.FieldSafe:
 		return m.Safe()
-	case virustotalresult.FieldURL:
-		return m.URL()
 	case virustotalresult.FieldHash:
 		return m.Hash()
 	case virustotalresult.FieldFileName:
@@ -12539,8 +12497,6 @@ func (m *VirustotalResultMutation) OldField(ctx context.Context, name string) (e
 		return m.OldUpdatedAt(ctx)
 	case virustotalresult.FieldSafe:
 		return m.OldSafe(ctx)
-	case virustotalresult.FieldURL:
-		return m.OldURL(ctx)
 	case virustotalresult.FieldHash:
 		return m.OldHash(ctx)
 	case virustotalresult.FieldFileName:
@@ -12576,13 +12532,6 @@ func (m *VirustotalResultMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSafe(v)
-		return nil
-	case virustotalresult.FieldURL:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetURL(v)
 		return nil
 	case virustotalresult.FieldHash:
 		v, ok := value.(string)
@@ -12662,9 +12611,6 @@ func (m *VirustotalResultMutation) ResetField(name string) error {
 		return nil
 	case virustotalresult.FieldSafe:
 		m.ResetSafe()
-		return nil
-	case virustotalresult.FieldURL:
-		m.ResetURL()
 		return nil
 	case virustotalresult.FieldHash:
 		m.ResetHash()

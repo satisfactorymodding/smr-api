@@ -52,7 +52,6 @@ type PreviousAnalysisResults struct {
 
 type ScanResult struct {
 	Safe     bool
-	URL      *string
 	Hash     *string
 	FileName string
 }
@@ -114,8 +113,6 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 		slox.Info(ctx, "file already scanned, skipping upload", slog.String("file", name))
 		hash := fmt.Sprintf("%x", checksum)
 		scanResult.Hash = &hash
-		url := fmt.Sprintf(analysisURL, hash)
-		scanResult.URL = &url
 	} else {
 		scan, err := client.NewFileScanner().Scan(file, name, nil)
 		if err != nil {
@@ -139,8 +136,6 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 				return nil, fmt.Errorf("failed to get analysis results: %w", err)
 			}
 			scanResult.Hash = &analysisResults.Meta.FileInfo.SHA256
-			url := fmt.Sprintf(analysisURL, &analysisResults.Meta.FileInfo.SHA256)
-			scanResult.URL = &url
 
 			if !alreadyScanned && analysisResults.Attributes.Status != "completed" {
 				continue
