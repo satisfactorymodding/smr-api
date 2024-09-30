@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS virustotal_results (
     id varchar(14) NOT NULL,
     hash varchar(64) NOT NULL,
-    url varchar(101) NOT NULL,
     safe boolean DEFAULT false,
     version_id varchar(14) NOT NULL,
     file_name varchar NOT NULL DEFAULT 'foobar'::varchar,
