@@ -422,13 +422,13 @@ func (vu *VersionUpdate) AddTargets(v ...*VersionTarget) *VersionUpdate {
 	return vu.AddTargetIDs(ids...)
 }
 
-// AddVirustotalResultIDs adds the "virustotalResults" edge to the VirustotalResult entity by IDs.
+// AddVirustotalResultIDs adds the "virustotal_results" edge to the VirustotalResult entity by IDs.
 func (vu *VersionUpdate) AddVirustotalResultIDs(ids ...string) *VersionUpdate {
 	vu.mutation.AddVirustotalResultIDs(ids...)
 	return vu
 }
 
-// AddVirustotalResults adds the "virustotalResults" edges to the VirustotalResult entity.
+// AddVirustotalResults adds the "virustotal_results" edges to the VirustotalResult entity.
 func (vu *VersionUpdate) AddVirustotalResults(v ...*VirustotalResult) *VersionUpdate {
 	ids := make([]string, len(v))
 	for i := range v {
@@ -490,19 +490,19 @@ func (vu *VersionUpdate) RemoveTargets(v ...*VersionTarget) *VersionUpdate {
 	return vu.RemoveTargetIDs(ids...)
 }
 
-// ClearVirustotalResults clears all "virustotalResults" edges to the VirustotalResult entity.
+// ClearVirustotalResults clears all "virustotal_results" edges to the VirustotalResult entity.
 func (vu *VersionUpdate) ClearVirustotalResults() *VersionUpdate {
 	vu.mutation.ClearVirustotalResults()
 	return vu
 }
 
-// RemoveVirustotalResultIDs removes the "virustotalResults" edge to VirustotalResult entities by IDs.
+// RemoveVirustotalResultIDs removes the "virustotal_results" edge to VirustotalResult entities by IDs.
 func (vu *VersionUpdate) RemoveVirustotalResultIDs(ids ...string) *VersionUpdate {
 	vu.mutation.RemoveVirustotalResultIDs(ids...)
 	return vu
 }
 
-// RemoveVirustotalResults removes "virustotalResults" edges to VirustotalResult entities.
+// RemoveVirustotalResults removes "virustotal_results" edges to VirustotalResult entities.
 func (vu *VersionUpdate) RemoveVirustotalResults(v ...*VirustotalResult) *VersionUpdate {
 	ids := make([]string, len(v))
 	for i := range v {
@@ -1285,13 +1285,13 @@ func (vuo *VersionUpdateOne) AddTargets(v ...*VersionTarget) *VersionUpdateOne {
 	return vuo.AddTargetIDs(ids...)
 }
 
-// AddVirustotalResultIDs adds the "virustotalResults" edge to the VirustotalResult entity by IDs.
+// AddVirustotalResultIDs adds the "virustotal_results" edge to the VirustotalResult entity by IDs.
 func (vuo *VersionUpdateOne) AddVirustotalResultIDs(ids ...string) *VersionUpdateOne {
 	vuo.mutation.AddVirustotalResultIDs(ids...)
 	return vuo
 }
 
-// AddVirustotalResults adds the "virustotalResults" edges to the VirustotalResult entity.
+// AddVirustotalResults adds the "virustotal_results" edges to the VirustotalResult entity.
 func (vuo *VersionUpdateOne) AddVirustotalResults(v ...*VirustotalResult) *VersionUpdateOne {
 	ids := make([]string, len(v))
 	for i := range v {
@@ -1353,19 +1353,19 @@ func (vuo *VersionUpdateOne) RemoveTargets(v ...*VersionTarget) *VersionUpdateOn
 	return vuo.RemoveTargetIDs(ids...)
 }
 
-// ClearVirustotalResults clears all "virustotalResults" edges to the VirustotalResult entity.
+// ClearVirustotalResults clears all "virustotal_results" edges to the VirustotalResult entity.
 func (vuo *VersionUpdateOne) ClearVirustotalResults() *VersionUpdateOne {
 	vuo.mutation.ClearVirustotalResults()
 	return vuo
 }
 
-// RemoveVirustotalResultIDs removes the "virustotalResults" edge to VirustotalResult entities by IDs.
+// RemoveVirustotalResultIDs removes the "virustotal_results" edge to VirustotalResult entities by IDs.
 func (vuo *VersionUpdateOne) RemoveVirustotalResultIDs(ids ...string) *VersionUpdateOne {
 	vuo.mutation.RemoveVirustotalResultIDs(ids...)
 	return vuo
 }
 
-// RemoveVirustotalResults removes "virustotalResults" edges to VirustotalResult entities.
+// RemoveVirustotalResults removes "virustotal_results" edges to VirustotalResult entities.
 func (vuo *VersionUpdateOne) RemoveVirustotalResults(v ...*VirustotalResult) *VersionUpdateOne {
 	ids := make([]string, len(v))
 	for i := range v {

@@ -8729,49 +8729,49 @@ func (m *UserSessionMutation) ResetEdge(name string) error {
 // VersionMutation represents an operation that mutates the Version nodes in the graph.
 type VersionMutation struct {
 	config
-	op                       Op
-	typ                      string
-	id                       *string
-	created_at               *time.Time
-	updated_at               *time.Time
-	deleted_at               *time.Time
-	version                  *string
-	game_version             *string
-	changelog                *string
-	downloads                *uint
-	adddownloads             *int
-	key                      *string
-	stability                *util.Stability
-	approved                 *bool
-	hotness                  *uint
-	addhotness               *int
-	denied                   *bool
-	metadata                 *string
-	mod_reference            *string
-	version_major            *int
-	addversion_major         *int
-	version_minor            *int
-	addversion_minor         *int
-	version_patch            *int
-	addversion_patch         *int
-	size                     *int64
-	addsize                  *int64
-	hash                     *string
-	clearedFields            map[string]struct{}
-	mod                      *string
-	clearedmod               bool
-	dependencies             map[string]struct{}
-	removeddependencies      map[string]struct{}
-	cleareddependencies      bool
-	targets                  map[string]struct{}
-	removedtargets           map[string]struct{}
-	clearedtargets           bool
-	virustotalResults        map[string]struct{}
-	removedvirustotalResults map[string]struct{}
-	clearedvirustotalResults bool
-	done                     bool
-	oldValue                 func(context.Context) (*Version, error)
-	predicates               []predicate.Version
+	op                        Op
+	typ                       string
+	id                        *string
+	created_at                *time.Time
+	updated_at                *time.Time
+	deleted_at                *time.Time
+	version                   *string
+	game_version              *string
+	changelog                 *string
+	downloads                 *uint
+	adddownloads              *int
+	key                       *string
+	stability                 *util.Stability
+	approved                  *bool
+	hotness                   *uint
+	addhotness                *int
+	denied                    *bool
+	metadata                  *string
+	mod_reference             *string
+	version_major             *int
+	addversion_major          *int
+	version_minor             *int
+	addversion_minor          *int
+	version_patch             *int
+	addversion_patch          *int
+	size                      *int64
+	addsize                   *int64
+	hash                      *string
+	clearedFields             map[string]struct{}
+	mod                       *string
+	clearedmod                bool
+	dependencies              map[string]struct{}
+	removeddependencies       map[string]struct{}
+	cleareddependencies       bool
+	targets                   map[string]struct{}
+	removedtargets            map[string]struct{}
+	clearedtargets            bool
+	virustotal_results        map[string]struct{}
+	removedvirustotal_results map[string]struct{}
+	clearedvirustotal_results bool
+	done                      bool
+	oldValue                  func(context.Context) (*Version, error)
+	predicates                []predicate.Version
 }
 
 var _ ent.Mutation = (*VersionMutation)(nil)
@@ -9974,58 +9974,58 @@ func (m *VersionMutation) ResetTargets() {
 	m.removedtargets = nil
 }
 
-// AddVirustotalResultIDs adds the "virustotalResults" edge to the VirustotalResult entity by ids.
+// AddVirustotalResultIDs adds the "virustotal_results" edge to the VirustotalResult entity by ids.
 func (m *VersionMutation) AddVirustotalResultIDs(ids ...string) {
-	if m.virustotalResults == nil {
-		m.virustotalResults = make(map[string]struct{})
+	if m.virustotal_results == nil {
+		m.virustotal_results = make(map[string]struct{})
 	}
 	for i := range ids {
-		m.virustotalResults[ids[i]] = struct{}{}
+		m.virustotal_results[ids[i]] = struct{}{}
 	}
 }
 
-// ClearVirustotalResults clears the "virustotalResults" edge to the VirustotalResult entity.
+// ClearVirustotalResults clears the "virustotal_results" edge to the VirustotalResult entity.
 func (m *VersionMutation) ClearVirustotalResults() {
-	m.clearedvirustotalResults = true
+	m.clearedvirustotal_results = true
 }
 
-// VirustotalResultsCleared reports if the "virustotalResults" edge to the VirustotalResult entity was cleared.
+// VirustotalResultsCleared reports if the "virustotal_results" edge to the VirustotalResult entity was cleared.
 func (m *VersionMutation) VirustotalResultsCleared() bool {
-	return m.clearedvirustotalResults
+	return m.clearedvirustotal_results
 }
 
-// RemoveVirustotalResultIDs removes the "virustotalResults" edge to the VirustotalResult entity by IDs.
+// RemoveVirustotalResultIDs removes the "virustotal_results" edge to the VirustotalResult entity by IDs.
 func (m *VersionMutation) RemoveVirustotalResultIDs(ids ...string) {
-	if m.removedvirustotalResults == nil {
-		m.removedvirustotalResults = make(map[string]struct{})
+	if m.removedvirustotal_results == nil {
+		m.removedvirustotal_results = make(map[string]struct{})
 	}
 	for i := range ids {
-		delete(m.virustotalResults, ids[i])
-		m.removedvirustotalResults[ids[i]] = struct{}{}
+		delete(m.virustotal_results, ids[i])
+		m.removedvirustotal_results[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedVirustotalResults returns the removed IDs of the "virustotalResults" edge to the VirustotalResult entity.
+// RemovedVirustotalResults returns the removed IDs of the "virustotal_results" edge to the VirustotalResult entity.
 func (m *VersionMutation) RemovedVirustotalResultsIDs() (ids []string) {
-	for id := range m.removedvirustotalResults {
+	for id := range m.removedvirustotal_results {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// VirustotalResultsIDs returns the "virustotalResults" edge IDs in the mutation.
+// VirustotalResultsIDs returns the "virustotal_results" edge IDs in the mutation.
 func (m *VersionMutation) VirustotalResultsIDs() (ids []string) {
-	for id := range m.virustotalResults {
+	for id := range m.virustotal_results {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetVirustotalResults resets all changes to the "virustotalResults" edge.
+// ResetVirustotalResults resets all changes to the "virustotal_results" edge.
 func (m *VersionMutation) ResetVirustotalResults() {
-	m.virustotalResults = nil
-	m.clearedvirustotalResults = false
-	m.removedvirustotalResults = nil
+	m.virustotal_results = nil
+	m.clearedvirustotal_results = false
+	m.removedvirustotal_results = nil
 }
 
 // Where appends a list predicates to the VersionMutation builder.
@@ -10626,7 +10626,7 @@ func (m *VersionMutation) AddedEdges() []string {
 	if m.targets != nil {
 		edges = append(edges, version.EdgeTargets)
 	}
-	if m.virustotalResults != nil {
+	if m.virustotal_results != nil {
 		edges = append(edges, version.EdgeVirustotalResults)
 	}
 	return edges
@@ -10653,8 +10653,8 @@ func (m *VersionMutation) AddedIDs(name string) []ent.Value {
 		}
 		return ids
 	case version.EdgeVirustotalResults:
-		ids := make([]ent.Value, 0, len(m.virustotalResults))
-		for id := range m.virustotalResults {
+		ids := make([]ent.Value, 0, len(m.virustotal_results))
+		for id := range m.virustotal_results {
 			ids = append(ids, id)
 		}
 		return ids
@@ -10671,7 +10671,7 @@ func (m *VersionMutation) RemovedEdges() []string {
 	if m.removedtargets != nil {
 		edges = append(edges, version.EdgeTargets)
 	}
-	if m.removedvirustotalResults != nil {
+	if m.removedvirustotal_results != nil {
 		edges = append(edges, version.EdgeVirustotalResults)
 	}
 	return edges
@@ -10694,8 +10694,8 @@ func (m *VersionMutation) RemovedIDs(name string) []ent.Value {
 		}
 		return ids
 	case version.EdgeVirustotalResults:
-		ids := make([]ent.Value, 0, len(m.removedvirustotalResults))
-		for id := range m.removedvirustotalResults {
+		ids := make([]ent.Value, 0, len(m.removedvirustotal_results))
+		for id := range m.removedvirustotal_results {
 			ids = append(ids, id)
 		}
 		return ids
@@ -10715,7 +10715,7 @@ func (m *VersionMutation) ClearedEdges() []string {
 	if m.clearedtargets {
 		edges = append(edges, version.EdgeTargets)
 	}
-	if m.clearedvirustotalResults {
+	if m.clearedvirustotal_results {
 		edges = append(edges, version.EdgeVirustotalResults)
 	}
 	return edges
@@ -10732,7 +10732,7 @@ func (m *VersionMutation) EdgeCleared(name string) bool {
 	case version.EdgeTargets:
 		return m.clearedtargets
 	case version.EdgeVirustotalResults:
-		return m.clearedvirustotalResults
+		return m.clearedvirustotal_results
 	}
 	return false
 }

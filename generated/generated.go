@@ -124,11 +124,6 @@ type ComplexityRoot struct {
 		Versions func(childComplexity int) int
 	}
 
-	GetVirustotalResults struct {
-		Count             func(childComplexity int) int
-		VirustotalResults func(childComplexity int) int
-	}
-
 	Group struct {
 		ID   func(childComplexity int) int
 		Name func(childComplexity int) int
@@ -260,8 +255,6 @@ type ComplexityRoot struct {
 		GetUsers                     func(childComplexity int, userIds []string) int
 		GetVersion                   func(childComplexity int, versionID string) int
 		GetVersions                  func(childComplexity int, filter map[string]interface{}) int
-		GetVirustotalResult          func(childComplexity int, hash string) int
-		GetVirustotalResults         func(childComplexity int) int
 		ResolveModVersions           func(childComplexity int, filter []*ModVersionConstraint) int
 	}
 
@@ -489,8 +482,6 @@ type QueryResolver interface {
 	CheckVersionUploadState(ctx context.Context, modID string, versionID string) (*CreateVersionResponse, error)
 	GetMyVersions(ctx context.Context, filter map[string]interface{}) (*GetMyVersions, error)
 	GetMyUnapprovedVersions(ctx context.Context, filter map[string]interface{}) (*GetMyVersions, error)
-	GetVirustotalResult(ctx context.Context, hash string) (*VirustotalResult, error)
-	GetVirustotalResults(ctx context.Context) (*GetVirustotalResults, error)
 }
 type SMLVersionResolver interface {
 	Link(ctx context.Context, obj *SMLVersion) (string, error)
@@ -694,20 +685,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GetVersions.Versions(childComplexity), true
-
-	case "GetVirustotalResults.count":
-		if e.complexity.GetVirustotalResults.Count == nil {
-			break
-		}
-
-		return e.complexity.GetVirustotalResults.Count(childComplexity), true
-
-	case "GetVirustotalResults.virustotal_results":
-		if e.complexity.GetVirustotalResults.VirustotalResults == nil {
-			break
-		}
-
-		return e.complexity.GetVirustotalResults.VirustotalResults(childComplexity), true
 
 	case "Group.id":
 		if e.complexity.Group.ID == nil {
@@ -1772,25 +1749,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetVersions(childComplexity, args["filter"].(map[string]interface{})), true
 
-	case "Query.getVirustotalResult":
-		if e.complexity.Query.GetVirustotalResult == nil {
-			break
-		}
-
-		args, err := ec.field_Query_getVirustotalResult_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.GetVirustotalResult(childComplexity, args["hash"].(string)), true
-
-	case "Query.getVirustotalResults":
-		if e.complexity.Query.GetVirustotalResults == nil {
-			break
-		}
-
-		return e.complexity.Query.GetVirustotalResults(childComplexity), true
-
 	case "Query.resolveModVersions":
 		if e.complexity.Query.ResolveModVersions == nil {
 			break
@@ -2265,7 +2223,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Version.Version(childComplexity), true
 
-	case "Version.virustotalResults":
+	case "Version.virustotal_results":
 		if e.complexity.Version.VirustotalResults == nil {
 			break
 		}
@@ -3122,7 +3080,7 @@ type Version {
 
   mod: Mod!
   dependencies: [VersionDependency!]!
-  virustotalResults: [VirustotalResult!]!
+  virustotal_results: [VirustotalResult!]!
 }
 
 type CreateVersionResponse {
@@ -3264,16 +3222,6 @@ enum VirustotalResultFields {
   version_id
   created_at
   updated_at
-}
-
-type GetVirustotalResults {
-  virustotal_results: [VirustotalResult!]!
-  count: Int!
-}
-
-extend type Query {
-  getVirustotalResult(hash: VirustotalHash!): VirustotalResult @isLoggedIn
-  getVirustotalResults: GetVirustotalResults! @isLoggedIn
 }
 `, BuiltIn: false},
 }
@@ -4471,21 +4419,6 @@ func (ec *executionContext) field_Query_getVersions_args(ctx context.Context, ra
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_getVirustotalResult_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["hash"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hash"))
-		arg0, err = ec.unmarshalNVirustotalHash2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["hash"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_resolveModVersions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4972,8 +4905,8 @@ func (ec *executionContext) fieldContext_CreateVersionResponse_version(_ context
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -5450,8 +5383,8 @@ func (ec *executionContext) fieldContext_GetMyVersions_versions(_ context.Contex
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -5692,8 +5625,8 @@ func (ec *executionContext) fieldContext_GetVersions_versions(_ context.Context,
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -5738,112 +5671,6 @@ func (ec *executionContext) fieldContext_GetVersions_count(_ context.Context, fi
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _GetVirustotalResults_virustotal_results(ctx context.Context, field graphql.CollectedField, obj *GetVirustotalResults) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GetVirustotalResults_virustotal_results(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.VirustotalResults, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*VirustotalResult)
-	fc.Result = res
-	return ec.marshalNVirustotalResult2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVirustotalResultᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_GetVirustotalResults_virustotal_results(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "GetVirustotalResults",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VirustotalResult_id(ctx, field)
-			case "hash":
-				return ec.fieldContext_VirustotalResult_hash(ctx, field)
-			case "url":
-				return ec.fieldContext_VirustotalResult_url(ctx, field)
-			case "safe":
-				return ec.fieldContext_VirustotalResult_safe(ctx, field)
-			case "file_name":
-				return ec.fieldContext_VirustotalResult_file_name(ctx, field)
-			case "version_id":
-				return ec.fieldContext_VirustotalResult_version_id(ctx, field)
-			case "created_at":
-				return ec.fieldContext_VirustotalResult_created_at(ctx, field)
-			case "updated_at":
-				return ec.fieldContext_VirustotalResult_updated_at(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VirustotalResult", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _GetVirustotalResults_count(ctx context.Context, field graphql.CollectedField, obj *GetVirustotalResults) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GetVirustotalResults_count(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Count, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_GetVirustotalResults_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "GetVirustotalResults",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -6487,8 +6314,8 @@ func (ec *executionContext) fieldContext_LatestVersions_alpha(_ context.Context,
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -6568,8 +6395,8 @@ func (ec *executionContext) fieldContext_LatestVersions_beta(_ context.Context, 
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -6649,8 +6476,8 @@ func (ec *executionContext) fieldContext_LatestVersions_release(_ context.Contex
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -7747,8 +7574,8 @@ func (ec *executionContext) fieldContext_Mod_version(ctx context.Context, field 
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -7842,8 +7669,8 @@ func (ec *executionContext) fieldContext_Mod_versions(ctx context.Context, field
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -8077,8 +7904,8 @@ func (ec *executionContext) fieldContext_ModVersion_versions(_ context.Context, 
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -10751,8 +10578,8 @@ func (ec *executionContext) fieldContext_Mutation_updateVersion(ctx context.Cont
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -12967,8 +12794,8 @@ func (ec *executionContext) fieldContext_Query_getVersion(ctx context.Context, f
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -13381,166 +13208,6 @@ func (ec *executionContext) fieldContext_Query_getMyUnapprovedVersions(ctx conte
 	if fc.Args, err = ec.field_Query_getMyUnapprovedVersions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getVirustotalResult(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getVirustotalResult(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().GetVirustotalResult(rctx, fc.Args["hash"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
-			}
-			return ec.directives.IsLoggedIn(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*VirustotalResult); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/satisfactorymodding/smr-api/generated.VirustotalResult`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*VirustotalResult)
-	fc.Result = res
-	return ec.marshalOVirustotalResult2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVirustotalResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getVirustotalResult(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VirustotalResult_id(ctx, field)
-			case "hash":
-				return ec.fieldContext_VirustotalResult_hash(ctx, field)
-			case "url":
-				return ec.fieldContext_VirustotalResult_url(ctx, field)
-			case "safe":
-				return ec.fieldContext_VirustotalResult_safe(ctx, field)
-			case "file_name":
-				return ec.fieldContext_VirustotalResult_file_name(ctx, field)
-			case "version_id":
-				return ec.fieldContext_VirustotalResult_version_id(ctx, field)
-			case "created_at":
-				return ec.fieldContext_VirustotalResult_created_at(ctx, field)
-			case "updated_at":
-				return ec.fieldContext_VirustotalResult_updated_at(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VirustotalResult", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getVirustotalResult_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getVirustotalResults(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getVirustotalResults(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().GetVirustotalResults(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
-			}
-			return ec.directives.IsLoggedIn(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*GetVirustotalResults); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/satisfactorymodding/smr-api/generated.GetVirustotalResults`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*GetVirustotalResults)
-	fc.Result = res
-	return ec.marshalNGetVirustotalResults2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGetVirustotalResults(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getVirustotalResults(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "virustotal_results":
-				return ec.fieldContext_GetVirustotalResults_virustotal_results(ctx, field)
-			case "count":
-				return ec.fieldContext_GetVirustotalResults_count(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type GetVirustotalResults", field.Name)
-		},
 	}
 	return fc, nil
 }
@@ -16984,8 +16651,8 @@ func (ec *executionContext) fieldContext_Version_dependencies(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Version_virustotalResults(ctx context.Context, field graphql.CollectedField, obj *Version) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Version_virustotalResults(ctx, field)
+func (ec *executionContext) _Version_virustotal_results(ctx context.Context, field graphql.CollectedField, obj *Version) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Version_virustotal_results(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17015,7 +16682,7 @@ func (ec *executionContext) _Version_virustotalResults(ctx context.Context, fiel
 	return ec.marshalNVirustotalResult2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVirustotalResultᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Version_virustotalResults(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Version_virustotal_results(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Version",
 		Field:      field,
@@ -17433,8 +17100,8 @@ func (ec *executionContext) fieldContext_VersionDependency_version(_ context.Con
 				return ec.fieldContext_Version_mod(ctx, field)
 			case "dependencies":
 				return ec.fieldContext_Version_dependencies(ctx, field)
-			case "virustotalResults":
-				return ec.fieldContext_Version_virustotalResults(ctx, field)
+			case "virustotal_results":
+				return ec.fieldContext_Version_virustotal_results(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Version", field.Name)
 		},
@@ -21695,50 +21362,6 @@ func (ec *executionContext) _GetVersions(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
-var getVirustotalResultsImplementors = []string{"GetVirustotalResults"}
-
-func (ec *executionContext) _GetVirustotalResults(ctx context.Context, sel ast.SelectionSet, obj *GetVirustotalResults) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, getVirustotalResultsImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("GetVirustotalResults")
-		case "virustotal_results":
-			out.Values[i] = ec._GetVirustotalResults_virustotal_results(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "count":
-			out.Values[i] = ec._GetVirustotalResults_count(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var groupImplementors = []string{"Group"}
 
 func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, obj *Group) graphql.Marshaler {
@@ -23192,47 +22815,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getVirustotalResult":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getVirustotalResult(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getVirustotalResults":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getVirustotalResults(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -24343,7 +23925,7 @@ func (ec *executionContext) _Version(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "virustotalResults":
+		case "virustotal_results":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -24352,7 +23934,7 @@ func (ec *executionContext) _Version(ctx context.Context, sel ast.SelectionSet, 
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Version_virustotalResults(ctx, field, obj)
+				res = ec._Version_virustotal_results(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -25204,20 +24786,6 @@ func (ec *executionContext) marshalNGetVersions2ᚖgithubᚗcomᚋsatisfactorymo
 		return graphql.Null
 	}
 	return ec._GetVersions(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNGetVirustotalResults2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGetVirustotalResults(ctx context.Context, sel ast.SelectionSet, v GetVirustotalResults) graphql.Marshaler {
-	return ec._GetVirustotalResults(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNGetVirustotalResults2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGetVirustotalResults(ctx context.Context, sel ast.SelectionSet, v *GetVirustotalResults) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._GetVirustotalResults(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNGroup2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*Group) graphql.Marshaler {
@@ -27201,13 +26769,6 @@ func (ec *executionContext) marshalOVirustotalID2ᚖstring(ctx context.Context, 
 	}
 	res := graphql.MarshalString(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOVirustotalResult2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVirustotalResult(ctx context.Context, sel ast.SelectionSet, v *VirustotalResult) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._VirustotalResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

@@ -324,13 +324,13 @@ func (vc *VersionCreate) AddTargets(v ...*VersionTarget) *VersionCreate {
 	return vc.AddTargetIDs(ids...)
 }
 
-// AddVirustotalResultIDs adds the "virustotalResults" edge to the VirustotalResult entity by IDs.
+// AddVirustotalResultIDs adds the "virustotal_results" edge to the VirustotalResult entity by IDs.
 func (vc *VersionCreate) AddVirustotalResultIDs(ids ...string) *VersionCreate {
 	vc.mutation.AddVirustotalResultIDs(ids...)
 	return vc
 }
 
-// AddVirustotalResults adds the "virustotalResults" edges to the VirustotalResult entity.
+// AddVirustotalResults adds the "virustotal_results" edges to the VirustotalResult entity.
 func (vc *VersionCreate) AddVirustotalResults(v ...*VirustotalResult) *VersionCreate {
 	ids := make([]string, len(v))
 	for i := range v {

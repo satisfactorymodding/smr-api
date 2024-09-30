@@ -3,141 +3,150 @@
 scalar VersionID
 
 type LatestVersions {
-  alpha: Version
-  beta: Version
-  release: Version
+    alpha: Version
+    beta: Version
+    release: Version
 }
 
 enum VersionFields {
-  created_at
-  updated_at
-  downloads
+    created_at
+    updated_at
+    downloads
 }
 
 enum VersionStabilities {
-  alpha
-  beta
-  release
+    alpha
+    beta
+    release
 }
 
 type Version {
-  id: VersionID!
-  mod_id: ModID!
-  version: String!
-  sml_version: String!
-  game_version: String!
-  changelog: String!
-  downloads: Int!
-  stability: VersionStabilities!
-  approved: Boolean!
-  updated_at: Date!
-  created_at: Date!
-  link: String!
-  targets: [VersionTarget]!
-  metadata: String
-  size: Int
-  hash: String
+    id: VersionID!
+    mod_id: ModID!
+    version: String!
+    sml_version: String!
+    game_version: String!
+    changelog: String!
+    downloads: Int!
+    stability: VersionStabilities!
+    approved: Boolean!
+    updated_at: Date!
+    created_at: Date!
+    link: String!
+    targets: [VersionTarget]!
+    metadata: String
+    size: Int
+    hash: String
 
-  mod: Mod!
-  dependencies: [VersionDependency!]!
-  virustotalResults: [VirustotalResult!]!
+    mod: Mod!
+    dependencies: [VersionDependency!]!
+    virustotal_results: [VirustotalResult!]!
+}
+
+type VersionTarget {
+    VersionID: VersionID!
+    targetName: TargetName!
+    link: String!
+    size: Int
+    hash: String
+    id: VersionTargetID!
 }
 
 type CreateVersionResponse {
-  auto_approved: Boolean!
-  version: Version
+    auto_approved: Boolean!
+    version: Version
 }
 
 type GetVersions {
-  versions: [Version!]!
-  count: Int!
+    versions: [Version!]!
+    count: Int!
 }
 
 type GetMyVersions {
-  versions: [Version!]!
-  count: Int!
+    versions: [Version!]!
+    count: Int!
 }
 
 type VersionDependency {
-  version_id: VersionID!
-  mod_id: ModID!
-    @deprecated(
-      reason: "soon will return actual mod id instead of reference. use mod_reference field instead!"
-    )
-  condition: String!
-  optional: Boolean!
-  mod_reference: String!
+    version_id: VersionID!
+    mod_id: ModID!
+      @deprecated(
+        reason: "soon will return actual mod id instead of reference. use mod_reference field instead!"
+      )
+    condition: String!
+    optional: Boolean!
+    mod_reference: String!
 
-  mod: Mod
-  version: Version
+    mod: Mod
+    version: Version
 }
 
 ### Inputs
 
 input VersionFilter {
-  limit: Int
-  offset: Int
-  order_by: VersionFields
-  order: Order
-  search: String
-  ids: [String!]
+    limit: Int
+    offset: Int
+    order_by: VersionFields
+    order: Order
+    search: String
+    ids: [String!]
 }
 
 input NewVersion {
-  changelog: String!
-  stability: VersionStabilities!
+    changelog: String!
+    stability: VersionStabilities!
 }
 
 input UpdateVersion {
-  changelog: String
-  stability: VersionStabilities
+    changelog: String
+    stability: VersionStabilities
 }
 
 ### Queries
 
 extend type Query {
-  getVersion(versionId: VersionID!): Version
-  getVersions(filter: VersionFilter): GetVersions!
-  getUnapprovedVersions(filter: VersionFilter): GetVersions!
-    @canApproveVersions
-    @isLoggedIn
+    getVersion(versionId: VersionID!): Version
+    getVersions(filter: VersionFilter): GetVersions!
+    getUnapprovedVersions(filter: VersionFilter): GetVersions!
+      @canApproveVersions
+      @isLoggedIn
 
-  checkVersionUploadState(
-    modId: ModID!
-    versionId: VersionID!
-  ): CreateVersionResponse @canEditMod(field: "modId") @isLoggedIn
+    checkVersionUploadState(
+      modId: ModID!
+      versionId: VersionID!
+    ): CreateVersionResponse @canEditMod(field: "modId") @isLoggedIn
 
-  getMyVersions(filter: VersionFilter): GetMyVersions! @isLoggedIn
-  getMyUnapprovedVersions(filter: VersionFilter): GetMyVersions! @isLoggedIn
+    getMyVersions(filter: VersionFilter): GetMyVersions! @isLoggedIn
+    getMyUnapprovedVersions(filter: VersionFilter): GetMyVersions! @isLoggedIn
 }
 
 ### Mutations
 
 extend type Mutation {
-  createVersion(modId: ModID!): VersionID!
-    @canEditMod(field: "modId")
-    @isLoggedIn
-  uploadVersionPart(
-    modId: ModID!
-    versionId: VersionID!
-    part: Int!
-    file: Upload!
-  ): Boolean! @canEditMod(field: "modId") @isLoggedIn
-  finalizeCreateVersion(
-    modId: ModID!
-    versionId: VersionID!
-    version: NewVersion!
-  ): Boolean! @canEditMod(field: "modId") @isLoggedIn
+    createVersion(modId: ModID!): VersionID!
+      @canEditMod(field: "modId")
+      @isLoggedIn
+    uploadVersionPart(
+      modId: ModID!
+      versionId: VersionID!
+      part: Int!
+      file: Upload!
+    ): Boolean! @canEditMod(field: "modId") @isLoggedIn
+    finalizeCreateVersion(
+      modId: ModID!
+      versionId: VersionID!
+      version: NewVersion!
+    ): Boolean! @canEditMod(field: "modId") @isLoggedIn
 
-  updateVersion(versionId: VersionID!, version: UpdateVersion!): Version!
-    @canEditVersion(field: "versionId")
-    @isLoggedIn
-  deleteVersion(versionId: VersionID!): Boolean!
-    @canEditVersion(field: "versionId")
-    @isLoggedIn
+    updateVersion(versionId: VersionID!, version: UpdateVersion!): Version!
+      @canEditVersion(field: "versionId")
+      @isLoggedIn
+    deleteVersion(versionId: VersionID!): Boolean!
+      @canEditVersion(field: "versionId")
+      @isLoggedIn
 
-  approveVersion(versionId: VersionID!): Boolean!
-    @canApproveVersions
-    @isLoggedIn
-  denyVersion(versionId: VersionID!): Boolean! @canApproveVersions @isLoggedIn
+    approveVersion(versionId: VersionID!): Boolean!
+      @canApproveVersions
+      @isLoggedIn
+    denyVersion(versionId: VersionID!): Boolean! @canApproveVersions @isLoggedIn
 }

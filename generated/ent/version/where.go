@@ -1250,7 +1250,7 @@ func HasTargetsWith(preds ...predicate.VersionTarget) predicate.Version {
 	})
 }
 
-// HasVirustotalResults applies the HasEdge predicate on the "virustotalResults" edge.
+// HasVirustotalResults applies the HasEdge predicate on the "virustotal_results" edge.
 func HasVirustotalResults() predicate.Version {
 	return predicate.Version(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
@@ -1261,7 +1261,7 @@ func HasVirustotalResults() predicate.Version {
 	})
 }
 
-// HasVirustotalResultsWith applies the HasEdge predicate on the "virustotalResults" edge with a given conditions (other predicates).
+// HasVirustotalResultsWith applies the HasEdge predicate on the "virustotal_results" edge with a given conditions (other predicates).
 func HasVirustotalResultsWith(preds ...predicate.VirustotalResult) predicate.Version {
 	return predicate.Version(func(s *sql.Selector) {
 		step := newVirustotalResultsStep()

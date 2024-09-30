@@ -2241,7 +2241,7 @@ func (c *VersionClient) QueryTargets(v *Version) *VersionTargetQuery {
 	return query
 }
 
-// QueryVirustotalResults queries the virustotalResults edge of a Version.
+// QueryVirustotalResults queries the virustotal_results edge of a Version.
 func (c *VersionClient) QueryVirustotalResults(v *Version) *VirustotalResultQuery {
 	query := (&VirustotalResultClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {

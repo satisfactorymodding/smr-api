@@ -8,7 +8,6 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// YourTableName holds the schema definition for the YourTableName entity.
 type VirustotalResult struct {
 	ent.Schema
 }
@@ -40,7 +39,7 @@ func (VirustotalResult) Annotations() []schema.Annotation {
 func (VirustotalResult) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("version", Version.Type).
-			Ref("virustotalResults").
+			Ref("virustotal_results").
 			Field("version_id").
 			Unique().
 			Required(),

@@ -73,7 +73,7 @@ models:
         resolver: true
       sml_version:
         resolver: true
-      virustotalResults:
+      virustotal_results:
         resolver: true
 
   VersionTarget:

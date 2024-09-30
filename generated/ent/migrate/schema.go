@@ -489,7 +489,7 @@ var (
 		PrimaryKey: []*schema.Column{VirustotalResultsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "virustotal_results_versions_virustotalResults",
+				Symbol:     "virustotal_results_versions_virustotal_results",
 				Columns:    []*schema.Column{VirustotalResultsColumns[7]},
 				RefColumns: []*schema.Column{VersionsColumns[0]},
 				OnDelete:   schema.NoAction,

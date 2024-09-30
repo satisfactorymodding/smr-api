@@ -70,7 +70,7 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) ([]ScanRe
 			if err != nil {
 				return fmt.Errorf("failed to scan %s: %w", names[count], err)
 			}
-			c <- scanResult
+			c <- *scanResult
 			return nil
 		})
 	}
@@ -81,39 +81,30 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) ([]ScanRe
 	var results []ScanResult
 	for res := range c {
 		results = append(results, res)
-		// if !res.Safe {
-		// 	break
-		// }
 	}
 
 	if err := errs.Wait(); err != nil {
-		scanResult := []ScanResult{
-			{
-				Safe:     false,
-				FileName: "",
-			},
-		}
-		return scanResult, fmt.Errorf("failed to scan files: %w", err)
+		return nil, fmt.Errorf("failed to scan files: %w", err)
 	}
 
 	return results, nil
 }
 
-func scanFile(ctx context.Context, file io.Reader, name string) (ScanResult, error) {
+func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, error) {
 	scanResult := ScanResult{
-		Safe:     true,
+		Safe:     false,
 		FileName: name,
 	}
 
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
-		return scanResult, fmt.Errorf("failed to generate hash for file %w", err)
+		return nil, fmt.Errorf("failed to generate hash for file %w", err)
 	}
 
 	checksum := hash.Sum(nil)
-	var target PreviousAnalysisResults
+	var previousAnalysisResults PreviousAnalysisResults
 
-	_, err := client.GetData(vt.URL("files/%x", checksum), &target)
+	_, err := client.GetData(vt.URL("files/%x", checksum), &previousAnalysisResults)
 
 	alreadyScanned := false
 	analysisID := ""
@@ -129,54 +120,61 @@ func scanFile(ctx context.Context, file io.Reader, name string) (ScanResult, err
 		scan, err := client.NewFileScanner().Scan(file, name, nil)
 
 		if err != nil {
-			return scanResult, fmt.Errorf("failed to scan file: %w", err)
+			return &scanResult, fmt.Errorf("failed to scan file: %w", err)
 		}
 		analysisID := scan.ID()
 		slox.Info(ctx, "uploaded virus scan", slog.String("file", name), slog.String("analysis_id", analysisID))
 	}
 
 	for {
-		if !alreadyScanned {
-			var target AnalysisResults
+		var analysisResults AnalysisResults
+		var malicious int
+		var suspicious int
 
+		if !alreadyScanned {
 			time.Sleep(time.Second * 15)
 
-			_, err = client.GetData(vt.URL("analyses/%s", analysisID), &target)
+			_, err = client.GetData(vt.URL("analyses/%s", analysisID), &analysisResults)
 			if err != nil {
 				scanResult.Safe = false
-				return scanResult, fmt.Errorf("failed to get analysis results: %w", err)
+				return nil, fmt.Errorf("failed to get analysis results: %w", err)
 			}
-			scanResult.Hash = &target.Meta.FileInfo.SHA256
-			url := fmt.Sprintf(analysisURL, &target.Meta.FileInfo.SHA256)
+			scanResult.Hash = &analysisResults.Meta.FileInfo.SHA256
+			url := fmt.Sprintf(analysisURL, &analysisResults.Meta.FileInfo.SHA256)
 			scanResult.URL = &url
 
-			if !alreadyScanned && target.Attributes.Status != "completed" {
+			if !alreadyScanned && analysisResults.Attributes.Status != "completed" {
 				continue
 			}
 
-			if target.Attributes.Stats == nil {
+			if analysisResults.Attributes.Stats == nil {
 				slox.Error(ctx, "no stats available", slog.Any("err", err), slog.String("file", name))
 				scanResult.Safe = false
-				return scanResult, nil
+				return &scanResult, nil
 			}
 
-			if target.Attributes.Stats.Malicious == nil || target.Attributes.Stats.Suspicious == nil {
+			if analysisResults.Attributes.Stats.Malicious == nil || analysisResults.Attributes.Stats.Suspicious == nil {
 				slox.Error(ctx, "unable to determine malicious or suspicious file", slog.Any("err", err), slog.String("file", name))
 				scanResult.Safe = false
-				return scanResult, nil
+				return &scanResult, nil
 			}
+			malicious = *analysisResults.Attributes.Stats.Malicious
+			suspicious = *analysisResults.Attributes.Stats.Suspicious
 
+		} else {
+			malicious = *previousAnalysisResults.Attributes.Stats.Malicious
+			suspicious = *previousAnalysisResults.Attributes.Stats.Suspicious
 		}
 
 		// Why 1? Well because some company made a shitty AI and it flags random mods.
-		if *target.Attributes.Stats.Malicious > 1 || *target.Attributes.Stats.Suspicious > 1 {
+		if malicious > 1 || suspicious > 1 {
 			slox.Error(ctx, "suspicious or malicious file found", slog.Any("err", err), slog.String("file", name))
 			scanResult.Safe = false
-			return scanResult, nil
+			return &scanResult, nil
 		}
 
 		break
 	}
 
-	return scanResult, nil
+	return &scanResult, nil
 }

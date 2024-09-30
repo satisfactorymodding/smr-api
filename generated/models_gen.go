@@ -71,11 +71,6 @@ type GetVersions struct {
 	Count    int        `json:"count"`
 }
 
-type GetVirustotalResults struct {
-	VirustotalResults []*VirustotalResult `json:"virustotal_results"`
-	Count             int                 `json:"count"`
-}
-
 type Group struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -311,7 +306,7 @@ type Version struct {
 	Hash              *string              `json:"hash,omitempty"`
 	Mod               *Mod                 `json:"mod"`
 	Dependencies      []*VersionDependency `json:"dependencies"`
-	VirustotalResults []*VirustotalResult  `json:"virustotalResults"`
+	VirustotalResults []*VirustotalResult  `json:"virustotal_results"`
 }
 
 type VersionDependency struct {

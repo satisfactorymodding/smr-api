@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
@@ -78,29 +79,28 @@ func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTo
 	}
 
 	success := true
+
 	for _, scanResult := range scanResults {
 		if !scanResult.Safe {
 			success = false
 			slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", args.ModID), slog.String("version", args.VersionID), slog.String("analysis_url", *scanResult.URL))
 		}
-		hash := *scanResult.Hash
-		url := *scanResult.URL
-		slox.Debug(ctx, "scan result of mod", slog.String("hash", hash), slog.String("url", url))
+	}
+	_, err = db.From(ctx).VirustotalResult.MapCreateBulk(scanResults,
+		func(c *ent.VirustotalResultCreate, i int) {
+			c.SetURL(*scanResults[i].URL).
+				SetSafe(scanResults[i].Safe).
+				SetVersionID(args.VersionID).
+				SetFileName(scanResults[i].FileName).
+				OnConflict().
+				DoNothing()
+		},
+	).Save(ctx)
 
-		err := db.From(ctx).VirustotalResult.Create().
-			SetHash(hash).
-			SetURL(url).
-			SetSafe(scanResult.Safe).
-			SetVersionID(args.VersionID).
-			SetFileName(scanResult.FileName).
-			OnConflict().
-			DoNothing().
-			Exec(ctx)
-
-		if err != nil && err.Error() != "sql: no rows in result set" {
-			slox.Error(ctx, "failed to save scan results", slog.String("hash", hash), slog.String("url", url))
-			return false, err
-		}
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		return false, err
 	}
 
 	if !success {

@@ -1,16 +1,7 @@
 scalar VersionTargetID
 
 enum TargetName {
-  Windows
-  WindowsServer
-  LinuxServer
-}
-
-type VersionTarget {
-  VersionID: VersionID!
-  targetName: TargetName!
-  link: String!
-  size: Int
-  hash: String
-  id: VersionTargetID!
+    Windows
+    WindowsServer
+    LinuxServer
 }

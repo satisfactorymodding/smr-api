@@ -135,7 +135,7 @@ func (vq *VersionQuery) QueryTargets() *VersionTargetQuery {
 	return query
 }
 
-// QueryVirustotalResults chains the current query on the "virustotalResults" edge.
+// QueryVirustotalResults chains the current query on the "virustotal_results" edge.
 func (vq *VersionQuery) QueryVirustotalResults() *VirustotalResultQuery {
 	query := (&VirustotalResultClient{config: vq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
@@ -416,7 +416,7 @@ func (vq *VersionQuery) WithTargets(opts ...func(*VersionTargetQuery)) *VersionQ
 }
 
 // WithVirustotalResults tells the query-builder to eager-load the nodes that are connected to
-// the "virustotalResults" edge. The optional arguments are used to configure the query builder of the edge.
+// the "virustotal_results" edge. The optional arguments are used to configure the query builder of the edge.
 func (vq *VersionQuery) WithVirustotalResults(opts ...func(*VirustotalResultQuery)) *VersionQuery {
 	query := (&VirustotalResultClient{config: vq.config}).Query()
 	for _, opt := range opts {
