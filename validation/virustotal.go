@@ -78,7 +78,7 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) ([]ScanRe
 		_ = errs.Wait()
 		close(c)
 	}()
-	var results []ScanResult
+	results := make([]ScanResult, 0, 100)
 	for res := range c {
 		results = append(results, res)
 	}
@@ -118,7 +118,6 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 		scanResult.URL = &url
 	} else {
 		scan, err := client.NewFileScanner().Scan(file, name, nil)
-
 		if err != nil {
 			return &scanResult, fmt.Errorf("failed to scan file: %w", err)
 		}
@@ -160,7 +159,6 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 			}
 			malicious = *analysisResults.Attributes.Stats.Malicious
 			suspicious = *analysisResults.Attributes.Stats.Suspicious
-
 		} else {
 			malicious = *previousAnalysisResults.Attributes.Stats.Malicious
 			suspicious = *previousAnalysisResults.Attributes.Stats.Suspicious
