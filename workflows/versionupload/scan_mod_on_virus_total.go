@@ -70,15 +70,40 @@ func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTo
 		}
 	}
 
-	success, err := validation.ScanFiles(ctx, toScan, names)
+	scanResults, err := validation.ScanFiles(ctx, toScan, names)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
 		return false, err
 	}
 
+	success := true
+	for _, scanResult := range scanResults {
+		if !scanResult.Safe {
+			success = false
+			slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", args.ModID), slog.String("version", args.VersionID), slog.String("analysis_url", *scanResult.URL))
+		}
+		hash := *scanResult.Hash
+		url := *scanResult.URL
+		slox.Debug(ctx, "scan result of mod", slog.String("hash", hash), slog.String("url", url))
+
+		err := db.From(ctx).VirustotalResult.Create().
+			SetHash(hash).
+			SetURL(url).
+			SetSafe(scanResult.Safe).
+			SetVersionID(args.VersionID).
+			SetFileName(scanResult.FileName).
+			OnConflict().
+			DoNothing().
+			Exec(ctx)
+
+		if err != nil && err.Error() != "sql: no rows in result set" {
+			slox.Error(ctx, "failed to save scan results", slog.String("hash", hash), slog.String("url", url))
+			return false, err
+		}
+	}
+
 	if !success {
-		slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", args.ModID), slog.String("version", args.VersionID))
 		return false, nil
 	}
 

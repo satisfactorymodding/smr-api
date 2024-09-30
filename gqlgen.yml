@@ -14,7 +14,6 @@ resolver:
   type: Resolver
 
 models:
-
   NewMod:
     model: github.com/satisfactorymodding/smr-api/generated.NewMod
   UpdateMod:
@@ -73,6 +72,8 @@ models:
       hash:
         resolver: true
       sml_version:
+        resolver: true
+      virustotalResults:
         resolver: true
 
   VersionTarget:
