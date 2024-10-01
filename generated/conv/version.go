@@ -19,6 +19,7 @@ func (c *ModAllVersionsImpl) Convert(source *ent.Version) *types.ModAllVersionsV
 		typesModAllVersionsVersion.ID = (*source).ID
 		typesModAllVersionsVersion.Version = (*source).Version
 		typesModAllVersionsVersion.GameVersion = (*source).GameVersion
+		typesModAllVersionsVersion.RequiredOnRemote = (*source).RequiredOnRemote
 		var pTypesModAllVersionsVersionTargetList []*types.ModAllVersionsVersionTarget
 		if (*source).Edges.Targets != nil {
 			pTypesModAllVersionsVersionTargetList = make([]*types.ModAllVersionsVersionTarget, len((*source).Edges.Targets))
@@ -85,6 +86,7 @@ func (c *VersionImpl) Convert(source *ent.Version) *generated.Version {
 		generatedVersion.ModID = (*source).ModID
 		generatedVersion.Version = (*source).Version
 		generatedVersion.GameVersion = (*source).GameVersion
+		generatedVersion.RequiredOnRemote = (*source).RequiredOnRemote
 		generatedVersion.Changelog = (*source).Changelog
 		generatedVersion.Downloads = conversion.UIntToInt((*source).Downloads)
 		generatedVersion.Stability = generated.VersionStabilities((*source).Stability)

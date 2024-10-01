@@ -36,6 +36,10 @@
     "GameVersion": {
       "type": "string"
     },
+    "RequiredOnRemote": {
+      "type": "boolean",
+      "default": true
+    },
     "Plugins": {
       "type": "array",
       "items": [

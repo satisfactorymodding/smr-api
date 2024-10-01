@@ -29,6 +29,8 @@ const (
 	FieldVersion = "version"
 	// FieldGameVersion holds the string denoting the game_version field in the database.
 	FieldGameVersion = "game_version"
+	// FieldRequiredOnRemote holds the string denoting the required_on_remote field in the database.
+	FieldRequiredOnRemote = "required_on_remote"
 	// FieldChangelog holds the string denoting the changelog field in the database.
 	FieldChangelog = "changelog"
 	// FieldDownloads holds the string denoting the downloads field in the database.
@@ -104,6 +106,7 @@ var Columns = []string{
 	FieldModID,
 	FieldVersion,
 	FieldGameVersion,
+	FieldRequiredOnRemote,
 	FieldChangelog,
 	FieldDownloads,
 	FieldKey,
@@ -216,6 +219,11 @@ func ByVersion(opts ...sql.OrderTermOption) OrderOption {
 // ByGameVersion orders the results by the game_version field.
 func ByGameVersion(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldGameVersion, opts...).ToFunc()
+}
+
+// ByRequiredOnRemote orders the results by the required_on_remote field.
+func ByRequiredOnRemote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRequiredOnRemote, opts...).ToFunc()
 }
 
 // ByChangelog orders the results by the changelog field.

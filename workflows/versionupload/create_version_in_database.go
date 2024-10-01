@@ -37,6 +37,7 @@ func (*A) CreateVersionInDatabaseActivity(ctx context.Context, args CreateVersio
 		dbVersion, err = tx.Version.Create().
 			SetVersion(args.ModInfo.Version).
 			SetGameVersion(args.ModInfo.GameVersion).
+			SetRequiredOnRemote(args.ModInfo.RequiredOnRemote).
 			SetChangelog(args.Version.Changelog).
 			SetModID(args.ModID).
 			SetStability(util.Stability(args.Version.Stability)).
