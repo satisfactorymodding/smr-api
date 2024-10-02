@@ -100,6 +100,20 @@ func (vu *VersionUpdate) SetNillableGameVersion(s *string) *VersionUpdate {
 	return vu
 }
 
+// SetRequiredOnRemote sets the "required_on_remote" field.
+func (vu *VersionUpdate) SetRequiredOnRemote(b bool) *VersionUpdate {
+	vu.mutation.SetRequiredOnRemote(b)
+	return vu
+}
+
+// SetNillableRequiredOnRemote sets the "required_on_remote" field if the given value is not nil.
+func (vu *VersionUpdate) SetNillableRequiredOnRemote(b *bool) *VersionUpdate {
+	if b != nil {
+		vu.SetRequiredOnRemote(*b)
+	}
+	return vu
+}
+
 // SetChangelog sets the "changelog" field.
 func (vu *VersionUpdate) SetChangelog(s string) *VersionUpdate {
 	vu.mutation.SetChangelog(s)
@@ -577,6 +591,9 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.GameVersion(); ok {
 		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
 	}
+	if value, ok := vu.mutation.RequiredOnRemote(); ok {
+		_spec.SetField(version.FieldRequiredOnRemote, field.TypeBool, value)
+	}
 	if value, ok := vu.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)
 	}
@@ -878,6 +895,20 @@ func (vuo *VersionUpdateOne) SetGameVersion(s string) *VersionUpdateOne {
 func (vuo *VersionUpdateOne) SetNillableGameVersion(s *string) *VersionUpdateOne {
 	if s != nil {
 		vuo.SetGameVersion(*s)
+	}
+	return vuo
+}
+
+// SetRequiredOnRemote sets the "required_on_remote" field.
+func (vuo *VersionUpdateOne) SetRequiredOnRemote(b bool) *VersionUpdateOne {
+	vuo.mutation.SetRequiredOnRemote(b)
+	return vuo
+}
+
+// SetNillableRequiredOnRemote sets the "required_on_remote" field if the given value is not nil.
+func (vuo *VersionUpdateOne) SetNillableRequiredOnRemote(b *bool) *VersionUpdateOne {
+	if b != nil {
+		vuo.SetRequiredOnRemote(*b)
 	}
 	return vuo
 }
@@ -1388,6 +1419,9 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	}
 	if value, ok := vuo.mutation.GameVersion(); ok {
 		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
+	}
+	if value, ok := vuo.mutation.RequiredOnRemote(); ok {
+		_spec.SetField(version.FieldRequiredOnRemote, field.TypeBool, value)
 	}
 	if value, ok := vuo.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)

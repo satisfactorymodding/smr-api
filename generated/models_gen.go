@@ -288,24 +288,25 @@ type UserSession struct {
 }
 
 type Version struct {
-	ID           string               `json:"id"`
-	ModID        string               `json:"mod_id"`
-	Version      string               `json:"version"`
-	SmlVersion   string               `json:"sml_version"`
-	GameVersion  string               `json:"game_version"`
-	Changelog    string               `json:"changelog"`
-	Downloads    int                  `json:"downloads"`
-	Stability    VersionStabilities   `json:"stability"`
-	Approved     bool                 `json:"approved"`
-	UpdatedAt    string               `json:"updated_at"`
-	CreatedAt    string               `json:"created_at"`
-	Link         string               `json:"link"`
-	Targets      []*VersionTarget     `json:"targets"`
-	Metadata     *string              `json:"metadata,omitempty"`
-	Size         *int                 `json:"size,omitempty"`
-	Hash         *string              `json:"hash,omitempty"`
-	Mod          *Mod                 `json:"mod"`
-	Dependencies []*VersionDependency `json:"dependencies"`
+	ID               string               `json:"id"`
+	ModID            string               `json:"mod_id"`
+	Version          string               `json:"version"`
+	SmlVersion       string               `json:"sml_version"`
+	GameVersion      string               `json:"game_version"`
+	RequiredOnRemote bool                 `json:"required_on_remote"`
+	Changelog        string               `json:"changelog"`
+	Downloads        int                  `json:"downloads"`
+	Stability        VersionStabilities   `json:"stability"`
+	Approved         bool                 `json:"approved"`
+	UpdatedAt        string               `json:"updated_at"`
+	CreatedAt        string               `json:"created_at"`
+	Link             string               `json:"link"`
+	Targets          []*VersionTarget     `json:"targets"`
+	Metadata         *string              `json:"metadata,omitempty"`
+	Size             *int                 `json:"size,omitempty"`
+	Hash             *string              `json:"hash,omitempty"`
+	Mod              *Mod                 `json:"mod"`
+	Dependencies     []*VersionDependency `json:"dependencies"`
 }
 
 type VersionDependency struct {
