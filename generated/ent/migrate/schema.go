@@ -352,6 +352,7 @@ var (
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "version", Type: field.TypeString, Size: 16},
 		{Name: "game_version", Type: field.TypeString},
+		{Name: "required_on_remote", Type: field.TypeBool},
 		{Name: "changelog", Type: field.TypeString, Nullable: true},
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
 		{Name: "key", Type: field.TypeString, Nullable: true},
@@ -376,7 +377,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "versions_mods_versions",
-				Columns:    []*schema.Column{VersionsColumns[20]},
+				Columns:    []*schema.Column{VersionsColumns[21]},
 				RefColumns: []*schema.Column{ModsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -390,17 +391,17 @@ var (
 			{
 				Name:    "version_approved",
 				Unique:  false,
-				Columns: []*schema.Column{VersionsColumns[10]},
+				Columns: []*schema.Column{VersionsColumns[11]},
 			},
 			{
 				Name:    "version_denied",
 				Unique:  false,
-				Columns: []*schema.Column{VersionsColumns[12]},
+				Columns: []*schema.Column{VersionsColumns[13]},
 			},
 			{
 				Name:    "version_mod_id",
 				Unique:  false,
-				Columns: []*schema.Column{VersionsColumns[20]},
+				Columns: []*schema.Column{VersionsColumns[21]},
 			},
 		},
 	}

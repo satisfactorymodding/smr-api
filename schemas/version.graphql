@@ -26,6 +26,7 @@ type Version {
     version: String!
     sml_version: String!
     game_version: String!
+    required_on_remote: Boolean!
     changelog: String!
     downloads: Int!
     stability: VersionStabilities!

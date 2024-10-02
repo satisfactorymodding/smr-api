@@ -96,6 +96,11 @@ func GameVersion(v string) predicate.Version {
 	return predicate.Version(sql.FieldEQ(FieldGameVersion, v))
 }
 
+// RequiredOnRemote applies equality check predicate on the "required_on_remote" field. It's identical to RequiredOnRemoteEQ.
+func RequiredOnRemote(v bool) predicate.Version {
+	return predicate.Version(sql.FieldEQ(FieldRequiredOnRemote, v))
+}
+
 // Changelog applies equality check predicate on the "changelog" field. It's identical to ChangelogEQ.
 func Changelog(v string) predicate.Version {
 	return predicate.Version(sql.FieldEQ(FieldChangelog, v))
@@ -484,6 +489,16 @@ func GameVersionEqualFold(v string) predicate.Version {
 // GameVersionContainsFold applies the ContainsFold predicate on the "game_version" field.
 func GameVersionContainsFold(v string) predicate.Version {
 	return predicate.Version(sql.FieldContainsFold(FieldGameVersion, v))
+}
+
+// RequiredOnRemoteEQ applies the EQ predicate on the "required_on_remote" field.
+func RequiredOnRemoteEQ(v bool) predicate.Version {
+	return predicate.Version(sql.FieldEQ(FieldRequiredOnRemote, v))
+}
+
+// RequiredOnRemoteNEQ applies the NEQ predicate on the "required_on_remote" field.
+func RequiredOnRemoteNEQ(v bool) predicate.Version {
+	return predicate.Version(sql.FieldNEQ(FieldRequiredOnRemote, v))
 }
 
 // ChangelogEQ applies the EQ predicate on the "changelog" field.

@@ -87,6 +87,12 @@ func (vc *VersionCreate) SetGameVersion(s string) *VersionCreate {
 	return vc
 }
 
+// SetRequiredOnRemote sets the "required_on_remote" field.
+func (vc *VersionCreate) SetRequiredOnRemote(b bool) *VersionCreate {
+	vc.mutation.SetRequiredOnRemote(b)
+	return vc
+}
+
 // SetChangelog sets the "changelog" field.
 func (vc *VersionCreate) SetChangelog(s string) *VersionCreate {
 	vc.mutation.SetChangelog(s)
@@ -442,6 +448,9 @@ func (vc *VersionCreate) check() error {
 	if _, ok := vc.mutation.GameVersion(); !ok {
 		return &ValidationError{Name: "game_version", err: errors.New(`ent: missing required field "Version.game_version"`)}
 	}
+	if _, ok := vc.mutation.RequiredOnRemote(); !ok {
+		return &ValidationError{Name: "required_on_remote", err: errors.New(`ent: missing required field "Version.required_on_remote"`)}
+	}
 	if _, ok := vc.mutation.Downloads(); !ok {
 		return &ValidationError{Name: "downloads", err: errors.New(`ent: missing required field "Version.downloads"`)}
 	}
@@ -533,6 +542,10 @@ func (vc *VersionCreate) createSpec() (*Version, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.GameVersion(); ok {
 		_spec.SetField(version.FieldGameVersion, field.TypeString, value)
 		_node.GameVersion = value
+	}
+	if value, ok := vc.mutation.RequiredOnRemote(); ok {
+		_spec.SetField(version.FieldRequiredOnRemote, field.TypeBool, value)
+		_node.RequiredOnRemote = value
 	}
 	if value, ok := vc.mutation.Changelog(); ok {
 		_spec.SetField(version.FieldChangelog, field.TypeString, value)
@@ -774,6 +787,18 @@ func (u *VersionUpsert) SetGameVersion(v string) *VersionUpsert {
 // UpdateGameVersion sets the "game_version" field to the value that was provided on create.
 func (u *VersionUpsert) UpdateGameVersion() *VersionUpsert {
 	u.SetExcluded(version.FieldGameVersion)
+	return u
+}
+
+// SetRequiredOnRemote sets the "required_on_remote" field.
+func (u *VersionUpsert) SetRequiredOnRemote(v bool) *VersionUpsert {
+	u.Set(version.FieldRequiredOnRemote, v)
+	return u
+}
+
+// UpdateRequiredOnRemote sets the "required_on_remote" field to the value that was provided on create.
+func (u *VersionUpsert) UpdateRequiredOnRemote() *VersionUpsert {
+	u.SetExcluded(version.FieldRequiredOnRemote)
 	return u
 }
 
@@ -1154,6 +1179,20 @@ func (u *VersionUpsertOne) SetGameVersion(v string) *VersionUpsertOne {
 func (u *VersionUpsertOne) UpdateGameVersion() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateGameVersion()
+	})
+}
+
+// SetRequiredOnRemote sets the "required_on_remote" field.
+func (u *VersionUpsertOne) SetRequiredOnRemote(v bool) *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetRequiredOnRemote(v)
+	})
+}
+
+// UpdateRequiredOnRemote sets the "required_on_remote" field to the value that was provided on create.
+func (u *VersionUpsertOne) UpdateRequiredOnRemote() *VersionUpsertOne {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateRequiredOnRemote()
 	})
 }
 
@@ -1743,6 +1782,20 @@ func (u *VersionUpsertBulk) SetGameVersion(v string) *VersionUpsertBulk {
 func (u *VersionUpsertBulk) UpdateGameVersion() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.UpdateGameVersion()
+	})
+}
+
+// SetRequiredOnRemote sets the "required_on_remote" field.
+func (u *VersionUpsertBulk) SetRequiredOnRemote(v bool) *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.SetRequiredOnRemote(v)
+	})
+}
+
+// UpdateRequiredOnRemote sets the "required_on_remote" field to the value that was provided on create.
+func (u *VersionUpsertBulk) UpdateRequiredOnRemote() *VersionUpsertBulk {
+	return u.Update(func(s *VersionUpsert) {
+		s.UpdateRequiredOnRemote()
 	})
 }
 

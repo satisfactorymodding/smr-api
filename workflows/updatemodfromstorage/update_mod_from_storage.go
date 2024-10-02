@@ -108,6 +108,7 @@ func (*A) UpdateModDataFromStorageActivity(ctx context.Context, modID string, ve
 		SetVersionPatch(versionPatch).
 		SetModReference(info.ModReference).
 		SetGameVersion(info.GameVersion).
+		SetRequiredOnRemote(info.RequiredOnRemote).
 		Exec(ctx)
 	if err != nil {
 		return err

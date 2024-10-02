@@ -31,6 +31,8 @@ type Version struct {
 	Version string `json:"version,omitempty"`
 	// GameVersion holds the value of the "game_version" field.
 	GameVersion string `json:"game_version,omitempty"`
+	// RequiredOnRemote holds the value of the "required_on_remote" field.
+	RequiredOnRemote bool `json:"required_on_remote,omitempty"`
 	// Changelog holds the value of the "changelog" field.
 	Changelog string `json:"changelog,omitempty"`
 	// Downloads holds the value of the "downloads" field.
@@ -134,7 +136,7 @@ func (*Version) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case version.FieldApproved, version.FieldDenied:
+		case version.FieldRequiredOnRemote, version.FieldApproved, version.FieldDenied:
 			values[i] = new(sql.NullBool)
 		case version.FieldDownloads, version.FieldHotness, version.FieldVersionMajor, version.FieldVersionMinor, version.FieldVersionPatch, version.FieldSize:
 			values[i] = new(sql.NullInt64)
@@ -198,6 +200,12 @@ func (v *Version) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field game_version", values[i])
 			} else if value.Valid {
 				v.GameVersion = value.String
+			}
+		case version.FieldRequiredOnRemote:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field required_on_remote", values[i])
+			} else if value.Valid {
+				v.RequiredOnRemote = value.Bool
 			}
 		case version.FieldChangelog:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -361,6 +369,9 @@ func (v *Version) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("game_version=")
 	builder.WriteString(v.GameVersion)
+	builder.WriteString(", ")
+	builder.WriteString("required_on_remote=")
+	builder.WriteString(fmt.Sprintf("%v", v.RequiredOnRemote))
 	builder.WriteString(", ")
 	builder.WriteString("changelog=")
 	builder.WriteString(v.Changelog)

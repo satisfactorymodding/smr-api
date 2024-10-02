@@ -331,25 +331,25 @@ type ComplexityRoot struct {
 	}
 
 	Version struct {
-		Approved          func(childComplexity int) int
-		Changelog         func(childComplexity int) int
-		CreatedAt         func(childComplexity int) int
-		Dependencies      func(childComplexity int) int
-		Downloads         func(childComplexity int) int
-		GameVersion       func(childComplexity int) int
-		Hash              func(childComplexity int) int
-		ID                func(childComplexity int) int
-		Link              func(childComplexity int) int
-		Metadata          func(childComplexity int) int
-		Mod               func(childComplexity int) int
-		ModID             func(childComplexity int) int
-		Size              func(childComplexity int) int
-		SmlVersion        func(childComplexity int) int
-		Stability         func(childComplexity int) int
-		Targets           func(childComplexity int) int
-		UpdatedAt         func(childComplexity int) int
-		Version           func(childComplexity int) int
-		VirustotalResults func(childComplexity int) int
+		Approved         func(childComplexity int) int
+		Changelog        func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		Dependencies     func(childComplexity int) int
+		Downloads        func(childComplexity int) int
+		GameVersion      func(childComplexity int) int
+		Hash             func(childComplexity int) int
+		ID               func(childComplexity int) int
+		Link             func(childComplexity int) int
+		Metadata         func(childComplexity int) int
+		Mod              func(childComplexity int) int
+		ModID            func(childComplexity int) int
+		RequiredOnRemote func(childComplexity int) int
+		Size             func(childComplexity int) int
+		SmlVersion       func(childComplexity int) int
+		Stability        func(childComplexity int) int
+		Targets          func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
+		Version          func(childComplexity int) int
 	}
 
 	VersionDependency struct {
@@ -2180,6 +2180,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Version.ModID(childComplexity), true
 
+	case "Version.required_on_remote":
+		if e.complexity.Version.RequiredOnRemote == nil {
+			break
+		}
+
+		return e.complexity.Version.RequiredOnRemote(childComplexity), true
+
 	case "Version.size":
 		if e.complexity.Version.Size == nil {
 			break
@@ -3058,6 +3065,7 @@ type Version {
     version: String!
     sml_version: String!
     game_version: String!
+    required_on_remote: Boolean!
     changelog: String!
     downloads: Int!
     stability: VersionStabilities!
@@ -4870,6 +4878,8 @@ func (ec *executionContext) fieldContext_CreateVersionResponse_version(_ context
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -5348,6 +5358,8 @@ func (ec *executionContext) fieldContext_GetMyVersions_versions(_ context.Contex
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -5590,6 +5602,8 @@ func (ec *executionContext) fieldContext_GetVersions_versions(_ context.Context,
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -6279,6 +6293,8 @@ func (ec *executionContext) fieldContext_LatestVersions_alpha(_ context.Context,
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -6360,6 +6376,8 @@ func (ec *executionContext) fieldContext_LatestVersions_beta(_ context.Context, 
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -6441,6 +6459,8 @@ func (ec *executionContext) fieldContext_LatestVersions_release(_ context.Contex
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -7539,6 +7559,8 @@ func (ec *executionContext) fieldContext_Mod_version(ctx context.Context, field 
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -7634,6 +7656,8 @@ func (ec *executionContext) fieldContext_Mod_versions(ctx context.Context, field
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -7869,6 +7893,8 @@ func (ec *executionContext) fieldContext_ModVersion_versions(_ context.Context, 
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -10543,6 +10569,8 @@ func (ec *executionContext) fieldContext_Mutation_updateVersion(ctx context.Cont
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -12759,6 +12787,8 @@ func (ec *executionContext) fieldContext_Query_getVersion(ctx context.Context, f
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -15995,6 +16025,50 @@ func (ec *executionContext) fieldContext_Version_game_version(_ context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Version_required_on_remote(ctx context.Context, field graphql.CollectedField, obj *Version) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Version_required_on_remote(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RequiredOnRemote, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Version_required_on_remote(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Version",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Version_changelog(ctx context.Context, field graphql.CollectedField, obj *Version) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Version_changelog(ctx, field)
 	if err != nil {
@@ -17063,6 +17137,8 @@ func (ec *executionContext) fieldContext_VersionDependency_version(_ context.Con
 				return ec.fieldContext_Version_sml_version(ctx, field)
 			case "game_version":
 				return ec.fieldContext_Version_game_version(ctx, field)
+			case "required_on_remote":
+				return ec.fieldContext_Version_required_on_remote(ctx, field)
 			case "changelog":
 				return ec.fieldContext_Version_changelog(ctx, field)
 			case "downloads":
@@ -23656,6 +23732,11 @@ func (ec *executionContext) _Version(ctx context.Context, sel ast.SelectionSet, 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "game_version":
 			out.Values[i] = ec._Version_game_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "required_on_remote":
+			out.Values[i] = ec._Version_required_on_remote(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

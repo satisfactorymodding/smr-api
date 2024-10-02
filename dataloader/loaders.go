@@ -113,6 +113,7 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 						version.FieldModID,
 						version.FieldVersion,
 						version.FieldGameVersion,
+						version.FieldRequiredOnRemote,
 						version.FieldChangelog,
 						version.FieldDownloads,
 						version.FieldKey,
