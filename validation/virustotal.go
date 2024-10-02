@@ -16,8 +16,6 @@ import (
 
 var client *vt.Client
 
-var analysisURL = "https://www.virustotal.com/gui/file/%s"
-
 func InitializeVirusTotal() {
 	client = vt.NewClient(viper.GetString("virustotal.key"))
 
@@ -60,30 +58,36 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) ([]ScanRe
 	errs, gctx := errgroup.WithContext(ctx)
 	fileCount := len(files)
 
-	c := make(chan ScanResult)
+	c := make(chan ScanResult, fileCount)
 
-	for i := range fileCount {
+	for i := range files {
 		count := i
 		errs.Go(func() error {
 			scanResult, err := scanFile(gctx, files[count], names[count])
 			if err != nil {
 				return fmt.Errorf("failed to scan %s: %w", names[count], err)
 			}
-			c <- *scanResult
+			select {
+			case c <- *scanResult:
+			case <-gctx.Done():
+				return gctx.Err()
+			}
 			return nil
 		})
 	}
+
 	go func() {
+		defer close(c)
 		_ = errs.Wait()
-		close(c)
 	}()
-	results := make([]ScanResult, 0, 100)
+
+	results := make([]ScanResult, 0)
 	for res := range c {
 		results = append(results, res)
 	}
 
 	if err := errs.Wait(); err != nil {
-		return nil, fmt.Errorf("failed to scan files: %w", err)
+		return results, fmt.Errorf("failed to scan files: %w", err)
 	}
 
 	return results, nil
@@ -166,6 +170,7 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 			return &scanResult, nil
 		}
 
+		scanResult.Safe = true
 		break
 	}
 

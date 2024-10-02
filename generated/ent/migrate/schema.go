@@ -477,7 +477,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "safe", Type: field.TypeBool, Default: false},
-		{Name: "hash", Type: field.TypeString, Unique: true},
+		{Name: "hash", Type: field.TypeString},
 		{Name: "file_name", Type: field.TypeString},
 		{Name: "version_id", Type: field.TypeString},
 	}
