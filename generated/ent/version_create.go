@@ -92,6 +92,14 @@ func (vc *VersionCreate) SetRequiredOnRemote(b bool) *VersionCreate {
 	return vc
 }
 
+// SetNillableRequiredOnRemote sets the "required_on_remote" field if the given value is not nil.
+func (vc *VersionCreate) SetNillableRequiredOnRemote(b *bool) *VersionCreate {
+	if b != nil {
+		vc.SetRequiredOnRemote(*b)
+	}
+	return vc
+}
+
 // SetChangelog sets the "changelog" field.
 func (vc *VersionCreate) SetChangelog(s string) *VersionCreate {
 	vc.mutation.SetChangelog(s)
@@ -379,6 +387,10 @@ func (vc *VersionCreate) defaults() error {
 		}
 		v := version.DefaultUpdatedAt()
 		vc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := vc.mutation.RequiredOnRemote(); !ok {
+		v := version.DefaultRequiredOnRemote
+		vc.mutation.SetRequiredOnRemote(v)
 	}
 	if _, ok := vc.mutation.Downloads(); !ok {
 		v := version.DefaultDownloads
