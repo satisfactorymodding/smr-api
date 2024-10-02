@@ -331,25 +331,26 @@ type ComplexityRoot struct {
 	}
 
 	Version struct {
-		Approved         func(childComplexity int) int
-		Changelog        func(childComplexity int) int
-		CreatedAt        func(childComplexity int) int
-		Dependencies     func(childComplexity int) int
-		Downloads        func(childComplexity int) int
-		GameVersion      func(childComplexity int) int
-		Hash             func(childComplexity int) int
-		ID               func(childComplexity int) int
-		Link             func(childComplexity int) int
-		Metadata         func(childComplexity int) int
-		Mod              func(childComplexity int) int
-		ModID            func(childComplexity int) int
-		RequiredOnRemote func(childComplexity int) int
-		Size             func(childComplexity int) int
-		SmlVersion       func(childComplexity int) int
-		Stability        func(childComplexity int) int
-		Targets          func(childComplexity int) int
-		UpdatedAt        func(childComplexity int) int
-		Version          func(childComplexity int) int
+		Approved          func(childComplexity int) int
+		Changelog         func(childComplexity int) int
+		CreatedAt         func(childComplexity int) int
+		Dependencies      func(childComplexity int) int
+		Downloads         func(childComplexity int) int
+		GameVersion       func(childComplexity int) int
+		Hash              func(childComplexity int) int
+		ID                func(childComplexity int) int
+		Link              func(childComplexity int) int
+		Metadata          func(childComplexity int) int
+		Mod               func(childComplexity int) int
+		ModID             func(childComplexity int) int
+		RequiredOnRemote  func(childComplexity int) int
+		Size              func(childComplexity int) int
+		SmlVersion        func(childComplexity int) int
+		Stability         func(childComplexity int) int
+		Targets           func(childComplexity int) int
+		UpdatedAt         func(childComplexity int) int
+		Version           func(childComplexity int) int
+		VirustotalResults func(childComplexity int) int
 	}
 
 	VersionDependency struct {

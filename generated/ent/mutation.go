@@ -8729,47 +8729,50 @@ func (m *UserSessionMutation) ResetEdge(name string) error {
 // VersionMutation represents an operation that mutates the Version nodes in the graph.
 type VersionMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *string
-	created_at          *time.Time
-	updated_at          *time.Time
-	deleted_at          *time.Time
-	version             *string
-	game_version        *string
-	required_on_remote  *bool
-	changelog           *string
-	downloads           *uint
-	adddownloads        *int
-	key                 *string
-	stability           *util.Stability
-	approved            *bool
-	hotness             *uint
-	addhotness          *int
-	denied              *bool
-	metadata            *string
-	mod_reference       *string
-	version_major       *int
-	addversion_major    *int
-	version_minor       *int
-	addversion_minor    *int
-	version_patch       *int
-	addversion_patch    *int
-	size                *int64
-	addsize             *int64
-	hash                *string
-	clearedFields       map[string]struct{}
-	mod                 *string
-	clearedmod          bool
-	dependencies        map[string]struct{}
-	removeddependencies map[string]struct{}
-	cleareddependencies bool
-	targets             map[string]struct{}
-	removedtargets      map[string]struct{}
-	clearedtargets      bool
-	done                bool
-	oldValue            func(context.Context) (*Version, error)
-	predicates          []predicate.Version
+	op                        Op
+	typ                       string
+	id                        *string
+	created_at                *time.Time
+	updated_at                *time.Time
+	deleted_at                *time.Time
+	version                   *string
+	game_version              *string
+	required_on_remote        *bool
+	changelog                 *string
+	downloads                 *uint
+	adddownloads              *int
+	key                       *string
+	stability                 *util.Stability
+	approved                  *bool
+	hotness                   *uint
+	addhotness                *int
+	denied                    *bool
+	metadata                  *string
+	mod_reference             *string
+	version_major             *int
+	addversion_major          *int
+	version_minor             *int
+	addversion_minor          *int
+	version_patch             *int
+	addversion_patch          *int
+	size                      *int64
+	addsize                   *int64
+	hash                      *string
+	clearedFields             map[string]struct{}
+	mod                       *string
+	clearedmod                bool
+	dependencies              map[string]struct{}
+	removeddependencies       map[string]struct{}
+	cleareddependencies       bool
+	targets                   map[string]struct{}
+	removedtargets            map[string]struct{}
+	clearedtargets            bool
+	virustotal_results        map[string]struct{}
+	removedvirustotal_results map[string]struct{}
+	clearedvirustotal_results bool
+	done                      bool
+	oldValue                  func(context.Context) (*Version, error)
+	predicates                []predicate.Version
 }
 
 var _ ent.Mutation = (*VersionMutation)(nil)
