@@ -1,11 +1,12 @@
 package types
 
 type ModAllVersionsVersion struct {
-	ID           string                             `json:"id"`
-	Version      string                             `json:"version"`
-	GameVersion  string                             `json:"game_version"`
-	Targets      []*ModAllVersionsVersionTarget     `json:"targets"`
-	Dependencies []*ModAllVersionsVersionDependency `json:"dependencies"`
+	ID               string                             `json:"id"`
+	Version          string                             `json:"version"`
+	GameVersion      string                             `json:"game_version"`
+	RequiredOnRemote bool                               `json:"required_on_remote"`
+	Targets          []*ModAllVersionsVersionTarget     `json:"targets"`
+	Dependencies     []*ModAllVersionsVersionDependency `json:"dependencies"`
 }
 
 type ModAllVersionsVersionTarget struct {

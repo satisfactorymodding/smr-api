@@ -8735,6 +8735,7 @@ type VersionMutation struct {
 	deleted_at          *time.Time
 	version             *string
 	game_version        *string
+	required_on_remote  *bool
 	changelog           *string
 	downloads           *uint
 	adddownloads        *int
@@ -9100,6 +9101,42 @@ func (m *VersionMutation) OldGameVersion(ctx context.Context) (v string, err err
 // ResetGameVersion resets all changes to the "game_version" field.
 func (m *VersionMutation) ResetGameVersion() {
 	m.game_version = nil
+}
+
+// SetRequiredOnRemote sets the "required_on_remote" field.
+func (m *VersionMutation) SetRequiredOnRemote(b bool) {
+	m.required_on_remote = &b
+}
+
+// RequiredOnRemote returns the value of the "required_on_remote" field in the mutation.
+func (m *VersionMutation) RequiredOnRemote() (r bool, exists bool) {
+	v := m.required_on_remote
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequiredOnRemote returns the old "required_on_remote" field's value of the Version entity.
+// If the Version object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VersionMutation) OldRequiredOnRemote(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequiredOnRemote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequiredOnRemote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequiredOnRemote: %w", err)
+	}
+	return oldValue.RequiredOnRemote, nil
+}
+
+// ResetRequiredOnRemote resets all changes to the "required_on_remote" field.
+func (m *VersionMutation) ResetRequiredOnRemote() {
+	m.required_on_remote = nil
 }
 
 // SetChangelog sets the "changelog" field.
@@ -10003,7 +10040,7 @@ func (m *VersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VersionMutation) Fields() []string {
-	fields := make([]string, 0, 20)
+	fields := make([]string, 0, 21)
 	if m.created_at != nil {
 		fields = append(fields, version.FieldCreatedAt)
 	}
@@ -10021,6 +10058,9 @@ func (m *VersionMutation) Fields() []string {
 	}
 	if m.game_version != nil {
 		fields = append(fields, version.FieldGameVersion)
+	}
+	if m.required_on_remote != nil {
+		fields = append(fields, version.FieldRequiredOnRemote)
 	}
 	if m.changelog != nil {
 		fields = append(fields, version.FieldChangelog)
@@ -10084,6 +10124,8 @@ func (m *VersionMutation) Field(name string) (ent.Value, bool) {
 		return m.Version()
 	case version.FieldGameVersion:
 		return m.GameVersion()
+	case version.FieldRequiredOnRemote:
+		return m.RequiredOnRemote()
 	case version.FieldChangelog:
 		return m.Changelog()
 	case version.FieldDownloads:
@@ -10133,6 +10175,8 @@ func (m *VersionMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldVersion(ctx)
 	case version.FieldGameVersion:
 		return m.OldGameVersion(ctx)
+	case version.FieldRequiredOnRemote:
+		return m.OldRequiredOnRemote(ctx)
 	case version.FieldChangelog:
 		return m.OldChangelog(ctx)
 	case version.FieldDownloads:
@@ -10211,6 +10255,13 @@ func (m *VersionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetGameVersion(v)
+		return nil
+	case version.FieldRequiredOnRemote:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequiredOnRemote(v)
 		return nil
 	case version.FieldChangelog:
 		v, ok := value.(string)
@@ -10508,6 +10559,9 @@ func (m *VersionMutation) ResetField(name string) error {
 		return nil
 	case version.FieldGameVersion:
 		m.ResetGameVersion()
+		return nil
+	case version.FieldRequiredOnRemote:
+		m.ResetRequiredOnRemote()
 		return nil
 	case version.FieldChangelog:
 		m.ResetChangelog()

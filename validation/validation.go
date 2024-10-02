@@ -61,6 +61,7 @@ type ModInfo struct {
 	Hash                 string            `json:"hash"`
 	SMLVersion           *string           `json:"sml_version"`
 	GameVersion          string            `json:"game_version"`
+	RequiredOnRemote     bool              `json:"required_on_remote"`
 	Objects              []ModObject       `json:"objects"`
 	Targets              []string          `json:"targets"`
 	Size                 int64             `json:"size"`
@@ -370,10 +371,11 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 }
 
 type UPlugin struct {
-	SemVersion  *string  `json:"SemVersion"`
-	Plugins     []Plugin `json:"Plugins"`
-	Version     int64    `json:"Version"`
-	GameVersion string   `json:"GameVersion"`
+	SemVersion       *string  `json:"SemVersion"`
+	Plugins          []Plugin `json:"Plugins"`
+	Version          int64    `json:"Version"`
+	GameVersion      string   `json:"GameVersion"`
+	RequiredOnRemote *bool    `json:"RequiredOnRemote"`
 }
 
 type Plugin struct {
@@ -420,6 +422,7 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 		Objects:              []ModObject{},
 		Dependencies:         map[string]string{},
 		OptionalDependencies: map[string]string{},
+		RequiredOnRemote:     true,
 	}
 
 	if uPlugin.SemVersion != nil {
@@ -431,6 +434,10 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 		}
 	} else {
 		modInfo.Version = strconv.FormatInt(uPlugin.Version, 10) + ".0.0"
+	}
+
+	if uPlugin.RequiredOnRemote != nil {
+		modInfo.RequiredOnRemote = *uPlugin.RequiredOnRemote
 	}
 
 	for _, plugin := range uPlugin.Plugins {
