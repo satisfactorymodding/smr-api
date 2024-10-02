@@ -16,6 +16,9 @@ jobs:
       - name: Hash migrations
         run: atlas migrate hash --dir "file://migrations/sql?format=golang-migrate"
 
+      - name: Make sure all changes generated
+        run: atlas migrate diff ci_migration --dir "file://migrations/sql?format=golang-migrate" --to "ent://db/schema" --dev-url "docker://postgres/16/test?search_path=public"
+
       - name: Ensure no changes
         run: git diff --exit-code
 
