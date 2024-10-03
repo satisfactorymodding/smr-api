@@ -108,6 +108,12 @@ func scanAndSaveResults(ctx context.Context, toScan []io.Reader, names []string,
 		return false, err
 	}
 
+	for _, result := range scanResults {
+		if !result.Safe {
+			return false, nil
+		}
+	}
+
 	return true, nil
 }
 
