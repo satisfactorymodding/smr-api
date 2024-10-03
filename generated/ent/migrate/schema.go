@@ -3,7 +3,6 @@
 package migrate
 
 import (
-	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
@@ -478,7 +477,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "safe", Type: field.TypeBool, Default: false},
-		{Name: "hash", Type: field.TypeString},
+		{Name: "hash", Type: field.TypeString, Size: 64},
 		{Name: "file_name", Type: field.TypeString},
 		{Name: "version_id", Type: field.TypeString},
 	}
@@ -493,6 +492,23 @@ var (
 				Columns:    []*schema.Column{VirustotalResultsColumns[6]},
 				RefColumns: []*schema.Column{VersionsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "virustotalresult_safe",
+				Unique:  false,
+				Columns: []*schema.Column{VirustotalResultsColumns[3]},
+			},
+			{
+				Name:    "virustotalresult_hash_version_id",
+				Unique:  true,
+				Columns: []*schema.Column{VirustotalResultsColumns[4], VirustotalResultsColumns[6]},
+			},
+			{
+				Name:    "virustotalresult_file_name",
+				Unique:  false,
+				Columns: []*schema.Column{VirustotalResultsColumns[5]},
 			},
 		},
 	}
@@ -531,7 +547,4 @@ func init() {
 	VersionDependenciesTable.ForeignKeys[1].RefTable = ModsTable
 	VersionTargetsTable.ForeignKeys[0].RefTable = VersionsTable
 	VirustotalResultsTable.ForeignKeys[0].RefTable = VersionsTable
-	VirustotalResultsTable.Annotation = &entsql.Annotation{
-		Table: "virustotal_results",
-	}
 }

@@ -50,7 +50,6 @@ type VersionTarget {
     link: String!
     size: Int
     hash: String
-    id: VersionTargetID!
 }
 
 type CreateVersionResponse {
@@ -70,10 +69,7 @@ type GetMyVersions {
 
 type VersionDependency {
     version_id: VersionID!
-    mod_id: ModID!
-      @deprecated(
-        reason: "soon will return actual mod id instead of reference. use mod_reference field instead!"
-      )
+    mod_id: ModID! @deprecated(reason: "soon will return actual mod id instead of reference. use mod_reference field instead!")
     condition: String!
     optional: Boolean!
     mod_reference: String!
@@ -108,14 +104,9 @@ input UpdateVersion {
 extend type Query {
     getVersion(versionId: VersionID!): Version
     getVersions(filter: VersionFilter): GetVersions!
-    getUnapprovedVersions(filter: VersionFilter): GetVersions!
-      @canApproveVersions
-      @isLoggedIn
+    getUnapprovedVersions(filter: VersionFilter): GetVersions! @canApproveVersions @isLoggedIn
 
-    checkVersionUploadState(
-      modId: ModID!
-      versionId: VersionID!
-    ): CreateVersionResponse @canEditMod(field: "modId") @isLoggedIn
+    checkVersionUploadState(modId: ModID!, versionId: VersionID!): CreateVersionResponse @canEditMod(field: "modId") @isLoggedIn
 
     getMyVersions(filter: VersionFilter): GetMyVersions! @isLoggedIn
     getMyUnapprovedVersions(filter: VersionFilter): GetMyVersions! @isLoggedIn
@@ -124,30 +115,13 @@ extend type Query {
 ### Mutations
 
 extend type Mutation {
-    createVersion(modId: ModID!): VersionID!
-      @canEditMod(field: "modId")
-      @isLoggedIn
-    uploadVersionPart(
-      modId: ModID!
-      versionId: VersionID!
-      part: Int!
-      file: Upload!
-    ): Boolean! @canEditMod(field: "modId") @isLoggedIn
-    finalizeCreateVersion(
-      modId: ModID!
-      versionId: VersionID!
-      version: NewVersion!
-    ): Boolean! @canEditMod(field: "modId") @isLoggedIn
+    createVersion(modId: ModID!): VersionID! @canEditMod(field: "modId") @isLoggedIn
+    uploadVersionPart(modId: ModID!, versionId: VersionID!, part: Int!, file: Upload!): Boolean! @canEditMod(field: "modId") @isLoggedIn
+    finalizeCreateVersion(modId: ModID!, versionId: VersionID!, version: NewVersion!): Boolean! @canEditMod(field: "modId") @isLoggedIn
 
-    updateVersion(versionId: VersionID!, version: UpdateVersion!): Version!
-      @canEditVersion(field: "versionId")
-      @isLoggedIn
-    deleteVersion(versionId: VersionID!): Boolean!
-      @canEditVersion(field: "versionId")
-      @isLoggedIn
+    updateVersion(versionId: VersionID!, version: UpdateVersion!): Version! @canEditVersion(field: "versionId") @isLoggedIn
+    deleteVersion(versionId: VersionID!): Boolean! @canEditVersion(field: "versionId") @isLoggedIn
 
-    approveVersion(versionId: VersionID!): Boolean!
-      @canApproveVersions
-      @isLoggedIn
+    approveVersion(versionId: VersionID!): Boolean! @canApproveVersions @isLoggedIn
     denyVersion(versionId: VersionID!): Boolean! @canApproveVersions @isLoggedIn
 }

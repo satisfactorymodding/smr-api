@@ -12,12 +12,3 @@ type VirustotalResult {
     created_at: Date!
     updated_at: Date
 }
-
-enum VirustotalResultFields {
-    id
-    hash
-    safe
-    version_id
-    created_at
-    updated_at
-}

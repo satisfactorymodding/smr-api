@@ -13,7 +13,6 @@ import (
 	"github.com/Vilsol/slox"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
@@ -79,7 +78,7 @@ func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTo
 		}
 	}
 
-	success, err := scanAndSaveResults(ctx, toScan, names, span, args)
+	success, err := scanAndSaveResults(ctx, toScan, names, args)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
@@ -89,7 +88,10 @@ func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTo
 	return success, nil
 }
 
-func scanAndSaveResults(ctx context.Context, toScan []io.Reader, names []string, span trace.Span, args ScanModOnVirusTotalArgs) (bool, error) {
+func scanAndSaveResults(ctx context.Context, toScan []io.Reader, names []string, args ScanModOnVirusTotalArgs) (bool, error) {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "scanAndSaveResults")
+	defer span.End()
+
 	scanResults, scanErr := validation.ScanFiles(ctx, toScan, names)
 	if scanErr != nil {
 		span.SetStatus(codes.Error, scanErr.Error())

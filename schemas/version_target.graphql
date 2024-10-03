@@ -1,7 +1,5 @@
-scalar VersionTargetID
-
 enum TargetName {
-    Windows
-    WindowsServer
+    Windows,
+    WindowsServer,
     LinuxServer
 }

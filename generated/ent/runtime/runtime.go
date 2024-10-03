@@ -449,7 +449,21 @@ func init() {
 	// virustotalresultDescHash is the schema descriptor for hash field.
 	virustotalresultDescHash := virustotalresultFields[1].Descriptor()
 	// virustotalresult.HashValidator is a validator for the "hash" field. It is called by the builders before save.
-	virustotalresult.HashValidator = virustotalresultDescHash.Validators[0].(func(string) error)
+	virustotalresult.HashValidator = func() func(string) error {
+		validators := virustotalresultDescHash.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(hash string) error {
+			for _, fn := range fns {
+				if err := fn(hash); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// virustotalresultDescFileName is the schema descriptor for file_name field.
 	virustotalresultDescFileName := virustotalresultFields[2].Descriptor()
 	// virustotalresult.FileNameValidator is a validator for the "file_name" field. It is called by the builders before save.
@@ -457,7 +471,21 @@ func init() {
 	// virustotalresultDescVersionID is the schema descriptor for version_id field.
 	virustotalresultDescVersionID := virustotalresultFields[3].Descriptor()
 	// virustotalresult.VersionIDValidator is a validator for the "version_id" field. It is called by the builders before save.
-	virustotalresult.VersionIDValidator = virustotalresultDescVersionID.Validators[0].(func(string) error)
+	virustotalresult.VersionIDValidator = func() func(string) error {
+		validators := virustotalresultDescVersionID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(version string) error {
+			for _, fn := range fns {
+				if err := fn(version); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// virustotalresultDescID is the schema descriptor for id field.
 	virustotalresultDescID := virustotalresultMixinFields0[0].Descriptor()
 	// virustotalresult.DefaultID holds the default value on creation for the id field.
