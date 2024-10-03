@@ -346,6 +346,10 @@ func init() {
 	versionDescVersion := versionFields[1].Descriptor()
 	// version.VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	version.VersionValidator = versionDescVersion.Validators[0].(func(string) error)
+	// versionDescRequiredOnRemote is the schema descriptor for required_on_remote field.
+	versionDescRequiredOnRemote := versionFields[3].Descriptor()
+	// version.DefaultRequiredOnRemote holds the default value on creation for the required_on_remote field.
+	version.DefaultRequiredOnRemote = versionDescRequiredOnRemote.Default.(bool)
 	// versionDescDownloads is the schema descriptor for downloads field.
 	versionDescDownloads := versionFields[5].Descriptor()
 	// version.DefaultDownloads holds the default value on creation for the downloads field.

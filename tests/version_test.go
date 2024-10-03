@@ -34,7 +34,11 @@ const testModPath = "testdata/FicsitRemoteMonitoring-0.10.3.smod"
 // TODO Add rate limit test
 
 func TestVersionSuccess(t *testing.T) {
-	RunVersionTestWrapper(t, testModPath, viper.IsSet("virustotal.key") && viper.GetString("virustotal.key") != "", "FicsitRemoteMonitoring", "")
+	RunVersionTestWrapper(t, testModPath, false, "FicsitRemoteMonitoring", "")
+}
+
+func TestVersionVirustotal(t *testing.T) {
+	RunVersionTestWrapper(t, testModPath, true, "FicsitRemoteMonitoring", "")
 }
 
 func TestVersionWrongModReference(t *testing.T) {
@@ -72,6 +76,12 @@ func RunVersionTestWrapper(t *testing.T, modFilePath string, executeVirusCheck b
 }
 
 func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, modFilePath string, executeVirusCheck bool, modReference string, reuseModID string, expectError string) string {
+	if executeVirusCheck && !(viper.IsSet("virustotal.key") && viper.GetString("virustotal.key") != "") {
+		println("missing virustotal key from config")
+		t.FailNow()
+		return ""
+	}
+
 	viper.Set("skip-virus-check", !executeVirusCheck)
 
 	token, _, err := makeUser(ctx)
