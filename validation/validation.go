@@ -456,7 +456,7 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 		if file != nil {
 			splitName := strings.Split(file.Name, ".")
 			extension := splitName[len(splitName)-1]
-			if extension == "pak" {
+			if extension == "pak" || extension == "utoc" || extension == "ucas" {
 				modInfo.Objects = append(modInfo.Objects, ModObject{
 					Path: file.Name,
 					Type: "pak",
