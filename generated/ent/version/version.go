@@ -164,6 +164,8 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	VersionValidator func(string) error
+	// DefaultRequiredOnRemote holds the default value on creation for the "required_on_remote" field.
+	DefaultRequiredOnRemote bool
 	// DefaultDownloads holds the default value on creation for the "downloads" field.
 	DefaultDownloads uint
 	// DefaultApproved holds the default value on creation for the "approved" field.

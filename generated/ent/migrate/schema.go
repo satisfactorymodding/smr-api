@@ -352,7 +352,7 @@ var (
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "version", Type: field.TypeString, Size: 16},
 		{Name: "game_version", Type: field.TypeString},
-		{Name: "required_on_remote", Type: field.TypeBool},
+		{Name: "required_on_remote", Type: field.TypeBool, Default: true},
 		{Name: "changelog", Type: field.TypeString, Nullable: true},
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
 		{Name: "key", Type: field.TypeString, Nullable: true},

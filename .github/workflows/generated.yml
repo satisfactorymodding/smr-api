@@ -10,11 +10,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install atlas CLI
-        run: curl -sSf https://atlasgo.sh | sh
+      - uses: jetify-com/devbox-install-action@v0.11.0
+        with:
+          enable-cache: true
 
       - name: Hash migrations
-        run: atlas migrate hash --dir "file://migrations/sql?format=golang-migrate"
+        run: devbox run migrate:hash
+
+      - name: Make sure all changes generated
+        run: echo 'ci_migration' | devbox run migrate:diff
 
       - name: Ensure no changes
         run: git diff --exit-code

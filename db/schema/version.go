@@ -26,7 +26,7 @@ func (Version) Fields() []ent.Field {
 		field.String("mod_id"),
 		field.String("version").MaxLen(16),
 		field.String("game_version"),
-		field.Bool("required_on_remote"),
+		field.Bool("required_on_remote").Default(true),
 		field.String("changelog").Optional(),
 		field.Uint("downloads").Default(0),
 		field.String("key").Optional(),
