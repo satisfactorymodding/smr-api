@@ -54,5 +54,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           image-names: "smr-api"
           image-tags: "staging-*"
-          cut-off: 52w
+          cut-off: 4w
           dry-run: true
+          keep-n-most-recent: 1
