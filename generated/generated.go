@@ -365,7 +365,6 @@ type ComplexityRoot struct {
 
 	VersionTarget struct {
 		Hash       func(childComplexity int) int
-		ID         func(childComplexity int) int
 		Link       func(childComplexity int) int
 		Size       func(childComplexity int) int
 		TargetName func(childComplexity int) int
@@ -2293,13 +2292,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.VersionTarget.Hash(childComplexity), true
 
-	case "VersionTarget.id":
-		if e.complexity.VersionTarget.ID == nil {
-			break
-		}
-
-		return e.complexity.VersionTarget.ID(childComplexity), true
-
 	case "VersionTarget.link":
 		if e.complexity.VersionTarget.Link == nil {
 			break
@@ -3090,7 +3082,6 @@ type VersionTarget {
     link: String!
     size: Int
     hash: String
-    id: VersionTargetID!
 }
 
 type CreateVersionResponse {
@@ -3110,10 +3101,7 @@ type GetMyVersions {
 
 type VersionDependency {
     version_id: VersionID!
-    mod_id: ModID!
-      @deprecated(
-        reason: "soon will return actual mod id instead of reference. use mod_reference field instead!"
-      )
+    mod_id: ModID! @deprecated(reason: "soon will return actual mod id instead of reference. use mod_reference field instead!")
     condition: String!
     optional: Boolean!
     mod_reference: String!
@@ -3148,14 +3136,9 @@ input UpdateVersion {
 extend type Query {
     getVersion(versionId: VersionID!): Version
     getVersions(filter: VersionFilter): GetVersions!
-    getUnapprovedVersions(filter: VersionFilter): GetVersions!
-      @canApproveVersions
-      @isLoggedIn
+    getUnapprovedVersions(filter: VersionFilter): GetVersions! @canApproveVersions @isLoggedIn
 
-    checkVersionUploadState(
-      modId: ModID!
-      versionId: VersionID!
-    ): CreateVersionResponse @canEditMod(field: "modId") @isLoggedIn
+    checkVersionUploadState(modId: ModID!, versionId: VersionID!): CreateVersionResponse @canEditMod(field: "modId") @isLoggedIn
 
     getMyVersions(filter: VersionFilter): GetMyVersions! @isLoggedIn
     getMyUnapprovedVersions(filter: VersionFilter): GetMyVersions! @isLoggedIn
@@ -3164,42 +3147,21 @@ extend type Query {
 ### Mutations
 
 extend type Mutation {
-    createVersion(modId: ModID!): VersionID!
-      @canEditMod(field: "modId")
-      @isLoggedIn
-    uploadVersionPart(
-      modId: ModID!
-      versionId: VersionID!
-      part: Int!
-      file: Upload!
-    ): Boolean! @canEditMod(field: "modId") @isLoggedIn
-    finalizeCreateVersion(
-      modId: ModID!
-      versionId: VersionID!
-      version: NewVersion!
-    ): Boolean! @canEditMod(field: "modId") @isLoggedIn
+    createVersion(modId: ModID!): VersionID! @canEditMod(field: "modId") @isLoggedIn
+    uploadVersionPart(modId: ModID!, versionId: VersionID!, part: Int!, file: Upload!): Boolean! @canEditMod(field: "modId") @isLoggedIn
+    finalizeCreateVersion(modId: ModID!, versionId: VersionID!, version: NewVersion!): Boolean! @canEditMod(field: "modId") @isLoggedIn
 
-    updateVersion(versionId: VersionID!, version: UpdateVersion!): Version!
-      @canEditVersion(field: "versionId")
-      @isLoggedIn
-    deleteVersion(versionId: VersionID!): Boolean!
-      @canEditVersion(field: "versionId")
-      @isLoggedIn
+    updateVersion(versionId: VersionID!, version: UpdateVersion!): Version! @canEditVersion(field: "versionId") @isLoggedIn
+    deleteVersion(versionId: VersionID!): Boolean! @canEditVersion(field: "versionId") @isLoggedIn
 
-    approveVersion(versionId: VersionID!): Boolean!
-      @canApproveVersions
-      @isLoggedIn
+    approveVersion(versionId: VersionID!): Boolean! @canApproveVersions @isLoggedIn
     denyVersion(versionId: VersionID!): Boolean! @canApproveVersions @isLoggedIn
-}
-`, BuiltIn: false},
-	{Name: "../schemas/version_target.graphql", Input: `scalar VersionTargetID
-
-enum TargetName {
-    Windows
-    WindowsServer
+}`, BuiltIn: false},
+	{Name: "../schemas/version_target.graphql", Input: `enum TargetName {
+    Windows,
+    WindowsServer,
     LinuxServer
-}
-`, BuiltIn: false},
+}`, BuiltIn: false},
 	{Name: "../schemas/virustotal_results.graphql", Input: `### Types
 
 scalar VirustotalHash
@@ -3213,15 +3175,6 @@ type VirustotalResult {
     version_id: String!
     created_at: Date!
     updated_at: Date
-}
-
-enum VirustotalResultFields {
-    id
-    hash
-    safe
-    version_id
-    created_at
-    updated_at
 }
 `, BuiltIn: false},
 }
@@ -16427,8 +16380,6 @@ func (ec *executionContext) fieldContext_Version_targets(_ context.Context, fiel
 				return ec.fieldContext_VersionTarget_size(ctx, field)
 			case "hash":
 				return ec.fieldContext_VersionTarget_hash(ctx, field)
-			case "id":
-				return ec.fieldContext_VersionTarget_id(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type VersionTarget", field.Name)
 		},
@@ -17384,50 +17335,6 @@ func (ec *executionContext) fieldContext_VersionTarget_hash(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VersionTarget_id(ctx context.Context, field graphql.CollectedField, obj *VersionTarget) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VersionTarget_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNVersionTargetID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VersionTarget_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VersionTarget",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type VersionTargetID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -24166,11 +24073,6 @@ func (ec *executionContext) _VersionTarget(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._VersionTarget_size(ctx, field, obj)
 		case "hash":
 			out.Values[i] = ec._VersionTarget_hash(ctx, field, obj)
-		case "id":
-			out.Values[i] = ec._VersionTarget_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -25938,21 +25840,6 @@ func (ec *executionContext) marshalNVersionTarget2ᚕᚖgithubᚗcomᚋsatisfact
 	wg.Wait()
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalNVersionTargetID2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNVersionTargetID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
 }
 
 func (ec *executionContext) unmarshalNVirustotalHash2string(ctx context.Context, v interface{}) (string, error) {
