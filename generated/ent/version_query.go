@@ -17,6 +17,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
 )
 
 // VersionQuery is the builder for querying Version entities.
@@ -29,6 +30,7 @@ type VersionQuery struct {
 	withMod                 *ModQuery
 	withDependencies        *ModQuery
 	withTargets             *VersionTargetQuery
+	withVirustotalResults   *VirustotalResultQuery
 	withVersionDependencies *VersionDependencyQuery
 	modifiers               []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
@@ -126,6 +128,28 @@ func (vq *VersionQuery) QueryTargets() *VersionTargetQuery {
 			sqlgraph.From(version.Table, version.FieldID, selector),
 			sqlgraph.To(versiontarget.Table, versiontarget.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, version.TargetsTable, version.TargetsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryVirustotalResults chains the current query on the "virustotal_results" edge.
+func (vq *VersionQuery) QueryVirustotalResults() *VirustotalResultQuery {
+	query := (&VirustotalResultClient{config: vq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := vq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := vq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(version.Table, version.FieldID, selector),
+			sqlgraph.To(virustotalresult.Table, virustotalresult.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, version.VirustotalResultsTable, version.VirustotalResultsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
 		return fromU, nil
@@ -350,6 +374,7 @@ func (vq *VersionQuery) Clone() *VersionQuery {
 		withMod:                 vq.withMod.Clone(),
 		withDependencies:        vq.withDependencies.Clone(),
 		withTargets:             vq.withTargets.Clone(),
+		withVirustotalResults:   vq.withVirustotalResults.Clone(),
 		withVersionDependencies: vq.withVersionDependencies.Clone(),
 		// clone intermediate query.
 		sql:  vq.sql.Clone(),
@@ -387,6 +412,17 @@ func (vq *VersionQuery) WithTargets(opts ...func(*VersionTargetQuery)) *VersionQ
 		opt(query)
 	}
 	vq.withTargets = query
+	return vq
+}
+
+// WithVirustotalResults tells the query-builder to eager-load the nodes that are connected to
+// the "virustotal_results" edge. The optional arguments are used to configure the query builder of the edge.
+func (vq *VersionQuery) WithVirustotalResults(opts ...func(*VirustotalResultQuery)) *VersionQuery {
+	query := (&VirustotalResultClient{config: vq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	vq.withVirustotalResults = query
 	return vq
 }
 
@@ -479,10 +515,11 @@ func (vq *VersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vers
 	var (
 		nodes       = []*Version{}
 		_spec       = vq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			vq.withMod != nil,
 			vq.withDependencies != nil,
 			vq.withTargets != nil,
+			vq.withVirustotalResults != nil,
 			vq.withVersionDependencies != nil,
 		}
 	)
@@ -524,6 +561,15 @@ func (vq *VersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Vers
 		if err := vq.loadTargets(ctx, query, nodes,
 			func(n *Version) { n.Edges.Targets = []*VersionTarget{} },
 			func(n *Version, e *VersionTarget) { n.Edges.Targets = append(n.Edges.Targets, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := vq.withVirustotalResults; query != nil {
+		if err := vq.loadVirustotalResults(ctx, query, nodes,
+			func(n *Version) { n.Edges.VirustotalResults = []*VirustotalResult{} },
+			func(n *Version, e *VirustotalResult) {
+				n.Edges.VirustotalResults = append(n.Edges.VirustotalResults, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -644,6 +690,36 @@ func (vq *VersionQuery) loadTargets(ctx context.Context, query *VersionTargetQue
 	}
 	query.Where(predicate.VersionTarget(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(version.TargetsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.VersionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "version_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (vq *VersionQuery) loadVirustotalResults(ctx context.Context, query *VirustotalResultQuery, nodes []*Version, init func(*Version), assign func(*Version, *VirustotalResult)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*Version)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(virustotalresult.FieldVersionID)
+	}
+	query.Where(predicate.VirustotalResult(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(version.VirustotalResultsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

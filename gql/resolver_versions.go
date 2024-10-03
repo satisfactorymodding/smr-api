@@ -23,6 +23,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/conv"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
 	"github.com/satisfactorymodding/smr-api/integrations"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/redis"
@@ -326,6 +327,16 @@ func (r *versionResolver) Mod(ctx context.Context, obj *generated.Version) (*gen
 	}
 
 	return (*conv.ModImpl)(nil).Convert(mod), nil
+}
+
+func (r *versionResolver) VirustotalResults(ctx context.Context, obj *generated.Version) ([]*generated.VirustotalResult, error) {
+	query := db.From(ctx).VirustotalResult.Query()
+
+	result, err := query.Where(virustotalresult.VersionID(obj.ID)).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return (*conv.VirustotalResultImpl)(nil).ConvertSlice(result), nil
 }
 
 func (r *versionResolver) Hash(_ context.Context, obj *generated.Version) (*string, error) {

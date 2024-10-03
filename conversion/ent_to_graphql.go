@@ -99,7 +99,7 @@ type Mod interface {
 // goverter:extend TimeToString UIntToInt Int64ToInt
 type Version interface {
 	// goverter:map Edges.Targets Targets
-	// goverter:ignore Link Mod Dependencies SmlVersion
+	// goverter:ignore Link Mod Dependencies SmlVersion VirustotalResults
 	Convert(source *ent.Version) *generated.Version
 	ConvertSlice(source []*ent.Version) []*generated.Version
 
@@ -116,6 +116,15 @@ type VersionDependency interface {
 	// goverter:map ModID ModReference
 	Convert(source *ent.VersionDependency) *generated.VersionDependency
 	ConvertSlice(source []*ent.VersionDependency) []*generated.VersionDependency
+}
+
+// goverter:converter
+// goverter:output:file ../generated/conv/virustotal_result.go
+// goverter:output:package conv
+// goverter:extend TimeToString UIntToInt Int64ToInt
+type VirustotalResult interface {
+	Convert(source *ent.VirustotalResult) *generated.VirustotalResult
+	ConvertSlice(source []*ent.VirustotalResult) []*generated.VirustotalResult
 }
 
 func TimeToString(i time.Time) string {

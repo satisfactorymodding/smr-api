@@ -177,6 +177,18 @@ func (f VersionTargetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Valu
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VersionTargetMutation", m)
 }
 
+// The VirustotalResultFunc type is an adapter to allow the use of ordinary
+// function as VirustotalResult mutator.
+type VirustotalResultFunc func(context.Context, *ent.VirustotalResultMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f VirustotalResultFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.VirustotalResultMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VirustotalResultMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

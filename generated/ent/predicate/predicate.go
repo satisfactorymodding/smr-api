@@ -47,3 +47,6 @@ type VersionDependency func(*sql.Selector)
 
 // VersionTarget is the predicate function for versiontarget builders.
 type VersionTarget func(*sql.Selector)
+
+// VirustotalResult is the predicate function for virustotalresult builders.
+type VirustotalResult func(*sql.Selector)

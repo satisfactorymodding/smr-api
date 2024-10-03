@@ -75,11 +75,13 @@ type VersionEdges struct {
 	Dependencies []*Mod `json:"dependencies,omitempty"`
 	// Targets holds the value of the targets edge.
 	Targets []*VersionTarget `json:"targets,omitempty"`
+	// VirustotalResults holds the value of the virustotal_results edge.
+	VirustotalResults []*VirustotalResult `json:"virustotal_results,omitempty"`
 	// VersionDependencies holds the value of the version_dependencies edge.
 	VersionDependencies []*VersionDependency `json:"version_dependencies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // ModOrErr returns the Mod value or an error if the edge
@@ -111,10 +113,19 @@ func (e VersionEdges) TargetsOrErr() ([]*VersionTarget, error) {
 	return nil, &NotLoadedError{edge: "targets"}
 }
 
+// VirustotalResultsOrErr returns the VirustotalResults value or an error if the edge
+// was not loaded in eager-loading.
+func (e VersionEdges) VirustotalResultsOrErr() ([]*VirustotalResult, error) {
+	if e.loadedTypes[3] {
+		return e.VirustotalResults, nil
+	}
+	return nil, &NotLoadedError{edge: "virustotal_results"}
+}
+
 // VersionDependenciesOrErr returns the VersionDependencies value or an error if the edge
 // was not loaded in eager-loading.
 func (e VersionEdges) VersionDependenciesOrErr() ([]*VersionDependency, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.VersionDependencies, nil
 	}
 	return nil, &NotLoadedError{edge: "version_dependencies"}
@@ -306,6 +317,11 @@ func (v *Version) QueryDependencies() *ModQuery {
 // QueryTargets queries the "targets" edge of the Version entity.
 func (v *Version) QueryTargets() *VersionTargetQuery {
 	return NewVersionClient(v.config).QueryTargets(v)
+}
+
+// QueryVirustotalResults queries the "virustotal_results" edge of the Version entity.
+func (v *Version) QueryVirustotalResults() *VirustotalResultQuery {
+	return NewVersionClient(v.config).QueryVirustotalResults(v)
 }
 
 // QueryVersionDependencies queries the "version_dependencies" edge of the Version entity.

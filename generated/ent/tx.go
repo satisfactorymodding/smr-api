@@ -42,6 +42,8 @@ type Tx struct {
 	VersionDependency *VersionDependencyClient
 	// VersionTarget is the client for interacting with the VersionTarget builders.
 	VersionTarget *VersionTargetClient
+	// VirustotalResult is the client for interacting with the VirustotalResult builders.
+	VirustotalResult *VirustotalResultClient
 
 	// lazily loaded.
 	client     *Client
@@ -187,6 +189,7 @@ func (tx *Tx) init() {
 	tx.Version = NewVersionClient(tx.config)
 	tx.VersionDependency = NewVersionDependencyClient(tx.config)
 	tx.VersionTarget = NewVersionTargetClient(tx.config)
+	tx.VirustotalResult = NewVirustotalResultClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

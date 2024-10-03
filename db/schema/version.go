@@ -62,5 +62,6 @@ func (Version) Edges() []ent.Edge {
 		edge.To("dependencies", Mod.Type).
 			Through("version_dependencies", VersionDependency.Type),
 		edge.To("targets", VersionTarget.Type),
+		edge.To("virustotal_results", VirustotalResult.Type),
 	}
 }

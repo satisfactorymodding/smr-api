@@ -1,0 +1,14 @@
+### Types
+
+scalar VirustotalHash
+scalar VirustotalID
+
+type VirustotalResult {
+    id: VirustotalID
+    hash: VirustotalHash!
+    safe: Boolean!
+    file_name: String!
+    version_id: String!
+    created_at: Date!
+    updated_at: Date
+}

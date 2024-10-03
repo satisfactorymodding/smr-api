@@ -26,6 +26,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -52,6 +53,7 @@ const (
 	TypeVersion             = "Version"
 	TypeVersionDependency   = "VersionDependency"
 	TypeVersionTarget       = "VersionTarget"
+	TypeVirustotalResult    = "VirustotalResult"
 )
 
 // AnnouncementMutation represents an operation that mutates the Announcement nodes in the graph.
@@ -8727,47 +8729,50 @@ func (m *UserSessionMutation) ResetEdge(name string) error {
 // VersionMutation represents an operation that mutates the Version nodes in the graph.
 type VersionMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *string
-	created_at          *time.Time
-	updated_at          *time.Time
-	deleted_at          *time.Time
-	version             *string
-	game_version        *string
-	required_on_remote  *bool
-	changelog           *string
-	downloads           *uint
-	adddownloads        *int
-	key                 *string
-	stability           *util.Stability
-	approved            *bool
-	hotness             *uint
-	addhotness          *int
-	denied              *bool
-	metadata            *string
-	mod_reference       *string
-	version_major       *int
-	addversion_major    *int
-	version_minor       *int
-	addversion_minor    *int
-	version_patch       *int
-	addversion_patch    *int
-	size                *int64
-	addsize             *int64
-	hash                *string
-	clearedFields       map[string]struct{}
-	mod                 *string
-	clearedmod          bool
-	dependencies        map[string]struct{}
-	removeddependencies map[string]struct{}
-	cleareddependencies bool
-	targets             map[string]struct{}
-	removedtargets      map[string]struct{}
-	clearedtargets      bool
-	done                bool
-	oldValue            func(context.Context) (*Version, error)
-	predicates          []predicate.Version
+	op                        Op
+	typ                       string
+	id                        *string
+	created_at                *time.Time
+	updated_at                *time.Time
+	deleted_at                *time.Time
+	version                   *string
+	game_version              *string
+	required_on_remote        *bool
+	changelog                 *string
+	downloads                 *uint
+	adddownloads              *int
+	key                       *string
+	stability                 *util.Stability
+	approved                  *bool
+	hotness                   *uint
+	addhotness                *int
+	denied                    *bool
+	metadata                  *string
+	mod_reference             *string
+	version_major             *int
+	addversion_major          *int
+	version_minor             *int
+	addversion_minor          *int
+	version_patch             *int
+	addversion_patch          *int
+	size                      *int64
+	addsize                   *int64
+	hash                      *string
+	clearedFields             map[string]struct{}
+	mod                       *string
+	clearedmod                bool
+	dependencies              map[string]struct{}
+	removeddependencies       map[string]struct{}
+	cleareddependencies       bool
+	targets                   map[string]struct{}
+	removedtargets            map[string]struct{}
+	clearedtargets            bool
+	virustotal_results        map[string]struct{}
+	removedvirustotal_results map[string]struct{}
+	clearedvirustotal_results bool
+	done                      bool
+	oldValue                  func(context.Context) (*Version, error)
+	predicates                []predicate.Version
 }
 
 var _ ent.Mutation = (*VersionMutation)(nil)
@@ -10006,6 +10011,60 @@ func (m *VersionMutation) ResetTargets() {
 	m.removedtargets = nil
 }
 
+// AddVirustotalResultIDs adds the "virustotal_results" edge to the VirustotalResult entity by ids.
+func (m *VersionMutation) AddVirustotalResultIDs(ids ...string) {
+	if m.virustotal_results == nil {
+		m.virustotal_results = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.virustotal_results[ids[i]] = struct{}{}
+	}
+}
+
+// ClearVirustotalResults clears the "virustotal_results" edge to the VirustotalResult entity.
+func (m *VersionMutation) ClearVirustotalResults() {
+	m.clearedvirustotal_results = true
+}
+
+// VirustotalResultsCleared reports if the "virustotal_results" edge to the VirustotalResult entity was cleared.
+func (m *VersionMutation) VirustotalResultsCleared() bool {
+	return m.clearedvirustotal_results
+}
+
+// RemoveVirustotalResultIDs removes the "virustotal_results" edge to the VirustotalResult entity by IDs.
+func (m *VersionMutation) RemoveVirustotalResultIDs(ids ...string) {
+	if m.removedvirustotal_results == nil {
+		m.removedvirustotal_results = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.virustotal_results, ids[i])
+		m.removedvirustotal_results[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVirustotalResults returns the removed IDs of the "virustotal_results" edge to the VirustotalResult entity.
+func (m *VersionMutation) RemovedVirustotalResultsIDs() (ids []string) {
+	for id := range m.removedvirustotal_results {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// VirustotalResultsIDs returns the "virustotal_results" edge IDs in the mutation.
+func (m *VersionMutation) VirustotalResultsIDs() (ids []string) {
+	for id := range m.virustotal_results {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetVirustotalResults resets all changes to the "virustotal_results" edge.
+func (m *VersionMutation) ResetVirustotalResults() {
+	m.virustotal_results = nil
+	m.clearedvirustotal_results = false
+	m.removedvirustotal_results = nil
+}
+
 // Where appends a list predicates to the VersionMutation builder.
 func (m *VersionMutation) Where(ps ...predicate.Version) {
 	m.predicates = append(m.predicates, ps...)
@@ -10611,7 +10670,7 @@ func (m *VersionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *VersionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.mod != nil {
 		edges = append(edges, version.EdgeMod)
 	}
@@ -10620,6 +10679,9 @@ func (m *VersionMutation) AddedEdges() []string {
 	}
 	if m.targets != nil {
 		edges = append(edges, version.EdgeTargets)
+	}
+	if m.virustotal_results != nil {
+		edges = append(edges, version.EdgeVirustotalResults)
 	}
 	return edges
 }
@@ -10644,18 +10706,27 @@ func (m *VersionMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case version.EdgeVirustotalResults:
+		ids := make([]ent.Value, 0, len(m.virustotal_results))
+		for id := range m.virustotal_results {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *VersionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removeddependencies != nil {
 		edges = append(edges, version.EdgeDependencies)
 	}
 	if m.removedtargets != nil {
 		edges = append(edges, version.EdgeTargets)
+	}
+	if m.removedvirustotal_results != nil {
+		edges = append(edges, version.EdgeVirustotalResults)
 	}
 	return edges
 }
@@ -10676,13 +10747,19 @@ func (m *VersionMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case version.EdgeVirustotalResults:
+		ids := make([]ent.Value, 0, len(m.removedvirustotal_results))
+		for id := range m.removedvirustotal_results {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *VersionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedmod {
 		edges = append(edges, version.EdgeMod)
 	}
@@ -10691,6 +10768,9 @@ func (m *VersionMutation) ClearedEdges() []string {
 	}
 	if m.clearedtargets {
 		edges = append(edges, version.EdgeTargets)
+	}
+	if m.clearedvirustotal_results {
+		edges = append(edges, version.EdgeVirustotalResults)
 	}
 	return edges
 }
@@ -10705,6 +10785,8 @@ func (m *VersionMutation) EdgeCleared(name string) bool {
 		return m.cleareddependencies
 	case version.EdgeTargets:
 		return m.clearedtargets
+	case version.EdgeVirustotalResults:
+		return m.clearedvirustotal_results
 	}
 	return false
 }
@@ -10732,6 +10814,9 @@ func (m *VersionMutation) ResetEdge(name string) error {
 		return nil
 	case version.EdgeTargets:
 		m.ResetTargets()
+		return nil
+	case version.EdgeVirustotalResults:
+		m.ResetVirustotalResults()
 		return nil
 	}
 	return fmt.Errorf("unknown Version edge %s", name)
@@ -12010,4 +12095,660 @@ func (m *VersionTargetMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown VersionTarget edge %s", name)
+}
+
+// VirustotalResultMutation represents an operation that mutates the VirustotalResult nodes in the graph.
+type VirustotalResultMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *string
+	created_at     *time.Time
+	updated_at     *time.Time
+	safe           *bool
+	hash           *string
+	file_name      *string
+	clearedFields  map[string]struct{}
+	version        *string
+	clearedversion bool
+	done           bool
+	oldValue       func(context.Context) (*VirustotalResult, error)
+	predicates     []predicate.VirustotalResult
+}
+
+var _ ent.Mutation = (*VirustotalResultMutation)(nil)
+
+// virustotalresultOption allows management of the mutation configuration using functional options.
+type virustotalresultOption func(*VirustotalResultMutation)
+
+// newVirustotalResultMutation creates new mutation for the VirustotalResult entity.
+func newVirustotalResultMutation(c config, op Op, opts ...virustotalresultOption) *VirustotalResultMutation {
+	m := &VirustotalResultMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeVirustotalResult,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withVirustotalResultID sets the ID field of the mutation.
+func withVirustotalResultID(id string) virustotalresultOption {
+	return func(m *VirustotalResultMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *VirustotalResult
+		)
+		m.oldValue = func(ctx context.Context) (*VirustotalResult, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().VirustotalResult.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withVirustotalResult sets the old VirustotalResult of the mutation.
+func withVirustotalResult(node *VirustotalResult) virustotalresultOption {
+	return func(m *VirustotalResultMutation) {
+		m.oldValue = func(context.Context) (*VirustotalResult, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m VirustotalResultMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m VirustotalResultMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of VirustotalResult entities.
+func (m *VirustotalResultMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *VirustotalResultMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *VirustotalResultMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().VirustotalResult.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *VirustotalResultMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *VirustotalResultMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the VirustotalResult entity.
+// If the VirustotalResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VirustotalResultMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *VirustotalResultMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *VirustotalResultMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *VirustotalResultMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the VirustotalResult entity.
+// If the VirustotalResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VirustotalResultMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *VirustotalResultMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetSafe sets the "safe" field.
+func (m *VirustotalResultMutation) SetSafe(b bool) {
+	m.safe = &b
+}
+
+// Safe returns the value of the "safe" field in the mutation.
+func (m *VirustotalResultMutation) Safe() (r bool, exists bool) {
+	v := m.safe
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSafe returns the old "safe" field's value of the VirustotalResult entity.
+// If the VirustotalResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VirustotalResultMutation) OldSafe(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSafe is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSafe requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSafe: %w", err)
+	}
+	return oldValue.Safe, nil
+}
+
+// ResetSafe resets all changes to the "safe" field.
+func (m *VirustotalResultMutation) ResetSafe() {
+	m.safe = nil
+}
+
+// SetHash sets the "hash" field.
+func (m *VirustotalResultMutation) SetHash(s string) {
+	m.hash = &s
+}
+
+// Hash returns the value of the "hash" field in the mutation.
+func (m *VirustotalResultMutation) Hash() (r string, exists bool) {
+	v := m.hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHash returns the old "hash" field's value of the VirustotalResult entity.
+// If the VirustotalResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VirustotalResultMutation) OldHash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHash: %w", err)
+	}
+	return oldValue.Hash, nil
+}
+
+// ResetHash resets all changes to the "hash" field.
+func (m *VirustotalResultMutation) ResetHash() {
+	m.hash = nil
+}
+
+// SetFileName sets the "file_name" field.
+func (m *VirustotalResultMutation) SetFileName(s string) {
+	m.file_name = &s
+}
+
+// FileName returns the value of the "file_name" field in the mutation.
+func (m *VirustotalResultMutation) FileName() (r string, exists bool) {
+	v := m.file_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFileName returns the old "file_name" field's value of the VirustotalResult entity.
+// If the VirustotalResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VirustotalResultMutation) OldFileName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFileName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFileName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFileName: %w", err)
+	}
+	return oldValue.FileName, nil
+}
+
+// ResetFileName resets all changes to the "file_name" field.
+func (m *VirustotalResultMutation) ResetFileName() {
+	m.file_name = nil
+}
+
+// SetVersionID sets the "version_id" field.
+func (m *VirustotalResultMutation) SetVersionID(s string) {
+	m.version = &s
+}
+
+// VersionID returns the value of the "version_id" field in the mutation.
+func (m *VirustotalResultMutation) VersionID() (r string, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersionID returns the old "version_id" field's value of the VirustotalResult entity.
+// If the VirustotalResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VirustotalResultMutation) OldVersionID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersionID: %w", err)
+	}
+	return oldValue.VersionID, nil
+}
+
+// ResetVersionID resets all changes to the "version_id" field.
+func (m *VirustotalResultMutation) ResetVersionID() {
+	m.version = nil
+}
+
+// ClearVersion clears the "version" edge to the Version entity.
+func (m *VirustotalResultMutation) ClearVersion() {
+	m.clearedversion = true
+	m.clearedFields[virustotalresult.FieldVersionID] = struct{}{}
+}
+
+// VersionCleared reports if the "version" edge to the Version entity was cleared.
+func (m *VirustotalResultMutation) VersionCleared() bool {
+	return m.clearedversion
+}
+
+// VersionIDs returns the "version" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// VersionID instead. It exists only for internal usage by the builders.
+func (m *VirustotalResultMutation) VersionIDs() (ids []string) {
+	if id := m.version; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetVersion resets all changes to the "version" edge.
+func (m *VirustotalResultMutation) ResetVersion() {
+	m.version = nil
+	m.clearedversion = false
+}
+
+// Where appends a list predicates to the VirustotalResultMutation builder.
+func (m *VirustotalResultMutation) Where(ps ...predicate.VirustotalResult) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the VirustotalResultMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *VirustotalResultMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.VirustotalResult, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *VirustotalResultMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *VirustotalResultMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (VirustotalResult).
+func (m *VirustotalResultMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *VirustotalResultMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.created_at != nil {
+		fields = append(fields, virustotalresult.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, virustotalresult.FieldUpdatedAt)
+	}
+	if m.safe != nil {
+		fields = append(fields, virustotalresult.FieldSafe)
+	}
+	if m.hash != nil {
+		fields = append(fields, virustotalresult.FieldHash)
+	}
+	if m.file_name != nil {
+		fields = append(fields, virustotalresult.FieldFileName)
+	}
+	if m.version != nil {
+		fields = append(fields, virustotalresult.FieldVersionID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *VirustotalResultMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case virustotalresult.FieldCreatedAt:
+		return m.CreatedAt()
+	case virustotalresult.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case virustotalresult.FieldSafe:
+		return m.Safe()
+	case virustotalresult.FieldHash:
+		return m.Hash()
+	case virustotalresult.FieldFileName:
+		return m.FileName()
+	case virustotalresult.FieldVersionID:
+		return m.VersionID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *VirustotalResultMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case virustotalresult.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case virustotalresult.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case virustotalresult.FieldSafe:
+		return m.OldSafe(ctx)
+	case virustotalresult.FieldHash:
+		return m.OldHash(ctx)
+	case virustotalresult.FieldFileName:
+		return m.OldFileName(ctx)
+	case virustotalresult.FieldVersionID:
+		return m.OldVersionID(ctx)
+	}
+	return nil, fmt.Errorf("unknown VirustotalResult field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *VirustotalResultMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case virustotalresult.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case virustotalresult.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case virustotalresult.FieldSafe:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSafe(v)
+		return nil
+	case virustotalresult.FieldHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHash(v)
+		return nil
+	case virustotalresult.FieldFileName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFileName(v)
+		return nil
+	case virustotalresult.FieldVersionID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersionID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown VirustotalResult field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *VirustotalResultMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *VirustotalResultMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *VirustotalResultMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown VirustotalResult numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *VirustotalResultMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *VirustotalResultMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *VirustotalResultMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown VirustotalResult nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *VirustotalResultMutation) ResetField(name string) error {
+	switch name {
+	case virustotalresult.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case virustotalresult.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case virustotalresult.FieldSafe:
+		m.ResetSafe()
+		return nil
+	case virustotalresult.FieldHash:
+		m.ResetHash()
+		return nil
+	case virustotalresult.FieldFileName:
+		m.ResetFileName()
+		return nil
+	case virustotalresult.FieldVersionID:
+		m.ResetVersionID()
+		return nil
+	}
+	return fmt.Errorf("unknown VirustotalResult field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *VirustotalResultMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.version != nil {
+		edges = append(edges, virustotalresult.EdgeVersion)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *VirustotalResultMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case virustotalresult.EdgeVersion:
+		if id := m.version; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *VirustotalResultMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *VirustotalResultMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *VirustotalResultMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedversion {
+		edges = append(edges, virustotalresult.EdgeVersion)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *VirustotalResultMutation) EdgeCleared(name string) bool {
+	switch name {
+	case virustotalresult.EdgeVersion:
+		return m.clearedversion
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *VirustotalResultMutation) ClearEdge(name string) error {
+	switch name {
+	case virustotalresult.EdgeVersion:
+		m.ClearVersion()
+		return nil
+	}
+	return fmt.Errorf("unknown VirustotalResult unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *VirustotalResultMutation) ResetEdge(name string) error {
+	switch name {
+	case virustotalresult.EdgeVersion:
+		m.ResetVersion()
+		return nil
+	}
+	return fmt.Errorf("unknown VirustotalResult edge %s", name)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
+	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -435,6 +436,21 @@ func (vu *VersionUpdate) AddTargets(v ...*VersionTarget) *VersionUpdate {
 	return vu.AddTargetIDs(ids...)
 }
 
+// AddVirustotalResultIDs adds the "virustotal_results" edge to the VirustotalResult entity by IDs.
+func (vu *VersionUpdate) AddVirustotalResultIDs(ids ...string) *VersionUpdate {
+	vu.mutation.AddVirustotalResultIDs(ids...)
+	return vu
+}
+
+// AddVirustotalResults adds the "virustotal_results" edges to the VirustotalResult entity.
+func (vu *VersionUpdate) AddVirustotalResults(v ...*VirustotalResult) *VersionUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vu.AddVirustotalResultIDs(ids...)
+}
+
 // Mutation returns the VersionMutation object of the builder.
 func (vu *VersionUpdate) Mutation() *VersionMutation {
 	return vu.mutation
@@ -486,6 +502,27 @@ func (vu *VersionUpdate) RemoveTargets(v ...*VersionTarget) *VersionUpdate {
 		ids[i] = v[i].ID
 	}
 	return vu.RemoveTargetIDs(ids...)
+}
+
+// ClearVirustotalResults clears all "virustotal_results" edges to the VirustotalResult entity.
+func (vu *VersionUpdate) ClearVirustotalResults() *VersionUpdate {
+	vu.mutation.ClearVirustotalResults()
+	return vu
+}
+
+// RemoveVirustotalResultIDs removes the "virustotal_results" edge to VirustotalResult entities by IDs.
+func (vu *VersionUpdate) RemoveVirustotalResultIDs(ids ...string) *VersionUpdate {
+	vu.mutation.RemoveVirustotalResultIDs(ids...)
+	return vu
+}
+
+// RemoveVirustotalResults removes "virustotal_results" edges to VirustotalResult entities.
+func (vu *VersionUpdate) RemoveVirustotalResults(v ...*VirustotalResult) *VersionUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vu.RemoveVirustotalResultIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -802,6 +839,51 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if vu.mutation.VirustotalResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.VirustotalResultsTable,
+			Columns: []string{version.VirustotalResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(virustotalresult.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.RemovedVirustotalResultsIDs(); len(nodes) > 0 && !vu.mutation.VirustotalResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.VirustotalResultsTable,
+			Columns: []string{version.VirustotalResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(virustotalresult.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.VirustotalResultsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.VirustotalResultsTable,
+			Columns: []string{version.VirustotalResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(virustotalresult.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -1234,6 +1316,21 @@ func (vuo *VersionUpdateOne) AddTargets(v ...*VersionTarget) *VersionUpdateOne {
 	return vuo.AddTargetIDs(ids...)
 }
 
+// AddVirustotalResultIDs adds the "virustotal_results" edge to the VirustotalResult entity by IDs.
+func (vuo *VersionUpdateOne) AddVirustotalResultIDs(ids ...string) *VersionUpdateOne {
+	vuo.mutation.AddVirustotalResultIDs(ids...)
+	return vuo
+}
+
+// AddVirustotalResults adds the "virustotal_results" edges to the VirustotalResult entity.
+func (vuo *VersionUpdateOne) AddVirustotalResults(v ...*VirustotalResult) *VersionUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vuo.AddVirustotalResultIDs(ids...)
+}
+
 // Mutation returns the VersionMutation object of the builder.
 func (vuo *VersionUpdateOne) Mutation() *VersionMutation {
 	return vuo.mutation
@@ -1285,6 +1382,27 @@ func (vuo *VersionUpdateOne) RemoveTargets(v ...*VersionTarget) *VersionUpdateOn
 		ids[i] = v[i].ID
 	}
 	return vuo.RemoveTargetIDs(ids...)
+}
+
+// ClearVirustotalResults clears all "virustotal_results" edges to the VirustotalResult entity.
+func (vuo *VersionUpdateOne) ClearVirustotalResults() *VersionUpdateOne {
+	vuo.mutation.ClearVirustotalResults()
+	return vuo
+}
+
+// RemoveVirustotalResultIDs removes the "virustotal_results" edge to VirustotalResult entities by IDs.
+func (vuo *VersionUpdateOne) RemoveVirustotalResultIDs(ids ...string) *VersionUpdateOne {
+	vuo.mutation.RemoveVirustotalResultIDs(ids...)
+	return vuo
+}
+
+// RemoveVirustotalResults removes "virustotal_results" edges to VirustotalResult entities.
+func (vuo *VersionUpdateOne) RemoveVirustotalResults(v ...*VirustotalResult) *VersionUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return vuo.RemoveVirustotalResultIDs(ids...)
 }
 
 // Where appends a list predicates to the VersionUpdate builder.
@@ -1631,6 +1749,51 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(versiontarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if vuo.mutation.VirustotalResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.VirustotalResultsTable,
+			Columns: []string{version.VirustotalResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(virustotalresult.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.RemovedVirustotalResultsIDs(); len(nodes) > 0 && !vuo.mutation.VirustotalResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.VirustotalResultsTable,
+			Columns: []string{version.VirustotalResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(virustotalresult.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.VirustotalResultsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   version.VirustotalResultsTable,
+			Columns: []string{version.VirustotalResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(virustotalresult.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

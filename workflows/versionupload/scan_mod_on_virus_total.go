@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
@@ -38,7 +39,13 @@ func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTo
 	}
 	link := storage.GenerateDownloadLink(ctx, version.Key)
 
-	response, _ := http.Get(link)
+	response, err := http.Get(link)
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		return false, fmt.Errorf("failed to download mod file: %w", err)
+	}
+	defer response.Body.Close()
 
 	fileData, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -64,23 +71,56 @@ func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTo
 				span.RecordError(err)
 				return false, fmt.Errorf("failed to open mod file: %w", err)
 			}
+			defer open.Close()
 
 			toScan = append(toScan, open)
 			names = append(names, path.Base(file.Name))
 		}
 	}
 
-	success, err := validation.ScanFiles(ctx, toScan, names)
+	success, err := scanAndSaveResults(ctx, toScan, names, args)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
 		return false, err
 	}
 
-	if !success {
-		slox.Warn(ctx, "mod failed to pass virus scan", slog.String("mod", args.ModID), slog.String("version", args.VersionID))
-		return false, nil
+	return success, nil
+}
+
+func scanAndSaveResults(ctx context.Context, toScan []io.Reader, names []string, args ScanModOnVirusTotalArgs) (bool, error) {
+	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "scanAndSaveResults")
+	defer span.End()
+
+	scanResults, scanErr := validation.ScanFiles(ctx, toScan, names)
+	if scanErr != nil {
+		span.SetStatus(codes.Error, scanErr.Error())
+		span.RecordError(scanErr)
+		if len(scanResults) == 0 {
+			return false, scanErr
+		}
+		slox.Error(ctx, scanErr.Error())
+	}
+
+	if err := saveScanResults(ctx, scanResults, args); err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		return false, err
 	}
 
 	return true, nil
+}
+
+func saveScanResults(ctx context.Context, scanResults []validation.ScanResult, args ScanModOnVirusTotalArgs) error {
+	err := db.From(ctx).VirustotalResult.MapCreateBulk(scanResults,
+		func(c *ent.VirustotalResultCreate, i int) {
+			c.SetSafe(scanResults[i].Safe).
+				SetVersionID(args.VersionID).
+				SetFileName(scanResults[i].FileName).
+				SetHash(*scanResults[i].Hash)
+		},
+	).OnConflict().
+		DoNothing().
+		Exec(ctx)
+	return err
 }

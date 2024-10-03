@@ -41,6 +41,7 @@ type Version {
 
     mod: Mod!
     dependencies: [VersionDependency!]!
+    virustotal_results: [VirustotalResult!]!
 }
 
 type VersionTarget {
