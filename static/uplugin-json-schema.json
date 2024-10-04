@@ -4,7 +4,7 @@
   "required": [
     "FileVersion",
     "Version",
-    "Plugins"
+    "GameVersion"
   ],
   "properties": {
     "CanContainContent": {
