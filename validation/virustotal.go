@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"errors"
@@ -91,8 +92,14 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) ([]ScanRe
 
 func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, error) {
 	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return nil, fmt.Errorf("failed to generate hash for file %w", err)
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed read file: %w", err)
+	}
+
+	_, err = hash.Write(fileBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash file: %w", err)
 	}
 
 	checksum := hash.Sum(nil)
@@ -101,7 +108,7 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 	var previousAnalysisResults PreviousAnalysisResults
 
 	hasPreviousAnalysis := true
-	_, err := client.GetData(vt.URL("files/%x", checksum), &previousAnalysisResults)
+	_, err = client.GetData(vt.URL("files/%x", checksum), &previousAnalysisResults)
 	if err != nil {
 		var vtErr vt.Error
 		if errors.As(err, &vtErr) {
@@ -130,7 +137,7 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 		}, nil
 	}
 
-	scan, err := client.NewFileScanner().Scan(file, name, nil)
+	scan, err := client.NewFileScanner().Scan(bytes.NewReader(fileBytes), name, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan file: %w", err)
 	}
