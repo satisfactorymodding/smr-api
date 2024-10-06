@@ -93,19 +93,18 @@ func scanAndSaveResults(ctx context.Context, toScan []io.Reader, names []string,
 	defer span.End()
 
 	scanResults, scanErr := validation.ScanFiles(ctx, toScan, names)
-	if scanErr != nil {
-		span.SetStatus(codes.Error, scanErr.Error())
-		span.RecordError(scanErr)
-		if len(scanResults) == 0 {
-			return false, scanErr
-		}
-		slox.Error(ctx, scanErr.Error())
-	}
+	// Check error later, because we can have partial results to save, even in the case of an error
 
 	if err := saveScanResults(ctx, scanResults, args); err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
 		return false, err
+	}
+
+	if scanErr != nil {
+		span.SetStatus(codes.Error, scanErr.Error())
+		span.RecordError(scanErr)
+		return false, scanErr
 	}
 
 	if len(scanResults) != len(toScan) {
