@@ -127,7 +127,7 @@ func saveScanResults(ctx context.Context, scanResults []validation.ScanResult, a
 			c.SetSafe(scanResults[i].Safe).
 				SetVersionID(args.VersionID).
 				SetFileName(scanResults[i].FileName).
-				SetHash(*scanResults[i].Hash)
+				SetHash(scanResults[i].Hash)
 		},
 	).OnConflict().
 		DoNothing().
