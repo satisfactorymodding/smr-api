@@ -29,8 +29,8 @@ func (User) Fields() []ent.Field {
 		field.Bool("banned").Default(false),
 		field.Int("rank").Default(1),
 		field.String("github_id").MaxLen(16).Optional(),
-		field.String("google_id").MaxLen(16).Optional(),
-		field.String("facebook_id").MaxLen(16).Optional(),
+		field.String("google_id").MaxLen(32).Optional(),
+		field.String("facebook_id").MaxLen(128).Optional(),
 	}
 }
 
