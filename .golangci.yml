@@ -15,7 +15,7 @@ linters-settings:
       - github.com/satisfactorymodding/smr-api/*
 
   govet:
-    disable:
+    enable:
       - shadow
 
   gocritic:
@@ -54,6 +54,9 @@ issues:
     - ./generated/
   exclude:
     - should pass the context parameter
+  exclude-rules:
+    - text: 'shadow: declaration of "err" shadows declaration at'
+      linters: [ govet ]
 
 linters:
   disable-all: true
