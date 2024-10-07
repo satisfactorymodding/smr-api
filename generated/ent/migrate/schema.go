@@ -210,8 +210,8 @@ var (
 		{Name: "banned", Type: field.TypeBool, Default: false},
 		{Name: "rank", Type: field.TypeInt, Default: 1},
 		{Name: "github_id", Type: field.TypeString, Nullable: true, Size: 16},
-		{Name: "google_id", Type: field.TypeString, Nullable: true, Size: 16},
-		{Name: "facebook_id", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "google_id", Type: field.TypeString, Nullable: true, Size: 32},
+		{Name: "facebook_id", Type: field.TypeString, Nullable: true, Size: 128},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
