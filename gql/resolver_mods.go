@@ -80,23 +80,6 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 
 	dbMod.SetCreatorID(user.ID)
 
-	var logoData []byte
-	var thumbHash string
-
-	if newMod.Logo != nil {
-		file, err := io.ReadAll(newMod.Logo.File)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read logo file: %w", err)
-		}
-
-		logoData, thumbHash, err = converter.ConvertAnyImageToWebp(ctx, file)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert logo file: %w", err)
-		}
-	} else {
-		dbMod.SetLogo("")
-	}
-
 	// Allow only new 4 mods per 24h
 	existingMods, err := db.From(ctx).Mod.Query().
 		Order(mod.ByCreatedAt(sql.OrderAsc())).
@@ -136,12 +119,22 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 		return nil, err
 	}
 
-	if logoData != nil {
+	if newMod.Logo != nil {
+		file, err := io.ReadAll(newMod.Logo.File)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read logo file: %w", err)
+		}
+
+		logoData, thumbHash, err := converter.ConvertAnyImageToWebp(ctx, file)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert logo file: %w", err)
+		}
+
 		logoKey, err := storage.UploadModLogo(ctx, resultMod.ID, bytes.NewReader(logoData))
 		if err == nil {
 			resultMod, err = resultMod.Update().
 				SetLogo(storage.GenerateDownloadLink(ctx, logoKey)).
-				SetNillableLogoThumbhash(util.ContainsOrNil(thumbHash)).
+				SetLogoThumbhash(thumbHash).
 				Save(ctx)
 			if err != nil {
 				return nil, err
@@ -208,7 +201,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 			dbUpdate.SetLogo(storage.GenerateDownloadLink(ctx, logoKey))
 			dbUpdate.SetLogoThumbhash(thumbHash)
 		} else {
-			dbUpdate.SetLogo("")
+			dbUpdate.ClearLogo()
 			dbUpdate.ClearLogoThumbhash()
 		}
 	}

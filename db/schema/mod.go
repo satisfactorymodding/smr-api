@@ -26,7 +26,7 @@ func (Mod) Fields() []ent.Field {
 		field.String("name").MaxLen(32),
 		field.String("short_description").MaxLen(128),
 		field.String("full_description"),
-		field.String("logo"),
+		field.String("logo").Optional(),
 		field.String("logo_thumbhash").Optional(),
 		field.String("source_url").Optional(),
 		field.String("creator_id"),

@@ -550,6 +550,16 @@ func LogoHasSuffix(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldHasSuffix(FieldLogo, v))
 }
 
+// LogoIsNil applies the IsNil predicate on the "logo" field.
+func LogoIsNil() predicate.Mod {
+	return predicate.Mod(sql.FieldIsNull(FieldLogo))
+}
+
+// LogoNotNil applies the NotNil predicate on the "logo" field.
+func LogoNotNil() predicate.Mod {
+	return predicate.Mod(sql.FieldNotNull(FieldLogo))
+}
+
 // LogoEqualFold applies the EqualFold predicate on the "logo" field.
 func LogoEqualFold(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldEqualFold(FieldLogo, v))

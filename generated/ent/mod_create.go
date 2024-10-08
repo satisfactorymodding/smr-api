@@ -93,6 +93,14 @@ func (mc *ModCreate) SetLogo(s string) *ModCreate {
 	return mc
 }
 
+// SetNillableLogo sets the "logo" field if the given value is not nil.
+func (mc *ModCreate) SetNillableLogo(s *string) *ModCreate {
+	if s != nil {
+		mc.SetLogo(*s)
+	}
+	return mc
+}
+
 // SetLogoThumbhash sets the "logo_thumbhash" field.
 func (mc *ModCreate) SetLogoThumbhash(s string) *ModCreate {
 	mc.mutation.SetLogoThumbhash(s)
@@ -477,9 +485,6 @@ func (mc *ModCreate) check() error {
 	if _, ok := mc.mutation.FullDescription(); !ok {
 		return &ValidationError{Name: "full_description", err: errors.New(`ent: missing required field "Mod.full_description"`)}
 	}
-	if _, ok := mc.mutation.Logo(); !ok {
-		return &ValidationError{Name: "logo", err: errors.New(`ent: missing required field "Mod.logo"`)}
-	}
 	if _, ok := mc.mutation.CreatorID(); !ok {
 		return &ValidationError{Name: "creator_id", err: errors.New(`ent: missing required field "Mod.creator_id"`)}
 	}
@@ -837,6 +842,12 @@ func (u *ModUpsert) SetLogo(v string) *ModUpsert {
 // UpdateLogo sets the "logo" field to the value that was provided on create.
 func (u *ModUpsert) UpdateLogo() *ModUpsert {
 	u.SetExcluded(mod.FieldLogo)
+	return u
+}
+
+// ClearLogo clears the value of the "logo" field.
+func (u *ModUpsert) ClearLogo() *ModUpsert {
+	u.SetNull(mod.FieldLogo)
 	return u
 }
 
@@ -1207,6 +1218,13 @@ func (u *ModUpsertOne) SetLogo(v string) *ModUpsertOne {
 func (u *ModUpsertOne) UpdateLogo() *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateLogo()
+	})
+}
+
+// ClearLogo clears the value of the "logo" field.
+func (u *ModUpsertOne) ClearLogo() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearLogo()
 	})
 }
 
@@ -1782,6 +1800,13 @@ func (u *ModUpsertBulk) SetLogo(v string) *ModUpsertBulk {
 func (u *ModUpsertBulk) UpdateLogo() *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateLogo()
+	})
+}
+
+// ClearLogo clears the value of the "logo" field.
+func (u *ModUpsertBulk) ClearLogo() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearLogo()
 	})
 }
 
