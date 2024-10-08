@@ -97,7 +97,7 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 32},
 		{Name: "short_description", Type: field.TypeString, Size: 128},
 		{Name: "full_description", Type: field.TypeString},
-		{Name: "logo", Type: field.TypeString},
+		{Name: "logo", Type: field.TypeString, Nullable: true},
 		{Name: "logo_thumbhash", Type: field.TypeString, Nullable: true},
 		{Name: "source_url", Type: field.TypeString, Nullable: true},
 		{Name: "creator_id", Type: field.TypeString},

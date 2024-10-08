@@ -2345,9 +2345,22 @@ func (m *ModMutation) OldLogo(ctx context.Context) (v string, err error) {
 	return oldValue.Logo, nil
 }
 
+// ClearLogo clears the value of the "logo" field.
+func (m *ModMutation) ClearLogo() {
+	m.logo = nil
+	m.clearedFields[mod.FieldLogo] = struct{}{}
+}
+
+// LogoCleared returns if the "logo" field was cleared in this mutation.
+func (m *ModMutation) LogoCleared() bool {
+	_, ok := m.clearedFields[mod.FieldLogo]
+	return ok
+}
+
 // ResetLogo resets all changes to the "logo" field.
 func (m *ModMutation) ResetLogo() {
 	m.logo = nil
+	delete(m.clearedFields, mod.FieldLogo)
 }
 
 // SetLogoThumbhash sets the "logo_thumbhash" field.
@@ -3691,6 +3704,9 @@ func (m *ModMutation) ClearedFields() []string {
 	if m.FieldCleared(mod.FieldDeletedAt) {
 		fields = append(fields, mod.FieldDeletedAt)
 	}
+	if m.FieldCleared(mod.FieldLogo) {
+		fields = append(fields, mod.FieldLogo)
+	}
 	if m.FieldCleared(mod.FieldLogoThumbhash) {
 		fields = append(fields, mod.FieldLogoThumbhash)
 	}
@@ -3719,6 +3735,9 @@ func (m *ModMutation) ClearField(name string) error {
 	switch name {
 	case mod.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case mod.FieldLogo:
+		m.ClearLogo()
 		return nil
 	case mod.FieldLogoThumbhash:
 		m.ClearLogoThumbhash()

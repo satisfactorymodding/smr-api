@@ -115,6 +115,12 @@ func (mu *ModUpdate) SetNillableLogo(s *string) *ModUpdate {
 	return mu
 }
 
+// ClearLogo clears the value of the "logo" field.
+func (mu *ModUpdate) ClearLogo() *ModUpdate {
+	mu.mutation.ClearLogo()
+	return mu
+}
+
 // SetLogoThumbhash sets the "logo_thumbhash" field.
 func (mu *ModUpdate) SetLogoThumbhash(s string) *ModUpdate {
 	mu.mutation.SetLogoThumbhash(s)
@@ -619,6 +625,9 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := mu.mutation.Logo(); ok {
 		_spec.SetField(mod.FieldLogo, field.TypeString, value)
 	}
+	if mu.mutation.LogoCleared() {
+		_spec.ClearField(mod.FieldLogo, field.TypeString)
+	}
 	if value, ok := mu.mutation.LogoThumbhash(); ok {
 		_spec.SetField(mod.FieldLogoThumbhash, field.TypeString, value)
 	}
@@ -981,6 +990,12 @@ func (muo *ModUpdateOne) SetNillableLogo(s *string) *ModUpdateOne {
 	if s != nil {
 		muo.SetLogo(*s)
 	}
+	return muo
+}
+
+// ClearLogo clears the value of the "logo" field.
+func (muo *ModUpdateOne) ClearLogo() *ModUpdateOne {
+	muo.mutation.ClearLogo()
 	return muo
 }
 
@@ -1517,6 +1532,9 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	}
 	if value, ok := muo.mutation.Logo(); ok {
 		_spec.SetField(mod.FieldLogo, field.TypeString, value)
+	}
+	if muo.mutation.LogoCleared() {
+		_spec.ClearField(mod.FieldLogo, field.TypeString)
 	}
 	if value, ok := muo.mutation.LogoThumbhash(); ok {
 		_spec.SetField(mod.FieldLogoThumbhash, field.TypeString, value)
