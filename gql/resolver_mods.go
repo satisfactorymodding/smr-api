@@ -614,7 +614,7 @@ func (r *modResolver) LatestVersions(ctx context.Context, obj *generated.Mod) (*
 		Order(
 			version.ByModID(),
 			version.ByStability(),
-			version.ByCreatedAt(),
+			version.ByCreatedAt(sql.OrderDesc()),
 		).
 		Modify(func(s *sql.Selector) {
 			s.SelectExpr(sql.Expr("DISTINCT on (mod_id, stability) *"))
