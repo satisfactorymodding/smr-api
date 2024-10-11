@@ -415,7 +415,9 @@ func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Versi
 		}
 
 		for _, dependency := range dependencies {
-			dependency.ModID = dependency.Edges.Mod.ModReference
+			if dependency.Edges.Mod != nil {
+				dependency.ModID = dependency.Edges.Mod.ModReference
+			}
 		}
 
 		versionDependencyCache.SetWithTTL(obj.ID, dependencies, int64(len(dependencies)), versionDependencyCacheTTL)
