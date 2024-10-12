@@ -170,7 +170,7 @@ func getModLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
 			s.SelectExpr(sql.ExprP("distinct on (mod_id, stability) *"))
 		}).
 		Where(version2.Approved(true), version2.Denied(false), version2.ModID(modID)).
-		Order(version2.ByStability(sql.OrderDesc()), version2.ByCreatedAt(sql.OrderDesc())).
+		Order(version2.ByModID(), version2.ByStability(sql.OrderDesc()), version2.ByCreatedAt(sql.OrderDesc())).
 		All(c.Request().Context())
 	if err != nil {
 		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
@@ -210,7 +210,7 @@ func getModsLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
 			s.SelectExpr(sql.ExprP("distinct on (mod_id, stability) *"))
 		}).
 		Where(version2.Approved(true), version2.Denied(false), version2.ModIDIn(modIDSplit...)).
-		Order(version2.ByStability(sql.OrderDesc()), version2.ByCreatedAt(sql.OrderDesc())).
+		Order(version2.ByModID(), version2.ByStability(sql.OrderDesc()), version2.ByCreatedAt(sql.OrderDesc())).
 		All(c.Request().Context())
 	if err != nil {
 		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
