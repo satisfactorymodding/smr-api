@@ -67,6 +67,7 @@ func initializeDefaults() {
 	viper.SetDefault("database.postgres.user", "postgres")
 	viper.SetDefault("database.postgres.pass", "REPLACE_ME")
 	viper.SetDefault("database.postgres.db", "postgres")
+	viper.SetDefault("database.postgres.maxconns", 20)
 
 	viper.SetDefault("storage.type", "s3")
 	viper.SetDefault("storage.bucket", "smr")

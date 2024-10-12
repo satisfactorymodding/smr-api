@@ -46,6 +46,7 @@ func WithDB(ctx context.Context) (context.Context, error) {
 	}
 
 	poolConfig.ConnConfig.Tracer = otelpgx.NewTracer()
+	poolConfig.MaxConns = viper.GetInt32("database.postgres.maxconns")
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
