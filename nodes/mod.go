@@ -501,7 +501,9 @@ func getAllModVersions(c echo.Context) (interface{}, *ErrorResponse) {
 
 	for _, version := range versions {
 		for _, dependency := range version.Edges.VersionDependencies {
-			dependency.ModID = dependency.Edges.Mod.ModReference
+			if dependency.Edges.Mod != nil {
+				dependency.ModID = dependency.Edges.Mod.ModReference
+			}
 		}
 	}
 
