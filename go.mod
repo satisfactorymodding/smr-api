@@ -15,6 +15,7 @@ require (
 	github.com/alitto/pond v1.9.1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/avast/retry-go/v3 v3.1.1
+	github.com/avast/retry-go/v4 v4.6.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/cespare/xxhash v1.1.0
