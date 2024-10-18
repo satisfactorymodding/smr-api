@@ -173,7 +173,10 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 		return nil, errors.New("this mod already has set a mod reference")
 	}
 
-	dbUpdate := dbMod.Update().ClearTags().AddTagIDs(updateMod.TagIDs...)
+	dbUpdate := dbMod.Update()
+	if updateMod.TagIDs != nil {
+		dbUpdate.ClearTags().AddTagIDs(updateMod.TagIDs...)
+	}
 
 	SetINNOEF(updateMod.Name, dbUpdate.SetName)
 	SetINNOEF(updateMod.ShortDescription, dbUpdate.SetShortDescription)
