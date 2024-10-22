@@ -1,12 +1,12 @@
 module github.com/satisfactorymodding/smr-api
 
-go 1.22.5
+go 1.23.0
 
-toolchain go1.23.0
+toolchain go1.23.2
 
 require (
 	ariga.io/entcache v0.1.0
-	entgo.io/ent v0.14.0
+	entgo.io/ent v0.14.1
 	github.com/99designs/gqlgen v0.17.49
 	github.com/MarvinJWendt/testza v0.5.2
 	github.com/Masterminds/semver/v3 v3.2.1
