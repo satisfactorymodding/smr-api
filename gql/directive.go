@@ -78,7 +78,13 @@ func canEditVersion(ctx context.Context, _ interface{}, next graphql.Resolver, f
 		return nil, err
 	}
 
-	if db.UserCanUploadModVersions(ctx, user, getArgument(ctx, field).(string)) {
+	versionID := getArgument(ctx, field).(string)
+	version, err := db.From(ctx).Version.Get(ctx, versionID)
+	if err != nil {
+		return nil, err
+	}
+
+	if db.UserCanUploadModVersions(ctx, user, version.ModID) {
 		return next(ctx)
 	}
 
