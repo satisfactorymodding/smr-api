@@ -67,7 +67,7 @@ require (
 	golang.org/x/sync v0.8.0
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
-	gopkg.in/go-playground/validator.v9 v9.31.0
+	gopkg.in/go-playground/validator.v10 v10.24.0
 )
 
 // v3.2.1, with range.MinVersion()
