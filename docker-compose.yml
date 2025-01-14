@@ -86,7 +86,7 @@ services:
     tty: true
 
   temporal-ui:
-    image: temporalio/ui:2.26.2
+    image: temporalio/ui:2.34.0
     depends_on:
       - temporal
     environment:
