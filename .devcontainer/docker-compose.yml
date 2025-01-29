@@ -9,7 +9,7 @@ services:
         VARIANT: "1-bullseye"
         NODE_VERSION: "none"
     volumes:
-      - ..:/workspace:cached
+      - ..:/workspaces/smr_api:cached
     cap_add:
       - SYS_PTRACE
     network_mode: service:postgres
