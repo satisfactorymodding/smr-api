@@ -161,6 +161,12 @@ mise run test     # Run test suite
 mise run generate # Regenerate if needed
 ```
 
+Some linting issues can be auto-fixed:
+
+```bash
+mise run format
+```
+
 **Development patterns:**
 
 - Use Ent ORM for database operations
