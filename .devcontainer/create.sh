@@ -3,6 +3,7 @@ set -ex
 
 # Install protoc (used by go:generate) and add it to path
 # Not done in Dockerfile because it seems to lock out writing to some files go needs to write to?
+# https://github.com/ericslandry/grpc/blob/dcc9b228a2189933b0666eeea23852a12225092b/.devcontainer/post-create.sh
 version=25.4
 PB_REL="https://github.com/protocolbuffers/protobuf/releases"
 curl -LO $PB_REL/download/v$version/protoc-$version-linux-x86_64.zip
