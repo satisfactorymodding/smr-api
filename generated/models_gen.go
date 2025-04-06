@@ -23,18 +23,30 @@ type Compatibility struct {
 }
 
 type CompatibilityInfo struct {
-	Ea  *Compatibility `json:"EA"`
-	Exp *Compatibility `json:"EXP"`
+	Ea         *Compatibility           `json:"EA"`
+	Exp        *Compatibility           `json:"EXP"`
+	Controller *ControllerCompatibility `json:"Controller"`
 }
 
 type CompatibilityInfoInput struct {
-	Ea  *CompatibilityInput `json:"EA"`
-	Exp *CompatibilityInput `json:"EXP"`
+	Ea         *CompatibilityInput           `json:"EA"`
+	Exp        *CompatibilityInput           `json:"EXP"`
+	Controller *ControllerCompatibilityInput `json:"Controller"`
 }
 
 type CompatibilityInput struct {
 	State CompatibilityState `json:"state"`
 	Note  *string            `json:"note,omitempty"`
+}
+
+type ControllerCompatibility struct {
+	State ControllerCompatibilityState `json:"state"`
+	Note  *string                      `json:"note,omitempty"`
+}
+
+type ControllerCompatibilityInput struct {
+	State ControllerCompatibilityState `json:"state"`
+	Note  *string                      `json:"note,omitempty"`
 }
 
 type CreateVersionResponse struct {
@@ -450,6 +462,67 @@ func (e *CompatibilityState) UnmarshalJSON(b []byte) error {
 }
 
 func (e CompatibilityState) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ControllerCompatibilityState string
+
+const (
+	ControllerCompatibilityStateUntested    ControllerCompatibilityState = "Untested"
+	ControllerCompatibilityStateUnsupported ControllerCompatibilityState = "Unsupported"
+	ControllerCompatibilityStatePartial     ControllerCompatibilityState = "Partial"
+	ControllerCompatibilityStateImplicit    ControllerCompatibilityState = "Implicit"
+	ControllerCompatibilityStateSupported   ControllerCompatibilityState = "Supported"
+)
+
+var AllControllerCompatibilityState = []ControllerCompatibilityState{
+	ControllerCompatibilityStateUntested,
+	ControllerCompatibilityStateUnsupported,
+	ControllerCompatibilityStatePartial,
+	ControllerCompatibilityStateImplicit,
+	ControllerCompatibilityStateSupported,
+}
+
+func (e ControllerCompatibilityState) IsValid() bool {
+	switch e {
+	case ControllerCompatibilityStateUntested, ControllerCompatibilityStateUnsupported, ControllerCompatibilityStatePartial, ControllerCompatibilityStateImplicit, ControllerCompatibilityStateSupported:
+		return true
+	}
+	return false
+}
+
+func (e ControllerCompatibilityState) String() string {
+	return string(e)
+}
+
+func (e *ControllerCompatibilityState) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ControllerCompatibilityState(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ControllerCompatibilityState", str)
+	}
+	return nil
+}
+
+func (e ControllerCompatibilityState) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ControllerCompatibilityState) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ControllerCompatibilityState) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
