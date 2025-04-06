@@ -79,6 +79,7 @@ func (c *ModImpl) pUtilCompatibilityInfoToPGeneratedCompatibilityInfo(source *ut
 		var generatedCompatibilityInfo generated.CompatibilityInfo
 		generatedCompatibilityInfo.Ea = c.utilCompatibilityToPGeneratedCompatibility((*source).Ea)
 		generatedCompatibilityInfo.Exp = c.utilCompatibilityToPGeneratedCompatibility((*source).Exp)
+		generatedCompatibilityInfo.Controller = c.utilCompatibilityToPGeneratedControllerCompatibility((*source).Controller)
 		pGeneratedCompatibilityInfo = &generatedCompatibilityInfo
 	}
 	return pGeneratedCompatibilityInfo
@@ -93,4 +94,11 @@ func (c *ModImpl) utilCompatibilityToPGeneratedCompatibility(source util.Compati
 	pString := source.Note
 	generatedCompatibility.Note = &pString
 	return &generatedCompatibility
+}
+func (c *ModImpl) utilCompatibilityToPGeneratedControllerCompatibility(source util.Compatibility) *generated.ControllerCompatibility {
+	var generatedControllerCompatibility generated.ControllerCompatibility
+	generatedControllerCompatibility.State = generated.ControllerCompatibilityState(source.State)
+	pString := source.Note
+	generatedControllerCompatibility.Note = &pString
+	return &generatedControllerCompatibility
 }

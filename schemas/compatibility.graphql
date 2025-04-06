@@ -14,14 +14,34 @@ input CompatibilityInput {
     note: String
 }
 
+enum ControllerCompatibilityState {
+    Untested
+    Unsupported
+    Partial
+    Implicit
+    Supported
+}
+
+type ControllerCompatibility {
+    state: ControllerCompatibilityState!
+    note: String
+}
+
+input ControllerCompatibilityInput {
+    state: ControllerCompatibilityState!
+    note: String
+}
+
 type CompatibilityInfo {
     EA: Compatibility!
     EXP: Compatibility!
+    Controller: ControllerCompatibility!
 }
 
 input CompatibilityInfoInput {
     EA: CompatibilityInput!
     EXP: CompatibilityInput!
+    Controller: ControllerCompatibilityInput!
 }
 
 extend type Mutation {

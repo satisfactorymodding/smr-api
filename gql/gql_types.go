@@ -10,12 +10,21 @@ func GenCompInfoToDBCompInfo(gen *generated.CompatibilityInfoInput) *util.Compat
 		return nil
 	}
 	return &util.CompatibilityInfo{
-		Ea:  GenCompToDBComp(gen.Ea),
-		Exp: GenCompToDBComp(gen.Exp),
+		Ea:         GenCompToDBComp(gen.Ea),
+		Exp:        GenCompToDBComp(gen.Exp),
+		Controller: GenControllerCompToDBControllerComp(gen.Controller),
 	}
 }
 
 func GenCompToDBComp(gen *generated.CompatibilityInput) util.Compatibility {
+	r := util.Compatibility{
+		State: string(gen.State),
+	}
+	SetINN(gen.Note, &r.Note)
+	return r
+}
+
+func GenControllerCompToDBControllerComp(gen *generated.ControllerCompatibilityInput) util.Compatibility {
 	r := util.Compatibility{
 		State: string(gen.State),
 	}
