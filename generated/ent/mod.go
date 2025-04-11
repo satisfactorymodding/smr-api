@@ -62,7 +62,7 @@ type Mod struct {
 	// ToggleNetworkUse holds the value of the "toggle_network_use" field.
 	ToggleNetworkUse bool `json:"toggle_network_use,omitempty"`
 	// NetworkUseDisclosure holds the value of the "network_use_disclosure" field.
-	NetworkUseDisclosure string `json:"network_use_disclosure,omitempty"`
+	NetworkUseDisclosure *string `json:"network_use_disclosure,omitempty"`
 	// ToggleExplicitContent holds the value of the "toggle_explicit_content" field.
 	ToggleExplicitContent bool `json:"toggle_explicit_content,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -323,7 +323,8 @@ func (m *Mod) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field network_use_disclosure", values[i])
 			} else if value.Valid {
-				m.NetworkUseDisclosure = value.String
+				m.NetworkUseDisclosure = new(string)
+				*m.NetworkUseDisclosure = value.String
 			}
 		case mod.FieldToggleExplicitContent:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -465,8 +466,10 @@ func (m *Mod) String() string {
 	builder.WriteString("toggle_network_use=")
 	builder.WriteString(fmt.Sprintf("%v", m.ToggleNetworkUse))
 	builder.WriteString(", ")
-	builder.WriteString("network_use_disclosure=")
-	builder.WriteString(m.NetworkUseDisclosure)
+	if v := m.NetworkUseDisclosure; v != nil {
+		builder.WriteString("network_use_disclosure=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	builder.WriteString("toggle_explicit_content=")
 	builder.WriteString(fmt.Sprintf("%v", m.ToggleExplicitContent))
