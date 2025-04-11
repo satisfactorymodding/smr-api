@@ -165,6 +165,11 @@ func ToggleNetworkUse(v bool) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldToggleNetworkUse, v))
 }
 
+// NetworkUseDisclosure applies equality check predicate on the "network_use_disclosure" field. It's identical to NetworkUseDisclosureEQ.
+func NetworkUseDisclosure(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldEQ(FieldNetworkUseDisclosure, v))
+}
+
 // ToggleExplicitContent applies equality check predicate on the "toggle_explicit_content" field. It's identical to ToggleExplicitContentEQ.
 func ToggleExplicitContent(v bool) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldToggleExplicitContent, v))
@@ -1108,6 +1113,81 @@ func ToggleNetworkUseEQ(v bool) predicate.Mod {
 // ToggleNetworkUseNEQ applies the NEQ predicate on the "toggle_network_use" field.
 func ToggleNetworkUseNEQ(v bool) predicate.Mod {
 	return predicate.Mod(sql.FieldNEQ(FieldToggleNetworkUse, v))
+}
+
+// NetworkUseDisclosureEQ applies the EQ predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureEQ(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldEQ(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureNEQ applies the NEQ predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureNEQ(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldNEQ(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureIn applies the In predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureIn(vs ...string) predicate.Mod {
+	return predicate.Mod(sql.FieldIn(FieldNetworkUseDisclosure, vs...))
+}
+
+// NetworkUseDisclosureNotIn applies the NotIn predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureNotIn(vs ...string) predicate.Mod {
+	return predicate.Mod(sql.FieldNotIn(FieldNetworkUseDisclosure, vs...))
+}
+
+// NetworkUseDisclosureGT applies the GT predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureGT(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldGT(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureGTE applies the GTE predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureGTE(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldGTE(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureLT applies the LT predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureLT(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldLT(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureLTE applies the LTE predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureLTE(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldLTE(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureContains applies the Contains predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureContains(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldContains(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureHasPrefix applies the HasPrefix predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureHasPrefix(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldHasPrefix(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureHasSuffix applies the HasSuffix predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureHasSuffix(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldHasSuffix(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureIsNil applies the IsNil predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureIsNil() predicate.Mod {
+	return predicate.Mod(sql.FieldIsNull(FieldNetworkUseDisclosure))
+}
+
+// NetworkUseDisclosureNotNil applies the NotNil predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureNotNil() predicate.Mod {
+	return predicate.Mod(sql.FieldNotNull(FieldNetworkUseDisclosure))
+}
+
+// NetworkUseDisclosureEqualFold applies the EqualFold predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureEqualFold(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldEqualFold(FieldNetworkUseDisclosure, v))
+}
+
+// NetworkUseDisclosureContainsFold applies the ContainsFold predicate on the "network_use_disclosure" field.
+func NetworkUseDisclosureContainsFold(v string) predicate.Mod {
+	return predicate.Mod(sql.FieldContainsFold(FieldNetworkUseDisclosure, v))
 }
 
 // ToggleExplicitContentEQ applies the EQ predicate on the "toggle_explicit_content" field.

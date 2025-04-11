@@ -273,6 +273,20 @@ func (mc *ModCreate) SetNillableToggleNetworkUse(b *bool) *ModCreate {
 	return mc
 }
 
+// SetNetworkUseDisclosure sets the "network_use_disclosure" field.
+func (mc *ModCreate) SetNetworkUseDisclosure(s string) *ModCreate {
+	mc.mutation.SetNetworkUseDisclosure(s)
+	return mc
+}
+
+// SetNillableNetworkUseDisclosure sets the "network_use_disclosure" field if the given value is not nil.
+func (mc *ModCreate) SetNillableNetworkUseDisclosure(s *string) *ModCreate {
+	if s != nil {
+		mc.SetNetworkUseDisclosure(*s)
+	}
+	return mc
+}
+
 // SetToggleExplicitContent sets the "toggle_explicit_content" field.
 func (mc *ModCreate) SetToggleExplicitContent(b bool) *ModCreate {
 	mc.mutation.SetToggleExplicitContent(b)
@@ -642,6 +656,10 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 	if value, ok := mc.mutation.ToggleNetworkUse(); ok {
 		_spec.SetField(mod.FieldToggleNetworkUse, field.TypeBool, value)
 		_node.ToggleNetworkUse = value
+	}
+	if value, ok := mc.mutation.NetworkUseDisclosure(); ok {
+		_spec.SetField(mod.FieldNetworkUseDisclosure, field.TypeString, value)
+		_node.NetworkUseDisclosure = value
 	}
 	if value, ok := mc.mutation.ToggleExplicitContent(); ok {
 		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
@@ -1067,6 +1085,24 @@ func (u *ModUpsert) UpdateToggleNetworkUse() *ModUpsert {
 	return u
 }
 
+// SetNetworkUseDisclosure sets the "network_use_disclosure" field.
+func (u *ModUpsert) SetNetworkUseDisclosure(v string) *ModUpsert {
+	u.Set(mod.FieldNetworkUseDisclosure, v)
+	return u
+}
+
+// UpdateNetworkUseDisclosure sets the "network_use_disclosure" field to the value that was provided on create.
+func (u *ModUpsert) UpdateNetworkUseDisclosure() *ModUpsert {
+	u.SetExcluded(mod.FieldNetworkUseDisclosure)
+	return u
+}
+
+// ClearNetworkUseDisclosure clears the value of the "network_use_disclosure" field.
+func (u *ModUpsert) ClearNetworkUseDisclosure() *ModUpsert {
+	u.SetNull(mod.FieldNetworkUseDisclosure)
+	return u
+}
+
 // SetToggleExplicitContent sets the "toggle_explicit_content" field.
 func (u *ModUpsert) SetToggleExplicitContent(v bool) *ModUpsert {
 	u.Set(mod.FieldToggleExplicitContent, v)
@@ -1477,6 +1513,27 @@ func (u *ModUpsertOne) SetToggleNetworkUse(v bool) *ModUpsertOne {
 func (u *ModUpsertOne) UpdateToggleNetworkUse() *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateToggleNetworkUse()
+	})
+}
+
+// SetNetworkUseDisclosure sets the "network_use_disclosure" field.
+func (u *ModUpsertOne) SetNetworkUseDisclosure(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetNetworkUseDisclosure(v)
+	})
+}
+
+// UpdateNetworkUseDisclosure sets the "network_use_disclosure" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateNetworkUseDisclosure() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateNetworkUseDisclosure()
+	})
+}
+
+// ClearNetworkUseDisclosure clears the value of the "network_use_disclosure" field.
+func (u *ModUpsertOne) ClearNetworkUseDisclosure() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearNetworkUseDisclosure()
 	})
 }
 
@@ -2059,6 +2116,27 @@ func (u *ModUpsertBulk) SetToggleNetworkUse(v bool) *ModUpsertBulk {
 func (u *ModUpsertBulk) UpdateToggleNetworkUse() *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.UpdateToggleNetworkUse()
+	})
+}
+
+// SetNetworkUseDisclosure sets the "network_use_disclosure" field.
+func (u *ModUpsertBulk) SetNetworkUseDisclosure(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetNetworkUseDisclosure(v)
+	})
+}
+
+// UpdateNetworkUseDisclosure sets the "network_use_disclosure" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateNetworkUseDisclosure() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateNetworkUseDisclosure()
+	})
+}
+
+// ClearNetworkUseDisclosure clears the value of the "network_use_disclosure" field.
+func (u *ModUpsertBulk) ClearNetworkUseDisclosure() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearNetworkUseDisclosure()
 	})
 }
 
