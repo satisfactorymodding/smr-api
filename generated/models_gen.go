@@ -130,6 +130,7 @@ type Mod struct {
 	Tags                  []*Tag             `json:"tags,omitempty"`
 	Compatibility         *CompatibilityInfo `json:"compatibility,omitempty"`
 	ToggleNetworkUse      bool               `json:"toggle_network_use"`
+	NetworkUseDisclosure  *string            `json:"network_use_disclosure,omitempty"`
 	ToggleExplicitContent bool               `json:"toggle_explicit_content"`
 	Authors               []*UserMod         `json:"authors"`
 	Version               *Version           `json:"version,omitempty"`

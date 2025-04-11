@@ -15,6 +15,17 @@ enum ModFields {
     search
 }
 
+# enum AiUseDisclosureType {
+#     NotUsed
+#     AdaMessages
+#     Used
+# }
+
+# type AiUseDisclosure {
+#     type: AiUseDisclosureType!
+#     note: String
+# }
+
 type Mod {
     id: ModID!
     name: String!
@@ -37,6 +48,8 @@ type Mod {
     tags: [Tag!]
     compatibility: CompatibilityInfo
     toggle_network_use: Boolean!
+    network_use_disclosure: String
+    # ai_use_disclosure: AiUseDisclosure
     toggle_explicit_content: Boolean!
 
     authors: [UserMod!]!
@@ -100,6 +113,8 @@ input UpdateMod {
     tagIDs: [TagID!]
     compatibility: CompatibilityInfoInput
     toggle_network_use: Boolean
+    network_use_disclosure: String
+    # ai_use_disclosure: AiUseDisclosureInput
     toggle_explicit_content: Boolean
 }
 

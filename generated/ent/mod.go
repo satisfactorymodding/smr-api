@@ -61,6 +61,8 @@ type Mod struct {
 	Compatibility *util.CompatibilityInfo `json:"compatibility,omitempty"`
 	// ToggleNetworkUse holds the value of the "toggle_network_use" field.
 	ToggleNetworkUse bool `json:"toggle_network_use,omitempty"`
+	// NetworkUseDisclosure holds the value of the "network_use_disclosure" field.
+	NetworkUseDisclosure string `json:"network_use_disclosure,omitempty"`
 	// ToggleExplicitContent holds the value of the "toggle_explicit_content" field.
 	ToggleExplicitContent bool `json:"toggle_explicit_content,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -164,7 +166,7 @@ func (*Mod) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case mod.FieldViews, mod.FieldHotness, mod.FieldPopularity, mod.FieldDownloads:
 			values[i] = new(sql.NullInt64)
-		case mod.FieldID, mod.FieldName, mod.FieldShortDescription, mod.FieldFullDescription, mod.FieldLogo, mod.FieldLogoThumbhash, mod.FieldSourceURL, mod.FieldCreatorID, mod.FieldModReference:
+		case mod.FieldID, mod.FieldName, mod.FieldShortDescription, mod.FieldFullDescription, mod.FieldLogo, mod.FieldLogoThumbhash, mod.FieldSourceURL, mod.FieldCreatorID, mod.FieldModReference, mod.FieldNetworkUseDisclosure:
 			values[i] = new(sql.NullString)
 		case mod.FieldCreatedAt, mod.FieldUpdatedAt, mod.FieldDeletedAt, mod.FieldLastVersionDate:
 			values[i] = new(sql.NullTime)
@@ -317,6 +319,12 @@ func (m *Mod) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				m.ToggleNetworkUse = value.Bool
 			}
+		case mod.FieldNetworkUseDisclosure:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field network_use_disclosure", values[i])
+			} else if value.Valid {
+				m.NetworkUseDisclosure = value.String
+			}
 		case mod.FieldToggleExplicitContent:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field toggle_explicit_content", values[i])
@@ -456,6 +464,9 @@ func (m *Mod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("toggle_network_use=")
 	builder.WriteString(fmt.Sprintf("%v", m.ToggleNetworkUse))
+	builder.WriteString(", ")
+	builder.WriteString("network_use_disclosure=")
+	builder.WriteString(m.NetworkUseDisclosure)
 	builder.WriteString(", ")
 	builder.WriteString("toggle_explicit_content=")
 	builder.WriteString(fmt.Sprintf("%v", m.ToggleExplicitContent))

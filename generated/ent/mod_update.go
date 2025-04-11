@@ -361,6 +361,26 @@ func (mu *ModUpdate) SetNillableToggleNetworkUse(b *bool) *ModUpdate {
 	return mu
 }
 
+// SetNetworkUseDisclosure sets the "network_use_disclosure" field.
+func (mu *ModUpdate) SetNetworkUseDisclosure(s string) *ModUpdate {
+	mu.mutation.SetNetworkUseDisclosure(s)
+	return mu
+}
+
+// SetNillableNetworkUseDisclosure sets the "network_use_disclosure" field if the given value is not nil.
+func (mu *ModUpdate) SetNillableNetworkUseDisclosure(s *string) *ModUpdate {
+	if s != nil {
+		mu.SetNetworkUseDisclosure(*s)
+	}
+	return mu
+}
+
+// ClearNetworkUseDisclosure clears the value of the "network_use_disclosure" field.
+func (mu *ModUpdate) ClearNetworkUseDisclosure() *ModUpdate {
+	mu.mutation.ClearNetworkUseDisclosure()
+	return mu
+}
+
 // SetToggleExplicitContent sets the "toggle_explicit_content" field.
 func (mu *ModUpdate) SetToggleExplicitContent(b bool) *ModUpdate {
 	mu.mutation.SetToggleExplicitContent(b)
@@ -693,6 +713,12 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := mu.mutation.ToggleNetworkUse(); ok {
 		_spec.SetField(mod.FieldToggleNetworkUse, field.TypeBool, value)
+	}
+	if value, ok := mu.mutation.NetworkUseDisclosure(); ok {
+		_spec.SetField(mod.FieldNetworkUseDisclosure, field.TypeString, value)
+	}
+	if mu.mutation.NetworkUseDisclosureCleared() {
+		_spec.ClearField(mod.FieldNetworkUseDisclosure, field.TypeString)
 	}
 	if value, ok := mu.mutation.ToggleExplicitContent(); ok {
 		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
@@ -1239,6 +1265,26 @@ func (muo *ModUpdateOne) SetNillableToggleNetworkUse(b *bool) *ModUpdateOne {
 	return muo
 }
 
+// SetNetworkUseDisclosure sets the "network_use_disclosure" field.
+func (muo *ModUpdateOne) SetNetworkUseDisclosure(s string) *ModUpdateOne {
+	muo.mutation.SetNetworkUseDisclosure(s)
+	return muo
+}
+
+// SetNillableNetworkUseDisclosure sets the "network_use_disclosure" field if the given value is not nil.
+func (muo *ModUpdateOne) SetNillableNetworkUseDisclosure(s *string) *ModUpdateOne {
+	if s != nil {
+		muo.SetNetworkUseDisclosure(*s)
+	}
+	return muo
+}
+
+// ClearNetworkUseDisclosure clears the value of the "network_use_disclosure" field.
+func (muo *ModUpdateOne) ClearNetworkUseDisclosure() *ModUpdateOne {
+	muo.mutation.ClearNetworkUseDisclosure()
+	return muo
+}
+
 // SetToggleExplicitContent sets the "toggle_explicit_content" field.
 func (muo *ModUpdateOne) SetToggleExplicitContent(b bool) *ModUpdateOne {
 	muo.mutation.SetToggleExplicitContent(b)
@@ -1601,6 +1647,12 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	}
 	if value, ok := muo.mutation.ToggleNetworkUse(); ok {
 		_spec.SetField(mod.FieldToggleNetworkUse, field.TypeBool, value)
+	}
+	if value, ok := muo.mutation.NetworkUseDisclosure(); ok {
+		_spec.SetField(mod.FieldNetworkUseDisclosure, field.TypeString, value)
+	}
+	if muo.mutation.NetworkUseDisclosureCleared() {
+		_spec.ClearField(mod.FieldNetworkUseDisclosure, field.TypeString)
 	}
 	if value, ok := muo.mutation.ToggleExplicitContent(); ok {
 		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)

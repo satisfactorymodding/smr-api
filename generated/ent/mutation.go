@@ -1962,6 +1962,7 @@ type ModMutation struct {
 	hidden                  *bool
 	compatibility           **util.CompatibilityInfo
 	toggle_network_use      *bool
+	network_use_disclosure  *string
 	toggle_explicit_content *bool
 	clearedFields           map[string]struct{}
 	versions                map[string]struct{}
@@ -2999,6 +3000,55 @@ func (m *ModMutation) ResetToggleNetworkUse() {
 	m.toggle_network_use = nil
 }
 
+// SetNetworkUseDisclosure sets the "network_use_disclosure" field.
+func (m *ModMutation) SetNetworkUseDisclosure(s string) {
+	m.network_use_disclosure = &s
+}
+
+// NetworkUseDisclosure returns the value of the "network_use_disclosure" field in the mutation.
+func (m *ModMutation) NetworkUseDisclosure() (r string, exists bool) {
+	v := m.network_use_disclosure
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNetworkUseDisclosure returns the old "network_use_disclosure" field's value of the Mod entity.
+// If the Mod object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModMutation) OldNetworkUseDisclosure(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNetworkUseDisclosure is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNetworkUseDisclosure requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNetworkUseDisclosure: %w", err)
+	}
+	return oldValue.NetworkUseDisclosure, nil
+}
+
+// ClearNetworkUseDisclosure clears the value of the "network_use_disclosure" field.
+func (m *ModMutation) ClearNetworkUseDisclosure() {
+	m.network_use_disclosure = nil
+	m.clearedFields[mod.FieldNetworkUseDisclosure] = struct{}{}
+}
+
+// NetworkUseDisclosureCleared returns if the "network_use_disclosure" field was cleared in this mutation.
+func (m *ModMutation) NetworkUseDisclosureCleared() bool {
+	_, ok := m.clearedFields[mod.FieldNetworkUseDisclosure]
+	return ok
+}
+
+// ResetNetworkUseDisclosure resets all changes to the "network_use_disclosure" field.
+func (m *ModMutation) ResetNetworkUseDisclosure() {
+	m.network_use_disclosure = nil
+	delete(m.clearedFields, mod.FieldNetworkUseDisclosure)
+}
+
 // SetToggleExplicitContent sets the "toggle_explicit_content" field.
 func (m *ModMutation) SetToggleExplicitContent(b bool) {
 	m.toggle_explicit_content = &b
@@ -3285,7 +3335,7 @@ func (m *ModMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ModMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 23)
 	if m.created_at != nil {
 		fields = append(fields, mod.FieldCreatedAt)
 	}
@@ -3349,6 +3399,9 @@ func (m *ModMutation) Fields() []string {
 	if m.toggle_network_use != nil {
 		fields = append(fields, mod.FieldToggleNetworkUse)
 	}
+	if m.network_use_disclosure != nil {
+		fields = append(fields, mod.FieldNetworkUseDisclosure)
+	}
 	if m.toggle_explicit_content != nil {
 		fields = append(fields, mod.FieldToggleExplicitContent)
 	}
@@ -3402,6 +3455,8 @@ func (m *ModMutation) Field(name string) (ent.Value, bool) {
 		return m.Compatibility()
 	case mod.FieldToggleNetworkUse:
 		return m.ToggleNetworkUse()
+	case mod.FieldNetworkUseDisclosure:
+		return m.NetworkUseDisclosure()
 	case mod.FieldToggleExplicitContent:
 		return m.ToggleExplicitContent()
 	}
@@ -3455,6 +3510,8 @@ func (m *ModMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldCompatibility(ctx)
 	case mod.FieldToggleNetworkUse:
 		return m.OldToggleNetworkUse(ctx)
+	case mod.FieldNetworkUseDisclosure:
+		return m.OldNetworkUseDisclosure(ctx)
 	case mod.FieldToggleExplicitContent:
 		return m.OldToggleExplicitContent(ctx)
 	}
@@ -3613,6 +3670,13 @@ func (m *ModMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetToggleNetworkUse(v)
 		return nil
+	case mod.FieldNetworkUseDisclosure:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNetworkUseDisclosure(v)
+		return nil
 	case mod.FieldToggleExplicitContent:
 		v, ok := value.(bool)
 		if !ok {
@@ -3719,6 +3783,9 @@ func (m *ModMutation) ClearedFields() []string {
 	if m.FieldCleared(mod.FieldCompatibility) {
 		fields = append(fields, mod.FieldCompatibility)
 	}
+	if m.FieldCleared(mod.FieldNetworkUseDisclosure) {
+		fields = append(fields, mod.FieldNetworkUseDisclosure)
+	}
 	return fields
 }
 
@@ -3750,6 +3817,9 @@ func (m *ModMutation) ClearField(name string) error {
 		return nil
 	case mod.FieldCompatibility:
 		m.ClearCompatibility()
+		return nil
+	case mod.FieldNetworkUseDisclosure:
+		m.ClearNetworkUseDisclosure()
 		return nil
 	}
 	return fmt.Errorf("unknown Mod nullable field %s", name)
@@ -3821,6 +3891,9 @@ func (m *ModMutation) ResetField(name string) error {
 		return nil
 	case mod.FieldToggleNetworkUse:
 		m.ResetToggleNetworkUse()
+		return nil
+	case mod.FieldNetworkUseDisclosure:
+		m.ResetNetworkUseDisclosure()
 		return nil
 	case mod.FieldToggleExplicitContent:
 		m.ResetToggleExplicitContent()

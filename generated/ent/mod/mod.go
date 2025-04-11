@@ -57,6 +57,8 @@ const (
 	FieldCompatibility = "compatibility"
 	// FieldToggleNetworkUse holds the string denoting the toggle_network_use field in the database.
 	FieldToggleNetworkUse = "toggle_network_use"
+	// FieldNetworkUseDisclosure holds the string denoting the network_use_disclosure field in the database.
+	FieldNetworkUseDisclosure = "network_use_disclosure"
 	// FieldToggleExplicitContent holds the string denoting the toggle_explicit_content field in the database.
 	FieldToggleExplicitContent = "toggle_explicit_content"
 	// EdgeVersions holds the string denoting the versions edge name in mutations.
@@ -144,6 +146,7 @@ var Columns = []string{
 	FieldHidden,
 	FieldCompatibility,
 	FieldToggleNetworkUse,
+	FieldNetworkUseDisclosure,
 	FieldToggleExplicitContent,
 }
 
@@ -317,6 +320,11 @@ func ByHidden(opts ...sql.OrderTermOption) OrderOption {
 // ByToggleNetworkUse orders the results by the toggle_network_use field.
 func ByToggleNetworkUse(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldToggleNetworkUse, opts...).ToFunc()
+}
+
+// ByNetworkUseDisclosure orders the results by the network_use_disclosure field.
+func ByNetworkUseDisclosure(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNetworkUseDisclosure, opts...).ToFunc()
 }
 
 // ByToggleExplicitContent orders the results by the toggle_explicit_content field.
