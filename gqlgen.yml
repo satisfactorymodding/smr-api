@@ -14,12 +14,18 @@ resolver:
   type: Resolver
   preserve_resolver: true
 
+  # https://github.com/99designs/gqlgen/issues/3321
+  preserve_resolver: true
+
 models:
 
   NewMod:
     model: github.com/satisfactorymodding/smr-api/generated.NewMod
   UpdateMod:
     model: github.com/satisfactorymodding/smr-api/generated.UpdateMod
+    fields:
+      network_use_disclosure:
+        omittable: true
 
   VersionFilter:
     model: "map[string]interface{}"
