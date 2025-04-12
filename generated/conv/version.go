@@ -20,22 +20,18 @@ func (c *ModAllVersionsImpl) Convert(source *ent.Version) *types.ModAllVersionsV
 		typesModAllVersionsVersion.Version = (*source).Version
 		typesModAllVersionsVersion.GameVersion = (*source).GameVersion
 		typesModAllVersionsVersion.RequiredOnRemote = (*source).RequiredOnRemote
-		var pTypesModAllVersionsVersionTargetList []*types.ModAllVersionsVersionTarget
 		if (*source).Edges.Targets != nil {
-			pTypesModAllVersionsVersionTargetList = make([]*types.ModAllVersionsVersionTarget, len((*source).Edges.Targets))
+			typesModAllVersionsVersion.Targets = make([]*types.ModAllVersionsVersionTarget, len((*source).Edges.Targets))
 			for i := 0; i < len((*source).Edges.Targets); i++ {
-				pTypesModAllVersionsVersionTargetList[i] = c.ConvertTarget((*source).Edges.Targets[i])
+				typesModAllVersionsVersion.Targets[i] = c.ConvertTarget((*source).Edges.Targets[i])
 			}
 		}
-		typesModAllVersionsVersion.Targets = pTypesModAllVersionsVersionTargetList
-		var pTypesModAllVersionsVersionDependencyList []*types.ModAllVersionsVersionDependency
 		if (*source).Edges.VersionDependencies != nil {
-			pTypesModAllVersionsVersionDependencyList = make([]*types.ModAllVersionsVersionDependency, len((*source).Edges.VersionDependencies))
+			typesModAllVersionsVersion.Dependencies = make([]*types.ModAllVersionsVersionDependency, len((*source).Edges.VersionDependencies))
 			for j := 0; j < len((*source).Edges.VersionDependencies); j++ {
-				pTypesModAllVersionsVersionDependencyList[j] = c.ConvertDependency((*source).Edges.VersionDependencies[j])
+				typesModAllVersionsVersion.Dependencies[j] = c.ConvertDependency((*source).Edges.VersionDependencies[j])
 			}
 		}
-		typesModAllVersionsVersion.Dependencies = pTypesModAllVersionsVersionDependencyList
 		pTypesModAllVersionsVersion = &typesModAllVersionsVersion
 	}
 	return pTypesModAllVersionsVersion
@@ -93,14 +89,12 @@ func (c *VersionImpl) Convert(source *ent.Version) *generated.Version {
 		generatedVersion.Approved = (*source).Approved
 		generatedVersion.UpdatedAt = conversion.TimeToString((*source).UpdatedAt)
 		generatedVersion.CreatedAt = conversion.TimeToString((*source).CreatedAt)
-		var pGeneratedVersionTargetList []*generated.VersionTarget
 		if (*source).Edges.Targets != nil {
-			pGeneratedVersionTargetList = make([]*generated.VersionTarget, len((*source).Edges.Targets))
+			generatedVersion.Targets = make([]*generated.VersionTarget, len((*source).Edges.Targets))
 			for i := 0; i < len((*source).Edges.Targets); i++ {
-				pGeneratedVersionTargetList[i] = c.ConvertTarget((*source).Edges.Targets[i])
+				generatedVersion.Targets[i] = c.ConvertTarget((*source).Edges.Targets[i])
 			}
 		}
-		generatedVersion.Targets = pGeneratedVersionTargetList
 		pString := (*source).Metadata
 		generatedVersion.Metadata = &pString
 		pInt := conversion.Int64ToInt((*source).Size)

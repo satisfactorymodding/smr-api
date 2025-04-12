@@ -328,8 +328,9 @@ func (gq *GuideQuery) Clone() *GuideQuery {
 		withTags:      gq.withTags.Clone(),
 		withGuideTags: gq.withGuideTags.Clone(),
 		// clone intermediate query.
-		sql:  gq.sql.Clone(),
-		path: gq.path,
+		sql:       gq.sql.Clone(),
+		path:      gq.path,
+		modifiers: append([]func(*sql.Selector){}, gq.modifiers...),
 	}
 }
 

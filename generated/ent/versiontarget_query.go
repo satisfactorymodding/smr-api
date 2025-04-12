@@ -277,8 +277,9 @@ func (vtq *VersionTargetQuery) Clone() *VersionTargetQuery {
 		predicates:  append([]predicate.VersionTarget{}, vtq.predicates...),
 		withVersion: vtq.withVersion.Clone(),
 		// clone intermediate query.
-		sql:  vtq.sql.Clone(),
-		path: vtq.path,
+		sql:       vtq.sql.Clone(),
+		path:      vtq.path,
+		modifiers: append([]func(*sql.Selector){}, vtq.modifiers...),
 	}
 }
 

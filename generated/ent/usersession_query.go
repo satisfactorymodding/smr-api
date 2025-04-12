@@ -278,8 +278,9 @@ func (usq *UserSessionQuery) Clone() *UserSessionQuery {
 		predicates: append([]predicate.UserSession{}, usq.predicates...),
 		withUser:   usq.withUser.Clone(),
 		// clone intermediate query.
-		sql:  usq.sql.Clone(),
-		path: usq.path,
+		sql:       usq.sql.Clone(),
+		path:      usq.path,
+		modifiers: append([]func(*sql.Selector){}, usq.modifiers...),
 	}
 }
 

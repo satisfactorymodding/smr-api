@@ -54,22 +54,24 @@ type ResolverRoot interface {
 	Version() VersionResolver
 	VersionDependency() VersionDependencyResolver
 	VersionTarget() VersionTargetResolver
+	__InputValue() __InputValueResolver
+	__Type() __TypeResolver
 }
 
 type DirectiveRoot struct {
-	CanApproveMods              func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanApproveVersions          func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanEditAnnouncements        func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanEditGuide                func(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error)
-	CanEditMod                  func(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error)
-	CanEditModCompatibility     func(ctx context.Context, obj interface{}, next graphql.Resolver, field *string) (res interface{}, err error)
-	CanEditSatisfactoryVersions func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanEditUser                 func(ctx context.Context, obj interface{}, next graphql.Resolver, field string, object bool) (res interface{}, err error)
-	CanEditUsers                func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	CanEditVersion              func(ctx context.Context, obj interface{}, next graphql.Resolver, field string) (res interface{}, err error)
-	CanManageTags               func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	IsLoggedIn                  func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-	IsNotLoggedIn               func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	CanApproveMods              func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	CanApproveVersions          func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	CanEditAnnouncements        func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	CanEditGuide                func(ctx context.Context, obj any, next graphql.Resolver, field string) (res any, err error)
+	CanEditMod                  func(ctx context.Context, obj any, next graphql.Resolver, field string) (res any, err error)
+	CanEditModCompatibility     func(ctx context.Context, obj any, next graphql.Resolver, field *string) (res any, err error)
+	CanEditSatisfactoryVersions func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	CanEditUser                 func(ctx context.Context, obj any, next graphql.Resolver, field string, object bool) (res any, err error)
+	CanEditUsers                func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	CanEditVersion              func(ctx context.Context, obj any, next graphql.Resolver, field string) (res any, err error)
+	CanManageTags               func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	IsLoggedIn                  func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	IsNotLoggedIn               func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 }
 
 type ComplexityRoot struct {
@@ -518,6 +520,13 @@ type VersionDependencyResolver interface {
 type VersionTargetResolver interface {
 	Link(ctx context.Context, obj *VersionTarget) (string, error)
 }
+type __InputValueResolver interface {
+	IsDeprecated(ctx context.Context, obj *introspection.InputValue) (bool, error)
+	DeprecationReason(ctx context.Context, obj *introspection.InputValue) (*string, error)
+}
+type __TypeResolver interface {
+	IsOneOf(ctx context.Context, obj *introspection.Type) (*bool, error)
+}
 
 type executableSchema struct {
 	schema     *ast.Schema
@@ -533,7 +542,7 @@ func (e *executableSchema) Schema() *ast.Schema {
 	return parsedSchema
 }
 
-func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]interface{}) (int, bool) {
+func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
@@ -2374,8 +2383,8 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 }
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
-	rc := graphql.GetOperationContext(ctx)
-	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
+	opCtx := graphql.GetOperationContext(ctx)
+	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCompatibilityInfoInput,
 		ec.unmarshalInputCompatibilityInput,
@@ -2401,7 +2410,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	)
 	first := true
 
-	switch rc.Operation.Operation {
+	switch opCtx.Operation.Operation {
 	case ast.Query:
 		return func(ctx context.Context) *graphql.Response {
 			var response graphql.Response
@@ -2409,7 +2418,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			if first {
 				first = false
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-				data = ec._Query(ctx, rc.Operation.SelectionSet)
+				data = ec._Query(ctx, opCtx.Operation.SelectionSet)
 			} else {
 				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
 					result := <-ec.deferredResults
@@ -2439,7 +2448,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			}
 			first = false
 			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
+			data := ec._Mutation(ctx, opCtx.Operation.SelectionSet)
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 
@@ -3184,1237 +3193,2498 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) dir_canEditGuide_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) dir_canEditGuide_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["field"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.dir_canEditGuide_argsField(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["field"] = arg0
 	return args, nil
 }
+func (ec *executionContext) dir_canEditGuide_argsField(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["field"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) dir_canEditModCompatibility_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *string
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
 	if tmp, ok := rawArgs["field"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) dir_canEditModCompatibility_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.dir_canEditModCompatibility_argsField(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["field"] = arg0
 	return args, nil
 }
+func (ec *executionContext) dir_canEditModCompatibility_argsField(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	if _, ok := rawArgs["field"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) dir_canEditMod_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
 	if tmp, ok := rawArgs["field"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) dir_canEditMod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.dir_canEditMod_argsField(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["field"] = arg0
 	return args, nil
 }
+func (ec *executionContext) dir_canEditMod_argsField(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["field"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) dir_canEditUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
 	if tmp, ok := rawArgs["field"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) dir_canEditUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.dir_canEditUser_argsField(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["field"] = arg0
-	var arg1 bool
-	if tmp, ok := rawArgs["object"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("object"))
-		arg1, err = ec.unmarshalNBoolean2bool(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.dir_canEditUser_argsObject(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["object"] = arg1
 	return args, nil
 }
+func (ec *executionContext) dir_canEditUser_argsField(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["field"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) dir_canEditVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
 	if tmp, ok := rawArgs["field"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) dir_canEditUser_argsObject(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (bool, error) {
+	if _, ok := rawArgs["object"]; !ok {
+		var zeroVal bool
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("object"))
+	if tmp, ok := rawArgs["object"]; ok {
+		return ec.unmarshalNBoolean2bool(ctx, tmp)
+	}
+
+	var zeroVal bool
+	return zeroVal, nil
+}
+
+func (ec *executionContext) dir_canEditVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.dir_canEditVersion_argsField(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["field"] = arg0
 	return args, nil
 }
+func (ec *executionContext) dir_canEditVersion_argsField(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["field"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mod_version_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+	if tmp, ok := rawArgs["field"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mod_version_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["version"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mod_version_argsVersion(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["version"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mod_version_argsVersion(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["version"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mod_versions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+	if tmp, ok := rawArgs["version"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mod_versions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOVersionFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mod_versions_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mod_versions_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_approveMod_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+	if tmp, ok := rawArgs["filter"]; ok {
+		return ec.unmarshalOVersionFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_approveMod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_approveMod_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_approveMod_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_approveVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
+	if tmp, ok := rawArgs["modId"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_approveVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["versionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
-		arg0, err = ec.unmarshalNVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_approveVersion_argsVersionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["versionId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_approveVersion_argsVersionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["versionId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_createAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
+	if tmp, ok := rawArgs["versionId"]; ok {
+		return ec.unmarshalNVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createAnnouncement_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 NewAnnouncement
-	if tmp, ok := rawArgs["announcement"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("announcement"))
-		arg0, err = ec.unmarshalNNewAnnouncement2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewAnnouncement(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createAnnouncement_argsAnnouncement(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["announcement"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_createAnnouncement_argsAnnouncement(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (NewAnnouncement, error) {
+	if _, ok := rawArgs["announcement"]; !ok {
+		var zeroVal NewAnnouncement
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_createGuide_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("announcement"))
+	if tmp, ok := rawArgs["announcement"]; ok {
+		return ec.unmarshalNNewAnnouncement2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewAnnouncement(ctx, tmp)
+	}
+
+	var zeroVal NewAnnouncement
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createGuide_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 NewGuide
-	if tmp, ok := rawArgs["guide"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("guide"))
-		arg0, err = ec.unmarshalNNewGuide2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewGuide(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createGuide_argsGuide(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["guide"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_createGuide_argsGuide(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (NewGuide, error) {
+	if _, ok := rawArgs["guide"]; !ok {
+		var zeroVal NewGuide
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_createMod_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("guide"))
+	if tmp, ok := rawArgs["guide"]; ok {
+		return ec.unmarshalNNewGuide2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewGuide(ctx, tmp)
+	}
+
+	var zeroVal NewGuide
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createMod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 NewMod
-	if tmp, ok := rawArgs["mod"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mod"))
-		arg0, err = ec.unmarshalNNewMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewMod(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createMod_argsMod(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["mod"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_createMod_argsMod(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (NewMod, error) {
+	if _, ok := rawArgs["mod"]; !ok {
+		var zeroVal NewMod
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_createMultipleTags_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("mod"))
+	if tmp, ok := rawArgs["mod"]; ok {
+		return ec.unmarshalNNewMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewMod(ctx, tmp)
+	}
+
+	var zeroVal NewMod
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createMultipleTags_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 []*NewTag
-	if tmp, ok := rawArgs["tagNames"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagNames"))
-		arg0, err = ec.unmarshalNNewTag2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTagᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createMultipleTags_argsTagNames(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["tagNames"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_createMultipleTags_argsTagNames(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]*NewTag, error) {
+	if _, ok := rawArgs["tagNames"]; !ok {
+		var zeroVal []*NewTag
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_createSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("tagNames"))
+	if tmp, ok := rawArgs["tagNames"]; ok {
+		return ec.unmarshalNNewTag2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTagᚄ(ctx, tmp)
+	}
+
+	var zeroVal []*NewTag
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 NewSatisfactoryVersion
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSatisfactoryVersion(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createSatisfactoryVersion_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_createSatisfactoryVersion_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (NewSatisfactoryVersion, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal NewSatisfactoryVersion
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_createTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNNewSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSatisfactoryVersion(ctx, tmp)
+	}
+
+	var zeroVal NewSatisfactoryVersion
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createTag_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["tagName"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagName"))
-		arg0, err = ec.unmarshalNTagName2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createTag_argsTagName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["tagName"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["description"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_createTag_argsDescription(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["description"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_createTag_argsTagName(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["tagName"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_createVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("tagName"))
+	if tmp, ok := rawArgs["tagName"]; ok {
+		return ec.unmarshalNTagName2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createTag_argsDescription(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["description"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+	if tmp, ok := rawArgs["description"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createVersion_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_createVersion_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_deleteAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
+	if tmp, ok := rawArgs["modId"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteAnnouncement_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["announcementId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("announcementId"))
-		arg0, err = ec.unmarshalNAnnouncementID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteAnnouncement_argsAnnouncementID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["announcementId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_deleteAnnouncement_argsAnnouncementID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["announcementId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_deleteGuide_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("announcementId"))
+	if tmp, ok := rawArgs["announcementId"]; ok {
+		return ec.unmarshalNAnnouncementID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteGuide_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["guideId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("guideId"))
-		arg0, err = ec.unmarshalNGuideID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteGuide_argsGuideID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["guideId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_deleteGuide_argsGuideID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["guideId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_deleteMod_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("guideId"))
+	if tmp, ok := rawArgs["guideId"]; ok {
+		return ec.unmarshalNGuideID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteMod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteMod_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_deleteMod_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_deleteSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
+	if tmp, ok := rawArgs["modId"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNSatisfactoryVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteSatisfactoryVersion_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["id"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_deleteSatisfactoryVersion_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_deleteTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNSatisfactoryVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteTag_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["tagID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagID"))
-		arg0, err = ec.unmarshalNTagID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteTag_argsTagID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["tagID"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_deleteTag_argsTagID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["tagID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_deleteVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("tagID"))
+	if tmp, ok := rawArgs["tagID"]; ok {
+		return ec.unmarshalNTagID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["versionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
-		arg0, err = ec.unmarshalNVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteVersion_argsVersionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["versionId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_deleteVersion_argsVersionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["versionId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_denyMod_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
+	if tmp, ok := rawArgs["versionId"]; ok {
+		return ec.unmarshalNVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_denyMod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_denyMod_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_denyMod_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_denyVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
+	if tmp, ok := rawArgs["modId"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_denyVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["versionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
-		arg0, err = ec.unmarshalNVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_denyVersion_argsVersionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["versionId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_denyVersion_argsVersionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["versionId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_discourseSSO_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
+	if tmp, ok := rawArgs["versionId"]; ok {
+		return ec.unmarshalNVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_discourseSSO_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["sso"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sso"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_discourseSSO_argsSso(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["sso"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["sig"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sig"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_discourseSSO_argsSig(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["sig"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_discourseSSO_argsSso(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["sso"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_finalizeCreateVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sso"))
+	if tmp, ok := rawArgs["sso"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_discourseSSO_argsSig(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["sig"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sig"))
+	if tmp, ok := rawArgs["sig"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_finalizeCreateVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_finalizeCreateVersion_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["versionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
-		arg1, err = ec.unmarshalNVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_finalizeCreateVersion_argsVersionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["versionId"] = arg1
-	var arg2 NewVersion
-	if tmp, ok := rawArgs["version"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
-		arg2, err = ec.unmarshalNNewVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewVersion(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg2, err := ec.field_Mutation_finalizeCreateVersion_argsVersion(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["version"] = arg2
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_finalizeCreateVersion_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_oAuthFacebook_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
+	if tmp, ok := rawArgs["modId"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_finalizeCreateVersion_argsVersionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["versionId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
+	if tmp, ok := rawArgs["versionId"]; ok {
+		return ec.unmarshalNVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_finalizeCreateVersion_argsVersion(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (NewVersion, error) {
+	if _, ok := rawArgs["version"]; !ok {
+		var zeroVal NewVersion
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+	if tmp, ok := rawArgs["version"]; ok {
+		return ec.unmarshalNNewVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewVersion(ctx, tmp)
+	}
+
+	var zeroVal NewVersion
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_oAuthFacebook_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["code"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_oAuthFacebook_argsCode(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["code"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["state"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_oAuthFacebook_argsState(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["state"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_oAuthFacebook_argsCode(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["code"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_oAuthGithub_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
 	if tmp, ok := rawArgs["code"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_oAuthFacebook_argsState(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["state"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
+	if tmp, ok := rawArgs["state"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_oAuthGithub_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_oAuthGithub_argsCode(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["code"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["state"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_oAuthGithub_argsState(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["state"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_oAuthGithub_argsCode(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["code"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_oAuthGoogle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
 	if tmp, ok := rawArgs["code"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_oAuthGithub_argsState(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["state"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
+	if tmp, ok := rawArgs["state"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_oAuthGoogle_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_oAuthGoogle_argsCode(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["code"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["state"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_oAuthGoogle_argsState(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["state"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_oAuthGoogle_argsCode(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["code"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_updateAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+	if tmp, ok := rawArgs["code"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_oAuthGoogle_argsState(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["state"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
+	if tmp, ok := rawArgs["state"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateAnnouncement_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["announcementId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("announcementId"))
-		arg0, err = ec.unmarshalNAnnouncementID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateAnnouncement_argsAnnouncementID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["announcementId"] = arg0
-	var arg1 UpdateAnnouncement
-	if tmp, ok := rawArgs["announcement"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("announcement"))
-		arg1, err = ec.unmarshalNUpdateAnnouncement2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateAnnouncement(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_updateAnnouncement_argsAnnouncement(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["announcement"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_updateAnnouncement_argsAnnouncementID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["announcementId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_updateGuide_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("announcementId"))
+	if tmp, ok := rawArgs["announcementId"]; ok {
+		return ec.unmarshalNAnnouncementID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateAnnouncement_argsAnnouncement(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (UpdateAnnouncement, error) {
+	if _, ok := rawArgs["announcement"]; !ok {
+		var zeroVal UpdateAnnouncement
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("announcement"))
+	if tmp, ok := rawArgs["announcement"]; ok {
+		return ec.unmarshalNUpdateAnnouncement2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateAnnouncement(ctx, tmp)
+	}
+
+	var zeroVal UpdateAnnouncement
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateGuide_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["guideId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("guideId"))
-		arg0, err = ec.unmarshalNGuideID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateGuide_argsGuideID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["guideId"] = arg0
-	var arg1 UpdateGuide
-	if tmp, ok := rawArgs["guide"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("guide"))
-		arg1, err = ec.unmarshalNUpdateGuide2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateGuide(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_updateGuide_argsGuide(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["guide"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_updateGuide_argsGuideID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["guideId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_updateModCompatibility_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("guideId"))
+	if tmp, ok := rawArgs["guideId"]; ok {
+		return ec.unmarshalNGuideID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateGuide_argsGuide(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (UpdateGuide, error) {
+	if _, ok := rawArgs["guide"]; !ok {
+		var zeroVal UpdateGuide
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("guide"))
+	if tmp, ok := rawArgs["guide"]; ok {
+		return ec.unmarshalNUpdateGuide2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateGuide(ctx, tmp)
+	}
+
+	var zeroVal UpdateGuide
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateModCompatibility_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateModCompatibility_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
-	var arg1 CompatibilityInfoInput
-	if tmp, ok := rawArgs["compatibility"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("compatibility"))
-		arg1, err = ec.unmarshalNCompatibilityInfoInput2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_updateModCompatibility_argsCompatibility(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["compatibility"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_updateModCompatibility_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_updateMod_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
 	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateModCompatibility_argsCompatibility(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (CompatibilityInfoInput, error) {
+	if _, ok := rawArgs["compatibility"]; !ok {
+		var zeroVal CompatibilityInfoInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("compatibility"))
+	if tmp, ok := rawArgs["compatibility"]; ok {
+		return ec.unmarshalNCompatibilityInfoInput2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx, tmp)
+	}
+
+	var zeroVal CompatibilityInfoInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateMod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateMod_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
-	var arg1 UpdateMod
-	if tmp, ok := rawArgs["mod"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mod"))
-		arg1, err = ec.unmarshalNUpdateMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateMod(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_updateMod_argsMod(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["mod"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_updateMod_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_updateMultipleModCompatibilities_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
+	if tmp, ok := rawArgs["modId"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateMod_argsMod(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (UpdateMod, error) {
+	if _, ok := rawArgs["mod"]; !ok {
+		var zeroVal UpdateMod
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("mod"))
+	if tmp, ok := rawArgs["mod"]; ok {
+		return ec.unmarshalNUpdateMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateMod(ctx, tmp)
+	}
+
+	var zeroVal UpdateMod
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateMultipleModCompatibilities_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 []string
-	if tmp, ok := rawArgs["modIDs"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modIDs"))
-		arg0, err = ec.unmarshalNModID2ᚕstringᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateMultipleModCompatibilities_argsModIDs(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modIDs"] = arg0
-	var arg1 CompatibilityInfoInput
-	if tmp, ok := rawArgs["compatibility"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("compatibility"))
-		arg1, err = ec.unmarshalNCompatibilityInfoInput2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_updateMultipleModCompatibilities_argsCompatibility(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["compatibility"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_updateMultipleModCompatibilities_argsModIDs(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]string, error) {
+	if _, ok := rawArgs["modIDs"]; !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_updateSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modIDs"))
+	if tmp, ok := rawArgs["modIDs"]; ok {
+		return ec.unmarshalNModID2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateMultipleModCompatibilities_argsCompatibility(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (CompatibilityInfoInput, error) {
+	if _, ok := rawArgs["compatibility"]; !ok {
+		var zeroVal CompatibilityInfoInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("compatibility"))
+	if tmp, ok := rawArgs["compatibility"]; ok {
+		return ec.unmarshalNCompatibilityInfoInput2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx, tmp)
+	}
+
+	var zeroVal CompatibilityInfoInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNSatisfactoryVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateSatisfactoryVersion_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["id"] = arg0
-	var arg1 UpdateSatisfactoryVersion
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNUpdateSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSatisfactoryVersion(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_updateSatisfactoryVersion_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_updateSatisfactoryVersion_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_updateTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNSatisfactoryVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSatisfactoryVersion_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (UpdateSatisfactoryVersion, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal UpdateSatisfactoryVersion
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUpdateSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSatisfactoryVersion(ctx, tmp)
+	}
+
+	var zeroVal UpdateSatisfactoryVersion
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateTag_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["tagID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagID"))
-		arg0, err = ec.unmarshalNTagID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateTag_argsTagID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["tagID"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["NewName"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("NewName"))
-		arg1, err = ec.unmarshalNTagName2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_updateTag_argsNewName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["NewName"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["description"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg2, err := ec.field_Mutation_updateTag_argsDescription(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["description"] = arg2
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_updateTag_argsTagID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["tagID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("tagID"))
+	if tmp, ok := rawArgs["tagID"]; ok {
+		return ec.unmarshalNTagID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateTag_argsNewName(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["NewName"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("NewName"))
+	if tmp, ok := rawArgs["NewName"]; ok {
+		return ec.unmarshalNTagName2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateTag_argsDescription(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["description"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+	if tmp, ok := rawArgs["description"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["userId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
-		arg0, err = ec.unmarshalNUserID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateUser_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["userId"] = arg0
-	var arg1 UpdateUser
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNUpdateUser2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUser(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_updateUser_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_updateUser_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["userId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_updateVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
+		return ec.unmarshalNUserID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUser_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (UpdateUser, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal UpdateUser
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUpdateUser2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUser(ctx, tmp)
+	}
+
+	var zeroVal UpdateUser
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["versionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
-		arg0, err = ec.unmarshalNVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateVersion_argsVersionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["versionId"] = arg0
-	var arg1 UpdateVersion
-	if tmp, ok := rawArgs["version"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
-		arg1, err = ec.unmarshalNUpdateVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateVersion(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_updateVersion_argsVersion(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["version"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_updateVersion_argsVersionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["versionId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_uploadVersionPart_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
+	if tmp, ok := rawArgs["versionId"]; ok {
+		return ec.unmarshalNVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateVersion_argsVersion(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (UpdateVersion, error) {
+	if _, ok := rawArgs["version"]; !ok {
+		var zeroVal UpdateVersion
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+	if tmp, ok := rawArgs["version"]; ok {
+		return ec.unmarshalNUpdateVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateVersion(ctx, tmp)
+	}
+
+	var zeroVal UpdateVersion
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_uploadVersionPart_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_uploadVersionPart_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["versionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
-		arg1, err = ec.unmarshalNVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Mutation_uploadVersionPart_argsVersionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["versionId"] = arg1
-	var arg2 int
-	if tmp, ok := rawArgs["part"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("part"))
-		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg2, err := ec.field_Mutation_uploadVersionPart_argsPart(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["part"] = arg2
-	var arg3 graphql.Upload
-	if tmp, ok := rawArgs["file"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
-		arg3, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg3, err := ec.field_Mutation_uploadVersionPart_argsFile(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["file"] = arg3
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_uploadVersionPart_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
+	if tmp, ok := rawArgs["modId"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_uploadVersionPart_argsVersionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["versionId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
+	if tmp, ok := rawArgs["versionId"]; ok {
+		return ec.unmarshalNVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_uploadVersionPart_argsPart(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (int, error) {
+	if _, ok := rawArgs["part"]; !ok {
+		var zeroVal int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("part"))
+	if tmp, ok := rawArgs["part"]; ok {
+		return ec.unmarshalNInt2int(ctx, tmp)
+	}
+
+	var zeroVal int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_uploadVersionPart_argsFile(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (graphql.Upload, error) {
+	if _, ok := rawArgs["file"]; !ok {
+		var zeroVal graphql.Upload
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
+	if tmp, ok := rawArgs["file"]; ok {
+		return ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
+	}
+
+	var zeroVal graphql.Upload
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query___type_argsName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["name"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query___type_argsName(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["name"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_checkVersionUploadState_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+	if tmp, ok := rawArgs["name"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_checkVersionUploadState_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_checkVersionUploadState_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["versionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
-		arg1, err = ec.unmarshalNVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Query_checkVersionUploadState_argsVersionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["versionId"] = arg1
 	return args, nil
 }
+func (ec *executionContext) field_Query_checkVersionUploadState_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getAnnouncement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
+	if tmp, ok := rawArgs["modId"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_checkVersionUploadState_argsVersionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["versionId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
+	if tmp, ok := rawArgs["versionId"]; ok {
+		return ec.unmarshalNVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getAnnouncement_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["announcementId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("announcementId"))
-		arg0, err = ec.unmarshalNAnnouncementID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getAnnouncement_argsAnnouncementID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["announcementId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getAnnouncement_argsAnnouncementID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["announcementId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getAnnouncementsByImportance_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("announcementId"))
+	if tmp, ok := rawArgs["announcementId"]; ok {
+		return ec.unmarshalNAnnouncementID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getAnnouncementsByImportance_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 AnnouncementImportance
-	if tmp, ok := rawArgs["importance"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("importance"))
-		arg0, err = ec.unmarshalNAnnouncementImportance2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementImportance(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getAnnouncementsByImportance_argsImportance(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["importance"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getAnnouncementsByImportance_argsImportance(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (AnnouncementImportance, error) {
+	if _, ok := rawArgs["importance"]; !ok {
+		var zeroVal AnnouncementImportance
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getGuide_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("importance"))
+	if tmp, ok := rawArgs["importance"]; ok {
+		return ec.unmarshalNAnnouncementImportance2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementImportance(ctx, tmp)
+	}
+
+	var zeroVal AnnouncementImportance
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getGuide_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["guideId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("guideId"))
-		arg0, err = ec.unmarshalNGuideID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getGuide_argsGuideID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["guideId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getGuide_argsGuideID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["guideId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getGuides_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("guideId"))
+	if tmp, ok := rawArgs["guideId"]; ok {
+		return ec.unmarshalNGuideID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getGuides_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOGuideFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getGuides_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getGuides_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getModAssetList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+	if tmp, ok := rawArgs["filter"]; ok {
+		return ec.unmarshalOGuideFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getModAssetList_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modReference"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modReference"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getModAssetList_argsModReference(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modReference"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getModAssetList_argsModReference(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modReference"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getModByIdOrReference_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modReference"))
+	if tmp, ok := rawArgs["modReference"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getModByIdOrReference_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modIdOrReference"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modIdOrReference"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getModByIdOrReference_argsModIDOrReference(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modIdOrReference"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getModByIdOrReference_argsModIDOrReference(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modIdOrReference"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getModByReference_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modIdOrReference"))
+	if tmp, ok := rawArgs["modIdOrReference"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getModByReference_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modReference"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modReference"))
-		arg0, err = ec.unmarshalNModReference2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getModByReference_argsModReference(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modReference"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getModByReference_argsModReference(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modReference"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getMod_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modReference"))
+	if tmp, ok := rawArgs["modReference"]; ok {
+		return ec.unmarshalNModReference2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getMod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["modId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
-		arg0, err = ec.unmarshalNModID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getMod_argsModID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["modId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getMod_argsModID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getMods_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modId"))
+	if tmp, ok := rawArgs["modId"]; ok {
+		return ec.unmarshalNModID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getMods_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOModFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getMods_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getMods_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getMyMods_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
 	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOModFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalOModFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getMyMods_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getMyMods_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getMyMods_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getMyUnapprovedMods_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
 	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOModFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalOModFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getMyUnapprovedMods_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getMyUnapprovedMods_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getMyUnapprovedMods_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getMyUnapprovedVersions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
 	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOVersionFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalOModFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getMyUnapprovedVersions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getMyUnapprovedVersions_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getMyUnapprovedVersions_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getMyVersions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
 	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOVersionFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalOVersionFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getMyVersions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getMyVersions_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getMyVersions_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getOAuthOptions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+	if tmp, ok := rawArgs["filter"]; ok {
+		return ec.unmarshalOVersionFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getOAuthOptions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["callback_url"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("callback_url"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getOAuthOptions_argsCallbackURL(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["callback_url"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getOAuthOptions_argsCallbackURL(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["callback_url"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getSMLVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("callback_url"))
+	if tmp, ok := rawArgs["callback_url"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getSMLVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["smlVersionID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("smlVersionID"))
-		arg0, err = ec.unmarshalNSMLVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getSMLVersion_argsSmlVersionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["smlVersionID"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getSMLVersion_argsSmlVersionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["smlVersionID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getSMLVersions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("smlVersionID"))
+	if tmp, ok := rawArgs["smlVersionID"]; ok {
+		return ec.unmarshalNSMLVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getSMLVersions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOSMLVersionFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getSMLVersions_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getSMLVersions_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+	if tmp, ok := rawArgs["filter"]; ok {
+		return ec.unmarshalOSMLVersionFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getSatisfactoryVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNSatisfactoryVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getSatisfactoryVersion_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["id"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getSatisfactoryVersion_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNSatisfactoryVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getTag_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["tagID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagID"))
-		arg0, err = ec.unmarshalNTagID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getTag_argsTagID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["tagID"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getTag_argsTagID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["tagID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getTags_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("tagID"))
+	if tmp, ok := rawArgs["tagID"]; ok {
+		return ec.unmarshalNTagID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getTags_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 *TagFilter
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOTagFilter2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTagFilter(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getTags_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getTags_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*TagFilter, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal *TagFilter
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getUnapprovedMods_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
 	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOModFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalOTagFilter2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTagFilter(ctx, tmp)
+	}
+
+	var zeroVal *TagFilter
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getUnapprovedMods_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getUnapprovedMods_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getUnapprovedMods_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getUnapprovedVersions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
 	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOVersionFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalOModFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getUnapprovedVersions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getUnapprovedVersions_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getUnapprovedVersions_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+	if tmp, ok := rawArgs["filter"]; ok {
+		return ec.unmarshalOVersionFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["userId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
-		arg0, err = ec.unmarshalNUserID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getUser_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["userId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getUser_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["userId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getUsers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
+		return ec.unmarshalNUserID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getUsers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 []string
-	if tmp, ok := rawArgs["userIds"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
-		arg0, err = ec.unmarshalNUserID2ᚕstringᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getUsers_argsUserIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["userIds"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getUsers_argsUserIds(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]string, error) {
+	if _, ok := rawArgs["userIds"]; !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
+	if tmp, ok := rawArgs["userIds"]; ok {
+		return ec.unmarshalNUserID2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["versionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
-		arg0, err = ec.unmarshalNVersionID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getVersion_argsVersionID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["versionId"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getVersion_argsVersionID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["versionId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_getVersions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("versionId"))
+	if tmp, ok := rawArgs["versionId"]; ok {
+		return ec.unmarshalNVersionID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getVersions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOVersionFilter2map(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getVersions_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_getVersions_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (map[string]interface{}, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal map[string]interface{}
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Query_resolveModVersions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 []*ModVersionConstraint
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
 	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalNModVersionConstraint2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModVersionConstraintᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalOVersionFilter2map(ctx, tmp)
+	}
+
+	var zeroVal map[string]interface{}
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_resolveModVersions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_resolveModVersions_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["filter"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Query_resolveModVersions_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]*ModVersionConstraint, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal []*ModVersionConstraint
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+	if tmp, ok := rawArgs["filter"]; ok {
+		return ec.unmarshalNModVersionConstraint2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModVersionConstraintᚄ(ctx, tmp)
+	}
+
+	var zeroVal []*ModVersionConstraint
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field___Directive_args_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 bool
-	if tmp, ok := rawArgs["includeDeprecated"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
-		arg0, err = ec.unmarshalOBoolean2bool(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field___Directive_args_argsIncludeDeprecated(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["includeDeprecated"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field___Directive_args_argsIncludeDeprecated(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*bool, error) {
+	if _, ok := rawArgs["includeDeprecated"]; !ok {
+		var zeroVal *bool
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 bool
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
 	if tmp, ok := rawArgs["includeDeprecated"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
-		arg0, err = ec.unmarshalOBoolean2bool(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+	}
+
+	var zeroVal *bool
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field___Field_args_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field___Field_args_argsIncludeDeprecated(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["includeDeprecated"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field___Field_args_argsIncludeDeprecated(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*bool, error) {
+	if _, ok := rawArgs["includeDeprecated"]; !ok {
+		var zeroVal *bool
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
+	if tmp, ok := rawArgs["includeDeprecated"]; ok {
+		return ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+	}
+
+	var zeroVal *bool
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field___Type_enumValues_argsIncludeDeprecated(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["includeDeprecated"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field___Type_enumValues_argsIncludeDeprecated(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (bool, error) {
+	if _, ok := rawArgs["includeDeprecated"]; !ok {
+		var zeroVal bool
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
+	if tmp, ok := rawArgs["includeDeprecated"]; ok {
+		return ec.unmarshalOBoolean2bool(ctx, tmp)
+	}
+
+	var zeroVal bool
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field___Type_fields_argsIncludeDeprecated(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["includeDeprecated"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field___Type_fields_argsIncludeDeprecated(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (bool, error) {
+	if _, ok := rawArgs["includeDeprecated"]; !ok {
+		var zeroVal bool
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
+	if tmp, ok := rawArgs["includeDeprecated"]; ok {
+		return ec.unmarshalOBoolean2bool(ctx, tmp)
+	}
+
+	var zeroVal bool
+	return zeroVal, nil
 }
 
 // endregion ***************************** args.gotpl *****************************
@@ -4437,7 +5707,7 @@ func (ec *executionContext) _Announcement_id(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -4481,7 +5751,7 @@ func (ec *executionContext) _Announcement_message(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Message, nil
 	})
@@ -4525,7 +5795,7 @@ func (ec *executionContext) _Announcement_importance(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Importance, nil
 	})
@@ -4569,7 +5839,7 @@ func (ec *executionContext) _Compatibility_state(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.State, nil
 	})
@@ -4613,7 +5883,7 @@ func (ec *executionContext) _Compatibility_note(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Note, nil
 	})
@@ -4654,7 +5924,7 @@ func (ec *executionContext) _CompatibilityInfo_EA(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Ea, nil
 	})
@@ -4704,7 +5974,7 @@ func (ec *executionContext) _CompatibilityInfo_EXP(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Exp, nil
 	})
@@ -4754,7 +6024,7 @@ func (ec *executionContext) _CreateVersionResponse_auto_approved(ctx context.Con
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AutoApproved, nil
 	})
@@ -4798,7 +6068,7 @@ func (ec *executionContext) _CreateVersionResponse_version(ctx context.Context, 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Version, nil
 	})
@@ -4881,7 +6151,7 @@ func (ec *executionContext) _GetGuides_guides(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetGuides().Guides(rctx, obj)
 	})
@@ -4947,7 +6217,7 @@ func (ec *executionContext) _GetGuides_count(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetGuides().Count(rctx, obj)
 	})
@@ -4991,7 +6261,7 @@ func (ec *executionContext) _GetMods_mods(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetMods().Mods(rctx, obj)
 	})
@@ -5089,7 +6359,7 @@ func (ec *executionContext) _GetMods_count(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetMods().Count(rctx, obj)
 	})
@@ -5133,7 +6403,7 @@ func (ec *executionContext) _GetMyMods_mods(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetMyMods().Mods(rctx, obj)
 	})
@@ -5231,7 +6501,7 @@ func (ec *executionContext) _GetMyMods_count(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetMyMods().Count(rctx, obj)
 	})
@@ -5275,7 +6545,7 @@ func (ec *executionContext) _GetMyVersions_versions(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetMyVersions().Versions(rctx, obj)
 	})
@@ -5361,7 +6631,7 @@ func (ec *executionContext) _GetMyVersions_count(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetMyVersions().Count(rctx, obj)
 	})
@@ -5405,7 +6675,7 @@ func (ec *executionContext) _GetSMLVersions_sml_versions(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetSMLVersions().SmlVersions(rctx, obj)
 	})
@@ -5475,7 +6745,7 @@ func (ec *executionContext) _GetSMLVersions_count(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetSMLVersions().Count(rctx, obj)
 	})
@@ -5519,7 +6789,7 @@ func (ec *executionContext) _GetVersions_versions(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetVersions().Versions(rctx, obj)
 	})
@@ -5605,7 +6875,7 @@ func (ec *executionContext) _GetVersions_count(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.GetVersions().Count(rctx, obj)
 	})
@@ -5649,7 +6919,7 @@ func (ec *executionContext) _Group_id(ctx context.Context, field graphql.Collect
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -5693,7 +6963,7 @@ func (ec *executionContext) _Group_name(ctx context.Context, field graphql.Colle
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
 	})
@@ -5737,7 +7007,7 @@ func (ec *executionContext) _Guide_id(ctx context.Context, field graphql.Collect
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -5781,7 +7051,7 @@ func (ec *executionContext) _Guide_name(ctx context.Context, field graphql.Colle
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
 	})
@@ -5825,7 +7095,7 @@ func (ec *executionContext) _Guide_short_description(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ShortDescription, nil
 	})
@@ -5869,7 +7139,7 @@ func (ec *executionContext) _Guide_guide(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Guide, nil
 	})
@@ -5913,7 +7183,7 @@ func (ec *executionContext) _Guide_views(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Views, nil
 	})
@@ -5957,7 +7227,7 @@ func (ec *executionContext) _Guide_user_id(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.UserID, nil
 	})
@@ -6001,7 +7271,7 @@ func (ec *executionContext) _Guide_updated_at(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.UpdatedAt, nil
 	})
@@ -6045,7 +7315,7 @@ func (ec *executionContext) _Guide_created_at(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.CreatedAt, nil
 	})
@@ -6089,7 +7359,7 @@ func (ec *executionContext) _Guide_tags(ctx context.Context, field graphql.Colle
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Tags, nil
 	})
@@ -6141,7 +7411,7 @@ func (ec *executionContext) _Guide_user(ctx context.Context, field graphql.Colle
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Guide().User(rctx, obj)
 	})
@@ -6213,7 +7483,7 @@ func (ec *executionContext) _LatestVersions_alpha(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Alpha, nil
 	})
@@ -6296,7 +7566,7 @@ func (ec *executionContext) _LatestVersions_beta(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Beta, nil
 	})
@@ -6379,7 +7649,7 @@ func (ec *executionContext) _LatestVersions_release(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Release, nil
 	})
@@ -6462,7 +7732,7 @@ func (ec *executionContext) _Mod_id(ctx context.Context, field graphql.Collected
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -6506,7 +7776,7 @@ func (ec *executionContext) _Mod_name(ctx context.Context, field graphql.Collect
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
 	})
@@ -6550,7 +7820,7 @@ func (ec *executionContext) _Mod_short_description(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ShortDescription, nil
 	})
@@ -6594,7 +7864,7 @@ func (ec *executionContext) _Mod_full_description(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.FullDescription, nil
 	})
@@ -6635,7 +7905,7 @@ func (ec *executionContext) _Mod_logo(ctx context.Context, field graphql.Collect
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Logo, nil
 	})
@@ -6676,7 +7946,7 @@ func (ec *executionContext) _Mod_logo_thumbhash(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.LogoThumbhash, nil
 	})
@@ -6717,7 +7987,7 @@ func (ec *executionContext) _Mod_source_url(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.SourceURL, nil
 	})
@@ -6758,7 +8028,7 @@ func (ec *executionContext) _Mod_creator_id(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.CreatorID, nil
 	})
@@ -6802,7 +8072,7 @@ func (ec *executionContext) _Mod_approved(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Approved, nil
 	})
@@ -6846,7 +8116,7 @@ func (ec *executionContext) _Mod_views(ctx context.Context, field graphql.Collec
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Views, nil
 	})
@@ -6890,7 +8160,7 @@ func (ec *executionContext) _Mod_downloads(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Downloads, nil
 	})
@@ -6934,7 +8204,7 @@ func (ec *executionContext) _Mod_hotness(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Hotness, nil
 	})
@@ -6978,7 +8248,7 @@ func (ec *executionContext) _Mod_popularity(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Popularity, nil
 	})
@@ -7022,7 +8292,7 @@ func (ec *executionContext) _Mod_updated_at(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.UpdatedAt, nil
 	})
@@ -7066,7 +8336,7 @@ func (ec *executionContext) _Mod_created_at(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.CreatedAt, nil
 	})
@@ -7110,7 +8380,7 @@ func (ec *executionContext) _Mod_last_version_date(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.LastVersionDate, nil
 	})
@@ -7151,7 +8421,7 @@ func (ec *executionContext) _Mod_mod_reference(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ModReference, nil
 	})
@@ -7195,7 +8465,7 @@ func (ec *executionContext) _Mod_hidden(ctx context.Context, field graphql.Colle
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Hidden, nil
 	})
@@ -7239,7 +8509,7 @@ func (ec *executionContext) _Mod_tags(ctx context.Context, field graphql.Collect
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Tags, nil
 	})
@@ -7288,7 +8558,7 @@ func (ec *executionContext) _Mod_compatibility(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Compatibility, nil
 	})
@@ -7335,7 +8605,7 @@ func (ec *executionContext) _Mod_toggle_network_use(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ToggleNetworkUse, nil
 	})
@@ -7379,7 +8649,7 @@ func (ec *executionContext) _Mod_toggle_explicit_content(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ToggleExplicitContent, nil
 	})
@@ -7423,7 +8693,7 @@ func (ec *executionContext) _Mod_authors(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mod().Authors(rctx, obj)
 	})
@@ -7479,7 +8749,7 @@ func (ec *executionContext) _Mod_version(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mod().Version(rctx, obj, fc.Args["version"].(string))
 	})
@@ -7573,7 +8843,7 @@ func (ec *executionContext) _Mod_versions(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mod().Versions(rctx, obj, fc.Args["filter"].(map[string]interface{}))
 	})
@@ -7670,7 +8940,7 @@ func (ec *executionContext) _Mod_latestVersions(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mod().LatestVersions(rctx, obj)
 	})
@@ -7722,7 +8992,7 @@ func (ec *executionContext) _ModVersion_id(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -7766,7 +9036,7 @@ func (ec *executionContext) _ModVersion_mod_reference(ctx context.Context, field
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ModReference, nil
 	})
@@ -7810,7 +9080,7 @@ func (ec *executionContext) _ModVersion_versions(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Versions, nil
 	})
@@ -7896,14 +9166,16 @@ func (ec *executionContext) _Mutation_discourseSSO(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DiscourseSso(rctx, fc.Args["sso"].(string), fc.Args["sig"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *string
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
@@ -7968,20 +9240,23 @@ func (ec *executionContext) _Mutation_createAnnouncement(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateAnnouncement(rctx, fc.Args["announcement"].(NewAnnouncement))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanEditAnnouncements == nil {
-				return nil, errors.New("directive canEditAnnouncements is not implemented")
+				var zeroVal *Announcement
+				return zeroVal, errors.New("directive canEditAnnouncements is not implemented")
 			}
 			return ec.directives.CanEditAnnouncements(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *Announcement
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -8054,20 +9329,23 @@ func (ec *executionContext) _Mutation_updateAnnouncement(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateAnnouncement(rctx, fc.Args["announcementId"].(string), fc.Args["announcement"].(UpdateAnnouncement))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanEditAnnouncements == nil {
-				return nil, errors.New("directive canEditAnnouncements is not implemented")
+				var zeroVal *Announcement
+				return zeroVal, errors.New("directive canEditAnnouncements is not implemented")
 			}
 			return ec.directives.CanEditAnnouncements(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *Announcement
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -8143,20 +9421,23 @@ func (ec *executionContext) _Mutation_deleteAnnouncement(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DeleteAnnouncement(rctx, fc.Args["announcementId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanEditAnnouncements == nil {
-				return nil, errors.New("directive canEditAnnouncements is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditAnnouncements is not implemented")
 			}
 			return ec.directives.CanEditAnnouncements(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -8224,24 +9505,28 @@ func (ec *executionContext) _Mutation_updateModCompatibility(ctx context.Context
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateModCompatibility(rctx, fc.Args["modId"].(string), fc.Args["compatibility"].(CompatibilityInfoInput))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalOString2ᚖstring(ctx, "modId")
 			if err != nil {
-				return nil, err
+				var zeroVal bool
+				return zeroVal, err
 			}
 			if ec.directives.CanEditModCompatibility == nil {
-				return nil, errors.New("directive canEditModCompatibility is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditModCompatibility is not implemented")
 			}
 			return ec.directives.CanEditModCompatibility(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -8309,20 +9594,23 @@ func (ec *executionContext) _Mutation_updateMultipleModCompatibilities(ctx conte
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateMultipleModCompatibilities(rctx, fc.Args["modIDs"].([]string), fc.Args["compatibility"].(CompatibilityInfoInput))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanEditModCompatibility == nil {
-				return nil, errors.New("directive canEditModCompatibility is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditModCompatibility is not implemented")
 			}
 			return ec.directives.CanEditModCompatibility(ctx, nil, directive0, nil)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -8390,14 +9678,16 @@ func (ec *executionContext) _Mutation_createGuide(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateGuide(rctx, fc.Args["guide"].(NewGuide))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *Guide
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
@@ -8484,24 +9774,28 @@ func (ec *executionContext) _Mutation_updateGuide(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateGuide(rctx, fc.Args["guideId"].(string), fc.Args["guide"].(UpdateGuide))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "guideId")
 			if err != nil {
-				return nil, err
+				var zeroVal *Guide
+				return zeroVal, err
 			}
 			if ec.directives.CanEditGuide == nil {
-				return nil, errors.New("directive canEditGuide is not implemented")
+				var zeroVal *Guide
+				return zeroVal, errors.New("directive canEditGuide is not implemented")
 			}
 			return ec.directives.CanEditGuide(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *Guide
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -8591,24 +9885,28 @@ func (ec *executionContext) _Mutation_deleteGuide(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DeleteGuide(rctx, fc.Args["guideId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "guideId")
 			if err != nil {
-				return nil, err
+				var zeroVal bool
+				return zeroVal, err
 			}
 			if ec.directives.CanEditGuide == nil {
-				return nil, errors.New("directive canEditGuide is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditGuide is not implemented")
 			}
 			return ec.directives.CanEditGuide(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -8676,14 +9974,16 @@ func (ec *executionContext) _Mutation_createMod(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateMod(rctx, fc.Args["mod"].(NewMod))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *Mod
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
@@ -8802,24 +10102,28 @@ func (ec *executionContext) _Mutation_updateMod(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateMod(rctx, fc.Args["modId"].(string), fc.Args["mod"].(UpdateMod))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "modId")
 			if err != nil {
-				return nil, err
+				var zeroVal *Mod
+				return zeroVal, err
 			}
 			if ec.directives.CanEditMod == nil {
-				return nil, errors.New("directive canEditMod is not implemented")
+				var zeroVal *Mod
+				return zeroVal, errors.New("directive canEditMod is not implemented")
 			}
 			return ec.directives.CanEditMod(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *Mod
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -8941,24 +10245,28 @@ func (ec *executionContext) _Mutation_deleteMod(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DeleteMod(rctx, fc.Args["modId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "modId")
 			if err != nil {
-				return nil, err
+				var zeroVal bool
+				return zeroVal, err
 			}
 			if ec.directives.CanEditMod == nil {
-				return nil, errors.New("directive canEditMod is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditMod is not implemented")
 			}
 			return ec.directives.CanEditMod(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -9026,20 +10334,23 @@ func (ec *executionContext) _Mutation_approveMod(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().ApproveMod(rctx, fc.Args["modId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanApproveMods == nil {
-				return nil, errors.New("directive canApproveMods is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canApproveMods is not implemented")
 			}
 			return ec.directives.CanApproveMods(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -9107,20 +10418,23 @@ func (ec *executionContext) _Mutation_denyMod(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DenyMod(rctx, fc.Args["modId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanApproveMods == nil {
-				return nil, errors.New("directive canApproveMods is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canApproveMods is not implemented")
 			}
 			return ec.directives.CanApproveMods(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -9188,20 +10502,23 @@ func (ec *executionContext) _Mutation_createSatisfactoryVersion(ctx context.Cont
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateSatisfactoryVersion(rctx, fc.Args["input"].(NewSatisfactoryVersion))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *SatisfactoryVersion
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanEditSatisfactoryVersions == nil {
-				return nil, errors.New("directive canEditSatisfactoryVersions is not implemented")
+				var zeroVal *SatisfactoryVersion
+				return zeroVal, errors.New("directive canEditSatisfactoryVersions is not implemented")
 			}
 			return ec.directives.CanEditSatisfactoryVersions(ctx, nil, directive1)
 		}
@@ -9277,20 +10594,23 @@ func (ec *executionContext) _Mutation_updateSatisfactoryVersion(ctx context.Cont
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateSatisfactoryVersion(rctx, fc.Args["id"].(string), fc.Args["input"].(UpdateSatisfactoryVersion))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *SatisfactoryVersion
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanEditSatisfactoryVersions == nil {
-				return nil, errors.New("directive canEditSatisfactoryVersions is not implemented")
+				var zeroVal *SatisfactoryVersion
+				return zeroVal, errors.New("directive canEditSatisfactoryVersions is not implemented")
 			}
 			return ec.directives.CanEditSatisfactoryVersions(ctx, nil, directive1)
 		}
@@ -9366,20 +10686,23 @@ func (ec *executionContext) _Mutation_deleteSatisfactoryVersion(ctx context.Cont
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DeleteSatisfactoryVersion(rctx, fc.Args["id"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanEditSatisfactoryVersions == nil {
-				return nil, errors.New("directive canEditSatisfactoryVersions is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditSatisfactoryVersions is not implemented")
 			}
 			return ec.directives.CanEditSatisfactoryVersions(ctx, nil, directive1)
 		}
@@ -9447,20 +10770,23 @@ func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateTag(rctx, fc.Args["tagName"].(string), fc.Args["description"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanManageTags == nil {
-				return nil, errors.New("directive canManageTags is not implemented")
+				var zeroVal *Tag
+				return zeroVal, errors.New("directive canManageTags is not implemented")
 			}
 			return ec.directives.CanManageTags(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *Tag
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -9533,20 +10859,23 @@ func (ec *executionContext) _Mutation_createMultipleTags(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateMultipleTags(rctx, fc.Args["tagNames"].([]*NewTag))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanManageTags == nil {
-				return nil, errors.New("directive canManageTags is not implemented")
+				var zeroVal []*Tag
+				return zeroVal, errors.New("directive canManageTags is not implemented")
 			}
 			return ec.directives.CanManageTags(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal []*Tag
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -9622,20 +10951,23 @@ func (ec *executionContext) _Mutation_updateTag(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateTag(rctx, fc.Args["tagID"].(string), fc.Args["NewName"].(string), fc.Args["description"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanManageTags == nil {
-				return nil, errors.New("directive canManageTags is not implemented")
+				var zeroVal *Tag
+				return zeroVal, errors.New("directive canManageTags is not implemented")
 			}
 			return ec.directives.CanManageTags(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *Tag
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -9711,20 +11043,23 @@ func (ec *executionContext) _Mutation_deleteTag(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DeleteTag(rctx, fc.Args["tagID"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanManageTags == nil {
-				return nil, errors.New("directive canManageTags is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canManageTags is not implemented")
 			}
 			return ec.directives.CanManageTags(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -9792,28 +11127,33 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["userId"].(string), fc.Args["input"].(UpdateUser))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "userId")
 			if err != nil {
-				return nil, err
+				var zeroVal *User
+				return zeroVal, err
 			}
 			object, err := ec.unmarshalNBoolean2bool(ctx, false)
 			if err != nil {
-				return nil, err
+				var zeroVal *User
+				return zeroVal, err
 			}
 			if ec.directives.CanEditUser == nil {
-				return nil, errors.New("directive canEditUser is not implemented")
+				var zeroVal *User
+				return zeroVal, errors.New("directive canEditUser is not implemented")
 			}
 			return ec.directives.CanEditUser(ctx, nil, directive0, field, object)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *User
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -9909,14 +11249,16 @@ func (ec *executionContext) _Mutation_logout(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().Logout(rctx)
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
@@ -9973,14 +11315,16 @@ func (ec *executionContext) _Mutation_oAuthGithub(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().OAuthGithub(rctx, fc.Args["code"].(string), fc.Args["state"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsNotLoggedIn == nil {
-				return nil, errors.New("directive isNotLoggedIn is not implemented")
+				var zeroVal *UserSession
+				return zeroVal, errors.New("directive isNotLoggedIn is not implemented")
 			}
 			return ec.directives.IsNotLoggedIn(ctx, nil, directive0)
 		}
@@ -10049,14 +11393,16 @@ func (ec *executionContext) _Mutation_oAuthGoogle(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().OAuthGoogle(rctx, fc.Args["code"].(string), fc.Args["state"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsNotLoggedIn == nil {
-				return nil, errors.New("directive isNotLoggedIn is not implemented")
+				var zeroVal *UserSession
+				return zeroVal, errors.New("directive isNotLoggedIn is not implemented")
 			}
 			return ec.directives.IsNotLoggedIn(ctx, nil, directive0)
 		}
@@ -10125,14 +11471,16 @@ func (ec *executionContext) _Mutation_oAuthFacebook(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().OAuthFacebook(rctx, fc.Args["code"].(string), fc.Args["state"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsNotLoggedIn == nil {
-				return nil, errors.New("directive isNotLoggedIn is not implemented")
+				var zeroVal *UserSession
+				return zeroVal, errors.New("directive isNotLoggedIn is not implemented")
 			}
 			return ec.directives.IsNotLoggedIn(ctx, nil, directive0)
 		}
@@ -10201,24 +11549,28 @@ func (ec *executionContext) _Mutation_createVersion(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateVersion(rctx, fc.Args["modId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "modId")
 			if err != nil {
-				return nil, err
+				var zeroVal string
+				return zeroVal, err
 			}
 			if ec.directives.CanEditMod == nil {
-				return nil, errors.New("directive canEditMod is not implemented")
+				var zeroVal string
+				return zeroVal, errors.New("directive canEditMod is not implemented")
 			}
 			return ec.directives.CanEditMod(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal string
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -10286,24 +11638,28 @@ func (ec *executionContext) _Mutation_uploadVersionPart(ctx context.Context, fie
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UploadVersionPart(rctx, fc.Args["modId"].(string), fc.Args["versionId"].(string), fc.Args["part"].(int), fc.Args["file"].(graphql.Upload))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "modId")
 			if err != nil {
-				return nil, err
+				var zeroVal bool
+				return zeroVal, err
 			}
 			if ec.directives.CanEditMod == nil {
-				return nil, errors.New("directive canEditMod is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditMod is not implemented")
 			}
 			return ec.directives.CanEditMod(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -10371,24 +11727,28 @@ func (ec *executionContext) _Mutation_finalizeCreateVersion(ctx context.Context,
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().FinalizeCreateVersion(rctx, fc.Args["modId"].(string), fc.Args["versionId"].(string), fc.Args["version"].(NewVersion))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "modId")
 			if err != nil {
-				return nil, err
+				var zeroVal bool
+				return zeroVal, err
 			}
 			if ec.directives.CanEditMod == nil {
-				return nil, errors.New("directive canEditMod is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditMod is not implemented")
 			}
 			return ec.directives.CanEditMod(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -10456,24 +11816,28 @@ func (ec *executionContext) _Mutation_updateVersion(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateVersion(rctx, fc.Args["versionId"].(string), fc.Args["version"].(UpdateVersion))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "versionId")
 			if err != nil {
-				return nil, err
+				var zeroVal *Version
+				return zeroVal, err
 			}
 			if ec.directives.CanEditVersion == nil {
-				return nil, errors.New("directive canEditVersion is not implemented")
+				var zeroVal *Version
+				return zeroVal, errors.New("directive canEditVersion is not implemented")
 			}
 			return ec.directives.CanEditVersion(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *Version
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -10583,24 +11947,28 @@ func (ec *executionContext) _Mutation_deleteVersion(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DeleteVersion(rctx, fc.Args["versionId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "versionId")
 			if err != nil {
-				return nil, err
+				var zeroVal bool
+				return zeroVal, err
 			}
 			if ec.directives.CanEditVersion == nil {
-				return nil, errors.New("directive canEditVersion is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditVersion is not implemented")
 			}
 			return ec.directives.CanEditVersion(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -10668,20 +12036,23 @@ func (ec *executionContext) _Mutation_approveVersion(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().ApproveVersion(rctx, fc.Args["versionId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanApproveVersions == nil {
-				return nil, errors.New("directive canApproveVersions is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canApproveVersions is not implemented")
 			}
 			return ec.directives.CanApproveVersions(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -10749,20 +12120,23 @@ func (ec *executionContext) _Mutation_denyVersion(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DenyVersion(rctx, fc.Args["versionId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanApproveVersions == nil {
-				return nil, errors.New("directive canApproveVersions is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive canApproveVersions is not implemented")
 			}
 			return ec.directives.CanApproveVersions(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -10830,7 +12204,7 @@ func (ec *executionContext) _OAuthOptions_github(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Github, nil
 	})
@@ -10874,7 +12248,7 @@ func (ec *executionContext) _OAuthOptions_google(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Google, nil
 	})
@@ -10918,7 +12292,7 @@ func (ec *executionContext) _OAuthOptions_facebook(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Facebook, nil
 	})
@@ -10962,7 +12336,7 @@ func (ec *executionContext) _Query_getOAuthOptions(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetOAuthOptions(rctx, fc.Args["callback_url"].(string))
 	})
@@ -11025,7 +12399,7 @@ func (ec *executionContext) _Query_getAnnouncement(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetAnnouncement(rctx, fc.Args["announcementId"].(string))
 	})
@@ -11085,7 +12459,7 @@ func (ec *executionContext) _Query_getAnnouncements(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetAnnouncements(rctx)
 	})
@@ -11137,7 +12511,7 @@ func (ec *executionContext) _Query_getAnnouncementsByImportance(ctx context.Cont
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetAnnouncementsByImportance(rctx, fc.Args["importance"].(AnnouncementImportance))
 	})
@@ -11200,7 +12574,7 @@ func (ec *executionContext) _Query_getGuide(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetGuide(rctx, fc.Args["guideId"].(string))
 	})
@@ -11274,7 +12648,7 @@ func (ec *executionContext) _Query_getGuides(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetGuides(rctx, fc.Args["filter"].(map[string]interface{}))
 	})
@@ -11335,7 +12709,7 @@ func (ec *executionContext) _Query_getMod(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetMod(rctx, fc.Args["modId"].(string))
 	})
@@ -11441,7 +12815,7 @@ func (ec *executionContext) _Query_getModByReference(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetModByReference(rctx, fc.Args["modReference"].(string))
 	})
@@ -11547,7 +12921,7 @@ func (ec *executionContext) _Query_getModByIdOrReference(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetModByIDOrReference(rctx, fc.Args["modIdOrReference"].(string))
 	})
@@ -11653,7 +13027,7 @@ func (ec *executionContext) _Query_getMods(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetMods(rctx, fc.Args["filter"].(map[string]interface{}))
 	})
@@ -11714,20 +13088,23 @@ func (ec *executionContext) _Query_getUnapprovedMods(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().GetUnapprovedMods(rctx, fc.Args["filter"].(map[string]interface{}))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanApproveMods == nil {
-				return nil, errors.New("directive canApproveMods is not implemented")
+				var zeroVal *GetMods
+				return zeroVal, errors.New("directive canApproveMods is not implemented")
 			}
 			return ec.directives.CanApproveMods(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *GetMods
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -11801,14 +13178,16 @@ func (ec *executionContext) _Query_getMyMods(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().GetMyMods(rctx, fc.Args["filter"].(map[string]interface{}))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *GetMyMods
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
@@ -11882,14 +13261,16 @@ func (ec *executionContext) _Query_getMyUnapprovedMods(ctx context.Context, fiel
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().GetMyUnapprovedMods(rctx, fc.Args["filter"].(map[string]interface{}))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *GetMyMods
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
@@ -11963,7 +13344,7 @@ func (ec *executionContext) _Query_resolveModVersions(ctx context.Context, field
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().ResolveModVersions(rctx, fc.Args["filter"].([]*ModVersionConstraint))
 	})
@@ -12026,7 +13407,7 @@ func (ec *executionContext) _Query_getModAssetList(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetModAssetList(rctx, fc.Args["modReference"].(string))
 	})
@@ -12081,7 +13462,7 @@ func (ec *executionContext) _Query_getSatisfactoryVersions(ctx context.Context, 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetSatisfactoryVersions(rctx)
 	})
@@ -12133,7 +13514,7 @@ func (ec *executionContext) _Query_getSatisfactoryVersion(ctx context.Context, f
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetSatisfactoryVersion(rctx, fc.Args["id"].(string))
 	})
@@ -12193,7 +13574,7 @@ func (ec *executionContext) _Query_getSMLVersion(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetSMLVersion(rctx, fc.Args["smlVersionID"].(string))
 	})
@@ -12271,7 +13652,7 @@ func (ec *executionContext) _Query_getSMLVersions(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetSMLVersions(rctx, fc.Args["filter"].(map[string]interface{}))
 	})
@@ -12332,7 +13713,7 @@ func (ec *executionContext) _Query_getTag(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetTag(rctx, fc.Args["tagID"].(string))
 	})
@@ -12392,7 +13773,7 @@ func (ec *executionContext) _Query_getTags(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetTags(rctx, fc.Args["filter"].(*TagFilter))
 	})
@@ -12455,14 +13836,16 @@ func (ec *executionContext) _Query_getMe(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().GetMe(rctx)
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *User
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
@@ -12544,7 +13927,7 @@ func (ec *executionContext) _Query_getUser(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetUser(rctx, fc.Args["userId"].(string))
 	})
@@ -12624,7 +14007,7 @@ func (ec *executionContext) _Query_getUsers(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetUsers(rctx, fc.Args["userIds"].([]string))
 	})
@@ -12707,7 +14090,7 @@ func (ec *executionContext) _Query_getVersion(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetVersion(rctx, fc.Args["versionId"].(string))
 	})
@@ -12801,7 +14184,7 @@ func (ec *executionContext) _Query_getVersions(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().GetVersions(rctx, fc.Args["filter"].(map[string]interface{}))
 	})
@@ -12862,20 +14245,23 @@ func (ec *executionContext) _Query_getUnapprovedVersions(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().GetUnapprovedVersions(rctx, fc.Args["filter"].(map[string]interface{}))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.CanApproveVersions == nil {
-				return nil, errors.New("directive canApproveVersions is not implemented")
+				var zeroVal *GetVersions
+				return zeroVal, errors.New("directive canApproveVersions is not implemented")
 			}
 			return ec.directives.CanApproveVersions(ctx, nil, directive0)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *GetVersions
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -12949,24 +14335,28 @@ func (ec *executionContext) _Query_checkVersionUploadState(ctx context.Context, 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().CheckVersionUploadState(rctx, fc.Args["modId"].(string), fc.Args["versionId"].(string))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "modId")
 			if err != nil {
-				return nil, err
+				var zeroVal *CreateVersionResponse
+				return zeroVal, err
 			}
 			if ec.directives.CanEditMod == nil {
-				return nil, errors.New("directive canEditMod is not implemented")
+				var zeroVal *CreateVersionResponse
+				return zeroVal, errors.New("directive canEditMod is not implemented")
 			}
 			return ec.directives.CanEditMod(ctx, nil, directive0, field)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *CreateVersionResponse
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive1)
 		}
@@ -13037,14 +14427,16 @@ func (ec *executionContext) _Query_getMyVersions(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().GetMyVersions(rctx, fc.Args["filter"].(map[string]interface{}))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *GetMyVersions
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
@@ -13118,14 +14510,16 @@ func (ec *executionContext) _Query_getMyUnapprovedVersions(ctx context.Context, 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().GetMyUnapprovedVersions(rctx, fc.Args["filter"].(map[string]interface{}))
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *GetMyVersions
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, nil, directive0)
 		}
@@ -13199,7 +14593,7 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.introspectType(fc.Args["name"].(string))
 	})
@@ -13229,6 +14623,8 @@ func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -13241,8 +14637,8 @@ func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -13273,7 +14669,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.introspectSchema()
 	})
@@ -13328,7 +14724,7 @@ func (ec *executionContext) _SMLVersion_id(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -13372,7 +14768,7 @@ func (ec *executionContext) _SMLVersion_version(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Version, nil
 	})
@@ -13416,7 +14812,7 @@ func (ec *executionContext) _SMLVersion_satisfactory_version(ctx context.Context
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.SatisfactoryVersion, nil
 	})
@@ -13460,7 +14856,7 @@ func (ec *executionContext) _SMLVersion_stability(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Stability, nil
 	})
@@ -13504,7 +14900,7 @@ func (ec *executionContext) _SMLVersion_link(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.SMLVersion().Link(rctx, obj)
 	})
@@ -13548,7 +14944,7 @@ func (ec *executionContext) _SMLVersion_targets(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Targets, nil
 	})
@@ -13600,7 +14996,7 @@ func (ec *executionContext) _SMLVersion_changelog(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Changelog, nil
 	})
@@ -13644,7 +15040,7 @@ func (ec *executionContext) _SMLVersion_date(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Date, nil
 	})
@@ -13688,7 +15084,7 @@ func (ec *executionContext) _SMLVersion_bootstrap_version(ctx context.Context, f
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.SMLVersion().BootstrapVersion(rctx, obj)
 	})
@@ -13729,7 +15125,7 @@ func (ec *executionContext) _SMLVersion_engine_version(ctx context.Context, fiel
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.SMLVersion().EngineVersion(rctx, obj)
 	})
@@ -13773,7 +15169,7 @@ func (ec *executionContext) _SMLVersion_updated_at(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.UpdatedAt, nil
 	})
@@ -13817,7 +15213,7 @@ func (ec *executionContext) _SMLVersion_created_at(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.CreatedAt, nil
 	})
@@ -13861,7 +15257,7 @@ func (ec *executionContext) _SMLVersionTarget_VersionID(ctx context.Context, fie
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.VersionID, nil
 	})
@@ -13905,7 +15301,7 @@ func (ec *executionContext) _SMLVersionTarget_targetName(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.TargetName, nil
 	})
@@ -13949,7 +15345,7 @@ func (ec *executionContext) _SMLVersionTarget_link(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.SMLVersionTarget().Link(rctx, obj)
 	})
@@ -13993,7 +15389,7 @@ func (ec *executionContext) _SatisfactoryVersion_id(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -14037,7 +15433,7 @@ func (ec *executionContext) _SatisfactoryVersion_version(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Version, nil
 	})
@@ -14081,7 +15477,7 @@ func (ec *executionContext) _SatisfactoryVersion_engine_version(ctx context.Cont
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EngineVersion, nil
 	})
@@ -14125,7 +15521,7 @@ func (ec *executionContext) _Tag_id(ctx context.Context, field graphql.Collected
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -14169,7 +15565,7 @@ func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.Collect
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
 	})
@@ -14213,7 +15609,7 @@ func (ec *executionContext) _Tag_description(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description, nil
 	})
@@ -14257,7 +15653,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -14301,28 +15697,33 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return obj.Email, nil
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "ID")
 			if err != nil {
-				return nil, err
+				var zeroVal *string
+				return zeroVal, err
 			}
 			object, err := ec.unmarshalNBoolean2bool(ctx, true)
 			if err != nil {
-				return nil, err
+				var zeroVal *string
+				return zeroVal, err
 			}
 			if ec.directives.CanEditUser == nil {
-				return nil, errors.New("directive canEditUser is not implemented")
+				var zeroVal *string
+				return zeroVal, errors.New("directive canEditUser is not implemented")
 			}
 			return ec.directives.CanEditUser(ctx, obj, directive0, field, object)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *string
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, obj, directive1)
 		}
@@ -14376,7 +15777,7 @@ func (ec *executionContext) _User_username(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Username, nil
 	})
@@ -14420,7 +15821,7 @@ func (ec *executionContext) _User_avatar(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Avatar, nil
 	})
@@ -14461,7 +15862,7 @@ func (ec *executionContext) _User_avatar_thumbhash(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AvatarThumbhash, nil
 	})
@@ -14502,7 +15903,7 @@ func (ec *executionContext) _User_created_at(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.CreatedAt, nil
 	})
@@ -14546,28 +15947,33 @@ func (ec *executionContext) _User_github_id(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return obj.GithubID, nil
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "ID")
 			if err != nil {
-				return nil, err
+				var zeroVal *string
+				return zeroVal, err
 			}
 			object, err := ec.unmarshalNBoolean2bool(ctx, true)
 			if err != nil {
-				return nil, err
+				var zeroVal *string
+				return zeroVal, err
 			}
 			if ec.directives.CanEditUser == nil {
-				return nil, errors.New("directive canEditUser is not implemented")
+				var zeroVal *string
+				return zeroVal, errors.New("directive canEditUser is not implemented")
 			}
 			return ec.directives.CanEditUser(ctx, obj, directive0, field, object)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *string
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, obj, directive1)
 		}
@@ -14621,28 +16027,33 @@ func (ec *executionContext) _User_google_id(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return obj.GoogleID, nil
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "ID")
 			if err != nil {
-				return nil, err
+				var zeroVal *string
+				return zeroVal, err
 			}
 			object, err := ec.unmarshalNBoolean2bool(ctx, true)
 			if err != nil {
-				return nil, err
+				var zeroVal *string
+				return zeroVal, err
 			}
 			if ec.directives.CanEditUser == nil {
-				return nil, errors.New("directive canEditUser is not implemented")
+				var zeroVal *string
+				return zeroVal, errors.New("directive canEditUser is not implemented")
 			}
 			return ec.directives.CanEditUser(ctx, obj, directive0, field, object)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *string
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, obj, directive1)
 		}
@@ -14696,28 +16107,33 @@ func (ec *executionContext) _User_facebook_id(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return obj.FacebookID, nil
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "ID")
 			if err != nil {
-				return nil, err
+				var zeroVal *string
+				return zeroVal, err
 			}
 			object, err := ec.unmarshalNBoolean2bool(ctx, true)
 			if err != nil {
-				return nil, err
+				var zeroVal *string
+				return zeroVal, err
 			}
 			if ec.directives.CanEditUser == nil {
-				return nil, errors.New("directive canEditUser is not implemented")
+				var zeroVal *string
+				return zeroVal, errors.New("directive canEditUser is not implemented")
 			}
 			return ec.directives.CanEditUser(ctx, obj, directive0, field, object)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *string
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, obj, directive1)
 		}
@@ -14771,28 +16187,33 @@ func (ec *executionContext) _User_roles(ctx context.Context, field graphql.Colle
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.User().Roles(rctx, obj)
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "ID")
 			if err != nil {
-				return nil, err
+				var zeroVal *UserRoles
+				return zeroVal, err
 			}
 			object, err := ec.unmarshalNBoolean2bool(ctx, true)
 			if err != nil {
-				return nil, err
+				var zeroVal *UserRoles
+				return zeroVal, err
 			}
 			if ec.directives.CanEditUser == nil {
-				return nil, errors.New("directive canEditUser is not implemented")
+				var zeroVal *UserRoles
+				return zeroVal, errors.New("directive canEditUser is not implemented")
 			}
 			return ec.directives.CanEditUser(ctx, obj, directive0, field, object)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal *UserRoles
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, obj, directive1)
 		}
@@ -14867,28 +16288,33 @@ func (ec *executionContext) _User_groups(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.User().Groups(rctx, obj)
 		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
+
+		directive1 := func(ctx context.Context) (any, error) {
 			field, err := ec.unmarshalNString2string(ctx, "ID")
 			if err != nil {
-				return nil, err
+				var zeroVal []*Group
+				return zeroVal, err
 			}
 			object, err := ec.unmarshalNBoolean2bool(ctx, true)
 			if err != nil {
-				return nil, err
+				var zeroVal []*Group
+				return zeroVal, err
 			}
 			if ec.directives.CanEditUser == nil {
-				return nil, errors.New("directive canEditUser is not implemented")
+				var zeroVal []*Group
+				return zeroVal, errors.New("directive canEditUser is not implemented")
 			}
 			return ec.directives.CanEditUser(ctx, obj, directive0, field, object)
 		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
+		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.IsLoggedIn == nil {
-				return nil, errors.New("directive isLoggedIn is not implemented")
+				var zeroVal []*Group
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
 			}
 			return ec.directives.IsLoggedIn(ctx, obj, directive1)
 		}
@@ -14951,7 +16377,7 @@ func (ec *executionContext) _User_mods(ctx context.Context, field graphql.Collec
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.User().Mods(rctx, obj)
 	})
@@ -15007,7 +16433,7 @@ func (ec *executionContext) _User_guides(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.User().Guides(rctx, obj)
 	})
@@ -15073,7 +16499,7 @@ func (ec *executionContext) _UserMod_user_id(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.UserID, nil
 	})
@@ -15117,7 +16543,7 @@ func (ec *executionContext) _UserMod_mod_id(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ModID, nil
 	})
@@ -15161,7 +16587,7 @@ func (ec *executionContext) _UserMod_role(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Role, nil
 	})
@@ -15205,7 +16631,7 @@ func (ec *executionContext) _UserMod_user(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.UserMod().User(rctx, obj)
 	})
@@ -15277,7 +16703,7 @@ func (ec *executionContext) _UserMod_mod(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.UserMod().Mod(rctx, obj)
 	})
@@ -15375,7 +16801,7 @@ func (ec *executionContext) _UserRoles_approveMods(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ApproveMods, nil
 	})
@@ -15419,7 +16845,7 @@ func (ec *executionContext) _UserRoles_approveVersions(ctx context.Context, fiel
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ApproveVersions, nil
 	})
@@ -15463,7 +16889,7 @@ func (ec *executionContext) _UserRoles_deleteContent(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DeleteContent, nil
 	})
@@ -15507,7 +16933,7 @@ func (ec *executionContext) _UserRoles_editContent(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EditContent, nil
 	})
@@ -15551,7 +16977,7 @@ func (ec *executionContext) _UserRoles_editUsers(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EditUsers, nil
 	})
@@ -15595,7 +17021,7 @@ func (ec *executionContext) _UserRoles_editSatisfactoryVersions(ctx context.Cont
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EditSatisfactoryVersions, nil
 	})
@@ -15639,7 +17065,7 @@ func (ec *executionContext) _UserRoles_editBootstrapVersions(ctx context.Context
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EditBootstrapVersions, nil
 	})
@@ -15683,7 +17109,7 @@ func (ec *executionContext) _UserRoles_editAnyModCompatibility(ctx context.Conte
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EditAnyModCompatibility, nil
 	})
@@ -15727,7 +17153,7 @@ func (ec *executionContext) _UserSession_token(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Token, nil
 	})
@@ -15771,7 +17197,7 @@ func (ec *executionContext) _Version_id(ctx context.Context, field graphql.Colle
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -15815,7 +17241,7 @@ func (ec *executionContext) _Version_mod_id(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ModID, nil
 	})
@@ -15859,7 +17285,7 @@ func (ec *executionContext) _Version_version(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Version, nil
 	})
@@ -15903,7 +17329,7 @@ func (ec *executionContext) _Version_sml_version(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Version().SmlVersion(rctx, obj)
 	})
@@ -15947,7 +17373,7 @@ func (ec *executionContext) _Version_game_version(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.GameVersion, nil
 	})
@@ -15991,7 +17417,7 @@ func (ec *executionContext) _Version_required_on_remote(ctx context.Context, fie
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.RequiredOnRemote, nil
 	})
@@ -16035,7 +17461,7 @@ func (ec *executionContext) _Version_changelog(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Changelog, nil
 	})
@@ -16079,7 +17505,7 @@ func (ec *executionContext) _Version_downloads(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Downloads, nil
 	})
@@ -16123,7 +17549,7 @@ func (ec *executionContext) _Version_stability(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Stability, nil
 	})
@@ -16167,7 +17593,7 @@ func (ec *executionContext) _Version_approved(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Approved, nil
 	})
@@ -16211,7 +17637,7 @@ func (ec *executionContext) _Version_updated_at(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.UpdatedAt, nil
 	})
@@ -16255,7 +17681,7 @@ func (ec *executionContext) _Version_created_at(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.CreatedAt, nil
 	})
@@ -16299,7 +17725,7 @@ func (ec *executionContext) _Version_link(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Version().Link(rctx, obj)
 	})
@@ -16343,7 +17769,7 @@ func (ec *executionContext) _Version_targets(ctx context.Context, field graphql.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Targets, nil
 	})
@@ -16399,7 +17825,7 @@ func (ec *executionContext) _Version_metadata(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Metadata, nil
 	})
@@ -16440,7 +17866,7 @@ func (ec *executionContext) _Version_size(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Version().Size(rctx, obj)
 	})
@@ -16481,7 +17907,7 @@ func (ec *executionContext) _Version_hash(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Version().Hash(rctx, obj)
 	})
@@ -16522,7 +17948,7 @@ func (ec *executionContext) _Version_mod(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Version().Mod(rctx, obj)
 	})
@@ -16620,7 +18046,7 @@ func (ec *executionContext) _Version_dependencies(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Version().Dependencies(rctx, obj)
 	})
@@ -16680,7 +18106,7 @@ func (ec *executionContext) _Version_virustotal_results(ctx context.Context, fie
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Version().VirustotalResults(rctx, obj)
 	})
@@ -16740,7 +18166,7 @@ func (ec *executionContext) _VersionDependency_version_id(ctx context.Context, f
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.VersionID, nil
 	})
@@ -16784,7 +18210,7 @@ func (ec *executionContext) _VersionDependency_mod_id(ctx context.Context, field
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ModID, nil
 	})
@@ -16828,7 +18254,7 @@ func (ec *executionContext) _VersionDependency_condition(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Condition, nil
 	})
@@ -16872,7 +18298,7 @@ func (ec *executionContext) _VersionDependency_optional(ctx context.Context, fie
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Optional, nil
 	})
@@ -16916,7 +18342,7 @@ func (ec *executionContext) _VersionDependency_mod_reference(ctx context.Context
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ModReference, nil
 	})
@@ -16960,7 +18386,7 @@ func (ec *executionContext) _VersionDependency_mod(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.VersionDependency().Mod(rctx, obj)
 	})
@@ -17055,7 +18481,7 @@ func (ec *executionContext) _VersionDependency_version(ctx context.Context, fiel
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Version, nil
 	})
@@ -17138,7 +18564,7 @@ func (ec *executionContext) _VersionTarget_VersionID(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.VersionID, nil
 	})
@@ -17182,7 +18608,7 @@ func (ec *executionContext) _VersionTarget_targetName(ctx context.Context, field
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.TargetName, nil
 	})
@@ -17226,7 +18652,7 @@ func (ec *executionContext) _VersionTarget_link(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.VersionTarget().Link(rctx, obj)
 	})
@@ -17270,7 +18696,7 @@ func (ec *executionContext) _VersionTarget_size(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Size, nil
 	})
@@ -17311,7 +18737,7 @@ func (ec *executionContext) _VersionTarget_hash(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Hash, nil
 	})
@@ -17352,7 +18778,7 @@ func (ec *executionContext) _VirustotalResult_id(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ID, nil
 	})
@@ -17393,7 +18819,7 @@ func (ec *executionContext) _VirustotalResult_hash(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Hash, nil
 	})
@@ -17437,7 +18863,7 @@ func (ec *executionContext) _VirustotalResult_safe(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Safe, nil
 	})
@@ -17481,7 +18907,7 @@ func (ec *executionContext) _VirustotalResult_file_name(ctx context.Context, fie
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.FileName, nil
 	})
@@ -17525,7 +18951,7 @@ func (ec *executionContext) _VirustotalResult_version_id(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.VersionID, nil
 	})
@@ -17569,7 +18995,7 @@ func (ec *executionContext) _VirustotalResult_created_at(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.CreatedAt, nil
 	})
@@ -17613,7 +19039,7 @@ func (ec *executionContext) _VirustotalResult_updated_at(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.UpdatedAt, nil
 	})
@@ -17654,7 +19080,7 @@ func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
 	})
@@ -17698,7 +19124,7 @@ func (ec *executionContext) ___Directive_description(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description(), nil
 	})
@@ -17727,6 +19153,50 @@ func (ec *executionContext) fieldContext___Directive_description(_ context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext___Directive_isRepeatable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsRepeatable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext___Directive_isRepeatable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "__Directive",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) ___Directive_locations(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext___Directive_locations(ctx, field)
 	if err != nil {
@@ -17739,7 +19209,7 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Locations, nil
 	})
@@ -17783,7 +19253,7 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Args, nil
 	})
@@ -17802,7 +19272,7 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_args(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -17818,53 +19288,24 @@ func (ec *executionContext) fieldContext___Directive_args(_ context.Context, fie
 				return ec.fieldContext___InputValue_type(ctx, field)
 			case "defaultValue":
 				return ec.fieldContext___InputValue_defaultValue(ctx, field)
+			case "isDeprecated":
+				return ec.fieldContext___InputValue_isDeprecated(ctx, field)
+			case "deprecationReason":
+				return ec.fieldContext___InputValue_deprecationReason(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
 		},
 	}
-	return fc, nil
-}
-
-func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext___Directive_isRepeatable(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
 	defer func() {
 		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsRepeatable, nil
-	})
-	if err != nil {
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field___Directive_args_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext___Directive_isRepeatable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Directive",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
+		return fc, err
 	}
 	return fc, nil
 }
@@ -17881,7 +19322,7 @@ func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
 	})
@@ -17925,7 +19366,7 @@ func (ec *executionContext) ___EnumValue_description(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description(), nil
 	})
@@ -17966,7 +19407,7 @@ func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.IsDeprecated(), nil
 	})
@@ -18010,7 +19451,7 @@ func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DeprecationReason(), nil
 	})
@@ -18051,7 +19492,7 @@ func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
 	})
@@ -18095,7 +19536,7 @@ func (ec *executionContext) ___Field_description(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description(), nil
 	})
@@ -18136,7 +19577,7 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Args, nil
 	})
@@ -18155,7 +19596,7 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_args(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -18171,9 +19612,24 @@ func (ec *executionContext) fieldContext___Field_args(_ context.Context, field g
 				return ec.fieldContext___InputValue_type(ctx, field)
 			case "defaultValue":
 				return ec.fieldContext___InputValue_defaultValue(ctx, field)
+			case "isDeprecated":
+				return ec.fieldContext___InputValue_isDeprecated(ctx, field)
+			case "deprecationReason":
+				return ec.fieldContext___InputValue_deprecationReason(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field___Field_args_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -18190,7 +19646,7 @@ func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.Col
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Type, nil
 	})
@@ -18223,6 +19679,8 @@ func (ec *executionContext) fieldContext___Field_type(_ context.Context, field g
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -18235,8 +19693,8 @@ func (ec *executionContext) fieldContext___Field_type(_ context.Context, field g
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -18256,7 +19714,7 @@ func (ec *executionContext) ___Field_isDeprecated(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.IsDeprecated(), nil
 	})
@@ -18300,7 +19758,7 @@ func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, fiel
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DeprecationReason(), nil
 	})
@@ -18341,7 +19799,7 @@ func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
 	})
@@ -18385,7 +19843,7 @@ func (ec *executionContext) ___InputValue_description(ctx context.Context, field
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description(), nil
 	})
@@ -18426,7 +19884,7 @@ func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Type, nil
 	})
@@ -18459,6 +19917,8 @@ func (ec *executionContext) fieldContext___InputValue_type(_ context.Context, fi
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -18471,8 +19931,8 @@ func (ec *executionContext) fieldContext___InputValue_type(_ context.Context, fi
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -18492,7 +19952,7 @@ func (ec *executionContext) ___InputValue_defaultValue(ctx context.Context, fiel
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DefaultValue, nil
 	})
@@ -18521,6 +19981,91 @@ func (ec *executionContext) fieldContext___InputValue_defaultValue(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) ___InputValue_isDeprecated(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext___InputValue_isDeprecated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.__InputValue().IsDeprecated(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext___InputValue_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "__InputValue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) ___InputValue_deprecationReason(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext___InputValue_deprecationReason(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.__InputValue().DeprecationReason(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext___InputValue_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "__InputValue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) ___Schema_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext___Schema_description(ctx, field)
 	if err != nil {
@@ -18533,7 +20078,7 @@ func (ec *executionContext) ___Schema_description(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description(), nil
 	})
@@ -18574,7 +20119,7 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Types(), nil
 	})
@@ -18607,6 +20152,8 @@ func (ec *executionContext) fieldContext___Schema_types(_ context.Context, field
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -18619,8 +20166,8 @@ func (ec *executionContext) fieldContext___Schema_types(_ context.Context, field
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -18640,7 +20187,7 @@ func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.QueryType(), nil
 	})
@@ -18673,6 +20220,8 @@ func (ec *executionContext) fieldContext___Schema_queryType(_ context.Context, f
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -18685,8 +20234,8 @@ func (ec *executionContext) fieldContext___Schema_queryType(_ context.Context, f
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -18706,7 +20255,7 @@ func (ec *executionContext) ___Schema_mutationType(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.MutationType(), nil
 	})
@@ -18736,6 +20285,8 @@ func (ec *executionContext) fieldContext___Schema_mutationType(_ context.Context
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -18748,8 +20299,8 @@ func (ec *executionContext) fieldContext___Schema_mutationType(_ context.Context
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -18769,7 +20320,7 @@ func (ec *executionContext) ___Schema_subscriptionType(ctx context.Context, fiel
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.SubscriptionType(), nil
 	})
@@ -18799,6 +20350,8 @@ func (ec *executionContext) fieldContext___Schema_subscriptionType(_ context.Con
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -18811,8 +20364,8 @@ func (ec *executionContext) fieldContext___Schema_subscriptionType(_ context.Con
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -18832,7 +20385,7 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Directives(), nil
 	})
@@ -18863,12 +20416,12 @@ func (ec *executionContext) fieldContext___Schema_directives(_ context.Context, 
 				return ec.fieldContext___Directive_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Directive_description(ctx, field)
+			case "isRepeatable":
+				return ec.fieldContext___Directive_isRepeatable(ctx, field)
 			case "locations":
 				return ec.fieldContext___Directive_locations(ctx, field)
 			case "args":
 				return ec.fieldContext___Directive_args(ctx, field)
-			case "isRepeatable":
-				return ec.fieldContext___Directive_isRepeatable(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Directive", field.Name)
 		},
@@ -18888,7 +20441,7 @@ func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Kind(), nil
 	})
@@ -18932,7 +20485,7 @@ func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.Coll
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name(), nil
 	})
@@ -18973,7 +20526,7 @@ func (ec *executionContext) ___Type_description(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description(), nil
 	})
@@ -19002,6 +20555,47 @@ func (ec *executionContext) fieldContext___Type_description(_ context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext___Type_specifiedByURL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SpecifiedByURL(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "__Type",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext___Type_fields(ctx, field)
 	if err != nil {
@@ -19014,7 +20608,7 @@ func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Fields(fc.Args["includeDeprecated"].(bool)), nil
 	})
@@ -19080,7 +20674,7 @@ func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Interfaces(), nil
 	})
@@ -19110,6 +20704,8 @@ func (ec *executionContext) fieldContext___Type_interfaces(_ context.Context, fi
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -19122,8 +20718,8 @@ func (ec *executionContext) fieldContext___Type_interfaces(_ context.Context, fi
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -19143,7 +20739,7 @@ func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.PossibleTypes(), nil
 	})
@@ -19173,6 +20769,8 @@ func (ec *executionContext) fieldContext___Type_possibleTypes(_ context.Context,
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -19185,8 +20783,8 @@ func (ec *executionContext) fieldContext___Type_possibleTypes(_ context.Context,
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -19206,7 +20804,7 @@ func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EnumValues(fc.Args["includeDeprecated"].(bool)), nil
 	})
@@ -19268,7 +20866,7 @@ func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.InputFields(), nil
 	})
@@ -19300,6 +20898,10 @@ func (ec *executionContext) fieldContext___Type_inputFields(_ context.Context, f
 				return ec.fieldContext___InputValue_type(ctx, field)
 			case "defaultValue":
 				return ec.fieldContext___InputValue_defaultValue(ctx, field)
+			case "isDeprecated":
+				return ec.fieldContext___InputValue_isDeprecated(ctx, field)
+			case "deprecationReason":
+				return ec.fieldContext___InputValue_deprecationReason(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
 		},
@@ -19319,7 +20921,7 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.OfType(), nil
 	})
@@ -19349,6 +20951,8 @@ func (ec *executionContext) fieldContext___Type_ofType(_ context.Context, field 
 				return ec.fieldContext___Type_name(ctx, field)
 			case "description":
 				return ec.fieldContext___Type_description(ctx, field)
+			case "specifiedByURL":
+				return ec.fieldContext___Type_specifiedByURL(ctx, field)
 			case "fields":
 				return ec.fieldContext___Type_fields(ctx, field)
 			case "interfaces":
@@ -19361,8 +20965,8 @@ func (ec *executionContext) fieldContext___Type_ofType(_ context.Context, field 
 				return ec.fieldContext___Type_inputFields(ctx, field)
 			case "ofType":
 				return ec.fieldContext___Type_ofType(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
+			case "isOneOf":
+				return ec.fieldContext___Type_isOneOf(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
 		},
@@ -19370,8 +20974,8 @@ func (ec *executionContext) fieldContext___Type_ofType(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext___Type_specifiedByURL(ctx, field)
+func (ec *executionContext) ___Type_isOneOf(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext___Type_isOneOf(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -19382,9 +20986,9 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SpecifiedByURL(), nil
+		return ec.resolvers.__Type().IsOneOf(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -19393,19 +20997,19 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: false,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -19415,10 +21019,10 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputCompatibilityInfoInput(ctx context.Context, obj interface{}) (CompatibilityInfoInput, error) {
+func (ec *executionContext) unmarshalInputCompatibilityInfoInput(ctx context.Context, obj any) (CompatibilityInfoInput, error) {
 	var it CompatibilityInfoInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19449,10 +21053,10 @@ func (ec *executionContext) unmarshalInputCompatibilityInfoInput(ctx context.Con
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCompatibilityInput(ctx context.Context, obj interface{}) (CompatibilityInput, error) {
+func (ec *executionContext) unmarshalInputCompatibilityInput(ctx context.Context, obj any) (CompatibilityInput, error) {
 	var it CompatibilityInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19483,10 +21087,10 @@ func (ec *executionContext) unmarshalInputCompatibilityInput(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputGuideFilter(ctx context.Context, obj interface{}) (map[string]interface{}, error) {
-	it := make(map[string]interface{}, len(obj.(map[string]interface{})))
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+func (ec *executionContext) unmarshalInputGuideFilter(ctx context.Context, obj any) (map[string]interface{}, error) {
+	it := make(map[string]any, len(obj.(map[string]any)))
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19552,10 +21156,10 @@ func (ec *executionContext) unmarshalInputGuideFilter(ctx context.Context, obj i
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputModFilter(ctx context.Context, obj interface{}) (map[string]interface{}, error) {
-	it := make(map[string]interface{}, len(obj.(map[string]interface{})))
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+func (ec *executionContext) unmarshalInputModFilter(ctx context.Context, obj any) (map[string]interface{}, error) {
+	it := make(map[string]any, len(obj.(map[string]any)))
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19635,10 +21239,10 @@ func (ec *executionContext) unmarshalInputModFilter(ctx context.Context, obj int
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputModVersionConstraint(ctx context.Context, obj interface{}) (ModVersionConstraint, error) {
+func (ec *executionContext) unmarshalInputModVersionConstraint(ctx context.Context, obj any) (ModVersionConstraint, error) {
 	var it ModVersionConstraint
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19669,10 +21273,10 @@ func (ec *executionContext) unmarshalInputModVersionConstraint(ctx context.Conte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewAnnouncement(ctx context.Context, obj interface{}) (NewAnnouncement, error) {
+func (ec *executionContext) unmarshalInputNewAnnouncement(ctx context.Context, obj any) (NewAnnouncement, error) {
 	var it NewAnnouncement
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19703,10 +21307,10 @@ func (ec *executionContext) unmarshalInputNewAnnouncement(ctx context.Context, o
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewGuide(ctx context.Context, obj interface{}) (NewGuide, error) {
+func (ec *executionContext) unmarshalInputNewGuide(ctx context.Context, obj any) (NewGuide, error) {
 	var it NewGuide
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19751,10 +21355,10 @@ func (ec *executionContext) unmarshalInputNewGuide(ctx context.Context, obj inte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interface{}) (NewMod, error) {
+func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj any) (NewMod, error) {
 	var it NewMod
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19841,10 +21445,10 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj interf
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewSatisfactoryVersion(ctx context.Context, obj interface{}) (NewSatisfactoryVersion, error) {
+func (ec *executionContext) unmarshalInputNewSatisfactoryVersion(ctx context.Context, obj any) (NewSatisfactoryVersion, error) {
 	var it NewSatisfactoryVersion
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19875,10 +21479,10 @@ func (ec *executionContext) unmarshalInputNewSatisfactoryVersion(ctx context.Con
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewTag(ctx context.Context, obj interface{}) (NewTag, error) {
+func (ec *executionContext) unmarshalInputNewTag(ctx context.Context, obj any) (NewTag, error) {
 	var it NewTag
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19909,10 +21513,10 @@ func (ec *executionContext) unmarshalInputNewTag(ctx context.Context, obj interf
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewVersion(ctx context.Context, obj interface{}) (NewVersion, error) {
+func (ec *executionContext) unmarshalInputNewVersion(ctx context.Context, obj any) (NewVersion, error) {
 	var it NewVersion
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -19943,10 +21547,10 @@ func (ec *executionContext) unmarshalInputNewVersion(ctx context.Context, obj in
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSMLVersionFilter(ctx context.Context, obj interface{}) (map[string]interface{}, error) {
-	it := make(map[string]interface{}, len(obj.(map[string]interface{})))
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+func (ec *executionContext) unmarshalInputSMLVersionFilter(ctx context.Context, obj any) (map[string]interface{}, error) {
+	it := make(map[string]any, len(obj.(map[string]any)))
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -20005,10 +21609,10 @@ func (ec *executionContext) unmarshalInputSMLVersionFilter(ctx context.Context, 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputTagFilter(ctx context.Context, obj interface{}) (TagFilter, error) {
+func (ec *executionContext) unmarshalInputTagFilter(ctx context.Context, obj any) (TagFilter, error) {
 	var it TagFilter
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -20060,10 +21664,10 @@ func (ec *executionContext) unmarshalInputTagFilter(ctx context.Context, obj int
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateAnnouncement(ctx context.Context, obj interface{}) (UpdateAnnouncement, error) {
+func (ec *executionContext) unmarshalInputUpdateAnnouncement(ctx context.Context, obj any) (UpdateAnnouncement, error) {
 	var it UpdateAnnouncement
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -20094,10 +21698,10 @@ func (ec *executionContext) unmarshalInputUpdateAnnouncement(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateGuide(ctx context.Context, obj interface{}) (UpdateGuide, error) {
+func (ec *executionContext) unmarshalInputUpdateGuide(ctx context.Context, obj any) (UpdateGuide, error) {
 	var it UpdateGuide
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -20142,10 +21746,10 @@ func (ec *executionContext) unmarshalInputUpdateGuide(ctx context.Context, obj i
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj interface{}) (UpdateMod, error) {
+func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj any) (UpdateMod, error) {
 	var it UpdateMod
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -20246,10 +21850,10 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateSatisfactoryVersion(ctx context.Context, obj interface{}) (UpdateSatisfactoryVersion, error) {
+func (ec *executionContext) unmarshalInputUpdateSatisfactoryVersion(ctx context.Context, obj any) (UpdateSatisfactoryVersion, error) {
 	var it UpdateSatisfactoryVersion
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -20280,10 +21884,10 @@ func (ec *executionContext) unmarshalInputUpdateSatisfactoryVersion(ctx context.
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj interface{}) (UpdateUser, error) {
+func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj any) (UpdateUser, error) {
 	var it UpdateUser
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -20303,16 +21907,19 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj in
 			it.Avatar = data
 		case "groups":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groups"))
-			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOString2ᚕstringᚄ(ctx, v) }
-			directive1 := func(ctx context.Context) (interface{}, error) {
+			directive0 := func(ctx context.Context) (any, error) { return ec.unmarshalOString2ᚕstringᚄ(ctx, v) }
+
+			directive1 := func(ctx context.Context) (any, error) {
 				if ec.directives.CanEditUsers == nil {
-					return nil, errors.New("directive canEditUsers is not implemented")
+					var zeroVal []string
+					return zeroVal, errors.New("directive canEditUsers is not implemented")
 				}
 				return ec.directives.CanEditUsers(ctx, obj, directive0)
 			}
-			directive2 := func(ctx context.Context) (interface{}, error) {
+			directive2 := func(ctx context.Context) (any, error) {
 				if ec.directives.IsLoggedIn == nil {
-					return nil, errors.New("directive isLoggedIn is not implemented")
+					var zeroVal []string
+					return zeroVal, errors.New("directive isLoggedIn is not implemented")
 				}
 				return ec.directives.IsLoggedIn(ctx, obj, directive1)
 			}
@@ -20342,10 +21949,10 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj in
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateUserMod(ctx context.Context, obj interface{}) (UpdateUserMod, error) {
+func (ec *executionContext) unmarshalInputUpdateUserMod(ctx context.Context, obj any) (UpdateUserMod, error) {
 	var it UpdateUserMod
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -20376,10 +21983,10 @@ func (ec *executionContext) unmarshalInputUpdateUserMod(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateVersion(ctx context.Context, obj interface{}) (UpdateVersion, error) {
+func (ec *executionContext) unmarshalInputUpdateVersion(ctx context.Context, obj any) (UpdateVersion, error) {
 	var it UpdateVersion
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -20410,10 +22017,10 @@ func (ec *executionContext) unmarshalInputUpdateVersion(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputVersionFilter(ctx context.Context, obj interface{}) (map[string]interface{}, error) {
-	it := make(map[string]interface{}, len(obj.(map[string]interface{})))
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+func (ec *executionContext) unmarshalInputVersionFilter(ctx context.Context, obj any) (map[string]interface{}, error) {
+	it := make(map[string]any, len(obj.(map[string]any)))
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -24177,6 +25784,11 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 			}
 		case "description":
 			out.Values[i] = ec.___Directive_description(ctx, field, obj)
+		case "isRepeatable":
+			out.Values[i] = ec.___Directive_isRepeatable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "locations":
 			out.Values[i] = ec.___Directive_locations(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -24184,11 +25796,6 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 			}
 		case "args":
 			out.Values[i] = ec.___Directive_args(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "isRepeatable":
-			out.Values[i] = ec.___Directive_isRepeatable(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -24335,17 +25942,86 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 		case "name":
 			out.Values[i] = ec.___InputValue_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "description":
 			out.Values[i] = ec.___InputValue_description(ctx, field, obj)
 		case "type":
 			out.Values[i] = ec.___InputValue_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "defaultValue":
 			out.Values[i] = ec.___InputValue_defaultValue(ctx, field, obj)
+		case "isDeprecated":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec.___InputValue_isDeprecated(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "deprecationReason":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec.___InputValue_deprecationReason(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -24438,12 +26114,14 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 		case "kind":
 			out.Values[i] = ec.___Type_kind(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec.___Type_name(ctx, field, obj)
 		case "description":
 			out.Values[i] = ec.___Type_description(ctx, field, obj)
+		case "specifiedByURL":
+			out.Values[i] = ec.___Type_specifiedByURL(ctx, field, obj)
 		case "fields":
 			out.Values[i] = ec.___Type_fields(ctx, field, obj)
 		case "interfaces":
@@ -24456,8 +26134,39 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec.___Type_inputFields(ctx, field, obj)
 		case "ofType":
 			out.Values[i] = ec.___Type_ofType(ctx, field, obj)
-		case "specifiedByURL":
-			out.Values[i] = ec.___Type_specifiedByURL(ctx, field, obj)
+		case "isOneOf":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec.___Type_isOneOf(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -24543,7 +26252,7 @@ func (ec *executionContext) marshalNAnnouncement2ᚖgithubᚗcomᚋsatisfactorym
 	return ec._Announcement(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAnnouncementID2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNAnnouncementID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -24558,7 +26267,7 @@ func (ec *executionContext) marshalNAnnouncementID2string(ctx context.Context, s
 	return res
 }
 
-func (ec *executionContext) unmarshalNAnnouncementImportance2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementImportance(ctx context.Context, v interface{}) (AnnouncementImportance, error) {
+func (ec *executionContext) unmarshalNAnnouncementImportance2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementImportance(ctx context.Context, v any) (AnnouncementImportance, error) {
 	var res AnnouncementImportance
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -24568,7 +26277,7 @@ func (ec *executionContext) marshalNAnnouncementImportance2githubᚗcomᚋsatisf
 	return v
 }
 
-func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
+func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -24593,17 +26302,17 @@ func (ec *executionContext) marshalNCompatibility2ᚖgithubᚗcomᚋsatisfactory
 	return ec._Compatibility(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCompatibilityInfoInput2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx context.Context, v interface{}) (CompatibilityInfoInput, error) {
+func (ec *executionContext) unmarshalNCompatibilityInfoInput2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx context.Context, v any) (CompatibilityInfoInput, error) {
 	res, err := ec.unmarshalInputCompatibilityInfoInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCompatibilityInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInput(ctx context.Context, v interface{}) (*CompatibilityInput, error) {
+func (ec *executionContext) unmarshalNCompatibilityInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInput(ctx context.Context, v any) (*CompatibilityInput, error) {
 	res, err := ec.unmarshalInputCompatibilityInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCompatibilityState2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityState(ctx context.Context, v interface{}) (CompatibilityState, error) {
+func (ec *executionContext) unmarshalNCompatibilityState2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityState(ctx context.Context, v any) (CompatibilityState, error) {
 	var res CompatibilityState
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -24613,7 +26322,7 @@ func (ec *executionContext) marshalNCompatibilityState2githubᚗcomᚋsatisfacto
 	return v
 }
 
-func (ec *executionContext) unmarshalNDate2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNDate2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -24824,7 +26533,7 @@ func (ec *executionContext) marshalNGuide2ᚖgithubᚗcomᚋsatisfactorymodding�
 	return ec._Guide(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNGuideID2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNGuideID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -24839,7 +26548,7 @@ func (ec *executionContext) marshalNGuideID2string(ctx context.Context, sel ast.
 	return res
 }
 
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -24926,7 +26635,7 @@ func (ec *executionContext) marshalNMod2ᚖgithubᚗcomᚋsatisfactorymoddingᚋ
 	return ec._Mod(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNModID2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNModID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -24941,11 +26650,9 @@ func (ec *executionContext) marshalNModID2string(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNModID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+func (ec *executionContext) unmarshalNModID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
@@ -24973,7 +26680,7 @@ func (ec *executionContext) marshalNModID2ᚕstringᚄ(ctx context.Context, sel 
 	return ret
 }
 
-func (ec *executionContext) unmarshalNModReference2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNModReference2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25042,11 +26749,9 @@ func (ec *executionContext) marshalNModVersion2ᚖgithubᚗcomᚋsatisfactorymod
 	return ec._ModVersion(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNModVersionConstraint2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModVersionConstraintᚄ(ctx context.Context, v interface{}) ([]*ModVersionConstraint, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+func (ec *executionContext) unmarshalNModVersionConstraint2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModVersionConstraintᚄ(ctx context.Context, v any) ([]*ModVersionConstraint, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]*ModVersionConstraint, len(vSlice))
 	for i := range vSlice {
@@ -25059,36 +26764,34 @@ func (ec *executionContext) unmarshalNModVersionConstraint2ᚕᚖgithubᚗcomᚋ
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNModVersionConstraint2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModVersionConstraint(ctx context.Context, v interface{}) (*ModVersionConstraint, error) {
+func (ec *executionContext) unmarshalNModVersionConstraint2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModVersionConstraint(ctx context.Context, v any) (*ModVersionConstraint, error) {
 	res, err := ec.unmarshalInputModVersionConstraint(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewAnnouncement2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewAnnouncement(ctx context.Context, v interface{}) (NewAnnouncement, error) {
+func (ec *executionContext) unmarshalNNewAnnouncement2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewAnnouncement(ctx context.Context, v any) (NewAnnouncement, error) {
 	res, err := ec.unmarshalInputNewAnnouncement(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewGuide2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewGuide(ctx context.Context, v interface{}) (NewGuide, error) {
+func (ec *executionContext) unmarshalNNewGuide2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewGuide(ctx context.Context, v any) (NewGuide, error) {
 	res, err := ec.unmarshalInputNewGuide(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewMod(ctx context.Context, v interface{}) (NewMod, error) {
+func (ec *executionContext) unmarshalNNewMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewMod(ctx context.Context, v any) (NewMod, error) {
 	res, err := ec.unmarshalInputNewMod(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSatisfactoryVersion(ctx context.Context, v interface{}) (NewSatisfactoryVersion, error) {
+func (ec *executionContext) unmarshalNNewSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewSatisfactoryVersion(ctx context.Context, v any) (NewSatisfactoryVersion, error) {
 	res, err := ec.unmarshalInputNewSatisfactoryVersion(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewTag2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTagᚄ(ctx context.Context, v interface{}) ([]*NewTag, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+func (ec *executionContext) unmarshalNNewTag2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTagᚄ(ctx context.Context, v any) ([]*NewTag, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]*NewTag, len(vSlice))
 	for i := range vSlice {
@@ -25101,12 +26804,12 @@ func (ec *executionContext) unmarshalNNewTag2ᚕᚖgithubᚗcomᚋsatisfactorymo
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNNewTag2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTag(ctx context.Context, v interface{}) (*NewTag, error) {
+func (ec *executionContext) unmarshalNNewTag2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewTag(ctx context.Context, v any) (*NewTag, error) {
 	res, err := ec.unmarshalInputNewTag(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewVersion(ctx context.Context, v interface{}) (NewVersion, error) {
+func (ec *executionContext) unmarshalNNewVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐNewVersion(ctx context.Context, v any) (NewVersion, error) {
 	res, err := ec.unmarshalInputNewVersion(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25179,7 +26882,7 @@ func (ec *executionContext) marshalNSMLVersion2ᚖgithubᚗcomᚋsatisfactorymod
 	return ec._SMLVersion(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSMLVersionID2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNSMLVersionID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25290,7 +26993,7 @@ func (ec *executionContext) marshalNSatisfactoryVersion2ᚖgithubᚗcomᚋsatisf
 	return ec._SatisfactoryVersion(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSatisfactoryVersionID2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNSatisfactoryVersionID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25305,7 +27008,7 @@ func (ec *executionContext) marshalNSatisfactoryVersionID2string(ctx context.Con
 	return res
 }
 
-func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25320,11 +27023,9 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
@@ -25410,7 +27111,7 @@ func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋsatisfactorymoddingᚋ
 	return ec._Tag(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTagID2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNTagID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25425,7 +27126,7 @@ func (ec *executionContext) marshalNTagID2string(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNTagName2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNTagName2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25440,7 +27141,7 @@ func (ec *executionContext) marshalNTagName2string(ctx context.Context, sel ast.
 	return res
 }
 
-func (ec *executionContext) unmarshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx context.Context, v interface{}) (TargetName, error) {
+func (ec *executionContext) unmarshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx context.Context, v any) (TargetName, error) {
 	var res TargetName
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -25450,42 +27151,42 @@ func (ec *executionContext) marshalNTargetName2githubᚗcomᚋsatisfactorymoddin
 	return v
 }
 
-func (ec *executionContext) unmarshalNUpdateAnnouncement2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateAnnouncement(ctx context.Context, v interface{}) (UpdateAnnouncement, error) {
+func (ec *executionContext) unmarshalNUpdateAnnouncement2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateAnnouncement(ctx context.Context, v any) (UpdateAnnouncement, error) {
 	res, err := ec.unmarshalInputUpdateAnnouncement(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateGuide2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateGuide(ctx context.Context, v interface{}) (UpdateGuide, error) {
+func (ec *executionContext) unmarshalNUpdateGuide2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateGuide(ctx context.Context, v any) (UpdateGuide, error) {
 	res, err := ec.unmarshalInputUpdateGuide(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateMod(ctx context.Context, v interface{}) (UpdateMod, error) {
+func (ec *executionContext) unmarshalNUpdateMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateMod(ctx context.Context, v any) (UpdateMod, error) {
 	res, err := ec.unmarshalInputUpdateMod(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSatisfactoryVersion(ctx context.Context, v interface{}) (UpdateSatisfactoryVersion, error) {
+func (ec *executionContext) unmarshalNUpdateSatisfactoryVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateSatisfactoryVersion(ctx context.Context, v any) (UpdateSatisfactoryVersion, error) {
 	res, err := ec.unmarshalInputUpdateSatisfactoryVersion(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateUser2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUser(ctx context.Context, v interface{}) (UpdateUser, error) {
+func (ec *executionContext) unmarshalNUpdateUser2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUser(ctx context.Context, v any) (UpdateUser, error) {
 	res, err := ec.unmarshalInputUpdateUser(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateUserMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserMod(ctx context.Context, v interface{}) (UpdateUserMod, error) {
+func (ec *executionContext) unmarshalNUpdateUserMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserMod(ctx context.Context, v any) (UpdateUserMod, error) {
 	res, err := ec.unmarshalInputUpdateUserMod(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateVersion(ctx context.Context, v interface{}) (UpdateVersion, error) {
+func (ec *executionContext) unmarshalNUpdateVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateVersion(ctx context.Context, v any) (UpdateVersion, error) {
 	res, err := ec.unmarshalInputUpdateVersion(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (graphql.Upload, error) {
+func (ec *executionContext) unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v any) (graphql.Upload, error) {
 	res, err := graphql.UnmarshalUpload(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25552,7 +27253,7 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋsatisfactorymodding�
 	return ec._User(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNUserID2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNUserID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25567,11 +27268,9 @@ func (ec *executionContext) marshalNUserID2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNUserID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+func (ec *executionContext) unmarshalNUserID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
@@ -25779,7 +27478,7 @@ func (ec *executionContext) marshalNVersionDependency2ᚖgithubᚗcomᚋsatisfac
 	return ec._VersionDependency(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNVersionID2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNVersionID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25794,7 +27493,7 @@ func (ec *executionContext) marshalNVersionID2string(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalNVersionStabilities2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx context.Context, v interface{}) (VersionStabilities, error) {
+func (ec *executionContext) unmarshalNVersionStabilities2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx context.Context, v any) (VersionStabilities, error) {
 	var res VersionStabilities
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -25842,7 +27541,7 @@ func (ec *executionContext) marshalNVersionTarget2ᚕᚖgithubᚗcomᚋsatisfact
 	return ret
 }
 
-func (ec *executionContext) unmarshalNVirustotalHash2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNVirustotalHash2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25959,7 +27658,7 @@ func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgq
 	return ret
 }
 
-func (ec *executionContext) unmarshalN__DirectiveLocation2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalN__DirectiveLocation2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -25974,11 +27673,9 @@ func (ec *executionContext) marshalN__DirectiveLocation2string(ctx context.Conte
 	return res
 }
 
-func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
@@ -26149,7 +27846,7 @@ func (ec *executionContext) marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 	return ec.___Type(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalN__TypeKind2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalN__TypeKind2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -26171,7 +27868,7 @@ func (ec *executionContext) marshalOAnnouncement2ᚖgithubᚗcomᚋsatisfactorym
 	return ec._Announcement(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOAnnouncementImportance2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementImportance(ctx context.Context, v interface{}) (*AnnouncementImportance, error) {
+func (ec *executionContext) unmarshalOAnnouncementImportance2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncementImportance(ctx context.Context, v any) (*AnnouncementImportance, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26187,7 +27884,7 @@ func (ec *executionContext) marshalOAnnouncementImportance2ᚖgithubᚗcomᚋsat
 	return v
 }
 
-func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
+func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -26197,7 +27894,7 @@ func (ec *executionContext) marshalOBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalOBoolean2ᚖbool(ctx context.Context, v interface{}) (*bool, error) {
+func (ec *executionContext) unmarshalOBoolean2ᚖbool(ctx context.Context, v any) (*bool, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26220,7 +27917,7 @@ func (ec *executionContext) marshalOCompatibilityInfo2ᚖgithubᚗcomᚋsatisfac
 	return ec._CompatibilityInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOCompatibilityInfoInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx context.Context, v interface{}) (*CompatibilityInfoInput, error) {
+func (ec *executionContext) unmarshalOCompatibilityInfoInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx context.Context, v any) (*CompatibilityInfoInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26235,7 +27932,7 @@ func (ec *executionContext) marshalOCreateVersionResponse2ᚖgithubᚗcomᚋsati
 	return ec._CreateVersionResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalODate2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+func (ec *executionContext) unmarshalODate2ᚖstring(ctx context.Context, v any) (*string, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26258,7 +27955,7 @@ func (ec *executionContext) marshalOGuide2ᚖgithubᚗcomᚋsatisfactorymodding�
 	return ec._Guide(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOGuideFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGuideFields(ctx context.Context, v interface{}) (*GuideFields, error) {
+func (ec *executionContext) unmarshalOGuideFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGuideFields(ctx context.Context, v any) (*GuideFields, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26274,7 +27971,7 @@ func (ec *executionContext) marshalOGuideFields2ᚖgithubᚗcomᚋsatisfactorymo
 	return v
 }
 
-func (ec *executionContext) unmarshalOGuideFilter2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) unmarshalOGuideFilter2map(ctx context.Context, v any) (map[string]interface{}, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26282,7 +27979,7 @@ func (ec *executionContext) unmarshalOGuideFilter2map(ctx context.Context, v int
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v any) (*int, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26305,7 +28002,7 @@ func (ec *executionContext) marshalOMod2ᚖgithubᚗcomᚋsatisfactorymoddingᚋ
 	return ec._Mod(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOModFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModFields(ctx context.Context, v interface{}) (*ModFields, error) {
+func (ec *executionContext) unmarshalOModFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModFields(ctx context.Context, v any) (*ModFields, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26321,7 +28018,7 @@ func (ec *executionContext) marshalOModFields2ᚖgithubᚗcomᚋsatisfactorymodd
 	return v
 }
 
-func (ec *executionContext) unmarshalOModFilter2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) unmarshalOModFilter2map(ctx context.Context, v any) (map[string]interface{}, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26329,7 +28026,7 @@ func (ec *executionContext) unmarshalOModFilter2map(ctx context.Context, v inter
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOModReference2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+func (ec *executionContext) unmarshalOModReference2ᚖstring(ctx context.Context, v any) (*string, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26345,7 +28042,7 @@ func (ec *executionContext) marshalOModReference2ᚖstring(ctx context.Context, 
 	return res
 }
 
-func (ec *executionContext) unmarshalOOrder2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐOrder(ctx context.Context, v interface{}) (*Order, error) {
+func (ec *executionContext) unmarshalOOrder2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐOrder(ctx context.Context, v any) (*Order, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26368,7 +28065,7 @@ func (ec *executionContext) marshalOSMLVersion2ᚖgithubᚗcomᚋsatisfactorymod
 	return ec._SMLVersion(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOSMLVersionFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersionFields(ctx context.Context, v interface{}) (*SMLVersionFields, error) {
+func (ec *executionContext) unmarshalOSMLVersionFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐSMLVersionFields(ctx context.Context, v any) (*SMLVersionFields, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26384,7 +28081,7 @@ func (ec *executionContext) marshalOSMLVersionFields2ᚖgithubᚗcomᚋsatisfact
 	return v
 }
 
-func (ec *executionContext) unmarshalOSMLVersionFilter2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) unmarshalOSMLVersionFilter2map(ctx context.Context, v any) (map[string]interface{}, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26406,14 +28103,12 @@ func (ec *executionContext) marshalOSatisfactoryVersion2ᚖgithubᚗcomᚋsatisf
 	return ec._SatisfactoryVersion(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
@@ -26444,7 +28139,7 @@ func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26514,7 +28209,7 @@ func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋsatisfactorymoddingᚋ
 	return ec._Tag(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOTagFilter2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTagFilter(ctx context.Context, v interface{}) (*TagFilter, error) {
+func (ec *executionContext) unmarshalOTagFilter2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTagFilter(ctx context.Context, v any) (*TagFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26522,14 +28217,12 @@ func (ec *executionContext) unmarshalOTagFilter2ᚖgithubᚗcomᚋsatisfactorymo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOTagID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+func (ec *executionContext) unmarshalOTagID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
@@ -26560,14 +28253,12 @@ func (ec *executionContext) marshalOTagID2ᚕstringᚄ(ctx context.Context, sel 
 	return ret
 }
 
-func (ec *executionContext) unmarshalOUpdateUserMod2ᚕgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserModᚄ(ctx context.Context, v interface{}) ([]UpdateUserMod, error) {
+func (ec *executionContext) unmarshalOUpdateUserMod2ᚕgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserModᚄ(ctx context.Context, v any) ([]UpdateUserMod, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]UpdateUserMod, len(vSlice))
 	for i := range vSlice {
@@ -26580,7 +28271,7 @@ func (ec *executionContext) unmarshalOUpdateUserMod2ᚕgithubᚗcomᚋsatisfacto
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {
+func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v any) (*graphql.Upload, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26617,7 +28308,7 @@ func (ec *executionContext) marshalOVersion2ᚖgithubᚗcomᚋsatisfactorymoddin
 	return ec._Version(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOVersionFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionFields(ctx context.Context, v interface{}) (*VersionFields, error) {
+func (ec *executionContext) unmarshalOVersionFields2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionFields(ctx context.Context, v any) (*VersionFields, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26633,7 +28324,7 @@ func (ec *executionContext) marshalOVersionFields2ᚖgithubᚗcomᚋsatisfactory
 	return v
 }
 
-func (ec *executionContext) unmarshalOVersionFilter2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) unmarshalOVersionFilter2map(ctx context.Context, v any) (map[string]interface{}, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26641,7 +28332,7 @@ func (ec *executionContext) unmarshalOVersionFilter2map(ctx context.Context, v i
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOVersionStabilities2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx context.Context, v interface{}) (*VersionStabilities, error) {
+func (ec *executionContext) unmarshalOVersionStabilities2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐVersionStabilities(ctx context.Context, v any) (*VersionStabilities, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -26664,7 +28355,7 @@ func (ec *executionContext) marshalOVersionTarget2ᚖgithubᚗcomᚋsatisfactory
 	return ec._VersionTarget(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOVirustotalID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+func (ec *executionContext) unmarshalOVirustotalID2ᚖstring(ctx context.Context, v any) (*string, error) {
 	if v == nil {
 		return nil, nil
 	}
