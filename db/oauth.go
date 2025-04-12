@@ -18,11 +18,12 @@ func CompleteOAuthFlow(ctx context.Context, u *oauth.UserData, userAgent string)
 
 	var oauthPredicate predicate.User
 
-	if u.Site == oauth.SiteGithub {
+	switch u.Site {
+	case oauth.SiteGithub:
 		oauthPredicate = user.GithubID(u.ID)
-	} else if u.Site == oauth.SiteGoogle {
+	case oauth.SiteGoogle:
 		oauthPredicate = user.GoogleID(u.ID)
-	} else if u.Site == oauth.SiteFacebook {
+	case oauth.SiteFacebook:
 		oauthPredicate = user.FacebookID(u.ID)
 	}
 
@@ -42,11 +43,12 @@ func CompleteOAuthFlow(ctx context.Context, u *oauth.UserData, userAgent string)
 			SetJoinedFrom(string(u.Site)).
 			SetUsername(u.Username)
 
-		if u.Site == oauth.SiteGithub {
+		switch u.Site {
+		case oauth.SiteGithub:
 			create = create.SetGithubID(u.ID)
-		} else if u.Site == oauth.SiteGoogle {
+		case oauth.SiteGoogle:
 			create = create.SetGoogleID(u.ID)
-		} else if u.Site == oauth.SiteFacebook {
+		case oauth.SiteFacebook:
 			create = create.SetFacebookID(u.ID)
 		}
 

@@ -16,13 +16,13 @@ func GetIntDefault(c echo.Context, param string, def int) int {
 	return i
 }
 
-func GetIntRange(c echo.Context, param string, min int, max int, def int) int {
+func GetIntRange(c echo.Context, param string, minVal int, maxVal int, def int) int {
 	actual := GetIntDefault(c, param, def)
 
-	if actual > max {
-		return max
-	} else if actual < min {
-		return min
+	if actual > maxVal {
+		return maxVal
+	} else if actual < minVal {
+		return minVal
 	}
 
 	return actual

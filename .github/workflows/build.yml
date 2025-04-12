@@ -9,12 +9,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jetify-com/devbox-install-action@v0.11.0
-        with:
-          enable-cache: true
+      - uses: jdx/mise-action@v2
 
       - name: Build
-        run: devbox run -- go build -v -o api-linux-amd64 cmd/api/serve.go
+        run: mise exec -- go build -v -o api-linux-amd64 cmd/api/serve.go
         env:
           CGO_ENABLED: 1
 
@@ -24,14 +22,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jetify-com/devbox-install-action@v0.11.0
-        with:
-          enable-cache: true
+      - uses: jdx/mise-action@v2
 
       - name: Lint
-        run: |
-          devbox run -- curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.60.1
-          devbox run -- $(go env GOPATH)/bin/golangci-lint run --timeout 30m
+        run: mise run lint --timeout 30m
 
   workflowcheck:
     name: Workflow Check
@@ -39,12 +33,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jetify-com/devbox-install-action@v0.11.0
-        with:
-          enable-cache: true
+      - uses: jdx/mise-action@v2
 
       - name: Workflow Check
-        run: devbox run -- go run go.temporal.io/sdk/contrib/tools/workflowcheck@latest ./...
+        run: mise exec -- go run go.temporal.io/sdk/contrib/tools/workflowcheck@latest ./...
 
   test:
     name: Test
@@ -52,15 +44,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jetify-com/devbox-install-action@v0.11.0
-        with:
-          enable-cache: true
+      - uses: jdx/mise-action@v2
 
       - name: Setup
-        run: devbox run setup
+        run: mise run setup
 
       - name: Test
-        run: devbox run test:coverage:junit
+        run: mise run test_coverage_junit
         env:
           CGO_ENABLED: 1
           REPO_PASETO__PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a
@@ -98,12 +88,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jetify-com/devbox-install-action@v0.11.0
-        with:
-          enable-cache: true
+      - uses: jdx/mise-action@v2
 
       - name: Setup
-        run: devbox run setup
+        run: mise run setup
 
       - name: Download and seed database
         run: |
@@ -112,7 +100,7 @@ jobs:
           PGPASSWORD: REPLACE_ME
 
       - name: Test
-        run: devbox run -- go test -v -p 1 -timeout 1h -run '^TestSetup$' ./...
+        run: mise exec -- go test -v -p 1 -timeout 1h -run '^TestSetup$' ./...
         env:
           CGO_ENABLED: 1
           REPO_PASETO__PUBLIC_KEY: 408c5155a389aeabf1c1b0da73ff5a3079b6aa6628e4c661b1e1ce412181cc8a

@@ -1,8 +1,6 @@
 module github.com/satisfactorymodding/smr-api
 
-go 1.22.5
-
-toolchain go1.23.0
+go 1.24.2
 
 require (
 	ariga.io/entcache v0.1.0

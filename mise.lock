@@ -1,0 +1,34 @@
+[tools.atlas]
+version = "0.29.0"
+backend = "aqua:ariga/atlas"
+
+[tools.atlas.checksums]
+"atlas-linux-amd64-v0.29.0" = "sha256:4118903321496de84f4b2b404c6969922b0d0d7a24bf87441128c14d04cbb0ab"
+
+[tools.go]
+version = "1.24.2"
+backend = "core:go"
+
+[tools.go-junit-report]
+version = "2.1.0"
+backend = "ubi:jstemmer/go-junit-report"
+
+[tools.golangci-lint]
+version = "2.0.2"
+backend = "aqua:golangci/golangci-lint"
+
+[tools.mc]
+version = "2025-04-08T15-39-49Z"
+backend = "asdf:mc"
+
+[tools.protoc]
+version = "30.2"
+backend = "aqua:protocolbuffers/protobuf/protoc"
+
+[tools.protoc-gen-go]
+version = "1.36.6"
+backend = "aqua:protocolbuffers/protobuf-go/protoc-gen-go"
+
+[tools.protoc-gen-go-grpc]
+version = "1.5.1"
+backend = "aqua:grpc/grpc-go/protoc-gen-go-grpc"

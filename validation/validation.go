@@ -456,12 +456,13 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 		if file != nil {
 			splitName := strings.Split(file.Name, ".")
 			extension := splitName[len(splitName)-1]
-			if extension == "pak" || extension == "utoc" || extension == "ucas" {
+			switch extension {
+			case "pak", "utoc", "ucas":
 				modInfo.Objects = append(modInfo.Objects, ModObject{
 					Path: file.Name,
 					Type: "pak",
 				})
-			} else if extension == "dll" || extension == "so" {
+			case "dll", "so":
 				modInfo.Objects = append(modInfo.Objects, ModObject{
 					Path: file.Name,
 					Type: "sml_mod",
