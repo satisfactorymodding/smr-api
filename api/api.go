@@ -203,12 +203,12 @@ func Setup(ctx context.Context) *echo.Echo {
 		MaxMemory:     100 << 20,
 	})
 
-	gqlHandler.SetQueryCache(lru.New(5000))
+	gqlHandler.SetQueryCache(lru.New[*ast.QueryDocument](5000))
 
 	gqlHandler.Use(otelgqlgen.Middleware())
 	gqlHandler.Use(extension.Introspection{})
 	gqlHandler.Use(extension.AutomaticPersistedQuery{
-		Cache: lru.New(5000),
+		Cache: lru.New[string](5000),
 	})
 
 	gqlHandler.AroundResponses(func(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {

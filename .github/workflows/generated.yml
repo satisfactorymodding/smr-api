@@ -21,6 +21,9 @@ jobs:
       - name: Make sure all changes generated
         run: echo 'ci_migration' | mise run migrate_diff
 
+      - name: Tidy
+        run: go mod tidy
+
       - name: Ensure no changes
         run: git diff --exit-code
 
@@ -36,6 +39,9 @@ jobs:
 
       - name: Run generation tasks
         run: mise run generate
+
+      - name: Tidy
+        run: go mod tidy
 
       - name: Ensure no changes
         run: git diff --exit-code
