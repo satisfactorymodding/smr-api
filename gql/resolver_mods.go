@@ -188,7 +188,15 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 	SetINNF(updateMod.Hidden, dbUpdate.SetHidden)
 	SetCompatibilityINNF(updateMod.Compatibility, dbUpdate.SetCompatibility)
 	SetINNF(updateMod.ToggleNetworkUse, dbUpdate.SetToggleNetworkUse)
-	SetINNF(updateMod.NetworkUseDisclosure, dbUpdate.SetNetworkUseDisclosure)
+
+	newNetworkDisclosure, isSet := updateMod.NetworkUseDisclosure.ValueOK()
+	if isSet {
+		if newNetworkDisclosure == nil {
+			dbUpdate.ClearNetworkUseDisclosure()
+		} else {
+			dbUpdate.SetNetworkUseDisclosure(*newNetworkDisclosure)
+		}
+	}
 	// SetINNF(updateMod.AiUseDisclosure, dbUpdate.SetAiUseDisclosure)
 	SetINNF(updateMod.ToggleExplicitContent, dbUpdate.SetToggleExplicitContent)
 
