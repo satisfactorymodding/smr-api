@@ -12,6 +12,9 @@ jobs:
 
       - uses: jdx/mise-action@v2
 
+      - name: Install dependencies
+        run: sudo apt -y install libwebp-dev
+
       - name: Hash migrations
         run: mise run migrate_hash
 
@@ -27,6 +30,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: jdx/mise-action@v2
+
+      - name: Install dependencies
+        run: sudo apt -y install libwebp-dev
 
       - name: Run generation tasks
         run: mise run generate
