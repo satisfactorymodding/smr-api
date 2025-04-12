@@ -377,8 +377,9 @@ func (vq *VersionQuery) Clone() *VersionQuery {
 		withVirustotalResults:   vq.withVirustotalResults.Clone(),
 		withVersionDependencies: vq.withVersionDependencies.Clone(),
 		// clone intermediate query.
-		sql:  vq.sql.Clone(),
-		path: vq.path,
+		sql:       vq.sql.Clone(),
+		path:      vq.path,
+		modifiers: append([]func(*sql.Selector){}, vq.modifiers...),
 	}
 }
 

@@ -1,5 +1,5 @@
 [tools]
-atlas = "0.29.0"
+atlas = "0.32.0"
 go = "1.24.2"
 go-junit-report = "2.1.0"
 golangci-lint = "2.0.2"

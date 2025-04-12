@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	ariga.io/entcache v0.1.0
-	entgo.io/ent v0.14.0
+	entgo.io/ent v0.14.4
 	github.com/99designs/gqlgen v0.17.49
 	github.com/MarvinJWendt/testza v0.5.2
 	github.com/Masterminds/semver/v3 v3.2.1
@@ -59,10 +59,10 @@ require (
 	go.temporal.io/api v1.37.0
 	go.temporal.io/sdk v1.28.1
 	go.temporal.io/sdk/contrib/opentelemetry v0.6.0
-	golang.org/x/crypto v0.26.0
-	golang.org/x/net v0.28.0
+	golang.org/x/crypto v0.33.0
+	golang.org/x/net v0.35.0
 	golang.org/x/oauth2 v0.22.0
-	golang.org/x/sync v0.8.0
+	golang.org/x/sync v0.11.0
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/go-playground/validator.v9 v9.31.0
@@ -75,7 +75,7 @@ replace github.com/Masterminds/semver/v3 => github.com/taeold/semver/v3 v3.0.0-2
 replace github.com/sizeofint/webp-animation v0.0.0-20190207194838-b631dc900de9 => github.com/Vilsol/webp-animation v0.0.0-20240820141406-20a8f2d347c4
 
 require (
-	ariga.io/atlas v0.19.1-0.20240203083654-5948b60a8e43 // indirect
+	ariga.io/atlas v0.31.1-0.20250212144724-069be8033e83 // indirect
 	atomicgo.dev/assert v0.0.2 // indirect
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/keyboard v0.2.9 // indirect
@@ -88,7 +88,9 @@ require (
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
+	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/console v1.0.4 // indirect
@@ -179,19 +181,20 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	github.com/zclconf/go-cty v1.8.0 // indirect
+	github.com/zclconf/go-cty v1.14.4 // indirect
+	github.com/zclconf/go-cty-yaml v1.1.0 // indirect
 	go.opentelemetry.io/contrib v1.28.0 // indirect
 	go.opentelemetry.io/otel/metric v1.28.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa // indirect
-	golang.org/x/mod v0.20.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/term v0.23.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/mod v0.23.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/term v0.29.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
-	golang.org/x/tools v0.24.0 // indirect
+	golang.org/x/tools v0.30.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect

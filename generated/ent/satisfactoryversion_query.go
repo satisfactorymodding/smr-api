@@ -252,8 +252,9 @@ func (svq *SatisfactoryVersionQuery) Clone() *SatisfactoryVersionQuery {
 		inters:     append([]Interceptor{}, svq.inters...),
 		predicates: append([]predicate.SatisfactoryVersion{}, svq.predicates...),
 		// clone intermediate query.
-		sql:  svq.sql.Clone(),
-		path: svq.path,
+		sql:       svq.sql.Clone(),
+		path:      svq.path,
+		modifiers: append([]func(*sql.Selector){}, svq.modifiers...),
 	}
 }
 

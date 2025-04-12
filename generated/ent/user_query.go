@@ -378,8 +378,9 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withGroups:   uq.withGroups.Clone(),
 		withUserMods: uq.withUserMods.Clone(),
 		// clone intermediate query.
-		sql:  uq.sql.Clone(),
-		path: uq.path,
+		sql:       uq.sql.Clone(),
+		path:      uq.path,
+		modifiers: append([]func(*sql.Selector){}, uq.modifiers...),
 	}
 }
 

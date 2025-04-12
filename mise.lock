@@ -1,9 +1,6 @@
 [tools.atlas]
-version = "0.29.0"
+version = "0.32.0"
 backend = "aqua:ariga/atlas"
-
-[tools.atlas.checksums]
-"atlas-linux-amd64-v0.29.0" = "sha256:4118903321496de84f4b2b404c6969922b0d0d7a24bf87441128c14d04cbb0ab"
 
 [tools.go]
 version = "1.24.2"

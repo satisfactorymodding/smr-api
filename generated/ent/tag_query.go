@@ -353,8 +353,9 @@ func (tq *TagQuery) Clone() *TagQuery {
 		withModTags:   tq.withModTags.Clone(),
 		withGuideTags: tq.withGuideTags.Clone(),
 		// clone intermediate query.
-		sql:  tq.sql.Clone(),
-		path: tq.path,
+		sql:       tq.sql.Clone(),
+		path:      tq.path,
+		modifiers: append([]func(*sql.Selector){}, tq.modifiers...),
 	}
 }
 

@@ -229,8 +229,9 @@ func (mtq *ModTagQuery) Clone() *ModTagQuery {
 		withMod:    mtq.withMod.Clone(),
 		withTag:    mtq.withTag.Clone(),
 		// clone intermediate query.
-		sql:  mtq.sql.Clone(),
-		path: mtq.path,
+		sql:       mtq.sql.Clone(),
+		path:      mtq.path,
+		modifiers: append([]func(*sql.Selector){}, mtq.modifiers...),
 	}
 }
 
