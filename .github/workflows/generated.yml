@@ -10,15 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jetify-com/devbox-install-action@v0.11.0
-        with:
-          enable-cache: true
+      - uses: jdx/mise-action@v2
 
       - name: Hash migrations
-        run: devbox run migrate:hash
+        run: mise run migrate_hash
 
       - name: Make sure all changes generated
-        run: echo 'ci_migration' | devbox run migrate:diff
+        run: echo 'ci_migration' | mise run migrate_diff
 
       - name: Ensure no changes
         run: git diff --exit-code
@@ -28,12 +26,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jetify-com/devbox-install-action@v0.11.0
-        with:
-          enable-cache: true
+      - uses: jdx/mise-action@v2
 
       - name: Run generation tasks
-        run: devbox run generate
+        run: mise run generate
 
       - name: Ensure no changes
         run: git diff --exit-code

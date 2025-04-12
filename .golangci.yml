@@ -1,91 +1,113 @@
-linters-settings:
-  wrapcheck:
-    ignoreSigs:
-      - .Errorf(
-      - errors.New(
-      - errors.Unwrap(
-      - .WithMessage(
-      - .WithMessagef(
-      - .WithStack(
-      - github.com/labstack/echo/v4.Context
-      - (go.temporal.io/sdk/internal.Future).Get(
-      - .NewNonRetryableApplicationError(
-
-    ignorePackageGlobs:
-      - github.com/satisfactorymodding/smr-api/*
-
-  govet:
-    enable:
-      - shadow
-
-  gocritic:
-    disabled-checks:
-      - ifElseChain
-
-  gci:
-    custom-order: true
-    sections:
-      - standard
-      - default
-      - prefix(github.com/satisfactorymodding/smr-api)
-      - blank
-      - dot
-
-  sloglint:
-    attr-only: true
-    context: scope
-    forbidden-keys:
-      - time
-      - level
-      - msg
-      - source
-
-  spancheck:
-    checks:
-      - end
-      - record-error
-
-
-issues:
-  exclude-files:
-    - ./generated/generated.go
-    - ./generated/models_gen.go
-  exclude-dirs:
-    - ./generated/
-  exclude:
-    - should pass the context parameter
-  exclude-rules:
-    - text: 'shadow: declaration of "err" shadows declaration at'
-      linters: [ govet ]
-
+version: "2"
 linters:
-  disable-all: true
+  settings:
+    wrapcheck:
+      ignore-sigs:
+        - .Errorf(
+        - errors.New(
+        - errors.Unwrap(
+        - .WithMessage(
+        - .WithMessagef(
+        - .WithStack(
+        - github.com/labstack/echo/v4.Context
+        - (go.temporal.io/sdk/internal.Future).Get(
+        - .NewNonRetryableApplicationError(
+
+      ignore-package-globs:
+        - github.com/satisfactorymodding/smr-api/*
+
+    govet:
+      enable:
+        - shadow
+
+    gocritic:
+      disabled-checks:
+        - ifElseChain
+
+    sloglint:
+      attr-only: true
+      context: scope
+      forbidden-keys:
+        - time
+        - level
+        - msg
+        - source
+
+    spancheck:
+      checks:
+        - end
+        - record-error
+
+  exclusions:
+    paths:
+      - ./generated/generated.go
+      - ./generated/models_gen.go
+      - ./generated/
+      - third_party$
+      - builtin$
+      - examples$
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - govet
+        text: 'shadow: declaration of "err" shadows declaration at'
+      - path: (.+)\.go$
+        text: should pass the context parameter
+
+  default: none
+
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - typecheck
-    - unused
     - bidichk
+    - canonicalheader
     - contextcheck
+    - copyloopvar
     - durationcheck
+    - errcheck
     - errorlint
-    - goimports
-    - revive
-    - misspell
-    - prealloc
-    - whitespace
-    - wrapcheck
-    - gci
+    - fatcontext
     - gocritic
-    - gofumpt
-    - nonamedreturns
+    - govet
     - inamedparam
+    - ineffassign
+    - intrange
+    - misspell
+    - nonamedreturns
+    - prealloc
+    - revive
     - sloglint
     - spancheck
-    - intrange
-    - copyloopvar
-    - fatcontext
-    - canonicalheader
+    - staticcheck
+    - unused
+    - whitespace
+    - wrapcheck
+
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/satisfactorymodding/smr-api)
+        - blank
+        - dot
+      custom-order: true
+
+  exclusions:
+    generated: lax
+    paths:
+      - ./generated/generated.go
+      - ./generated/models_gen.go
+      - ./generated/
+      - third_party$
+      - builtin$
+      - examples$

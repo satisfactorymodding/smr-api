@@ -402,7 +402,7 @@ type getModsResolver struct{ *Resolver }
 
 func (r *getModsResolver) Mods(ctx context.Context, _ *generated.GetMods) ([]*generated.Mod, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedMods"
+	unapproved := resolverContext.Parent.Field.Name == "getUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -427,7 +427,7 @@ func (r *getModsResolver) Mods(ctx context.Context, _ *generated.GetMods) ([]*ge
 
 func (r *getModsResolver) Count(ctx context.Context, _ *generated.GetMods) (int, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedMods"
+	unapproved := resolverContext.Parent.Field.Name == "getUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -450,7 +450,7 @@ type getMyModsResolver struct{ *Resolver }
 
 func (r *getMyModsResolver) Mods(ctx context.Context, _ *generated.GetMyMods) ([]*generated.Mod, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedMods"
+	unapproved := resolverContext.Parent.Field.Name == "getMyUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -474,7 +474,7 @@ func (r *getMyModsResolver) Mods(ctx context.Context, _ *generated.GetMyMods) ([
 
 func (r *getMyModsResolver) Count(ctx context.Context, _ *generated.GetMyMods) (int, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedMods"
+	unapproved := resolverContext.Parent.Field.Name == "getMyUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {

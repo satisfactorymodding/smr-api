@@ -255,7 +255,7 @@ type getVersionsResolver struct{ *Resolver }
 
 func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVersions) ([]*generated.Version, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedVersions"
+	unapproved := resolverContext.Parent.Field.Name == "getUnapprovedVersions"
 
 	versionFilter, err := models.ProcessVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -279,7 +279,7 @@ func (r *getVersionsResolver) Versions(ctx context.Context, _ *generated.GetVers
 
 func (r *getVersionsResolver) Count(ctx context.Context, _ *generated.GetVersions) (int, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedVersions"
+	unapproved := resolverContext.Parent.Field.Name == "getUnapprovedVersions"
 
 	versionFilter, err := models.ProcessVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -436,7 +436,7 @@ type getMyVersionsResolver struct{ *Resolver }
 
 func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMyVersions) ([]*generated.Version, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedVersions"
+	unapproved := resolverContext.Parent.Field.Name == "getMyUnapprovedVersions"
 
 	versionFilter, err := models.ProcessVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -460,7 +460,7 @@ func (r *getMyVersionsResolver) Versions(ctx context.Context, _ *generated.GetMy
 
 func (r *getMyVersionsResolver) Count(ctx context.Context, _ *generated.GetMyVersions) (int, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedVersions"
+	unapproved := resolverContext.Parent.Field.Name == "getMyUnapprovedVersions"
 
 	versionFilter, err := models.ProcessVersionFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
