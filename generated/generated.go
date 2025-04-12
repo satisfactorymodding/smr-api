@@ -22273,7 +22273,7 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj int
 			if err != nil {
 				return it, err
 			}
-			it.NetworkUseDisclosure = data
+			it.NetworkUseDisclosure = graphql.OmittableOf(data)
 		case "toggle_explicit_content":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toggle_explicit_content"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)

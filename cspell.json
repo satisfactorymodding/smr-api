@@ -7,6 +7,7 @@
     ],
     "words": [
         "devbox",
+        "dgraph",
         "entcache",
         "entgo",
         "fenv",
@@ -15,6 +16,8 @@
         "golangci",
         "goverter",
         "gqlgen",
+        "INNF",
+        "INNOEF",
         "libwebp",
         "Mircea",
         "mtxr",
@@ -25,8 +28,10 @@
         "pasteo",
         "pgadmin",
         "protoc",
+        "ristretto",
         "slox",
-        "svcacct"
+        "svcacct",
+        "Webp"
     ],
     // cSpell:disable (don't complain about the words we listed here)
     "flagWords": [
