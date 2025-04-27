@@ -1,3 +1,10 @@
+[tools."aqua:minio/mc"]
+version = "RELEASE.2025-04-08T15-39-49Z"
+backend = "aqua:minio/mc"
+
+[tools."aqua:minio/mc".checksums]
+"mc.RELEASE.2025-04-08T15-39-49Z" = "sha256:43d44d801a936e48390c8d2dc02c1c1cc1e973becbe71897f28ca06a9f456489"
+
 [tools.atlas]
 version = "0.32.0"
 backend = "aqua:ariga/atlas"
@@ -13,10 +20,6 @@ backend = "ubi:jstemmer/go-junit-report"
 [tools.golangci-lint]
 version = "2.0.2"
 backend = "aqua:golangci/golangci-lint"
-
-[tools.mc]
-version = "2025-04-08T15-39-49Z"
-backend = "asdf:mc"
 
 [tools.protoc]
 version = "30.2"
