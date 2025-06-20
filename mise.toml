@@ -28,14 +28,14 @@ run = "go generate -tags tools -x ./..."
 
 [tasks.setup]
 run = [
-    "docker compose --file docker-compose-dev.yml up --detach --wait",
+        "docker compose --file docker-compose-dev.yml up --detach --wait && sleep 5",
     "mc alias set local http://localhost:9000 minio minio123",
     "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || echo It is okay for this REMOVE command to fail if the account does not exist",
     "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
     "mc anonymous set public local/smr"
 ]
 run_windows = [
-    "docker compose --file docker-compose-dev.yml up --detach --wait",
+    "docker compose --file docker-compose-dev.yml up --detach --wait && timeout /t 5",
     "mc alias set local http://localhost:9000 minio minio123",
     "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || echo It is okay for this REMOVE command to fail if the account does not exist",
     "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
