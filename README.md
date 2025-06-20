@@ -4,13 +4,7 @@ The Satisfactory Mod Repository backend API
 
 ## Running
 
-If you are under Linux, you will need to install the following packages (or your distro's equivalent):
-
-```bash
-sudo apt update && sudo apt install -y build-essential libpng-dev
-```
-
-You will also need to generate the GQL server and REST docs via:
+You need to generate the GQL server and REST docs via:
 
 ```bash
 go generate -x -tags tools ./...
