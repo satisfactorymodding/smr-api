@@ -17,7 +17,6 @@ require (
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/cespare/xxhash v1.1.0
-	github.com/chai2010/webp v1.1.1
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/exaring/otelpgx v0.6.2
 	github.com/felixge/fgprof v0.9.4
@@ -43,11 +42,9 @@ require (
 	github.com/ravilushqa/otelgqlgen v0.16.0
 	github.com/russross/blackfriday v1.6.0
 	github.com/samber/slog-multi v1.2.0
-	github.com/sizeofint/gif-to-webp v0.0.0-20210224202734-e9d7ed071591
 	github.com/spf13/viper v1.19.0
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.4
-	github.com/tidbyt/go-libwebp v0.0.0-20230922075150-fb11063b2a6a
 	github.com/vektah/gqlparser/v2 v2.5.23
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.53.0
@@ -167,7 +164,6 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/samber/lo v1.47.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
-	github.com/sizeofint/webp-animation v0.0.0-20190207194838-b631dc900de9 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
