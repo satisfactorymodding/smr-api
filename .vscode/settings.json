@@ -1,0 +1,6 @@
+{
+    "go.goroot": "/home/vilsol/.local/share/mise/installs/go/1.24.2",
+    "go.alternateTools": {
+        "go": "/home/vilsol/.local/share/mise/shims/go"
+    }
+}

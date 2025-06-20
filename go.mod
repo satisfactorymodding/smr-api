@@ -6,6 +6,7 @@ require (
 	ariga.io/entcache v0.1.0
 	entgo.io/ent v0.14.4
 	github.com/99designs/gqlgen v0.17.70
+	github.com/HugoSmits86/nativewebp v1.2.0
 	github.com/MarvinJWendt/testza v0.5.2
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Vilsol/slox v0.0.1
@@ -192,6 +193,7 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa // indirect
+	golang.org/x/image v0.24.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/term v0.30.0 // indirect
