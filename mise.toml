@@ -33,6 +33,12 @@ run = [
     "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
     "mc anonymous set public local/smr"
 ]
+run_windows = [
+    "docker compose up -d && timeout /t 5",
+    "mc alias set local http://localhost:9000 minio minio123",
+    "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
+    "mc anonymous set public local/smr"
+]
 
 [tasks.teardown]
 run = "docker compose down"
