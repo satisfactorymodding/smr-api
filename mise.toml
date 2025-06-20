@@ -28,22 +28,22 @@ run = "go generate -tags tools -x ./..."
 
 [tasks.setup]
 run = [
-    "docker compose up -d && sleep 5",
+    "docker compose --file docker-compose-dev.yml up --detach --wait",
     "mc alias set local http://localhost:9000 minio minio123",
-    "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || true",
+    "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || echo It is okay for this REMOVE command to fail if the account does not exist",
     "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
     "mc anonymous set public local/smr"
 ]
 run_windows = [
-    "docker compose up -d && timeout /t 5",
+    "docker compose --file docker-compose-dev.yml up --detach --wait",
     "mc alias set local http://localhost:9000 minio minio123",
-    "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || echo ignore",
+    "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || echo It is okay for this REMOVE command to fail if the account does not exist",
     "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
     "mc anonymous set public local/smr"
 ]
 
 [tasks.teardown]
-run = "docker compose down"
+run = "docker compose --file docker-compose-dev.yml down"
 
 [tasks.lint]
 run = "golangci-lint run"
