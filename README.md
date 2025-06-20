@@ -1,66 +1,108 @@
 # SMR API [![build](https://github.com/satisfactorymodding/smr-api/actions/workflows/build.yml/badge.svg)](https://github.com/satisfactorymodding/smr-api/actions/workflows/build.yml) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/satisfactorymodding/smr-api) [![codecov](https://codecov.io/gh/satisfactorymodding/smr-api/branch/master/graph/badge.svg?token=LFNKYWS0N2)](https://codecov.io/gh/satisfactorymodding/smr-api) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/satisfactorymodding/smr-api)
 
-The Satisfactory Mod Repository backend API
+The Satisfactory Mod Repository backend API - a Go-based service providing REST and GraphQL endpoints for mod management.
 
-## Running
+## Quick Start
 
-You need to generate the GQL server and REST docs via:
+### Prerequisites
+- [mise](https://mise.jdx.dev/) for tool management
+- Docker and Docker Compose
+
+### Setup
+```bash
+# Install tools and start development services
+mise install
+mise run setup
+
+# Generate code and start API
+mise run generate
+mise run api
+```
+
+## Development Commands
 
 ```bash
-go generate -x -tags tools ./...
+# Code generation (run after schema changes)
+mise run generate
+
+# Start API server
+mise run api
+
+# Testing
+mise run test
+mise run coverage
+
+# Linting
+mise run lint
+
+# Environment management
+mise run setup     # Start PostgreSQL, Redis, MinIO
+mise run teardown  # Stop services
 ```
 
-To start the API, execute:
+## Architecture
 
-```bash
-go run cmd/api/serve.go
-```
+**Tech Stack:**
+- **Framework**: Echo v4 with middleware
+- **Database**: PostgreSQL with Ent ORM
+- **GraphQL**: gqlgen with custom resolvers
+- **Authentication**: Multi-provider OAuth + PASETO tokens
+- **Storage**: S3-compatible (MinIO for dev)
+- **Background Processing**: Temporal.io workflows
+- **Monitoring**: OpenTelemetry tracing
 
-### Configuration
+**Key Components:**
+- REST API at `/v1/`
+- GraphQL at `/v2/` with playground
+- Swagger docs at `/swagger/`
+- Generated code in `generated/`
+- Database schemas in `db/schema/`
 
-Running the API has a lot of pre-requisites.
+## Configuration
 
-To run the API, you will need to have a working Postgres, Redis and Storage. There is a dev composefile that you can
-start via:
+Create `config.json` or use environment variables with `REPO_` prefix.
 
-```bash
-docker compose up -d
-```
+**Required services:**
+1. **PostgreSQL** - Database (dev: port 5432)
+2. **Redis** - Cache/sessions (dev: port 6379)  
+3. **MinIO** - Object storage (dev: ports 9000/9001)
+4. **OAuth providers** - GitHub, Google, Facebook
+5. **PASETO keys** - Generate with `go run cmd/paseto/main.go`
+6. **VirusTotal API key** - For mod scanning
 
-It is suggested you create a configuration file at `config.json` (but you can also use environment variables).
+**Development services** are started automatically with `mise run setup`. MinIO configuration is included in the setup task.
 
-Main configuration options:
+See `config/config.go` for full configuration structure.
 
-1. Postgres (started with dev composefile)
-2. Redis (started with dev composefile)
-3. B2 or S3 (or anything S3-compatible e.g. minio (started with dev composefile))
-4. GitHub OAuth (https://github.com/settings/developers)
-5. Google OAuth (https://console.developers.google.com/)
-6. Facebook OAuth (https://developers.facebook.com/apps/)
-7. Paseto keys (generated via `go run cmd/paseto/main.go`)
-8. Frontend URL (needed for Google OAuth, otherwise can be ignored)
-9. VirusTotal API key (https://www.virustotal.com/gui/sign-in)
+## Development Workflow
 
-The config format can be seen in `config/config.go` (each dot means a new level of nesting).
+1. **Code Generation**: Always run `mise run generate` after modifying:
+   - GraphQL schemas (`schemas/*.graphql`)
+   - Database schemas (`db/schema/*.go`) 
+   - Swagger annotations
 
-After startup requires the following minio commands to be executed:
+2. **Database Changes**: Use Atlas migrations
+   - SQL migrations in `migrations/sql/`
+   - Code migrations in `migrations/code/`
 
-```shell
-mc alias set local http://localhost:9000 minio minio123
-mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET
-mc anonymous set public local/smr
-```
+3. **Testing**: Tests require development services running
+   ```bash
+   mise run setup  # Start services
+   mise run test   # Run tests
+   ```
 
 ## Contributing
 
-Before contributing, please run the [linter](https://golangci-lint.run/) to ensure the code is clean and well-formed:
-
+**Before submitting:**
 ```bash
-golangci-lint run
+mise run lint     # Check code quality
+mise run test     # Run test suite
+mise run generate # Regenerate if needed
 ```
 
-For some simple formatting issues you can use the `--fix` flag, but for more complex issues you will need to fix the code:
-
-```bash
-golangci-lint run --fix
-```
+**Development patterns:**
+- Use Ent ORM for database operations
+- Implement GraphQL resolvers for complex queries
+- Use Temporal workflows for background processing
+- Follow structured logging with `slog`
+- Use context for request tracing
