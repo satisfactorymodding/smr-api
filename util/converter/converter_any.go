@@ -6,23 +6,18 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image"
+	"image/gif"
 	"log/slog"
 
+	webp "github.com/HugoSmits86/nativewebp"
 	"github.com/Vilsol/slox"
-	"github.com/chai2010/webp"
 	"github.com/galdor/go-thumbhash"
-	giftowebp "github.com/sizeofint/gif-to-webp"
-	webpd "github.com/tidbyt/go-libwebp/webp"
 
-	// GIF Support
-	_ "image/gif"
 	// JPEG Support
 	_ "image/jpeg"
 	// PNG Support
 	_ "image/png"
 )
-
-var converter = giftowebp.NewConverter()
 
 func ConvertAnyImageToWebp(ctx context.Context, imageAsBytes []byte) ([]byte, string, error) {
 	imageData, imageType, err := image.Decode(bytes.NewReader(imageAsBytes))
@@ -35,14 +30,38 @@ func ConvertAnyImageToWebp(ctx context.Context, imageAsBytes []byte) ([]byte, st
 	result := bytes.NewBuffer(make([]byte, 0))
 
 	if imageType == "gif" {
-		webpBin, err := converter.Convert(imageAsBytes)
+		allFrames, err := gif.DecodeAll(bytes.NewReader(imageAsBytes))
 		if err != nil {
 			message := "error converting image to webp"
 			slox.Error(ctx, message, slog.Any("err", err))
 			return nil, "", fmt.Errorf("%s: %w", message, err)
 		}
 
-		return webpBin, "", nil
+		palettesToImages := make([]image.Image, len(allFrames.Image))
+		durations := make([]uint, len(allFrames.Image))
+		disposals := make([]uint, len(allFrames.Image))
+
+		for i, paletted := range allFrames.Image {
+			palettesToImages[i] = paletted
+			durations[i] = max(10, uint(allFrames.Delay[i])/10)
+			disposals[i] = 0
+		}
+
+		err = webp.EncodeAll(result, &webp.Animation{
+			Images:          palettesToImages,
+			Durations:       durations,
+			Disposals:       disposals,
+			LoopCount:       uint16(allFrames.LoopCount),
+			BackgroundColor: 0xffffffff,
+		}, nil)
+		if err != nil {
+			return nil, "", fmt.Errorf("error converting image to webp: %w", err)
+		}
+
+		hash := thumbhash.EncodeImage(imageData)
+		thumbHash := base64.StdEncoding.EncodeToString(hash)
+
+		return result.Bytes(), thumbHash, nil
 	}
 
 	if err := webp.Encode(result, imageData, nil); err != nil {
@@ -66,12 +85,9 @@ func DecodeAny(data []byte) (image.Image, error) {
 		return imageData, nil
 	}
 
-	decoder, err := webpd.NewAnimationDecoder(data)
+	decode, err := gif.Decode(bytes.NewReader(data))
 	if err == nil {
-		decode, err := decoder.Decode()
-		if err == nil {
-			return decode.Image[0], nil
-		}
+		return decode, nil
 	}
 
 	return nil, fmt.Errorf("error decoding image: %w", err)
