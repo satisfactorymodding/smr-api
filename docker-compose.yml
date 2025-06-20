@@ -46,7 +46,7 @@ services:
     volumes:
       - ./grafana_datasources.yaml:/etc/grafana/provisioning/datasources/ds.yaml
     ports:
-      - "3000:3000"
+      - "3001:3000"
 
   tempo:
     image: grafana/tempo:latest
