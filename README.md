@@ -5,19 +5,28 @@ The Satisfactory Mod Repository backend API - a Go-based service providing REST 
 ## Quick Start
 
 ### Prerequisites
+
 - [mise](https://mise.jdx.dev/) for tool management
-- Docker and Docker Compose
+- [Docker (and Docker Compose)](https://docs.docker.com/desktop/)
 
 ### Setup
+
 ```bash
 # Install tools and start development services
 mise install
+# If this command fails, ensure you have Docker running and configured correctly
 mise run setup
 
 # Generate code and start API
 mise run generate
 mise run api
 ```
+
+If running `api` produces errors about the database fails to apply migrations,
+you may have switched branches without cleaning up after database changes you were working on.
+The easiest way to get back from this state
+is to delete the `postgres` Docker container
+and delete all not-in-use volumes so it creates a fresh one.
 
 ## Development Commands
 
@@ -40,9 +49,21 @@ mise run setup     # Start PostgreSQL, Redis, MinIO
 mise run teardown  # Stop services
 ```
 
+### Database Access
+
+The development docker compose also includes a pgadmin container for testing database related stuff
+exposed at <http://localhost:5433/>.
+The credentials are specified in `docker-compose-dev.yml`.
+
+Once logged in, add a server.
+The "Host name/address" should be `postgres`, username should be `postgres`, password should be `POSTGRES_PASSWORD` from `docker-compose.yml`.
+
+You can view tables via `Servers >(name)> Databases > postgres > Schemas > public > Tables`.
+
 ## Architecture
 
 **Tech Stack:**
+
 - **Framework**: Echo v4 with middleware
 - **Database**: PostgreSQL with Ent ORM
 - **GraphQL**: gqlgen with custom resolvers
@@ -52,6 +73,7 @@ mise run teardown  # Stop services
 - **Monitoring**: OpenTelemetry tracing
 
 **Key Components:**
+
 - REST API at `/v1/`
 - GraphQL at `/v2/` with playground
 - Swagger docs at `/swagger/`
@@ -63,6 +85,7 @@ mise run teardown  # Stop services
 Create `config.json` or use environment variables with `REPO_` prefix.
 
 **Required services:**
+
 1. **PostgreSQL** - Database (dev: port 5432)
 2. **Redis** - Cache/sessions (dev: port 6379)  
 3. **MinIO** - Object storage (dev: ports 9000/9001)
@@ -78,7 +101,7 @@ See `config/config.go` for full configuration structure.
 
 1. **Code Generation**: Always run `mise run generate` after modifying:
    - GraphQL schemas (`schemas/*.graphql`)
-   - Database schemas (`db/schema/*.go`) 
+   - Database schemas (`db/schema/*.go`)
    - Swagger annotations
 
 2. **Database Changes**: Use Atlas migrations
@@ -86,6 +109,7 @@ See `config/config.go` for full configuration structure.
    - Code migrations in `migrations/code/`
 
 3. **Testing**: Tests require development services running
+
    ```bash
    mise run setup  # Start services
    mise run test   # Run tests
@@ -94,6 +118,7 @@ See `config/config.go` for full configuration structure.
 ## Contributing
 
 **Before submitting:**
+
 ```bash
 mise run lint     # Check code quality
 mise run test     # Run test suite
@@ -101,6 +126,7 @@ mise run generate # Regenerate if needed
 ```
 
 **Development patterns:**
+
 - Use Ent ORM for database operations
 - Implement GraphQL resolvers for complex queries
 - Use Temporal workflows for background processing
