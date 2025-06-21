@@ -366,7 +366,7 @@ func (e AnnouncementImportance) String() string {
 	return string(e)
 }
 
-func (e *AnnouncementImportance) UnmarshalGQL(v interface{}) error {
+func (e *AnnouncementImportance) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -409,7 +409,7 @@ func (e CompatibilityState) String() string {
 	return string(e)
 }
 
-func (e *CompatibilityState) UnmarshalGQL(v interface{}) error {
+func (e *CompatibilityState) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -454,7 +454,7 @@ func (e GuideFields) String() string {
 	return string(e)
 }
 
-func (e *GuideFields) UnmarshalGQL(v interface{}) error {
+func (e *GuideFields) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -509,7 +509,7 @@ func (e ModFields) String() string {
 	return string(e)
 }
 
-func (e *ModFields) UnmarshalGQL(v interface{}) error {
+func (e *ModFields) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -550,7 +550,7 @@ func (e Order) String() string {
 	return string(e)
 }
 
-func (e *Order) UnmarshalGQL(v interface{}) error {
+func (e *Order) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -597,7 +597,7 @@ func (e SMLVersionFields) String() string {
 	return string(e)
 }
 
-func (e *SMLVersionFields) UnmarshalGQL(v interface{}) error {
+func (e *SMLVersionFields) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -640,7 +640,7 @@ func (e TargetName) String() string {
 	return string(e)
 }
 
-func (e *TargetName) UnmarshalGQL(v interface{}) error {
+func (e *TargetName) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -683,7 +683,7 @@ func (e VersionFields) String() string {
 	return string(e)
 }
 
-func (e *VersionFields) UnmarshalGQL(v interface{}) error {
+func (e *VersionFields) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -726,7 +726,7 @@ func (e VersionStabilities) String() string {
 	return string(e)
 }
 
-func (e *VersionStabilities) UnmarshalGQL(v interface{}) error {
+func (e *VersionStabilities) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")

@@ -76,9 +76,9 @@ func RunVersionTestWrapper(t *testing.T, modFilePath string, executeVirusCheck b
 }
 
 func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, modFilePath string, executeVirusCheck bool, modReference string, reuseModID string, expectError string) string {
-	if executeVirusCheck && !(viper.IsSet("virustotal.key") && viper.GetString("virustotal.key") != "") {
-		println("missing virustotal key from config")
-		t.FailNow()
+	if executeVirusCheck && (!viper.IsSet("virustotal.key") || viper.GetString("virustotal.key") == "") {
+		println("missing virustotal key from config, skipping")
+		t.SkipNow()
 		return ""
 	}
 

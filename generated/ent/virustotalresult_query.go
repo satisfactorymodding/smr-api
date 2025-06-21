@@ -277,8 +277,9 @@ func (vrq *VirustotalResultQuery) Clone() *VirustotalResultQuery {
 		predicates:  append([]predicate.VirustotalResult{}, vrq.predicates...),
 		withVersion: vrq.withVersion.Clone(),
 		// clone intermediate query.
-		sql:  vrq.sql.Clone(),
-		path: vrq.path,
+		sql:       vrq.sql.Clone(),
+		path:      vrq.path,
+		modifiers: append([]func(*sql.Selector){}, vrq.modifiers...),
 	}
 }
 

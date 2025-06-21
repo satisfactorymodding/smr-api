@@ -229,8 +229,9 @@ func (vdq *VersionDependencyQuery) Clone() *VersionDependencyQuery {
 		withVersion: vdq.withVersion.Clone(),
 		withMod:     vdq.withMod.Clone(),
 		// clone intermediate query.
-		sql:  vdq.sql.Clone(),
-		path: vdq.path,
+		sql:       vdq.sql.Clone(),
+		path:      vdq.path,
+		modifiers: append([]func(*sql.Selector){}, vdq.modifiers...),
 	}
 }
 

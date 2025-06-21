@@ -23,14 +23,12 @@ func (c *GuideImpl) Convert(source *ent.Guide) *generated.Guide {
 		generatedGuide.UserID = (*source).UserID
 		generatedGuide.UpdatedAt = conversion.TimeToString((*source).UpdatedAt)
 		generatedGuide.CreatedAt = conversion.TimeToString((*source).CreatedAt)
-		var pGeneratedTagList []*generated.Tag
 		if (*source).Edges.Tags != nil {
-			pGeneratedTagList = make([]*generated.Tag, len((*source).Edges.Tags))
+			generatedGuide.Tags = make([]*generated.Tag, len((*source).Edges.Tags))
 			for i := 0; i < len((*source).Edges.Tags); i++ {
-				pGeneratedTagList[i] = c.pEntTagToPGeneratedTag((*source).Edges.Tags[i])
+				generatedGuide.Tags[i] = c.pEntTagToPGeneratedTag((*source).Edges.Tags[i])
 			}
 		}
-		generatedGuide.Tags = pGeneratedTagList
 		pGeneratedGuide = &generatedGuide
 	}
 	return pGeneratedGuide

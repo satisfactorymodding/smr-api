@@ -29,7 +29,8 @@ services:
     image: ghcr.io/vilsol/ficsit-pak-parser:v0.0.6
     ports:
       - 50051:50051
-    restart: always
+    # TODO - Improve stability so this isn't needed
+    restart: on-failure
 
   loki:
     image: grafana/loki:latest
@@ -46,7 +47,7 @@ services:
     volumes:
       - ./grafana_datasources.yaml:/etc/grafana/provisioning/datasources/ds.yaml
     ports:
-      - "3000:3000"
+      - "3001:3000"
 
   tempo:
     image: grafana/tempo:latest

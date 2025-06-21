@@ -69,13 +69,13 @@ func rewriteRecursive(obj interface{}) interface{} {
 			return val
 		} else if mapHas("AssetPathName", b) && mapHas("SubPathString", b) {
 			return b["AssetPathName"]
-		} else {
-			newOut := make(map[string]interface{})
-			for k, v := range b {
-				newOut[k] = rewriteRecursive(v)
-			}
-			return newOut
 		}
+
+		newOut := make(map[string]interface{})
+		for k, v := range b {
+			newOut[k] = rewriteRecursive(v)
+		}
+		return newOut
 	case []interface{}:
 		newOut := make([]interface{}, len(b))
 		for i, v := range b {

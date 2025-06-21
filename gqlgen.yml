@@ -12,6 +12,7 @@ model:
 resolver:
   filename: ./gql/resolver.go
   type: Resolver
+  preserve_resolver: true
 
 models:
 

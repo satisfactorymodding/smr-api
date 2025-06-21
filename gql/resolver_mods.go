@@ -61,6 +61,16 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 		return nil, errors.New("mod with this mod reference already exists")
 	}
 
+	// Check if mod reference matches any existing mod ID
+	existByID, err := db.From(ctx).Mod.Query().Where(mod.ID(newMod.ModReference)).Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if existByID {
+		return nil, errors.New("mod reference cannot match an existing mod ID")
+	}
+
 	dbMod := db.From(ctx).Mod.Create().
 		SetName(newMod.Name).
 		SetShortDescription(newMod.ShortDescription).
@@ -402,7 +412,7 @@ type getModsResolver struct{ *Resolver }
 
 func (r *getModsResolver) Mods(ctx context.Context, _ *generated.GetMods) ([]*generated.Mod, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedMods"
+	unapproved := resolverContext.Parent.Field.Name == "getUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -427,7 +437,7 @@ func (r *getModsResolver) Mods(ctx context.Context, _ *generated.GetMods) ([]*ge
 
 func (r *getModsResolver) Count(ctx context.Context, _ *generated.GetMods) (int, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getUnapprovedMods"
+	unapproved := resolverContext.Parent.Field.Name == "getUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -450,7 +460,7 @@ type getMyModsResolver struct{ *Resolver }
 
 func (r *getMyModsResolver) Mods(ctx context.Context, _ *generated.GetMyMods) ([]*generated.Mod, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedMods"
+	unapproved := resolverContext.Parent.Field.Name == "getMyUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {
@@ -474,7 +484,7 @@ func (r *getMyModsResolver) Mods(ctx context.Context, _ *generated.GetMyMods) ([
 
 func (r *getMyModsResolver) Count(ctx context.Context, _ *generated.GetMyMods) (int, error) {
 	resolverContext := graphql.GetFieldContext(ctx)
-	unapproved := resolverContext.Parent.Field.Field.Name == "getMyUnapprovedMods"
+	unapproved := resolverContext.Parent.Field.Name == "getMyUnapprovedMods"
 
 	modFilter, err := models.ProcessModFilter(resolverContext.Parent.Args["filter"].(map[string]interface{}))
 	if err != nil {

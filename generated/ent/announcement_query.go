@@ -252,8 +252,9 @@ func (aq *AnnouncementQuery) Clone() *AnnouncementQuery {
 		inters:     append([]Interceptor{}, aq.inters...),
 		predicates: append([]predicate.Announcement{}, aq.predicates...),
 		// clone intermediate query.
-		sql:  aq.sql.Clone(),
-		path: aq.path,
+		sql:       aq.sql.Clone(),
+		path:      aq.path,
+		modifiers: append([]func(*sql.Selector){}, aq.modifiers...),
 	}
 }
 

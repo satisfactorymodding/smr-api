@@ -229,8 +229,9 @@ func (umq *UserModQuery) Clone() *UserModQuery {
 		withUser:   umq.withUser.Clone(),
 		withMod:    umq.withMod.Clone(),
 		// clone intermediate query.
-		sql:  umq.sql.Clone(),
-		path: umq.path,
+		sql:       umq.sql.Clone(),
+		path:      umq.path,
+		modifiers: append([]func(*sql.Selector){}, umq.modifiers...),
 	}
 }
 

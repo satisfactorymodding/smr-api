@@ -277,8 +277,9 @@ func (ugq *UserGroupQuery) Clone() *UserGroupQuery {
 		predicates: append([]predicate.UserGroup{}, ugq.predicates...),
 		withUser:   ugq.withUser.Clone(),
 		// clone intermediate query.
-		sql:  ugq.sql.Clone(),
-		path: ugq.path,
+		sql:       ugq.sql.Clone(),
+		path:      ugq.path,
+		modifiers: append([]func(*sql.Selector){}, ugq.modifiers...),
 	}
 }
 

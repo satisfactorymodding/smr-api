@@ -229,8 +229,9 @@ func (gtq *GuideTagQuery) Clone() *GuideTagQuery {
 		withGuide:  gtq.withGuide.Clone(),
 		withTag:    gtq.withTag.Clone(),
 		// clone intermediate query.
-		sql:  gtq.sql.Clone(),
-		path: gtq.path,
+		sql:       gtq.sql.Clone(),
+		path:      gtq.path,
+		modifiers: append([]func(*sql.Selector){}, gtq.modifiers...),
 	}
 }
 

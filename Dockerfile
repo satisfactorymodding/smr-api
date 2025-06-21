@@ -1,6 +1,4 @@
-FROM golang:1.23.0-alpine AS builder
-
-RUN apk add --no-cache git build-base libpng-dev libwebp-dev
+FROM golang:1.24.2-alpine AS builder
 
 WORKDIR $GOPATH/src/github.com/satisfactorymodding/smr-api/
 
@@ -12,11 +10,10 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -v -a -installsuffix cgo -o /go/bin/api cmd/api/serve.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -installsuffix cgo -o /go/bin/api cmd/api/serve.go
 
 
-FROM golang:1.23.0-alpine
-RUN apk add --no-cache libstdc++ libpng
+FROM golang:1.24.2-alpine
 COPY --from=builder /go/bin/api /api
 WORKDIR /app
 COPY static /app/static

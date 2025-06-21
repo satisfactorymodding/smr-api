@@ -10,15 +10,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jetify-com/devbox-install-action@v0.11.0
-        with:
-          enable-cache: true
+      - uses: jdx/mise-action@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Hash migrations
-        run: devbox run migrate:hash
+        run: mise run migrate_hash
 
       - name: Make sure all changes generated
-        run: echo 'ci_migration' | devbox run migrate:diff
+        run: echo 'ci_migration' | mise run migrate_diff
+
+      - name: Tidy
+        run: go mod tidy
 
       - name: Ensure no changes
         run: git diff --exit-code
@@ -28,12 +31,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jetify-com/devbox-install-action@v0.11.0
-        with:
-          enable-cache: true
+      - uses: jdx/mise-action@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Run generation tasks
-        run: devbox run generate
+        run: mise run generate
+
+      - name: Tidy
+        run: go mod tidy
 
       - name: Ensure no changes
         run: git diff --exit-code

@@ -33,12 +33,13 @@ func SetupLogger(out io.Writer) error {
 				AddSource:  true,
 				TimeFormat: time.RFC3339Nano,
 				ReplaceAttr: func(_ []string, attr slog.Attr) slog.Attr {
-					if attr.Key == slog.LevelKey {
+					switch attr.Key {
+					case slog.LevelKey:
 						level := attr.Value.Any().(slog.Level)
 						if level == slog.LevelDebug {
 							attr.Value = slog.StringValue(ansiBrightMagenta + "DBG" + ansiReset)
 						}
-					} else if attr.Key == slog.MessageKey {
+					case slog.MessageKey:
 						attr.Value = slog.StringValue(ansiBold + ansiWhite + fmt.Sprint(attr.Value.Any()) + ansiReset)
 					}
 					return attr

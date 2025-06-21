@@ -1,0 +1,11 @@
+include:
+  - docker-compose.yml
+
+services:
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - 5433:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user-name@domain-name.com
+      PGADMIN_DEFAULT_PASSWORD: strong-password

@@ -1,0 +1,49 @@
+[tools]
+"aqua:minio/mc" = "RELEASE.2025-04-08T15-39-49Z"
+atlas = "0.32.0"
+go = "1.24.2"
+go-junit-report = "2.1.0"
+golangci-lint = "2.0.2"
+protoc = "30.2"
+protoc-gen-go = "1.36.6"
+protoc-gen-go-grpc = "1.5.1"
+
+[tasks.api]
+run = "go run cmd/api/serve.go"
+
+[tasks.test]
+run = "go test -p 1 -v -timeout 1h ./..."
+
+[tasks.coverage]
+run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -p 1 -timeout 1h ./..."
+
+[tasks.test_coverage_junit]
+run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -p 1 -timeout 1h ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out junit.xml"
+
+[tasks.migrate_hash]
+run = "atlas migrate hash --dir \"file://migrations/sql?format=golang-migrate\""
+
+[tasks.generate]
+run = "go generate -tags tools -x ./..."
+
+[tasks.setup]
+run = [
+        "docker compose --file docker-compose-dev.yml up --detach --wait && sleep 5",
+    "mc alias set local http://localhost:9000 minio minio123",
+    "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || echo It is okay for this REMOVE command to fail if the account does not exist",
+    "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
+    "mc anonymous set public local/smr"
+]
+run_windows = [
+    "docker compose --file docker-compose-dev.yml up --detach --wait && timeout /t 5",
+    "mc alias set local http://localhost:9000 minio minio123",
+    "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || echo It is okay for this REMOVE command to fail if the account does not exist",
+    "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
+    "mc anonymous set public local/smr"
+]
+
+[tasks.teardown]
+run = "docker compose --file docker-compose-dev.yml down"
+
+[tasks.lint]
+run = "golangci-lint run"

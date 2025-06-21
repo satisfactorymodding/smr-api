@@ -19,14 +19,12 @@ func (c *SMLVersionImpl) Convert(source *ent.Version) *generated.SMLVersion {
 		generatedSMLVersion.Version = (*source).Version
 		generatedSMLVersion.SatisfactoryVersion = conversion.SMLSatisfactoryVersion((*source).GameVersion)
 		generatedSMLVersion.Stability = generated.VersionStabilities((*source).Stability)
-		var pGeneratedSMLVersionTargetList []*generated.SMLVersionTarget
 		if (*source).Edges.Targets != nil {
-			pGeneratedSMLVersionTargetList = make([]*generated.SMLVersionTarget, len((*source).Edges.Targets))
+			generatedSMLVersion.Targets = make([]*generated.SMLVersionTarget, len((*source).Edges.Targets))
 			for i := 0; i < len((*source).Edges.Targets); i++ {
-				pGeneratedSMLVersionTargetList[i] = c.pEntVersionTargetToPGeneratedSMLVersionTarget((*source).Edges.Targets[i])
+				generatedSMLVersion.Targets[i] = c.pEntVersionTargetToPGeneratedSMLVersionTarget((*source).Edges.Targets[i])
 			}
 		}
-		generatedSMLVersion.Targets = pGeneratedSMLVersionTargetList
 		generatedSMLVersion.Changelog = (*source).Changelog
 		generatedSMLVersion.Date = conversion.TimeToString((*source).CreatedAt)
 		generatedSMLVersion.UpdatedAt = conversion.TimeToString((*source).UpdatedAt)

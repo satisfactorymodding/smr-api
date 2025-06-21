@@ -39,14 +39,12 @@ func (c *ModImpl) Convert(source *ent.Mod) *generated.Mod {
 		generatedMod.LastVersionDate = c.timeTimeToPString((*source).LastVersionDate)
 		generatedMod.ModReference = (*source).ModReference
 		generatedMod.Hidden = (*source).Hidden
-		var pGeneratedTagList []*generated.Tag
 		if (*source).Edges.Tags != nil {
-			pGeneratedTagList = make([]*generated.Tag, len((*source).Edges.Tags))
+			generatedMod.Tags = make([]*generated.Tag, len((*source).Edges.Tags))
 			for i := 0; i < len((*source).Edges.Tags); i++ {
-				pGeneratedTagList[i] = c.pEntTagToPGeneratedTag((*source).Edges.Tags[i])
+				generatedMod.Tags[i] = c.pEntTagToPGeneratedTag((*source).Edges.Tags[i])
 			}
 		}
-		generatedMod.Tags = pGeneratedTagList
 		generatedMod.Compatibility = c.pUtilCompatibilityInfoToPGeneratedCompatibilityInfo((*source).Compatibility)
 		generatedMod.ToggleNetworkUse = (*source).ToggleNetworkUse
 		generatedMod.ToggleExplicitContent = (*source).ToggleExplicitContent
