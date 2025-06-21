@@ -41,6 +41,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/ravilushqa/otelgqlgen v0.16.0
 	github.com/russross/blackfriday v1.6.0
+	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/samber/slog-multi v1.2.0
 	github.com/spf13/viper v1.19.0
 	github.com/swaggo/echo-swagger v1.4.1
@@ -159,7 +160,6 @@ require (
 	github.com/pterm/pterm v0.12.79 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.6.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/samber/lo v1.47.0 // indirect
