@@ -58,7 +58,7 @@ require (
 	go.temporal.io/sdk v1.28.1
 	go.temporal.io/sdk/contrib/opentelemetry v0.6.0
 	golang.org/x/crypto v0.36.0
-	golang.org/x/net v0.37.0
+	golang.org/x/net v0.38.0
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/sync v0.12.0
 	google.golang.org/grpc v1.65.0
