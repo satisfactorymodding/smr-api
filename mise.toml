@@ -3,7 +3,7 @@
 atlas = "0.32.0"
 go = "1.24.4"
 go-junit-report = "2.1.0"
-golangci-lint = "2.0.2"
+golangci-lint = "2.1.6"
 protoc = "31.1"
 protoc-gen-go = "1.36.6"
 protoc-gen-go-grpc = "1.5.1"
