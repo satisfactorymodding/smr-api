@@ -8,7 +8,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // ID filters vertices based on their ID field.
@@ -689,36 +688,6 @@ func KeyEqualFold(v string) predicate.Version {
 // KeyContainsFold applies the ContainsFold predicate on the "key" field.
 func KeyContainsFold(v string) predicate.Version {
 	return predicate.Version(sql.FieldContainsFold(FieldKey, v))
-}
-
-// StabilityEQ applies the EQ predicate on the "stability" field.
-func StabilityEQ(v util.Stability) predicate.Version {
-	vc := v
-	return predicate.Version(sql.FieldEQ(FieldStability, vc))
-}
-
-// StabilityNEQ applies the NEQ predicate on the "stability" field.
-func StabilityNEQ(v util.Stability) predicate.Version {
-	vc := v
-	return predicate.Version(sql.FieldNEQ(FieldStability, vc))
-}
-
-// StabilityIn applies the In predicate on the "stability" field.
-func StabilityIn(vs ...util.Stability) predicate.Version {
-	v := make([]any, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Version(sql.FieldIn(FieldStability, v...))
-}
-
-// StabilityNotIn applies the NotIn predicate on the "stability" field.
-func StabilityNotIn(vs ...util.Stability) predicate.Version {
-	v := make([]any, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Version(sql.FieldNotIn(FieldStability, v...))
 }
 
 // ApprovedEQ applies the EQ predicate on the "approved" field.

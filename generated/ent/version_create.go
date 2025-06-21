@@ -16,7 +16,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // VersionCreate is the builder for creating a Version entity.
@@ -139,20 +138,6 @@ func (vc *VersionCreate) SetKey(s string) *VersionCreate {
 func (vc *VersionCreate) SetNillableKey(s *string) *VersionCreate {
 	if s != nil {
 		vc.SetKey(*s)
-	}
-	return vc
-}
-
-// SetStability sets the "stability" field.
-func (vc *VersionCreate) SetStability(u util.Stability) *VersionCreate {
-	vc.mutation.SetStability(u)
-	return vc
-}
-
-// SetNillableStability sets the "stability" field if the given value is not nil.
-func (vc *VersionCreate) SetNillableStability(u *util.Stability) *VersionCreate {
-	if u != nil {
-		vc.SetStability(*u)
 	}
 	return vc
 }
@@ -412,10 +397,6 @@ func (vc *VersionCreate) defaults() error {
 		v := version.DefaultDownloads
 		vc.mutation.SetDownloads(v)
 	}
-	if _, ok := vc.mutation.Stability(); !ok {
-		v := version.DefaultStability
-		vc.mutation.SetStability(v)
-	}
 	if _, ok := vc.mutation.Approved(); !ok {
 		v := version.DefaultApproved
 		vc.mutation.SetApproved(v)
@@ -465,14 +446,6 @@ func (vc *VersionCreate) check() error {
 	}
 	if _, ok := vc.mutation.Downloads(); !ok {
 		return &ValidationError{Name: "downloads", err: errors.New(`ent: missing required field "Version.downloads"`)}
-	}
-	if _, ok := vc.mutation.Stability(); !ok {
-		return &ValidationError{Name: "stability", err: errors.New(`ent: missing required field "Version.stability"`)}
-	}
-	if v, ok := vc.mutation.Stability(); ok {
-		if err := version.StabilityValidator(v); err != nil {
-			return &ValidationError{Name: "stability", err: fmt.Errorf(`ent: validator failed for field "Version.stability": %w`, err)}
-		}
 	}
 	if _, ok := vc.mutation.Approved(); !ok {
 		return &ValidationError{Name: "approved", err: errors.New(`ent: missing required field "Version.approved"`)}
@@ -570,10 +543,6 @@ func (vc *VersionCreate) createSpec() (*Version, *sqlgraph.CreateSpec) {
 	if value, ok := vc.mutation.Key(); ok {
 		_spec.SetField(version.FieldKey, field.TypeString, value)
 		_node.Key = value
-	}
-	if value, ok := vc.mutation.Stability(); ok {
-		_spec.SetField(version.FieldStability, field.TypeEnum, value)
-		_node.Stability = value
 	}
 	if value, ok := vc.mutation.Approved(); ok {
 		_spec.SetField(version.FieldApproved, field.TypeBool, value)
@@ -865,18 +834,6 @@ func (u *VersionUpsert) UpdateKey() *VersionUpsert {
 // ClearKey clears the value of the "key" field.
 func (u *VersionUpsert) ClearKey() *VersionUpsert {
 	u.SetNull(version.FieldKey)
-	return u
-}
-
-// SetStability sets the "stability" field.
-func (u *VersionUpsert) SetStability(v util.Stability) *VersionUpsert {
-	u.Set(version.FieldStability, v)
-	return u
-}
-
-// UpdateStability sets the "stability" field to the value that was provided on create.
-func (u *VersionUpsert) UpdateStability() *VersionUpsert {
-	u.SetExcluded(version.FieldStability)
 	return u
 }
 
@@ -1268,20 +1225,6 @@ func (u *VersionUpsertOne) UpdateKey() *VersionUpsertOne {
 func (u *VersionUpsertOne) ClearKey() *VersionUpsertOne {
 	return u.Update(func(s *VersionUpsert) {
 		s.ClearKey()
-	})
-}
-
-// SetStability sets the "stability" field.
-func (u *VersionUpsertOne) SetStability(v util.Stability) *VersionUpsertOne {
-	return u.Update(func(s *VersionUpsert) {
-		s.SetStability(v)
-	})
-}
-
-// UpdateStability sets the "stability" field to the value that was provided on create.
-func (u *VersionUpsertOne) UpdateStability() *VersionUpsertOne {
-	return u.Update(func(s *VersionUpsert) {
-		s.UpdateStability()
 	})
 }
 
@@ -1871,20 +1814,6 @@ func (u *VersionUpsertBulk) UpdateKey() *VersionUpsertBulk {
 func (u *VersionUpsertBulk) ClearKey() *VersionUpsertBulk {
 	return u.Update(func(s *VersionUpsert) {
 		s.ClearKey()
-	})
-}
-
-// SetStability sets the "stability" field.
-func (u *VersionUpsertBulk) SetStability(v util.Stability) *VersionUpsertBulk {
-	return u.Update(func(s *VersionUpsert) {
-		s.SetStability(v)
-	})
-}
-
-// UpdateStability sets the "stability" field to the value that was provided on create.
-func (u *VersionUpsertBulk) UpdateStability() *VersionUpsertBulk {
-	return u.Update(func(s *VersionUpsert) {
-		s.UpdateStability()
 	})
 }
 

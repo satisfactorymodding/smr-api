@@ -5,8 +5,6 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
 type Version struct {
@@ -30,7 +28,6 @@ func (Version) Fields() []ent.Field {
 		field.String("changelog").Optional(),
 		field.Uint("downloads").Default(0),
 		field.String("key").Optional(),
-		field.Enum("stability").GoType(util.Stability("")).Default("release"),
 		field.Bool("approved").Default(false),
 		field.Uint("hotness").Default(0),
 		field.Bool("denied").Default(false),

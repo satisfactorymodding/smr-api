@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // Version is the model entity for the Version schema.
@@ -39,8 +38,6 @@ type Version struct {
 	Downloads uint `json:"downloads,omitempty"`
 	// Key holds the value of the "key" field.
 	Key string `json:"key,omitempty"`
-	// Stability holds the value of the "stability" field.
-	Stability util.Stability `json:"stability,omitempty"`
 	// Approved holds the value of the "approved" field.
 	Approved bool `json:"approved,omitempty"`
 	// Hotness holds the value of the "hotness" field.
@@ -140,7 +137,7 @@ func (*Version) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case version.FieldDownloads, version.FieldHotness, version.FieldVersionMajor, version.FieldVersionMinor, version.FieldVersionPatch, version.FieldSize:
 			values[i] = new(sql.NullInt64)
-		case version.FieldID, version.FieldModID, version.FieldVersion, version.FieldGameVersion, version.FieldChangelog, version.FieldKey, version.FieldStability, version.FieldMetadata, version.FieldModReference, version.FieldHash:
+		case version.FieldID, version.FieldModID, version.FieldVersion, version.FieldGameVersion, version.FieldChangelog, version.FieldKey, version.FieldMetadata, version.FieldModReference, version.FieldHash:
 			values[i] = new(sql.NullString)
 		case version.FieldCreatedAt, version.FieldUpdatedAt, version.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -224,12 +221,6 @@ func (v *Version) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field key", values[i])
 			} else if value.Valid {
 				v.Key = value.String
-			}
-		case version.FieldStability:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field stability", values[i])
-			} else if value.Valid {
-				v.Stability = util.Stability(value.String)
 			}
 		case version.FieldApproved:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -381,9 +372,6 @@ func (v *Version) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("key=")
 	builder.WriteString(v.Key)
-	builder.WriteString(", ")
-	builder.WriteString("stability=")
-	builder.WriteString(fmt.Sprintf("%v", v.Stability))
 	builder.WriteString(", ")
 	builder.WriteString("approved=")
 	builder.WriteString(fmt.Sprintf("%v", v.Approved))

@@ -54,7 +54,6 @@ func (f *VersionFilter) AddField(name string) {
 		"sml_version",
 		"changelog",
 		"downloads",
-		"stability",
 		"approved",
 		"updated_at",
 		"created_at",

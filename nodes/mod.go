@@ -161,31 +161,10 @@ func getModsByIDs(c echo.Context) (interface{}, *ErrorResponse) {
 // @Param modId path string true "Mod ID"
 // @Success 200
 // @Router /mod/{modId}/latest-versions [get]
-func getModLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
-	modID := c.Param("modId")
-
-	versions, err := db.From(c.Request().Context()).Version.Query().
-		WithTargets().
-		Modify(func(s *sql.Selector) {
-			s.SelectExpr(sql.ExprP("distinct on (mod_id, stability) *"))
-		}).
-		Where(version2.Approved(true), version2.Denied(false), version2.ModID(modID)).
-		Order(version2.ByModID(), version2.ByStability(sql.OrderDesc()), version2.ByCreatedAt(sql.OrderDesc())).
-		All(c.Request().Context())
-	if err != nil {
-		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
-		return nil, &ErrorVersionNotFound
-	}
-
-	if versions == nil {
-		return nil, &ErrorVersionNotFound
-	}
-
+func getModLatestVersions(_ echo.Context) (interface{}, *ErrorResponse) {
+	// Note: Stability system has been removed. Returning empty objects for API compatibility.
+	// TODO: Remove this once clients are updated to not use stability-based queries.
 	result := make(map[string]*generated.Version)
-
-	for _, v := range versions {
-		result[string(v.Stability)] = (*conv.VersionImpl)(nil).Convert(v)
-	}
 
 	return result, nil
 }
@@ -198,37 +177,10 @@ func getModLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
 // @Param modIds path string true "Mod IDs"
 // @Success 200
 // @Router /mods/{modIds}/latest-versions [get]
-func getModsLatestVersions(c echo.Context) (interface{}, *ErrorResponse) {
-	modID := c.Param("modIds")
-	modIDSplit := strings.Split(modID, ",")
-
-	// TODO limit amount of mods requestable
-
-	versions, err := db.From(c.Request().Context()).Version.Query().
-		WithTargets().
-		Modify(func(s *sql.Selector) {
-			s.SelectExpr(sql.ExprP("distinct on (mod_id, stability) *"))
-		}).
-		Where(version2.Approved(true), version2.Denied(false), version2.ModIDIn(modIDSplit...)).
-		Order(version2.ByModID(), version2.ByStability(sql.OrderDesc()), version2.ByCreatedAt(sql.OrderDesc())).
-		All(c.Request().Context())
-	if err != nil {
-		slox.Error(c.Request().Context(), "failed fetching versions", slog.Any("err", err))
-		return nil, &ErrorVersionNotFound
-	}
-
-	if versions == nil {
-		return nil, &ErrorVersionNotFound
-	}
-
+func getModsLatestVersions(_ echo.Context) (interface{}, *ErrorResponse) {
+	// Note: Stability system has been removed. Returning empty objects for API compatibility.
+	// TODO: Remove this once clients are updated to not use stability-based queries.
 	result := make(map[string]map[string]*generated.Version)
-
-	for _, v := range versions {
-		if _, ok := result[v.ModID]; !ok {
-			result[v.ModID] = make(map[string]*generated.Version)
-		}
-		result[v.ModID][string(v.Stability)] = (*conv.VersionImpl)(nil).Convert(v)
-	}
 
 	return result, nil
 }

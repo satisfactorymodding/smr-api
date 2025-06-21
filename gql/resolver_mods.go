@@ -607,39 +607,10 @@ func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter m
 	return (*conv.VersionImpl)(nil).ConvertSlice(versions), nil
 }
 
-func (r *modResolver) LatestVersions(ctx context.Context, obj *generated.Mod) (*generated.LatestVersions, error) {
-	versions, err := db.From(ctx).Version.
-		Query().
-		WithTargets().
-		Where(
-			version.ModID(obj.ID),
-			version.Approved(true),
-			version.Denied(false),
-		).
-		Order(
-			version.ByModID(),
-			version.ByStability(),
-			version.ByCreatedAt(sql.OrderDesc()),
-		).
-		Modify(func(s *sql.Selector) {
-			s.SelectExpr(sql.Expr("DISTINCT on (mod_id, stability) *"))
-		}).
-		All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func (r *modResolver) LatestVersions(_ context.Context, _ *generated.Mod) (*generated.LatestVersions, error) {
+	// Note: Stability system has been removed. Returning empty objects for API compatibility.
+	// TODO: Remove this once clients are updated to not use stability-based queries.
 	converted := generated.LatestVersions{}
-	for _, v := range versions {
-		switch v.Stability {
-		case util.StabilityAlpha:
-			converted.Alpha = (*conv.VersionImpl)(nil).Convert(v)
-		case util.StabilityBeta:
-			converted.Beta = (*conv.VersionImpl)(nil).Convert(v)
-		case util.StabilityRelease:
-			converted.Release = (*conv.VersionImpl)(nil).Convert(v)
-		}
-	}
 
 	return &converted, nil
 }

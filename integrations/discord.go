@@ -131,11 +131,6 @@ func NewVersion(ctx context.Context, version *ent.Version) {
 						"value":  version.Version,
 						"inline": true,
 					},
-					map[string]interface{}{
-						"name":   "Stability",
-						"value":  version.Stability,
-						"inline": true,
-					},
 				},
 				"footer": map[string]interface{}{
 					"text": description,

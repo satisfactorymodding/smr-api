@@ -39,12 +39,6 @@ func SetINNOEF[T comparable, B any](value *T, target func(T) B) {
 	}
 }
 
-func SetStabilityINNF[B any](value *generated.VersionStabilities, target func(util.Stability) B) {
-	if value != nil {
-		target(util.Stability(*value))
-	}
-}
-
 func SetDateINNF[B any](value *string, target func(time.Time) B) {
 	if value != nil {
 		t, _ := time.Parse(time.RFC3339Nano, *value)

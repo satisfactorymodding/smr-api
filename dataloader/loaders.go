@@ -117,7 +117,6 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 						version.FieldChangelog,
 						version.FieldDownloads,
 						version.FieldKey,
-						version.FieldStability,
 						version.FieldApproved,
 						version.FieldHotness,
 						version.FieldDenied,
