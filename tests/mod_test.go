@@ -341,4 +341,53 @@ func TestMods(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("Prevent Mod Reference Matching Existing Mod ID", func(t *testing.T) {
+		// First create a mod to get its ID
+		token, _, err := makeUser(ctx)
+		testza.AssertNoError(t, err)
+
+		// Create the first mod
+		createRequest := authRequest(`mutation ($mod_reference: ModReference!) {
+			createMod(mod: {
+				name: "First Mod",
+				short_description: "This is the first mod for testing",
+				full_description: "A full description for the first mod",
+				mod_reference: $mod_reference
+			}) {
+				id
+			}
+		}`, token)
+		createRequest.Var("mod_reference", "first-mod")
+
+		var createResponse struct {
+			CreateMod generated.Mod
+		}
+		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
+		testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
+
+		existingModID := createResponse.CreateMod.ID
+
+		// Now try to create another mod with a reference that matches the first mod's ID
+		// This should fail
+		createRequest2 := authRequest(`mutation ($mod_reference: ModReference!) {
+			createMod(mod: {
+				name: "Second Mod",
+				short_description: "This should fail because reference matches existing mod ID",
+				full_description: "A full description for the second mod",
+				mod_reference: $mod_reference
+			}) {
+				id
+			}
+		}`, token)
+		createRequest2.Var("mod_reference", existingModID) // Using existing mod ID as reference
+
+		var createResponse2 struct {
+			CreateMod generated.Mod
+		}
+
+		err = client.Run(ctx, createRequest2, &createResponse2)
+		testza.AssertNotNil(t, err)
+		testza.AssertContains(t, err.Error(), "mod reference cannot match an existing mod ID")
+	})
 }

@@ -61,6 +61,16 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 		return nil, errors.New("mod with this mod reference already exists")
 	}
 
+	// Check if mod reference matches any existing mod ID
+	existByID, err := db.From(ctx).Mod.Query().Where(mod.ID(newMod.ModReference)).Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if existByID {
+		return nil, errors.New("mod reference cannot match an existing mod ID")
+	}
+
 	dbMod := db.From(ctx).Mod.Create().
 		SetName(newMod.Name).
 		SetShortDescription(newMod.ShortDescription).
