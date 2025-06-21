@@ -49,7 +49,9 @@ func ConvertModFilter(query *ent.ModQuery, filter *models.ModFilter, count bool,
 							WriteString(" + ").
 							WriteString("similarity(short_description, ").Arg(cleanSearch).WriteString(")").
 							WriteString(" + ").
-							WriteString("similarity(full_description, ").Arg(cleanSearch).WriteString(") * 0.5")
+							WriteString("similarity(full_description, ").Arg(cleanSearch).WriteString(") * 0.5").
+							WriteString(" + ").
+							WriteString("similarity(mod_reference, ").Arg(cleanSearch).WriteString(") * 5")
 					}),
 					"s",
 				)
