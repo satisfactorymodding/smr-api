@@ -45,7 +45,7 @@ func (w *Wrapper) StartMultipartUpload(key string) error {
 	return w.Writer.StartMultipartUpload(key)
 }
 
-func (w *Wrapper) UploadPart(key string, part int64, data io.ReadSeeker) error {
+func (w *Wrapper) UploadPart(key string, part int32, data io.ReadSeeker) error {
 	return w.Writer.UploadPart(key, part, data)
 }
 

@@ -86,7 +86,7 @@ func (r *mutationResolver) UploadVersionPart(ctx context.Context, modID string, 
 		return false, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	_, err = storage.UploadMultipartMod(ctx, mod.ID, mod.Name, uploadID, int64(part), bytes.NewReader(fileData))
+	_, err = storage.UploadMultipartMod(ctx, mod.ID, mod.Name, uploadID, int32(part), bytes.NewReader(fileData))
 
 	return err == nil, err
 }

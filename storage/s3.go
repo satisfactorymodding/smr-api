@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"strconv"
 	"strings"
 
 	"github.com/Vilsol/slox"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -22,40 +24,38 @@ import (
 )
 
 type S3 struct {
-	BaseURL   string
-	S3Client  *s3.S3
-	S3Session *session.Session
-	Config    Config
+	BaseURL  string
+	S3Client *s3.Client
+	Config   Config
 }
 
 func initializeS3(ctx context.Context, config Config) *S3 {
-	s3Config := &aws.Config{
-		Credentials:      credentials.NewStaticCredentials(config.Key, config.Secret, ""),
-		Endpoint:         aws.String(config.Endpoint),
-		Region:           aws.String(config.Region),
-		S3ForcePathStyle: aws.Bool(true),
-	}
-
-	newSession, err := session.NewSession(s3Config)
+	cfg, err := awsconfig.LoadDefaultConfig(
+		ctx,
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(config.Key, config.Secret, "")),
+		awsconfig.WithBaseEndpoint(config.Endpoint),
+		awsconfig.WithRegion(config.Region),
+	)
 	if err != nil {
 		slox.Error(ctx, "failed to create S3 session", slog.Any("err", err))
 		return nil
 	}
 
-	s3Client := s3.New(newSession)
+	s3Client := s3.NewFromConfig(cfg, func(options *s3.Options) {
+		options.UsePathStyle = true
+	})
 
 	return &S3{
-		BaseURL:   config.BaseURL,
-		S3Client:  s3Client,
-		S3Session: newSession,
-		Config:    config,
+		BaseURL:  config.BaseURL,
+		S3Client: s3Client,
+		Config:   config,
 	}
 }
 
 func (s3o *S3) Get(key string) (io.ReadCloser, error) {
 	cleanedKey := strings.TrimPrefix(key, "/")
 
-	object, err := s3o.S3Client.GetObject(&s3.GetObjectInput{
+	object, err := s3o.S3Client.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: aws.String(s3o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
@@ -74,9 +74,9 @@ func (s3o *S3) Put(ctx context.Context, key string, body io.ReadSeeker) (string,
 
 	cleanedKey := strings.TrimPrefix(key, "/")
 
-	uploader := s3manager.NewUploader(s3o.S3Session)
+	uploader := manager.NewUploader(s3o.S3Client)
 
-	_, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
+	_, err := uploader.Upload(ctx, &s3.PutObjectInput{
 		Body:   body,
 		Bucket: aws.String(s3o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
@@ -102,7 +102,7 @@ func (s3o *S3) SignPut(_ string) (string, error) {
 
 func (s3o *S3) StartMultipartUpload(key string) error {
 	cleanedKey := strings.TrimPrefix(key, "/")
-	upload, err := s3o.S3Client.CreateMultipartUpload(&s3.CreateMultipartUploadInput{
+	upload, err := s3o.S3Client.CreateMultipartUpload(context.TODO(), &s3.CreateMultipartUploadInput{
 		Bucket: aws.String(s3o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
@@ -115,15 +115,15 @@ func (s3o *S3) StartMultipartUpload(key string) error {
 	return nil
 }
 
-func (s3o *S3) UploadPart(key string, part int64, data io.ReadSeeker) error {
+func (s3o *S3) UploadPart(key string, part int32, data io.ReadSeeker) error {
 	cleanedKey := strings.TrimPrefix(key, "/")
 	id := redis.GetMultipartUploadID(cleanedKey)
 
-	response, err := s3o.S3Client.UploadPart(&s3.UploadPartInput{
+	response, err := s3o.S3Client.UploadPart(context.TODO(), &s3.UploadPartInput{
 		Body:       data,
 		Bucket:     aws.String(s3o.Config.Bucket),
 		Key:        aws.String(cleanedKey),
-		PartNumber: aws.Int64(part),
+		PartNumber: aws.Int32(part),
 		UploadId:   aws.String(id),
 	})
 	if err != nil {
@@ -139,17 +139,17 @@ func (s3o *S3) CompleteMultipartUpload(key string) error {
 	cleanedKey := strings.TrimPrefix(key, "/")
 	id := redis.GetMultipartUploadID(cleanedKey)
 	parts := redis.GetMultipartCompletedParts(cleanedKey)
-	completedParts := make([]*s3.CompletedPart, len(parts))
+	completedParts := make([]types.CompletedPart, len(parts))
 
 	for part, etag := range parts {
-		partInt, _ := strconv.ParseInt(part, 10, 64)
-		completedParts[partInt-1] = &s3.CompletedPart{ETag: aws.String(etag), PartNumber: &partInt}
+		partInt, _ := strconv.ParseInt(part, 10, 32)
+		completedParts[partInt-1] = types.CompletedPart{ETag: aws.String(etag), PartNumber: aws.Int32(int32(partInt))}
 	}
 
-	_, err := s3o.S3Client.CompleteMultipartUpload(&s3.CompleteMultipartUploadInput{
+	_, err := s3o.S3Client.CompleteMultipartUpload(context.TODO(), &s3.CompleteMultipartUploadInput{
 		Bucket:          aws.String(s3o.Config.Bucket),
 		Key:             aws.String(cleanedKey),
-		MultipartUpload: &s3.CompletedMultipartUpload{Parts: completedParts},
+		MultipartUpload: &types.CompletedMultipartUpload{Parts: completedParts},
 		UploadId:        aws.String(id),
 	})
 	if err != nil {
@@ -164,7 +164,7 @@ func (s3o *S3) CompleteMultipartUpload(key string) error {
 func (s3o *S3) Rename(from string, to string) error {
 	cleanedKey := strings.TrimPrefix(to, "/")
 
-	_, err := s3o.S3Client.CopyObject(&s3.CopyObjectInput{
+	_, err := s3o.S3Client.CopyObject(context.TODO(), &s3.CopyObjectInput{
 		Bucket:     aws.String(s3o.Config.Bucket),
 		CopySource: aws.String(s3o.Config.Bucket + from),
 		Key:        aws.String(cleanedKey),
@@ -181,14 +181,14 @@ func (s3o *S3) Delete(key string) error {
 
 	// Check up to 10 object pages
 	for range 10 {
-		versions, err := s3o.S3Client.ListObjectVersions(&s3.ListObjectVersionsInput{
+		versions, err := s3o.S3Client.ListObjectVersions(context.TODO(), &s3.ListObjectVersionsInput{
 			Bucket:    aws.String(s3o.Config.Bucket),
 			KeyMarker: aws.String(cleanedKey),
 			Prefix:    aws.String(cleanedKey),
 		})
 		if err != nil {
 			if strings.Contains(err.Error(), "NotImplemented") {
-				_, err = s3o.S3Client.DeleteObject(&s3.DeleteObjectInput{
+				_, err = s3o.S3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
 					Bucket: aws.String(s3o.Config.Bucket),
 					Key:    aws.String(cleanedKey),
 				})
@@ -202,24 +202,24 @@ func (s3o *S3) Delete(key string) error {
 			return fmt.Errorf("failed to list object versions: %w", err)
 		}
 
-		objects := make([]*s3.ObjectIdentifier, len(versions.Versions)+len(versions.DeleteMarkers))
+		objects := make([]types.ObjectIdentifier, len(versions.Versions)+len(versions.DeleteMarkers))
 
 		for i, version := range versions.Versions {
-			objects[i] = &s3.ObjectIdentifier{
+			objects[i] = types.ObjectIdentifier{
 				Key:       version.Key,
 				VersionId: version.VersionId,
 			}
 		}
 
 		for i, marker := range versions.DeleteMarkers {
-			objects[i+len(versions.Versions)] = &s3.ObjectIdentifier{
+			objects[i+len(versions.Versions)] = types.ObjectIdentifier{
 				Key:       marker.Key,
 				VersionId: marker.VersionId,
 			}
 		}
 
 		if len(objects) == 0 {
-			_, err = s3o.S3Client.DeleteObject(&s3.DeleteObjectInput{
+			_, err = s3o.S3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
 				Bucket: aws.String(s3o.Config.Bucket),
 				Key:    aws.String(cleanedKey),
 			})
@@ -230,9 +230,9 @@ func (s3o *S3) Delete(key string) error {
 			return nil
 		}
 
-		_, err = s3o.S3Client.DeleteObjects(&s3.DeleteObjectsInput{
+		_, err = s3o.S3Client.DeleteObjects(context.TODO(), &s3.DeleteObjectsInput{
 			Bucket: aws.String(s3o.Config.Bucket),
-			Delete: &s3.Delete{
+			Delete: &types.Delete{
 				Objects: objects,
 			},
 		})
@@ -247,7 +247,7 @@ func (s3o *S3) Delete(key string) error {
 func (s3o *S3) Meta(key string) (*ObjectMeta, error) {
 	cleanedKey := strings.TrimPrefix(key, "/")
 
-	data, err := s3o.S3Client.HeadObject(&s3.HeadObjectInput{
+	data, err := s3o.S3Client.HeadObject(context.TODO(), &s3.HeadObjectInput{
 		Bucket: aws.String(s3o.Config.Bucket),
 		Key:    aws.String(cleanedKey),
 	})
@@ -264,20 +264,30 @@ func (s3o *S3) Meta(key string) (*ObjectMeta, error) {
 func (s3o *S3) List(prefix string) ([]Object, error) {
 	out := make([]Object, 0)
 
-	err := s3o.S3Client.ListObjectsPages(&s3.ListObjectsInput{
-		Bucket: aws.String(s3o.Config.Bucket),
-		Prefix: aws.String(prefix),
-	}, func(output *s3.ListObjectsOutput, _ bool) bool {
-		for _, obj := range output.Contents {
+	var marker *string
+	for {
+		objects, err := s3o.S3Client.ListObjects(context.TODO(), &s3.ListObjectsInput{
+			Bucket:  aws.String(s3o.Config.Bucket),
+			Marker:  marker,
+			MaxKeys: aws.Int32(math.MaxInt32),
+			Prefix:  aws.String(prefix),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list objects: %w", err)
+		}
+
+		marker = objects.NextMarker
+
+		for _, obj := range objects.Contents {
 			out = append(out, Object{
 				Key:          obj.Key,
 				LastModified: obj.LastModified,
 			})
 		}
-		return true
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to list objects: %w", err)
+
+		if objects.IsTruncated == nil || !*objects.IsTruncated {
+			break
+		}
 	}
 
 	return out, nil
