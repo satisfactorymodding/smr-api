@@ -27,7 +27,7 @@ func TestGuideRateLimit(t *testing.T) {
 	tags := seedTags(ctx, t, token, client)
 
 	// Create util.GuidesPer24h guides to fill the rate limit
-	for i := 0; i < util.GuidesPer24h; i++ {
+	for range util.GuidesPer24h {
 		createRequest := authRequest(`mutation ($tags: [TagID!]) {
 			createGuide(guide: {
 				name: "Rate Limit Test Guide",

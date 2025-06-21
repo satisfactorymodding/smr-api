@@ -47,3 +47,6 @@ run = "docker compose --file docker-compose-dev.yml down"
 
 [tasks.lint]
 run = "golangci-lint run"
+
+[tasks.format]
+run = "golangci-lint run --fix"

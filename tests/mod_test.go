@@ -27,7 +27,7 @@ func TestModRateLimit(t *testing.T) {
 	tags := seedTags(ctx, t, token, client)
 
 	// Create util.ModsPer24h mods to fill the rate limit
-	for i := 0; i < util.ModsPer24h; i++ {
+	for i := range util.ModsPer24h {
 		createRequest := authRequest(`mutation ($mod_reference: ModReference!, $tags: [TagID!]) {
 			createMod(mod: {
 				name: "Rate Limit Test Mod",
