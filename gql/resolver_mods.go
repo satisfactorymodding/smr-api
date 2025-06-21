@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"math"
 	"strings"
 	"time"
 
@@ -89,20 +88,13 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 		return nil, err
 	}
 
-	currentAvailable := float64(util.ModsPer24h)
-	lastModTime := time.Now()
-	for _, mod := range existingMods {
-		currentAvailable--
-		if mod.CreatedAt.After(lastModTime) {
-			diff := mod.CreatedAt.Sub(lastModTime)
-			currentAvailable = math.Min(float64(util.ModsPer24h), currentAvailable+diff.Hours()/6)
+	if len(existingMods) >= util.ModsPer24h {
+		// User has reached the limit, they must wait until the oldest mod expires
+		oldestMod := existingMods[0] // First mod in ascending order
+		timeToWait := time.Until(oldestMod.CreatedAt.Add(time.Hour * 24)).Minutes()
+		if timeToWait > 0 {
+			return nil, fmt.Errorf("please wait %.0f minutes to post another mod", timeToWait)
 		}
-		lastModTime = mod.CreatedAt
-	}
-
-	if currentAvailable < 1 {
-		timeToWait := time.Until(lastModTime.Add(time.Hour * 6)).Minutes()
-		return nil, fmt.Errorf("please wait %.0f minutes to post another mod", timeToWait)
 	}
 
 	// Create mod

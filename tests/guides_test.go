@@ -16,7 +16,63 @@ func init() {
 	db.EnableDebug()
 }
 
-// TODO Add rate limit test
+func TestGuideRateLimit(t *testing.T) {
+	ctx, client, stop := setup()
+	defer stop()
+
+	token, _, err := makeUser(ctx)
+	testza.AssertNoError(t, err)
+
+	tags := seedTags(ctx, t, token, client)
+
+	for i := 0; i < 8; i++ {
+		createRequest := authRequest(`mutation ($tags: [TagID!]) {
+			createGuide(guide: {
+				name: "Rate Limit Test Guide",
+				short_description: "Testing rate limiting functionality",
+				guide: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+				tagIDs: $tags
+			}) {
+				id
+				name
+			}
+		}`, token)
+		createRequest.Var("tags", []string{tags[0]})
+
+		var createResponse struct {
+			CreateGuide generated.Guide
+		}
+		err := client.Run(ctx, createRequest, &createResponse)
+		testza.AssertNoError(t, err)
+		testza.AssertNotNil(t, createResponse.CreateGuide)
+	}
+
+	// Should fail with rate limit
+	createRequest := authRequest(`mutation ($tags: [TagID!]) {
+		createGuide(guide: {
+			name: "Should Fail Guide",
+			short_description: "This should fail due to rate limiting",
+			guide: "This guide should not be created due to rate limiting.",
+			tagIDs: $tags
+		}) {
+			id
+			name
+		}
+	}`, token)
+	createRequest.Var("tags", []string{tags[0]})
+
+	var createResponse struct {
+		CreateGuide generated.Guide
+	}
+	err = client.Run(ctx, createRequest, &createResponse)
+	testza.AssertNotNil(t, err)
+	if err != nil {
+		testza.AssertContains(t, err.Error(), "please wait")
+		testza.AssertContains(t, err.Error(), "minutes to post another guide")
+		// Verify that the error message does not contain negative minutes
+		testza.AssertNotContains(t, err.Error(), "-")
+	}
+}
 
 func TestGuides(t *testing.T) {
 	ctx, client, stop := setup()

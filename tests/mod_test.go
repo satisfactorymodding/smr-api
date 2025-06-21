@@ -9,6 +9,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func init() {
@@ -16,7 +17,69 @@ func init() {
 	db.EnableDebug()
 }
 
-// TODO Add rate limit test
+func TestModRateLimit(t *testing.T) {
+	ctx, client, stop := setup()
+	defer stop()
+
+	token, _, err := makeUser(ctx)
+	testza.AssertNoError(t, err)
+
+	tags := seedTags(ctx, t, token, client)
+
+	for i := 0; i < util.ModsPer24h; i++ {
+		createRequest := authRequest(`mutation ($mod_reference: ModReference!, $tags: [TagID!]) {
+			createMod(mod: {
+				name: "Rate Limit Test Mod",
+				short_description: "Testing rate limiting functionality",
+				full_description: "Lorem ipsum dolor sit amet",
+				mod_reference: $mod_reference,
+				tagIDs: $tags
+			}) {
+				id
+				name
+				mod_reference
+			}
+		}`, token)
+		createRequest.Var("mod_reference", "ratelimit"+strconv.Itoa(i))
+		createRequest.Var("tags", []string{tags[0]})
+
+		var createResponse struct {
+			CreateMod generated.Mod
+		}
+		err := client.Run(ctx, createRequest, &createResponse)
+		testza.AssertNoError(t, err)
+		testza.AssertNotNil(t, createResponse.CreateMod)
+	}
+
+	// Should fail with rate limit
+	createRequest := authRequest(`mutation ($mod_reference: ModReference!, $tags: [TagID!]) {
+		createMod(mod: {
+			name: "Should Fail Mod",
+			short_description: "This should fail due to rate limiting",
+			full_description: "Lorem ipsum dolor sit amet",
+			mod_reference: $mod_reference,
+			tagIDs: $tags
+		}) {
+			id
+			name
+			mod_reference
+		}
+	}`, token)
+	createRequest.Var("mod_reference", "shouldfail")
+	createRequest.Var("tags", []string{tags[0]})
+
+	var createResponse struct {
+		CreateMod generated.Mod
+	}
+	err = client.Run(ctx, createRequest, &createResponse)
+	testza.AssertNotNil(t, err)
+	if err != nil {
+		testza.AssertContains(t, err.Error(), "please wait")
+		testza.AssertContains(t, err.Error(), "minutes to post another mod")
+		// Verify that the error message does not contain negative minutes
+		testza.AssertNotContains(t, err.Error(), "-")
+	}
+}
 
 func TestMods(t *testing.T) {
 	ctx, client, stop := setup()
