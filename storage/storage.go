@@ -27,7 +27,7 @@ type Storage interface {
 	SignGet(key string) (string, error)
 	SignPut(key string) (string, error)
 	StartMultipartUpload(key string) error
-	UploadPart(key string, part int64, data io.ReadSeeker) error
+	UploadPart(key string, part int32, data io.ReadSeeker) error
 	CompleteMultipartUpload(key string) error
 	Rename(from string, to string) error
 	Delete(key string) error
@@ -134,7 +134,7 @@ func StartUploadMultipartMod(ctx context.Context, modID string, name string, ver
 	return fmt.Sprintf("/mods/%s/%s.smod", modID, EncodeName(filename)), nil
 }
 
-func UploadMultipartMod(ctx context.Context, modID string, name string, versionID string, part int64, data io.ReadSeeker) (string, error) {
+func UploadMultipartMod(ctx context.Context, modID string, name string, versionID string, part int32, data io.ReadSeeker) (string, error) {
 	cleanName := cleanModName(name)
 
 	filename := cleanName + "-" + versionID
@@ -217,7 +217,7 @@ func StartMultipartUpload(ctx context.Context, key string) error {
 	return nil
 }
 
-func UploadPart(ctx context.Context, key string, part int64, data io.ReadSeeker) error {
+func UploadPart(ctx context.Context, key string, part int32, data io.ReadSeeker) error {
 	if err := Client(ctx).UploadPart(key, part, data); err != nil {
 		return fmt.Errorf("failed to upload part: %w", err)
 	}
