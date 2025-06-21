@@ -1,3 +1,6 @@
 package util
 
-var ModsPer24h = 4
+var (
+	ModsPer24h   = 4
+	GuidesPer24h = 8
+)

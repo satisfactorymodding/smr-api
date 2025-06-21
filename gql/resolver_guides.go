@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"math"
 	"strings"
 	"time"
 
@@ -36,29 +35,24 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, g generated.NewGuide
 		return nil, err
 	}
 
-	// Allow only 8 new guides per 24h
-	guides, err := db.From(ctx).Guide.Query().Where(
-		guide.UserID(user.ID),
-		guide.CreatedAtGT(time.Now().Add(time.Hour*24*-1)),
-	).All(ctx)
+	// Allow only 8util.GuidesPer24h new guides per 24h
+	guides, err := db.From(ctx).Guide.Query().
+		Order(guide.ByCreatedAt(sql.OrderAsc())).
+		Where(
+			guide.UserID(user.ID),
+			guide.CreatedAtGT(time.Now().Add(time.Hour*24*-1)),
+		).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	currentAvailable := float64(8)
-	lastGuideTime := time.Now()
-	for _, existingGuide := range guides {
-		currentAvailable--
-		if existingGuide.CreatedAt.After(lastGuideTime) {
-			diff := existingGuide.CreatedAt.Sub(lastGuideTime)
-			currentAvailable = math.Min(8, currentAvailable+diff.Hours()/3)
+	if len(guides) >= util.GuidesPer24h {
+		// User has reached the limit, they must wait until the oldest guide expires
+		oldestGuide := guides[0] // First guide in ascending order
+		timeToWait := time.Until(oldestGuide.CreatedAt.Add(time.Hour * 24)).Minutes()
+		if timeToWait > 0 {
+			return nil, fmt.Errorf("please wait %.0f minutes to post another guide", timeToWait)
 		}
-		lastGuideTime = existingGuide.CreatedAt
-	}
-
-	if currentAvailable < 1 {
-		timeToWait := time.Until(lastGuideTime.Add(time.Hour * 6)).Minutes()
-		return nil, fmt.Errorf("please wait %.0f minutes to post another guide", timeToWait)
 	}
 
 	result, err := db.From(ctx).Guide.
