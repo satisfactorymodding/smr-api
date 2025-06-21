@@ -63,7 +63,7 @@ services:
       - "4040:4040"
 
   temporal:
-    image: temporalio/auto-setup:1.24.2
+    image: temporalio/auto-setup:1.27.2
     depends_on:
       - postgres
     environment:

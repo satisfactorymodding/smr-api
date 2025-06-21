@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
-	"gopkg.in/go-playground/validator.v9"
+	"github.com/go-playground/validator/v10"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"

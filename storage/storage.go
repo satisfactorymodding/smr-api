@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/Vilsol/slox"
-	"github.com/avast/retry-go/v3"
+	"github.com/avast/retry-go/v4"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"

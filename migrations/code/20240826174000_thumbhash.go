@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/Vilsol/slox"
-	"github.com/alitto/pond"
+	"github.com/alitto/pond/v2"
 	"github.com/galdor/go-thumbhash"
 	"github.com/lab259/go-migration"
 
@@ -23,7 +23,7 @@ func init() {
 		func(ctxInt interface{}) error {
 			ctx := ctxInt.(context.Context)
 
-			pool := pond.New(64, 0, pond.MinWorkers(64))
+			pool := pond.NewPool(64)
 
 			// Calculate for all mods
 			mods, err := db.From(ctx).Mod.Query().Select(mod.FieldID, mod.FieldLogo).Where(mod.LogoThumbhashIsNil()).All(ctx)
