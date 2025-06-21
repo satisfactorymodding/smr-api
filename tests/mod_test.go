@@ -347,7 +347,7 @@ func TestMods(t *testing.T) {
 		token, _, err := makeUser(ctx)
 		testza.AssertNoError(t, err)
 
-		// Create the first mod without tags to avoid validation issues
+		// Create the first mod
 		createRequest := authRequest(`mutation ($mod_reference: ModReference!) {
 			createMod(mod: {
 				name: "First Mod",
