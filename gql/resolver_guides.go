@@ -35,7 +35,7 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, g generated.NewGuide
 		return nil, err
 	}
 
-	// Allow only 8 new guides per 24h
+	// Allow only 8util.GuidesPer24h new guides per 24h
 	guides, err := db.From(ctx).Guide.Query().
 		Order(guide.ByCreatedAt(sql.OrderAsc())).
 		Where(
@@ -46,7 +46,7 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, g generated.NewGuide
 		return nil, err
 	}
 
-	if len(guides) >= 8 {
+	if len(guides) >= util.GuidesPer24h {
 		// User has reached the limit, they must wait until the oldest guide expires
 		oldestGuide := guides[0] // First guide in ascending order
 		timeToWait := time.Until(oldestGuide.CreatedAt.Add(time.Hour * 24)).Minutes()

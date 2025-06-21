@@ -9,6 +9,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func init() {
@@ -25,7 +26,8 @@ func TestGuideRateLimit(t *testing.T) {
 
 	tags := seedTags(ctx, t, token, client)
 
-	for i := 0; i < 8; i++ {
+	// Create util.GuidesPer24h guides to fill the rate limit
+	for i := 0; i < util.GuidesPer24h; i++ {
 		createRequest := authRequest(`mutation ($tags: [TagID!]) {
 			createGuide(guide: {
 				name: "Rate Limit Test Guide",

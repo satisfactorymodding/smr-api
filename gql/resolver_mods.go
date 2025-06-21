@@ -89,7 +89,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 
 	dbMod.SetCreatorID(user.ID)
 
-	// Allow only new 4 mods per 24h
+	// Allow only util.ModsPer24h new mods per 24h
 	existingMods, err := db.From(ctx).Mod.Query().
 		Order(mod.ByCreatedAt(sql.OrderAsc())).
 		Where(mod.CreatorID(user.ID), mod.CreatedAtGT(time.Now().Add(time.Hour*24*-1))).
