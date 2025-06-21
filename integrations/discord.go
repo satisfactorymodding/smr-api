@@ -13,7 +13,7 @@ import (
 
 	"github.com/Vilsol/slox"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 	"github.com/spf13/viper"
 
 	"github.com/satisfactorymodding/smr-api/db"
@@ -106,7 +106,7 @@ func NewVersion(ctx context.Context, version *ent.Version) {
 
 	description := version.Changelog
 	description = strings.Trim(description, "\n ")
-	description = string(blackfriday.MarkdownBasic([]byte(description)))
+	description = string(blackfriday.Run([]byte(description)))
 	description = bluemonday.StrictPolicy().Sanitize(description)
 	description = html.UnescapeString(description)
 	description = strings.Trim(description, "\n ")

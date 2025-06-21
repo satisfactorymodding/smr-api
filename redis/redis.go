@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/Vilsol/slox"
-	"github.com/cespare/xxhash"
+	"github.com/cespare/xxhash/v2"
 	"github.com/go-redis/redis"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"

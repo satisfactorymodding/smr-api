@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/o1egl/paseto"
+	"github.com/o1egl/paseto/v2"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ed25519"
 )

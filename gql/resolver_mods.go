@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/Vilsol/slox"
-	"github.com/dgraph-io/ristretto"
+	"github.com/dgraph-io/ristretto/v2"
+	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
-	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/dataloader"
 	"github.com/satisfactorymodding/smr-api/db"
@@ -530,7 +530,7 @@ func (r *modResolver) Version(ctx context.Context, obj *generated.Mod, versionNa
 	return (*conv.VersionImpl)(nil).Convert(dbVersion), nil
 }
 
-var versionNoMetaCache, _ = ristretto.NewCache(&ristretto.Config{
+var versionNoMetaCache, _ = ristretto.NewCache(&ristretto.Config[string, []*ent.Version]{
 	NumCounters: 1e6, // number of keys to track frequency of (1M).
 	MaxCost:     1e6, // maximum cost of cache (1M).
 	BufferItems: 64,  // number of keys per Get buffer.
@@ -560,7 +560,7 @@ func (r *modResolver) Versions(ctx context.Context, obj *generated.Mod, filter m
 			versions, err = dataloader.For(ctx).VersionsByModID.Load(ctx, obj.ID)()
 		} else {
 			if cacheVersions, ok := versionNoMetaCache.Get(obj.ID); ok {
-				versions = cacheVersions.([]*ent.Version)
+				versions = cacheVersions
 			}
 
 			if versions == nil {

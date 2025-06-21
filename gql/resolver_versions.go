@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/Vilsol/slox"
-	"github.com/dgraph-io/ristretto"
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"go.temporal.io/sdk/client"
@@ -392,7 +392,7 @@ func (r *versionResolver) SmlVersion(ctx context.Context, obj *generated.Version
 	return "", errors.New("could not find SML version")
 }
 
-var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config{
+var versionDependencyCache, _ = ristretto.NewCache(&ristretto.Config[string, []*ent.VersionDependency]{
 	NumCounters: 1e6, // number of keys to track frequency of (1M).
 	MaxCost:     1e6, // maximum cost of cache (1M).
 	BufferItems: 64,  // number of keys per Get buffer.
@@ -404,7 +404,7 @@ func (r *versionResolver) Dependencies(ctx context.Context, obj *generated.Versi
 	var dependencies []*ent.VersionDependency
 
 	if cacheVersions, ok := versionDependencyCache.Get(obj.ID); ok {
-		dependencies = cacheVersions.([]*ent.VersionDependency)
+		dependencies = cacheVersions
 	}
 
 	if dependencies == nil {

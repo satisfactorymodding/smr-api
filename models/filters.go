@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/mitchellh/mapstructure"
-	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/satisfactorymodding/smr-api/generated"
 )
