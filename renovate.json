@@ -12,9 +12,6 @@
     "labels": ["security"]
   },
   "labels": ["dependency"],
-  "repositories": [
-    "satisfactorymodding/smr-api"
-  ],
   "gitAuthor": "Renovate Bot <bot@renovateapp.com>",
   "postUpdateOptions": [
     "gomodTidy"
