@@ -17,6 +17,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/cespare/xxhash v1.1.0
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/exaring/otelpgx v0.6.2
 	github.com/felixge/fgprof v0.9.4
@@ -90,7 +91,6 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
 	github.com/dave/jennifer v1.6.0 // indirect
