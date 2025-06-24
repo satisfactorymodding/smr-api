@@ -63,5 +63,8 @@ func (Mod) Edges() []ent.Edge {
 		edge.From("dependents", Version.Type).
 			Ref("dependencies").
 			Through("version_dependencies", VersionDependency.Type),
+		edge.From("modpacks", Modpack.Type).
+			Ref("mods").
+			Through("modpack_mods", ModpackMod.Type),
 	}
 }

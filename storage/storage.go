@@ -174,6 +174,18 @@ func UploadModLogo(ctx context.Context, modID string, data io.ReadSeeker) (strin
 	return key, nil
 }
 
+func UploadModpackLogo(ctx context.Context, modID string, data io.ReadSeeker) (string, error) {
+	key := fmt.Sprintf("/images/modpacks/%s/logo.webp", modID)
+
+	key, err := Client(ctx).Put(ctx, key, data)
+	if err != nil {
+		slox.Error(ctx, "failed to upload modpack logo", slog.Any("err", err))
+		return "", fmt.Errorf("failed to upload modpack logo: %w", err)
+	}
+
+	return key, nil
+}
+
 func UploadUserAvatar(ctx context.Context, userID string, data io.ReadSeeker) (string, error) {
 	key := fmt.Sprintf("/images/users/%s/avatar.webp", userID)
 

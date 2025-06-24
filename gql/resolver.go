@@ -74,6 +74,14 @@ func (r *Resolver) VersionDependency() generated.VersionDependencyResolver {
 	return &versionDependencyResolver{r}
 }
 
+func (r *Resolver) GetModpacks() generated.GetModpacksResolver {
+	return &getModpacksResolver{r}
+}
+
+func (r *Resolver) Modpack() generated.ModpackResolver {
+	return &modpackResolver{r}
+}
+
 type mutationResolver struct{ *Resolver }
 
 type queryResolver struct{ *Resolver }

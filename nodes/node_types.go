@@ -23,6 +23,9 @@ var (
 	ErrorFailedModUpload = ErrorResponse{Code: 201, Message: "failed to upload mod", Status: 500}
 
 	ErrorVersionNotFound = ErrorResponse{Code: 300, Message: "version not found", Status: 404}
+
+	ErrorModpackNotFound        = ErrorResponse{Code: 400, Message: "modpack not found", Status: 404}
+	ErrorModpackReleaseNotFound = ErrorResponse{Code: 401, Message: "modpack release not found", Status: 404}
 )
 
 func GenericUserError(err error) *ErrorResponse {

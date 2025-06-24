@@ -15,6 +15,11 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guidetag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackmod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktag"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modtag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
@@ -44,6 +49,11 @@ const (
 	TypeGuideTag            = "GuideTag"
 	TypeMod                 = "Mod"
 	TypeModTag              = "ModTag"
+	TypeModpack             = "Modpack"
+	TypeModpackMod          = "ModpackMod"
+	TypeModpackRelease      = "ModpackRelease"
+	TypeModpackTag          = "ModpackTag"
+	TypeModpackTarget       = "ModpackTarget"
 	TypeSatisfactoryVersion = "SatisfactoryVersion"
 	TypeTag                 = "Tag"
 	TypeUser                = "User"
@@ -1976,6 +1986,9 @@ type ModMutation struct {
 	dependents              map[string]struct{}
 	removeddependents       map[string]struct{}
 	cleareddependents       bool
+	modpacks                map[string]struct{}
+	removedmodpacks         map[string]struct{}
+	clearedmodpacks         bool
 	done                    bool
 	oldValue                func(context.Context) (*Mod, error)
 	predicates              []predicate.Mod
@@ -3251,6 +3264,60 @@ func (m *ModMutation) ResetDependents() {
 	m.removeddependents = nil
 }
 
+// AddModpackIDs adds the "modpacks" edge to the Modpack entity by ids.
+func (m *ModMutation) AddModpackIDs(ids ...string) {
+	if m.modpacks == nil {
+		m.modpacks = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.modpacks[ids[i]] = struct{}{}
+	}
+}
+
+// ClearModpacks clears the "modpacks" edge to the Modpack entity.
+func (m *ModMutation) ClearModpacks() {
+	m.clearedmodpacks = true
+}
+
+// ModpacksCleared reports if the "modpacks" edge to the Modpack entity was cleared.
+func (m *ModMutation) ModpacksCleared() bool {
+	return m.clearedmodpacks
+}
+
+// RemoveModpackIDs removes the "modpacks" edge to the Modpack entity by IDs.
+func (m *ModMutation) RemoveModpackIDs(ids ...string) {
+	if m.removedmodpacks == nil {
+		m.removedmodpacks = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.modpacks, ids[i])
+		m.removedmodpacks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedModpacks returns the removed IDs of the "modpacks" edge to the Modpack entity.
+func (m *ModMutation) RemovedModpacksIDs() (ids []string) {
+	for id := range m.removedmodpacks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ModpacksIDs returns the "modpacks" edge IDs in the mutation.
+func (m *ModMutation) ModpacksIDs() (ids []string) {
+	for id := range m.modpacks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetModpacks resets all changes to the "modpacks" edge.
+func (m *ModMutation) ResetModpacks() {
+	m.modpacks = nil
+	m.clearedmodpacks = false
+	m.removedmodpacks = nil
+}
+
 // Where appends a list predicates to the ModMutation builder.
 func (m *ModMutation) Where(ps ...predicate.Mod) {
 	m.predicates = append(m.predicates, ps...)
@@ -3831,7 +3898,7 @@ func (m *ModMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ModMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.versions != nil {
 		edges = append(edges, mod.EdgeVersions)
 	}
@@ -3843,6 +3910,9 @@ func (m *ModMutation) AddedEdges() []string {
 	}
 	if m.dependents != nil {
 		edges = append(edges, mod.EdgeDependents)
+	}
+	if m.modpacks != nil {
+		edges = append(edges, mod.EdgeModpacks)
 	}
 	return edges
 }
@@ -3875,13 +3945,19 @@ func (m *ModMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case mod.EdgeModpacks:
+		ids := make([]ent.Value, 0, len(m.modpacks))
+		for id := range m.modpacks {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ModMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedversions != nil {
 		edges = append(edges, mod.EdgeVersions)
 	}
@@ -3893,6 +3969,9 @@ func (m *ModMutation) RemovedEdges() []string {
 	}
 	if m.removeddependents != nil {
 		edges = append(edges, mod.EdgeDependents)
+	}
+	if m.removedmodpacks != nil {
+		edges = append(edges, mod.EdgeModpacks)
 	}
 	return edges
 }
@@ -3925,13 +4004,19 @@ func (m *ModMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case mod.EdgeModpacks:
+		ids := make([]ent.Value, 0, len(m.removedmodpacks))
+		for id := range m.removedmodpacks {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ModMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedversions {
 		edges = append(edges, mod.EdgeVersions)
 	}
@@ -3943,6 +4028,9 @@ func (m *ModMutation) ClearedEdges() []string {
 	}
 	if m.cleareddependents {
 		edges = append(edges, mod.EdgeDependents)
+	}
+	if m.clearedmodpacks {
+		edges = append(edges, mod.EdgeModpacks)
 	}
 	return edges
 }
@@ -3959,6 +4047,8 @@ func (m *ModMutation) EdgeCleared(name string) bool {
 		return m.clearedtags
 	case mod.EdgeDependents:
 		return m.cleareddependents
+	case mod.EdgeModpacks:
+		return m.clearedmodpacks
 	}
 	return false
 }
@@ -3986,6 +4076,9 @@ func (m *ModMutation) ResetEdge(name string) error {
 		return nil
 	case mod.EdgeDependents:
 		m.ResetDependents()
+		return nil
+	case mod.EdgeModpacks:
+		m.ResetModpacks()
 		return nil
 	}
 	return fmt.Errorf("unknown Mod edge %s", name)
@@ -4368,6 +4461,3595 @@ func (m *ModTagMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ModTag edge %s", name)
+}
+
+// ModpackMutation represents an operation that mutates the Modpack nodes in the graph.
+type ModpackMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *string
+	created_at        *time.Time
+	updated_at        *time.Time
+	name              *string
+	short_description *string
+	full_description  *string
+	logo              *string
+	logo_thumbhash    *string
+	creator_id        *string
+	views             *uint
+	addviews          *int
+	hotness           *uint
+	addhotness        *int
+	installs          *uint
+	addinstalls       *int
+	popularity        *uint
+	addpopularity     *int
+	hidden            *bool
+	clearedFields     map[string]struct{}
+	children          map[string]struct{}
+	removedchildren   map[string]struct{}
+	clearedchildren   bool
+	parent            *string
+	clearedparent     bool
+	targets           map[string]struct{}
+	removedtargets    map[string]struct{}
+	clearedtargets    bool
+	releases          map[string]struct{}
+	removedreleases   map[string]struct{}
+	clearedreleases   bool
+	mods              map[string]struct{}
+	removedmods       map[string]struct{}
+	clearedmods       bool
+	tags              map[string]struct{}
+	removedtags       map[string]struct{}
+	clearedtags       bool
+	done              bool
+	oldValue          func(context.Context) (*Modpack, error)
+	predicates        []predicate.Modpack
+}
+
+var _ ent.Mutation = (*ModpackMutation)(nil)
+
+// modpackOption allows management of the mutation configuration using functional options.
+type modpackOption func(*ModpackMutation)
+
+// newModpackMutation creates new mutation for the Modpack entity.
+func newModpackMutation(c config, op Op, opts ...modpackOption) *ModpackMutation {
+	m := &ModpackMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeModpack,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withModpackID sets the ID field of the mutation.
+func withModpackID(id string) modpackOption {
+	return func(m *ModpackMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Modpack
+		)
+		m.oldValue = func(ctx context.Context) (*Modpack, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Modpack.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withModpack sets the old Modpack of the mutation.
+func withModpack(node *Modpack) modpackOption {
+	return func(m *ModpackMutation) {
+		m.oldValue = func(context.Context) (*Modpack, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ModpackMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ModpackMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Modpack entities.
+func (m *ModpackMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ModpackMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ModpackMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Modpack.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ModpackMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ModpackMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ModpackMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ModpackMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ModpackMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ModpackMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetName sets the "name" field.
+func (m *ModpackMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ModpackMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ModpackMutation) ResetName() {
+	m.name = nil
+}
+
+// SetShortDescription sets the "short_description" field.
+func (m *ModpackMutation) SetShortDescription(s string) {
+	m.short_description = &s
+}
+
+// ShortDescription returns the value of the "short_description" field in the mutation.
+func (m *ModpackMutation) ShortDescription() (r string, exists bool) {
+	v := m.short_description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldShortDescription returns the old "short_description" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldShortDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldShortDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldShortDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldShortDescription: %w", err)
+	}
+	return oldValue.ShortDescription, nil
+}
+
+// ResetShortDescription resets all changes to the "short_description" field.
+func (m *ModpackMutation) ResetShortDescription() {
+	m.short_description = nil
+}
+
+// SetFullDescription sets the "full_description" field.
+func (m *ModpackMutation) SetFullDescription(s string) {
+	m.full_description = &s
+}
+
+// FullDescription returns the value of the "full_description" field in the mutation.
+func (m *ModpackMutation) FullDescription() (r string, exists bool) {
+	v := m.full_description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFullDescription returns the old "full_description" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldFullDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFullDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFullDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFullDescription: %w", err)
+	}
+	return oldValue.FullDescription, nil
+}
+
+// ResetFullDescription resets all changes to the "full_description" field.
+func (m *ModpackMutation) ResetFullDescription() {
+	m.full_description = nil
+}
+
+// SetLogo sets the "logo" field.
+func (m *ModpackMutation) SetLogo(s string) {
+	m.logo = &s
+}
+
+// Logo returns the value of the "logo" field in the mutation.
+func (m *ModpackMutation) Logo() (r string, exists bool) {
+	v := m.logo
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLogo returns the old "logo" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldLogo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLogo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLogo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLogo: %w", err)
+	}
+	return oldValue.Logo, nil
+}
+
+// ClearLogo clears the value of the "logo" field.
+func (m *ModpackMutation) ClearLogo() {
+	m.logo = nil
+	m.clearedFields[modpack.FieldLogo] = struct{}{}
+}
+
+// LogoCleared returns if the "logo" field was cleared in this mutation.
+func (m *ModpackMutation) LogoCleared() bool {
+	_, ok := m.clearedFields[modpack.FieldLogo]
+	return ok
+}
+
+// ResetLogo resets all changes to the "logo" field.
+func (m *ModpackMutation) ResetLogo() {
+	m.logo = nil
+	delete(m.clearedFields, modpack.FieldLogo)
+}
+
+// SetLogoThumbhash sets the "logo_thumbhash" field.
+func (m *ModpackMutation) SetLogoThumbhash(s string) {
+	m.logo_thumbhash = &s
+}
+
+// LogoThumbhash returns the value of the "logo_thumbhash" field in the mutation.
+func (m *ModpackMutation) LogoThumbhash() (r string, exists bool) {
+	v := m.logo_thumbhash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLogoThumbhash returns the old "logo_thumbhash" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldLogoThumbhash(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLogoThumbhash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLogoThumbhash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLogoThumbhash: %w", err)
+	}
+	return oldValue.LogoThumbhash, nil
+}
+
+// ClearLogoThumbhash clears the value of the "logo_thumbhash" field.
+func (m *ModpackMutation) ClearLogoThumbhash() {
+	m.logo_thumbhash = nil
+	m.clearedFields[modpack.FieldLogoThumbhash] = struct{}{}
+}
+
+// LogoThumbhashCleared returns if the "logo_thumbhash" field was cleared in this mutation.
+func (m *ModpackMutation) LogoThumbhashCleared() bool {
+	_, ok := m.clearedFields[modpack.FieldLogoThumbhash]
+	return ok
+}
+
+// ResetLogoThumbhash resets all changes to the "logo_thumbhash" field.
+func (m *ModpackMutation) ResetLogoThumbhash() {
+	m.logo_thumbhash = nil
+	delete(m.clearedFields, modpack.FieldLogoThumbhash)
+}
+
+// SetCreatorID sets the "creator_id" field.
+func (m *ModpackMutation) SetCreatorID(s string) {
+	m.creator_id = &s
+}
+
+// CreatorID returns the value of the "creator_id" field in the mutation.
+func (m *ModpackMutation) CreatorID() (r string, exists bool) {
+	v := m.creator_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatorID returns the old "creator_id" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldCreatorID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatorID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatorID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatorID: %w", err)
+	}
+	return oldValue.CreatorID, nil
+}
+
+// ResetCreatorID resets all changes to the "creator_id" field.
+func (m *ModpackMutation) ResetCreatorID() {
+	m.creator_id = nil
+}
+
+// SetViews sets the "views" field.
+func (m *ModpackMutation) SetViews(u uint) {
+	m.views = &u
+	m.addviews = nil
+}
+
+// Views returns the value of the "views" field in the mutation.
+func (m *ModpackMutation) Views() (r uint, exists bool) {
+	v := m.views
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldViews returns the old "views" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldViews(ctx context.Context) (v uint, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldViews is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldViews requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldViews: %w", err)
+	}
+	return oldValue.Views, nil
+}
+
+// AddViews adds u to the "views" field.
+func (m *ModpackMutation) AddViews(u int) {
+	if m.addviews != nil {
+		*m.addviews += u
+	} else {
+		m.addviews = &u
+	}
+}
+
+// AddedViews returns the value that was added to the "views" field in this mutation.
+func (m *ModpackMutation) AddedViews() (r int, exists bool) {
+	v := m.addviews
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetViews resets all changes to the "views" field.
+func (m *ModpackMutation) ResetViews() {
+	m.views = nil
+	m.addviews = nil
+}
+
+// SetHotness sets the "hotness" field.
+func (m *ModpackMutation) SetHotness(u uint) {
+	m.hotness = &u
+	m.addhotness = nil
+}
+
+// Hotness returns the value of the "hotness" field in the mutation.
+func (m *ModpackMutation) Hotness() (r uint, exists bool) {
+	v := m.hotness
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHotness returns the old "hotness" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldHotness(ctx context.Context) (v uint, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHotness is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHotness requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHotness: %w", err)
+	}
+	return oldValue.Hotness, nil
+}
+
+// AddHotness adds u to the "hotness" field.
+func (m *ModpackMutation) AddHotness(u int) {
+	if m.addhotness != nil {
+		*m.addhotness += u
+	} else {
+		m.addhotness = &u
+	}
+}
+
+// AddedHotness returns the value that was added to the "hotness" field in this mutation.
+func (m *ModpackMutation) AddedHotness() (r int, exists bool) {
+	v := m.addhotness
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetHotness resets all changes to the "hotness" field.
+func (m *ModpackMutation) ResetHotness() {
+	m.hotness = nil
+	m.addhotness = nil
+}
+
+// SetInstalls sets the "installs" field.
+func (m *ModpackMutation) SetInstalls(u uint) {
+	m.installs = &u
+	m.addinstalls = nil
+}
+
+// Installs returns the value of the "installs" field in the mutation.
+func (m *ModpackMutation) Installs() (r uint, exists bool) {
+	v := m.installs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInstalls returns the old "installs" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldInstalls(ctx context.Context) (v uint, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInstalls is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInstalls requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInstalls: %w", err)
+	}
+	return oldValue.Installs, nil
+}
+
+// AddInstalls adds u to the "installs" field.
+func (m *ModpackMutation) AddInstalls(u int) {
+	if m.addinstalls != nil {
+		*m.addinstalls += u
+	} else {
+		m.addinstalls = &u
+	}
+}
+
+// AddedInstalls returns the value that was added to the "installs" field in this mutation.
+func (m *ModpackMutation) AddedInstalls() (r int, exists bool) {
+	v := m.addinstalls
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetInstalls resets all changes to the "installs" field.
+func (m *ModpackMutation) ResetInstalls() {
+	m.installs = nil
+	m.addinstalls = nil
+}
+
+// SetPopularity sets the "popularity" field.
+func (m *ModpackMutation) SetPopularity(u uint) {
+	m.popularity = &u
+	m.addpopularity = nil
+}
+
+// Popularity returns the value of the "popularity" field in the mutation.
+func (m *ModpackMutation) Popularity() (r uint, exists bool) {
+	v := m.popularity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPopularity returns the old "popularity" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldPopularity(ctx context.Context) (v uint, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPopularity is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPopularity requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPopularity: %w", err)
+	}
+	return oldValue.Popularity, nil
+}
+
+// AddPopularity adds u to the "popularity" field.
+func (m *ModpackMutation) AddPopularity(u int) {
+	if m.addpopularity != nil {
+		*m.addpopularity += u
+	} else {
+		m.addpopularity = &u
+	}
+}
+
+// AddedPopularity returns the value that was added to the "popularity" field in this mutation.
+func (m *ModpackMutation) AddedPopularity() (r int, exists bool) {
+	v := m.addpopularity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPopularity resets all changes to the "popularity" field.
+func (m *ModpackMutation) ResetPopularity() {
+	m.popularity = nil
+	m.addpopularity = nil
+}
+
+// SetHidden sets the "hidden" field.
+func (m *ModpackMutation) SetHidden(b bool) {
+	m.hidden = &b
+}
+
+// Hidden returns the value of the "hidden" field in the mutation.
+func (m *ModpackMutation) Hidden() (r bool, exists bool) {
+	v := m.hidden
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHidden returns the old "hidden" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldHidden(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHidden is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHidden requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHidden: %w", err)
+	}
+	return oldValue.Hidden, nil
+}
+
+// ResetHidden resets all changes to the "hidden" field.
+func (m *ModpackMutation) ResetHidden() {
+	m.hidden = nil
+}
+
+// SetParentID sets the "parent_id" field.
+func (m *ModpackMutation) SetParentID(s string) {
+	m.parent = &s
+}
+
+// ParentID returns the value of the "parent_id" field in the mutation.
+func (m *ModpackMutation) ParentID() (r string, exists bool) {
+	v := m.parent
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParentID returns the old "parent_id" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldParentID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParentID: %w", err)
+	}
+	return oldValue.ParentID, nil
+}
+
+// ClearParentID clears the value of the "parent_id" field.
+func (m *ModpackMutation) ClearParentID() {
+	m.parent = nil
+	m.clearedFields[modpack.FieldParentID] = struct{}{}
+}
+
+// ParentIDCleared returns if the "parent_id" field was cleared in this mutation.
+func (m *ModpackMutation) ParentIDCleared() bool {
+	_, ok := m.clearedFields[modpack.FieldParentID]
+	return ok
+}
+
+// ResetParentID resets all changes to the "parent_id" field.
+func (m *ModpackMutation) ResetParentID() {
+	m.parent = nil
+	delete(m.clearedFields, modpack.FieldParentID)
+}
+
+// AddChildIDs adds the "children" edge to the Modpack entity by ids.
+func (m *ModpackMutation) AddChildIDs(ids ...string) {
+	if m.children == nil {
+		m.children = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.children[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChildren clears the "children" edge to the Modpack entity.
+func (m *ModpackMutation) ClearChildren() {
+	m.clearedchildren = true
+}
+
+// ChildrenCleared reports if the "children" edge to the Modpack entity was cleared.
+func (m *ModpackMutation) ChildrenCleared() bool {
+	return m.clearedchildren
+}
+
+// RemoveChildIDs removes the "children" edge to the Modpack entity by IDs.
+func (m *ModpackMutation) RemoveChildIDs(ids ...string) {
+	if m.removedchildren == nil {
+		m.removedchildren = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.children, ids[i])
+		m.removedchildren[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChildren returns the removed IDs of the "children" edge to the Modpack entity.
+func (m *ModpackMutation) RemovedChildrenIDs() (ids []string) {
+	for id := range m.removedchildren {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChildrenIDs returns the "children" edge IDs in the mutation.
+func (m *ModpackMutation) ChildrenIDs() (ids []string) {
+	for id := range m.children {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChildren resets all changes to the "children" edge.
+func (m *ModpackMutation) ResetChildren() {
+	m.children = nil
+	m.clearedchildren = false
+	m.removedchildren = nil
+}
+
+// ClearParent clears the "parent" edge to the Modpack entity.
+func (m *ModpackMutation) ClearParent() {
+	m.clearedparent = true
+	m.clearedFields[modpack.FieldParentID] = struct{}{}
+}
+
+// ParentCleared reports if the "parent" edge to the Modpack entity was cleared.
+func (m *ModpackMutation) ParentCleared() bool {
+	return m.ParentIDCleared() || m.clearedparent
+}
+
+// ParentIDs returns the "parent" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParentID instead. It exists only for internal usage by the builders.
+func (m *ModpackMutation) ParentIDs() (ids []string) {
+	if id := m.parent; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParent resets all changes to the "parent" edge.
+func (m *ModpackMutation) ResetParent() {
+	m.parent = nil
+	m.clearedparent = false
+}
+
+// AddTargetIDs adds the "targets" edge to the ModpackTarget entity by ids.
+func (m *ModpackMutation) AddTargetIDs(ids ...string) {
+	if m.targets == nil {
+		m.targets = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.targets[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTargets clears the "targets" edge to the ModpackTarget entity.
+func (m *ModpackMutation) ClearTargets() {
+	m.clearedtargets = true
+}
+
+// TargetsCleared reports if the "targets" edge to the ModpackTarget entity was cleared.
+func (m *ModpackMutation) TargetsCleared() bool {
+	return m.clearedtargets
+}
+
+// RemoveTargetIDs removes the "targets" edge to the ModpackTarget entity by IDs.
+func (m *ModpackMutation) RemoveTargetIDs(ids ...string) {
+	if m.removedtargets == nil {
+		m.removedtargets = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.targets, ids[i])
+		m.removedtargets[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTargets returns the removed IDs of the "targets" edge to the ModpackTarget entity.
+func (m *ModpackMutation) RemovedTargetsIDs() (ids []string) {
+	for id := range m.removedtargets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TargetsIDs returns the "targets" edge IDs in the mutation.
+func (m *ModpackMutation) TargetsIDs() (ids []string) {
+	for id := range m.targets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTargets resets all changes to the "targets" edge.
+func (m *ModpackMutation) ResetTargets() {
+	m.targets = nil
+	m.clearedtargets = false
+	m.removedtargets = nil
+}
+
+// AddReleaseIDs adds the "releases" edge to the ModpackRelease entity by ids.
+func (m *ModpackMutation) AddReleaseIDs(ids ...string) {
+	if m.releases == nil {
+		m.releases = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.releases[ids[i]] = struct{}{}
+	}
+}
+
+// ClearReleases clears the "releases" edge to the ModpackRelease entity.
+func (m *ModpackMutation) ClearReleases() {
+	m.clearedreleases = true
+}
+
+// ReleasesCleared reports if the "releases" edge to the ModpackRelease entity was cleared.
+func (m *ModpackMutation) ReleasesCleared() bool {
+	return m.clearedreleases
+}
+
+// RemoveReleaseIDs removes the "releases" edge to the ModpackRelease entity by IDs.
+func (m *ModpackMutation) RemoveReleaseIDs(ids ...string) {
+	if m.removedreleases == nil {
+		m.removedreleases = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.releases, ids[i])
+		m.removedreleases[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedReleases returns the removed IDs of the "releases" edge to the ModpackRelease entity.
+func (m *ModpackMutation) RemovedReleasesIDs() (ids []string) {
+	for id := range m.removedreleases {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ReleasesIDs returns the "releases" edge IDs in the mutation.
+func (m *ModpackMutation) ReleasesIDs() (ids []string) {
+	for id := range m.releases {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetReleases resets all changes to the "releases" edge.
+func (m *ModpackMutation) ResetReleases() {
+	m.releases = nil
+	m.clearedreleases = false
+	m.removedreleases = nil
+}
+
+// AddModIDs adds the "mods" edge to the Mod entity by ids.
+func (m *ModpackMutation) AddModIDs(ids ...string) {
+	if m.mods == nil {
+		m.mods = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.mods[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMods clears the "mods" edge to the Mod entity.
+func (m *ModpackMutation) ClearMods() {
+	m.clearedmods = true
+}
+
+// ModsCleared reports if the "mods" edge to the Mod entity was cleared.
+func (m *ModpackMutation) ModsCleared() bool {
+	return m.clearedmods
+}
+
+// RemoveModIDs removes the "mods" edge to the Mod entity by IDs.
+func (m *ModpackMutation) RemoveModIDs(ids ...string) {
+	if m.removedmods == nil {
+		m.removedmods = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.mods, ids[i])
+		m.removedmods[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMods returns the removed IDs of the "mods" edge to the Mod entity.
+func (m *ModpackMutation) RemovedModsIDs() (ids []string) {
+	for id := range m.removedmods {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ModsIDs returns the "mods" edge IDs in the mutation.
+func (m *ModpackMutation) ModsIDs() (ids []string) {
+	for id := range m.mods {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMods resets all changes to the "mods" edge.
+func (m *ModpackMutation) ResetMods() {
+	m.mods = nil
+	m.clearedmods = false
+	m.removedmods = nil
+}
+
+// AddTagIDs adds the "tags" edge to the Tag entity by ids.
+func (m *ModpackMutation) AddTagIDs(ids ...string) {
+	if m.tags == nil {
+		m.tags = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.tags[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTags clears the "tags" edge to the Tag entity.
+func (m *ModpackMutation) ClearTags() {
+	m.clearedtags = true
+}
+
+// TagsCleared reports if the "tags" edge to the Tag entity was cleared.
+func (m *ModpackMutation) TagsCleared() bool {
+	return m.clearedtags
+}
+
+// RemoveTagIDs removes the "tags" edge to the Tag entity by IDs.
+func (m *ModpackMutation) RemoveTagIDs(ids ...string) {
+	if m.removedtags == nil {
+		m.removedtags = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.tags, ids[i])
+		m.removedtags[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTags returns the removed IDs of the "tags" edge to the Tag entity.
+func (m *ModpackMutation) RemovedTagsIDs() (ids []string) {
+	for id := range m.removedtags {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TagsIDs returns the "tags" edge IDs in the mutation.
+func (m *ModpackMutation) TagsIDs() (ids []string) {
+	for id := range m.tags {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTags resets all changes to the "tags" edge.
+func (m *ModpackMutation) ResetTags() {
+	m.tags = nil
+	m.clearedtags = false
+	m.removedtags = nil
+}
+
+// Where appends a list predicates to the ModpackMutation builder.
+func (m *ModpackMutation) Where(ps ...predicate.Modpack) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ModpackMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ModpackMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Modpack, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ModpackMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ModpackMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Modpack).
+func (m *ModpackMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ModpackMutation) Fields() []string {
+	fields := make([]string, 0, 14)
+	if m.created_at != nil {
+		fields = append(fields, modpack.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, modpack.FieldUpdatedAt)
+	}
+	if m.name != nil {
+		fields = append(fields, modpack.FieldName)
+	}
+	if m.short_description != nil {
+		fields = append(fields, modpack.FieldShortDescription)
+	}
+	if m.full_description != nil {
+		fields = append(fields, modpack.FieldFullDescription)
+	}
+	if m.logo != nil {
+		fields = append(fields, modpack.FieldLogo)
+	}
+	if m.logo_thumbhash != nil {
+		fields = append(fields, modpack.FieldLogoThumbhash)
+	}
+	if m.creator_id != nil {
+		fields = append(fields, modpack.FieldCreatorID)
+	}
+	if m.views != nil {
+		fields = append(fields, modpack.FieldViews)
+	}
+	if m.hotness != nil {
+		fields = append(fields, modpack.FieldHotness)
+	}
+	if m.installs != nil {
+		fields = append(fields, modpack.FieldInstalls)
+	}
+	if m.popularity != nil {
+		fields = append(fields, modpack.FieldPopularity)
+	}
+	if m.hidden != nil {
+		fields = append(fields, modpack.FieldHidden)
+	}
+	if m.parent != nil {
+		fields = append(fields, modpack.FieldParentID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ModpackMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case modpack.FieldCreatedAt:
+		return m.CreatedAt()
+	case modpack.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case modpack.FieldName:
+		return m.Name()
+	case modpack.FieldShortDescription:
+		return m.ShortDescription()
+	case modpack.FieldFullDescription:
+		return m.FullDescription()
+	case modpack.FieldLogo:
+		return m.Logo()
+	case modpack.FieldLogoThumbhash:
+		return m.LogoThumbhash()
+	case modpack.FieldCreatorID:
+		return m.CreatorID()
+	case modpack.FieldViews:
+		return m.Views()
+	case modpack.FieldHotness:
+		return m.Hotness()
+	case modpack.FieldInstalls:
+		return m.Installs()
+	case modpack.FieldPopularity:
+		return m.Popularity()
+	case modpack.FieldHidden:
+		return m.Hidden()
+	case modpack.FieldParentID:
+		return m.ParentID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ModpackMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case modpack.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case modpack.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case modpack.FieldName:
+		return m.OldName(ctx)
+	case modpack.FieldShortDescription:
+		return m.OldShortDescription(ctx)
+	case modpack.FieldFullDescription:
+		return m.OldFullDescription(ctx)
+	case modpack.FieldLogo:
+		return m.OldLogo(ctx)
+	case modpack.FieldLogoThumbhash:
+		return m.OldLogoThumbhash(ctx)
+	case modpack.FieldCreatorID:
+		return m.OldCreatorID(ctx)
+	case modpack.FieldViews:
+		return m.OldViews(ctx)
+	case modpack.FieldHotness:
+		return m.OldHotness(ctx)
+	case modpack.FieldInstalls:
+		return m.OldInstalls(ctx)
+	case modpack.FieldPopularity:
+		return m.OldPopularity(ctx)
+	case modpack.FieldHidden:
+		return m.OldHidden(ctx)
+	case modpack.FieldParentID:
+		return m.OldParentID(ctx)
+	}
+	return nil, fmt.Errorf("unknown Modpack field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case modpack.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case modpack.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case modpack.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case modpack.FieldShortDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetShortDescription(v)
+		return nil
+	case modpack.FieldFullDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFullDescription(v)
+		return nil
+	case modpack.FieldLogo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLogo(v)
+		return nil
+	case modpack.FieldLogoThumbhash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLogoThumbhash(v)
+		return nil
+	case modpack.FieldCreatorID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatorID(v)
+		return nil
+	case modpack.FieldViews:
+		v, ok := value.(uint)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetViews(v)
+		return nil
+	case modpack.FieldHotness:
+		v, ok := value.(uint)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHotness(v)
+		return nil
+	case modpack.FieldInstalls:
+		v, ok := value.(uint)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInstalls(v)
+		return nil
+	case modpack.FieldPopularity:
+		v, ok := value.(uint)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPopularity(v)
+		return nil
+	case modpack.FieldHidden:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHidden(v)
+		return nil
+	case modpack.FieldParentID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParentID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Modpack field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ModpackMutation) AddedFields() []string {
+	var fields []string
+	if m.addviews != nil {
+		fields = append(fields, modpack.FieldViews)
+	}
+	if m.addhotness != nil {
+		fields = append(fields, modpack.FieldHotness)
+	}
+	if m.addinstalls != nil {
+		fields = append(fields, modpack.FieldInstalls)
+	}
+	if m.addpopularity != nil {
+		fields = append(fields, modpack.FieldPopularity)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ModpackMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case modpack.FieldViews:
+		return m.AddedViews()
+	case modpack.FieldHotness:
+		return m.AddedHotness()
+	case modpack.FieldInstalls:
+		return m.AddedInstalls()
+	case modpack.FieldPopularity:
+		return m.AddedPopularity()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case modpack.FieldViews:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddViews(v)
+		return nil
+	case modpack.FieldHotness:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHotness(v)
+		return nil
+	case modpack.FieldInstalls:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddInstalls(v)
+		return nil
+	case modpack.FieldPopularity:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPopularity(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Modpack numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ModpackMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(modpack.FieldLogo) {
+		fields = append(fields, modpack.FieldLogo)
+	}
+	if m.FieldCleared(modpack.FieldLogoThumbhash) {
+		fields = append(fields, modpack.FieldLogoThumbhash)
+	}
+	if m.FieldCleared(modpack.FieldParentID) {
+		fields = append(fields, modpack.FieldParentID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ModpackMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ModpackMutation) ClearField(name string) error {
+	switch name {
+	case modpack.FieldLogo:
+		m.ClearLogo()
+		return nil
+	case modpack.FieldLogoThumbhash:
+		m.ClearLogoThumbhash()
+		return nil
+	case modpack.FieldParentID:
+		m.ClearParentID()
+		return nil
+	}
+	return fmt.Errorf("unknown Modpack nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ModpackMutation) ResetField(name string) error {
+	switch name {
+	case modpack.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case modpack.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case modpack.FieldName:
+		m.ResetName()
+		return nil
+	case modpack.FieldShortDescription:
+		m.ResetShortDescription()
+		return nil
+	case modpack.FieldFullDescription:
+		m.ResetFullDescription()
+		return nil
+	case modpack.FieldLogo:
+		m.ResetLogo()
+		return nil
+	case modpack.FieldLogoThumbhash:
+		m.ResetLogoThumbhash()
+		return nil
+	case modpack.FieldCreatorID:
+		m.ResetCreatorID()
+		return nil
+	case modpack.FieldViews:
+		m.ResetViews()
+		return nil
+	case modpack.FieldHotness:
+		m.ResetHotness()
+		return nil
+	case modpack.FieldInstalls:
+		m.ResetInstalls()
+		return nil
+	case modpack.FieldPopularity:
+		m.ResetPopularity()
+		return nil
+	case modpack.FieldHidden:
+		m.ResetHidden()
+		return nil
+	case modpack.FieldParentID:
+		m.ResetParentID()
+		return nil
+	}
+	return fmt.Errorf("unknown Modpack field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ModpackMutation) AddedEdges() []string {
+	edges := make([]string, 0, 6)
+	if m.children != nil {
+		edges = append(edges, modpack.EdgeChildren)
+	}
+	if m.parent != nil {
+		edges = append(edges, modpack.EdgeParent)
+	}
+	if m.targets != nil {
+		edges = append(edges, modpack.EdgeTargets)
+	}
+	if m.releases != nil {
+		edges = append(edges, modpack.EdgeReleases)
+	}
+	if m.mods != nil {
+		edges = append(edges, modpack.EdgeMods)
+	}
+	if m.tags != nil {
+		edges = append(edges, modpack.EdgeTags)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ModpackMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case modpack.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.children))
+		for id := range m.children {
+			ids = append(ids, id)
+		}
+		return ids
+	case modpack.EdgeParent:
+		if id := m.parent; id != nil {
+			return []ent.Value{*id}
+		}
+	case modpack.EdgeTargets:
+		ids := make([]ent.Value, 0, len(m.targets))
+		for id := range m.targets {
+			ids = append(ids, id)
+		}
+		return ids
+	case modpack.EdgeReleases:
+		ids := make([]ent.Value, 0, len(m.releases))
+		for id := range m.releases {
+			ids = append(ids, id)
+		}
+		return ids
+	case modpack.EdgeMods:
+		ids := make([]ent.Value, 0, len(m.mods))
+		for id := range m.mods {
+			ids = append(ids, id)
+		}
+		return ids
+	case modpack.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.tags))
+		for id := range m.tags {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ModpackMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 6)
+	if m.removedchildren != nil {
+		edges = append(edges, modpack.EdgeChildren)
+	}
+	if m.removedtargets != nil {
+		edges = append(edges, modpack.EdgeTargets)
+	}
+	if m.removedreleases != nil {
+		edges = append(edges, modpack.EdgeReleases)
+	}
+	if m.removedmods != nil {
+		edges = append(edges, modpack.EdgeMods)
+	}
+	if m.removedtags != nil {
+		edges = append(edges, modpack.EdgeTags)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ModpackMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case modpack.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.removedchildren))
+		for id := range m.removedchildren {
+			ids = append(ids, id)
+		}
+		return ids
+	case modpack.EdgeTargets:
+		ids := make([]ent.Value, 0, len(m.removedtargets))
+		for id := range m.removedtargets {
+			ids = append(ids, id)
+		}
+		return ids
+	case modpack.EdgeReleases:
+		ids := make([]ent.Value, 0, len(m.removedreleases))
+		for id := range m.removedreleases {
+			ids = append(ids, id)
+		}
+		return ids
+	case modpack.EdgeMods:
+		ids := make([]ent.Value, 0, len(m.removedmods))
+		for id := range m.removedmods {
+			ids = append(ids, id)
+		}
+		return ids
+	case modpack.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.removedtags))
+		for id := range m.removedtags {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ModpackMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 6)
+	if m.clearedchildren {
+		edges = append(edges, modpack.EdgeChildren)
+	}
+	if m.clearedparent {
+		edges = append(edges, modpack.EdgeParent)
+	}
+	if m.clearedtargets {
+		edges = append(edges, modpack.EdgeTargets)
+	}
+	if m.clearedreleases {
+		edges = append(edges, modpack.EdgeReleases)
+	}
+	if m.clearedmods {
+		edges = append(edges, modpack.EdgeMods)
+	}
+	if m.clearedtags {
+		edges = append(edges, modpack.EdgeTags)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ModpackMutation) EdgeCleared(name string) bool {
+	switch name {
+	case modpack.EdgeChildren:
+		return m.clearedchildren
+	case modpack.EdgeParent:
+		return m.clearedparent
+	case modpack.EdgeTargets:
+		return m.clearedtargets
+	case modpack.EdgeReleases:
+		return m.clearedreleases
+	case modpack.EdgeMods:
+		return m.clearedmods
+	case modpack.EdgeTags:
+		return m.clearedtags
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ModpackMutation) ClearEdge(name string) error {
+	switch name {
+	case modpack.EdgeParent:
+		m.ClearParent()
+		return nil
+	}
+	return fmt.Errorf("unknown Modpack unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ModpackMutation) ResetEdge(name string) error {
+	switch name {
+	case modpack.EdgeChildren:
+		m.ResetChildren()
+		return nil
+	case modpack.EdgeParent:
+		m.ResetParent()
+		return nil
+	case modpack.EdgeTargets:
+		m.ResetTargets()
+		return nil
+	case modpack.EdgeReleases:
+		m.ResetReleases()
+		return nil
+	case modpack.EdgeMods:
+		m.ResetMods()
+		return nil
+	case modpack.EdgeTags:
+		m.ResetTags()
+		return nil
+	}
+	return fmt.Errorf("unknown Modpack edge %s", name)
+}
+
+// ModpackModMutation represents an operation that mutates the ModpackMod nodes in the graph.
+type ModpackModMutation struct {
+	config
+	op                 Op
+	typ                string
+	version_constraint *string
+	clearedFields      map[string]struct{}
+	modpack            *string
+	clearedmodpack     bool
+	mod                *string
+	clearedmod         bool
+	done               bool
+	oldValue           func(context.Context) (*ModpackMod, error)
+	predicates         []predicate.ModpackMod
+}
+
+var _ ent.Mutation = (*ModpackModMutation)(nil)
+
+// modpackmodOption allows management of the mutation configuration using functional options.
+type modpackmodOption func(*ModpackModMutation)
+
+// newModpackModMutation creates new mutation for the ModpackMod entity.
+func newModpackModMutation(c config, op Op, opts ...modpackmodOption) *ModpackModMutation {
+	m := &ModpackModMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeModpackMod,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ModpackModMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ModpackModMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetModpackID sets the "modpack_id" field.
+func (m *ModpackModMutation) SetModpackID(s string) {
+	m.modpack = &s
+}
+
+// ModpackID returns the value of the "modpack_id" field in the mutation.
+func (m *ModpackModMutation) ModpackID() (r string, exists bool) {
+	v := m.modpack
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModpackID resets all changes to the "modpack_id" field.
+func (m *ModpackModMutation) ResetModpackID() {
+	m.modpack = nil
+}
+
+// SetModID sets the "mod_id" field.
+func (m *ModpackModMutation) SetModID(s string) {
+	m.mod = &s
+}
+
+// ModID returns the value of the "mod_id" field in the mutation.
+func (m *ModpackModMutation) ModID() (r string, exists bool) {
+	v := m.mod
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModID resets all changes to the "mod_id" field.
+func (m *ModpackModMutation) ResetModID() {
+	m.mod = nil
+}
+
+// SetVersionConstraint sets the "version_constraint" field.
+func (m *ModpackModMutation) SetVersionConstraint(s string) {
+	m.version_constraint = &s
+}
+
+// VersionConstraint returns the value of the "version_constraint" field in the mutation.
+func (m *ModpackModMutation) VersionConstraint() (r string, exists bool) {
+	v := m.version_constraint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersionConstraint resets all changes to the "version_constraint" field.
+func (m *ModpackModMutation) ResetVersionConstraint() {
+	m.version_constraint = nil
+}
+
+// ClearModpack clears the "modpack" edge to the Modpack entity.
+func (m *ModpackModMutation) ClearModpack() {
+	m.clearedmodpack = true
+	m.clearedFields[modpackmod.FieldModpackID] = struct{}{}
+}
+
+// ModpackCleared reports if the "modpack" edge to the Modpack entity was cleared.
+func (m *ModpackModMutation) ModpackCleared() bool {
+	return m.clearedmodpack
+}
+
+// ModpackIDs returns the "modpack" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ModpackID instead. It exists only for internal usage by the builders.
+func (m *ModpackModMutation) ModpackIDs() (ids []string) {
+	if id := m.modpack; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetModpack resets all changes to the "modpack" edge.
+func (m *ModpackModMutation) ResetModpack() {
+	m.modpack = nil
+	m.clearedmodpack = false
+}
+
+// ClearMod clears the "mod" edge to the Mod entity.
+func (m *ModpackModMutation) ClearMod() {
+	m.clearedmod = true
+	m.clearedFields[modpackmod.FieldModID] = struct{}{}
+}
+
+// ModCleared reports if the "mod" edge to the Mod entity was cleared.
+func (m *ModpackModMutation) ModCleared() bool {
+	return m.clearedmod
+}
+
+// ModIDs returns the "mod" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ModID instead. It exists only for internal usage by the builders.
+func (m *ModpackModMutation) ModIDs() (ids []string) {
+	if id := m.mod; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMod resets all changes to the "mod" edge.
+func (m *ModpackModMutation) ResetMod() {
+	m.mod = nil
+	m.clearedmod = false
+}
+
+// Where appends a list predicates to the ModpackModMutation builder.
+func (m *ModpackModMutation) Where(ps ...predicate.ModpackMod) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ModpackModMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ModpackModMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ModpackMod, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ModpackModMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ModpackModMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ModpackMod).
+func (m *ModpackModMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ModpackModMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.modpack != nil {
+		fields = append(fields, modpackmod.FieldModpackID)
+	}
+	if m.mod != nil {
+		fields = append(fields, modpackmod.FieldModID)
+	}
+	if m.version_constraint != nil {
+		fields = append(fields, modpackmod.FieldVersionConstraint)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ModpackModMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case modpackmod.FieldModpackID:
+		return m.ModpackID()
+	case modpackmod.FieldModID:
+		return m.ModID()
+	case modpackmod.FieldVersionConstraint:
+		return m.VersionConstraint()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ModpackModMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	return nil, errors.New("edge schema ModpackMod does not support getting old values")
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackModMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case modpackmod.FieldModpackID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModpackID(v)
+		return nil
+	case modpackmod.FieldModID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModID(v)
+		return nil
+	case modpackmod.FieldVersionConstraint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersionConstraint(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackMod field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ModpackModMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ModpackModMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackModMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ModpackMod numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ModpackModMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ModpackModMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ModpackModMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ModpackMod nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ModpackModMutation) ResetField(name string) error {
+	switch name {
+	case modpackmod.FieldModpackID:
+		m.ResetModpackID()
+		return nil
+	case modpackmod.FieldModID:
+		m.ResetModID()
+		return nil
+	case modpackmod.FieldVersionConstraint:
+		m.ResetVersionConstraint()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackMod field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ModpackModMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.modpack != nil {
+		edges = append(edges, modpackmod.EdgeModpack)
+	}
+	if m.mod != nil {
+		edges = append(edges, modpackmod.EdgeMod)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ModpackModMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case modpackmod.EdgeModpack:
+		if id := m.modpack; id != nil {
+			return []ent.Value{*id}
+		}
+	case modpackmod.EdgeMod:
+		if id := m.mod; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ModpackModMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ModpackModMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ModpackModMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedmodpack {
+		edges = append(edges, modpackmod.EdgeModpack)
+	}
+	if m.clearedmod {
+		edges = append(edges, modpackmod.EdgeMod)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ModpackModMutation) EdgeCleared(name string) bool {
+	switch name {
+	case modpackmod.EdgeModpack:
+		return m.clearedmodpack
+	case modpackmod.EdgeMod:
+		return m.clearedmod
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ModpackModMutation) ClearEdge(name string) error {
+	switch name {
+	case modpackmod.EdgeModpack:
+		m.ClearModpack()
+		return nil
+	case modpackmod.EdgeMod:
+		m.ClearMod()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackMod unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ModpackModMutation) ResetEdge(name string) error {
+	switch name {
+	case modpackmod.EdgeModpack:
+		m.ResetModpack()
+		return nil
+	case modpackmod.EdgeMod:
+		m.ResetMod()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackMod edge %s", name)
+}
+
+// ModpackReleaseMutation represents an operation that mutates the ModpackRelease nodes in the graph.
+type ModpackReleaseMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *string
+	created_at     *time.Time
+	updated_at     *time.Time
+	version        *string
+	changelog      *string
+	lockfile       *string
+	clearedFields  map[string]struct{}
+	modpack        *string
+	clearedmodpack bool
+	done           bool
+	oldValue       func(context.Context) (*ModpackRelease, error)
+	predicates     []predicate.ModpackRelease
+}
+
+var _ ent.Mutation = (*ModpackReleaseMutation)(nil)
+
+// modpackreleaseOption allows management of the mutation configuration using functional options.
+type modpackreleaseOption func(*ModpackReleaseMutation)
+
+// newModpackReleaseMutation creates new mutation for the ModpackRelease entity.
+func newModpackReleaseMutation(c config, op Op, opts ...modpackreleaseOption) *ModpackReleaseMutation {
+	m := &ModpackReleaseMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeModpackRelease,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withModpackReleaseID sets the ID field of the mutation.
+func withModpackReleaseID(id string) modpackreleaseOption {
+	return func(m *ModpackReleaseMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ModpackRelease
+		)
+		m.oldValue = func(ctx context.Context) (*ModpackRelease, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ModpackRelease.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withModpackRelease sets the old ModpackRelease of the mutation.
+func withModpackRelease(node *ModpackRelease) modpackreleaseOption {
+	return func(m *ModpackReleaseMutation) {
+		m.oldValue = func(context.Context) (*ModpackRelease, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ModpackReleaseMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ModpackReleaseMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ModpackRelease entities.
+func (m *ModpackReleaseMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ModpackReleaseMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ModpackReleaseMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ModpackRelease.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ModpackReleaseMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ModpackReleaseMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ModpackRelease entity.
+// If the ModpackRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackReleaseMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ModpackReleaseMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ModpackReleaseMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ModpackReleaseMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ModpackRelease entity.
+// If the ModpackRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackReleaseMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ModpackReleaseMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetModpackID sets the "modpack_id" field.
+func (m *ModpackReleaseMutation) SetModpackID(s string) {
+	m.modpack = &s
+}
+
+// ModpackID returns the value of the "modpack_id" field in the mutation.
+func (m *ModpackReleaseMutation) ModpackID() (r string, exists bool) {
+	v := m.modpack
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModpackID returns the old "modpack_id" field's value of the ModpackRelease entity.
+// If the ModpackRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackReleaseMutation) OldModpackID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModpackID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModpackID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModpackID: %w", err)
+	}
+	return oldValue.ModpackID, nil
+}
+
+// ResetModpackID resets all changes to the "modpack_id" field.
+func (m *ModpackReleaseMutation) ResetModpackID() {
+	m.modpack = nil
+}
+
+// SetVersion sets the "version" field.
+func (m *ModpackReleaseMutation) SetVersion(s string) {
+	m.version = &s
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ModpackReleaseMutation) Version() (r string, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the ModpackRelease entity.
+// If the ModpackRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackReleaseMutation) OldVersion(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ModpackReleaseMutation) ResetVersion() {
+	m.version = nil
+}
+
+// SetChangelog sets the "changelog" field.
+func (m *ModpackReleaseMutation) SetChangelog(s string) {
+	m.changelog = &s
+}
+
+// Changelog returns the value of the "changelog" field in the mutation.
+func (m *ModpackReleaseMutation) Changelog() (r string, exists bool) {
+	v := m.changelog
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangelog returns the old "changelog" field's value of the ModpackRelease entity.
+// If the ModpackRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackReleaseMutation) OldChangelog(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangelog is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangelog requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangelog: %w", err)
+	}
+	return oldValue.Changelog, nil
+}
+
+// ResetChangelog resets all changes to the "changelog" field.
+func (m *ModpackReleaseMutation) ResetChangelog() {
+	m.changelog = nil
+}
+
+// SetLockfile sets the "lockfile" field.
+func (m *ModpackReleaseMutation) SetLockfile(s string) {
+	m.lockfile = &s
+}
+
+// Lockfile returns the value of the "lockfile" field in the mutation.
+func (m *ModpackReleaseMutation) Lockfile() (r string, exists bool) {
+	v := m.lockfile
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLockfile returns the old "lockfile" field's value of the ModpackRelease entity.
+// If the ModpackRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackReleaseMutation) OldLockfile(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLockfile is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLockfile requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLockfile: %w", err)
+	}
+	return oldValue.Lockfile, nil
+}
+
+// ResetLockfile resets all changes to the "lockfile" field.
+func (m *ModpackReleaseMutation) ResetLockfile() {
+	m.lockfile = nil
+}
+
+// ClearModpack clears the "modpack" edge to the Modpack entity.
+func (m *ModpackReleaseMutation) ClearModpack() {
+	m.clearedmodpack = true
+	m.clearedFields[modpackrelease.FieldModpackID] = struct{}{}
+}
+
+// ModpackCleared reports if the "modpack" edge to the Modpack entity was cleared.
+func (m *ModpackReleaseMutation) ModpackCleared() bool {
+	return m.clearedmodpack
+}
+
+// ModpackIDs returns the "modpack" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ModpackID instead. It exists only for internal usage by the builders.
+func (m *ModpackReleaseMutation) ModpackIDs() (ids []string) {
+	if id := m.modpack; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetModpack resets all changes to the "modpack" edge.
+func (m *ModpackReleaseMutation) ResetModpack() {
+	m.modpack = nil
+	m.clearedmodpack = false
+}
+
+// Where appends a list predicates to the ModpackReleaseMutation builder.
+func (m *ModpackReleaseMutation) Where(ps ...predicate.ModpackRelease) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ModpackReleaseMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ModpackReleaseMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ModpackRelease, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ModpackReleaseMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ModpackReleaseMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ModpackRelease).
+func (m *ModpackReleaseMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ModpackReleaseMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.created_at != nil {
+		fields = append(fields, modpackrelease.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, modpackrelease.FieldUpdatedAt)
+	}
+	if m.modpack != nil {
+		fields = append(fields, modpackrelease.FieldModpackID)
+	}
+	if m.version != nil {
+		fields = append(fields, modpackrelease.FieldVersion)
+	}
+	if m.changelog != nil {
+		fields = append(fields, modpackrelease.FieldChangelog)
+	}
+	if m.lockfile != nil {
+		fields = append(fields, modpackrelease.FieldLockfile)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ModpackReleaseMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case modpackrelease.FieldCreatedAt:
+		return m.CreatedAt()
+	case modpackrelease.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case modpackrelease.FieldModpackID:
+		return m.ModpackID()
+	case modpackrelease.FieldVersion:
+		return m.Version()
+	case modpackrelease.FieldChangelog:
+		return m.Changelog()
+	case modpackrelease.FieldLockfile:
+		return m.Lockfile()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ModpackReleaseMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case modpackrelease.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case modpackrelease.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case modpackrelease.FieldModpackID:
+		return m.OldModpackID(ctx)
+	case modpackrelease.FieldVersion:
+		return m.OldVersion(ctx)
+	case modpackrelease.FieldChangelog:
+		return m.OldChangelog(ctx)
+	case modpackrelease.FieldLockfile:
+		return m.OldLockfile(ctx)
+	}
+	return nil, fmt.Errorf("unknown ModpackRelease field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackReleaseMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case modpackrelease.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case modpackrelease.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case modpackrelease.FieldModpackID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModpackID(v)
+		return nil
+	case modpackrelease.FieldVersion:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case modpackrelease.FieldChangelog:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangelog(v)
+		return nil
+	case modpackrelease.FieldLockfile:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLockfile(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackRelease field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ModpackReleaseMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ModpackReleaseMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackReleaseMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ModpackRelease numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ModpackReleaseMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ModpackReleaseMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ModpackReleaseMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ModpackRelease nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ModpackReleaseMutation) ResetField(name string) error {
+	switch name {
+	case modpackrelease.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case modpackrelease.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case modpackrelease.FieldModpackID:
+		m.ResetModpackID()
+		return nil
+	case modpackrelease.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case modpackrelease.FieldChangelog:
+		m.ResetChangelog()
+		return nil
+	case modpackrelease.FieldLockfile:
+		m.ResetLockfile()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackRelease field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ModpackReleaseMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.modpack != nil {
+		edges = append(edges, modpackrelease.EdgeModpack)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ModpackReleaseMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case modpackrelease.EdgeModpack:
+		if id := m.modpack; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ModpackReleaseMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ModpackReleaseMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ModpackReleaseMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedmodpack {
+		edges = append(edges, modpackrelease.EdgeModpack)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ModpackReleaseMutation) EdgeCleared(name string) bool {
+	switch name {
+	case modpackrelease.EdgeModpack:
+		return m.clearedmodpack
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ModpackReleaseMutation) ClearEdge(name string) error {
+	switch name {
+	case modpackrelease.EdgeModpack:
+		m.ClearModpack()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackRelease unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ModpackReleaseMutation) ResetEdge(name string) error {
+	switch name {
+	case modpackrelease.EdgeModpack:
+		m.ResetModpack()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackRelease edge %s", name)
+}
+
+// ModpackTagMutation represents an operation that mutates the ModpackTag nodes in the graph.
+type ModpackTagMutation struct {
+	config
+	op             Op
+	typ            string
+	clearedFields  map[string]struct{}
+	modpack        *string
+	clearedmodpack bool
+	tag            *string
+	clearedtag     bool
+	done           bool
+	oldValue       func(context.Context) (*ModpackTag, error)
+	predicates     []predicate.ModpackTag
+}
+
+var _ ent.Mutation = (*ModpackTagMutation)(nil)
+
+// modpacktagOption allows management of the mutation configuration using functional options.
+type modpacktagOption func(*ModpackTagMutation)
+
+// newModpackTagMutation creates new mutation for the ModpackTag entity.
+func newModpackTagMutation(c config, op Op, opts ...modpacktagOption) *ModpackTagMutation {
+	m := &ModpackTagMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeModpackTag,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ModpackTagMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ModpackTagMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetModpackID sets the "modpack_id" field.
+func (m *ModpackTagMutation) SetModpackID(s string) {
+	m.modpack = &s
+}
+
+// ModpackID returns the value of the "modpack_id" field in the mutation.
+func (m *ModpackTagMutation) ModpackID() (r string, exists bool) {
+	v := m.modpack
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModpackID resets all changes to the "modpack_id" field.
+func (m *ModpackTagMutation) ResetModpackID() {
+	m.modpack = nil
+}
+
+// SetTagID sets the "tag_id" field.
+func (m *ModpackTagMutation) SetTagID(s string) {
+	m.tag = &s
+}
+
+// TagID returns the value of the "tag_id" field in the mutation.
+func (m *ModpackTagMutation) TagID() (r string, exists bool) {
+	v := m.tag
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTagID resets all changes to the "tag_id" field.
+func (m *ModpackTagMutation) ResetTagID() {
+	m.tag = nil
+}
+
+// ClearModpack clears the "modpack" edge to the Modpack entity.
+func (m *ModpackTagMutation) ClearModpack() {
+	m.clearedmodpack = true
+	m.clearedFields[modpacktag.FieldModpackID] = struct{}{}
+}
+
+// ModpackCleared reports if the "modpack" edge to the Modpack entity was cleared.
+func (m *ModpackTagMutation) ModpackCleared() bool {
+	return m.clearedmodpack
+}
+
+// ModpackIDs returns the "modpack" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ModpackID instead. It exists only for internal usage by the builders.
+func (m *ModpackTagMutation) ModpackIDs() (ids []string) {
+	if id := m.modpack; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetModpack resets all changes to the "modpack" edge.
+func (m *ModpackTagMutation) ResetModpack() {
+	m.modpack = nil
+	m.clearedmodpack = false
+}
+
+// ClearTag clears the "tag" edge to the Tag entity.
+func (m *ModpackTagMutation) ClearTag() {
+	m.clearedtag = true
+	m.clearedFields[modpacktag.FieldTagID] = struct{}{}
+}
+
+// TagCleared reports if the "tag" edge to the Tag entity was cleared.
+func (m *ModpackTagMutation) TagCleared() bool {
+	return m.clearedtag
+}
+
+// TagIDs returns the "tag" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TagID instead. It exists only for internal usage by the builders.
+func (m *ModpackTagMutation) TagIDs() (ids []string) {
+	if id := m.tag; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetTag resets all changes to the "tag" edge.
+func (m *ModpackTagMutation) ResetTag() {
+	m.tag = nil
+	m.clearedtag = false
+}
+
+// Where appends a list predicates to the ModpackTagMutation builder.
+func (m *ModpackTagMutation) Where(ps ...predicate.ModpackTag) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ModpackTagMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ModpackTagMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ModpackTag, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ModpackTagMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ModpackTagMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ModpackTag).
+func (m *ModpackTagMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ModpackTagMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.modpack != nil {
+		fields = append(fields, modpacktag.FieldModpackID)
+	}
+	if m.tag != nil {
+		fields = append(fields, modpacktag.FieldTagID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ModpackTagMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case modpacktag.FieldModpackID:
+		return m.ModpackID()
+	case modpacktag.FieldTagID:
+		return m.TagID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ModpackTagMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	return nil, errors.New("edge schema ModpackTag does not support getting old values")
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackTagMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case modpacktag.FieldModpackID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModpackID(v)
+		return nil
+	case modpacktag.FieldTagID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTagID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackTag field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ModpackTagMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ModpackTagMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackTagMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ModpackTag numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ModpackTagMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ModpackTagMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ModpackTagMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ModpackTag nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ModpackTagMutation) ResetField(name string) error {
+	switch name {
+	case modpacktag.FieldModpackID:
+		m.ResetModpackID()
+		return nil
+	case modpacktag.FieldTagID:
+		m.ResetTagID()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackTag field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ModpackTagMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.modpack != nil {
+		edges = append(edges, modpacktag.EdgeModpack)
+	}
+	if m.tag != nil {
+		edges = append(edges, modpacktag.EdgeTag)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ModpackTagMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case modpacktag.EdgeModpack:
+		if id := m.modpack; id != nil {
+			return []ent.Value{*id}
+		}
+	case modpacktag.EdgeTag:
+		if id := m.tag; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ModpackTagMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ModpackTagMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ModpackTagMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedmodpack {
+		edges = append(edges, modpacktag.EdgeModpack)
+	}
+	if m.clearedtag {
+		edges = append(edges, modpacktag.EdgeTag)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ModpackTagMutation) EdgeCleared(name string) bool {
+	switch name {
+	case modpacktag.EdgeModpack:
+		return m.clearedmodpack
+	case modpacktag.EdgeTag:
+		return m.clearedtag
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ModpackTagMutation) ClearEdge(name string) error {
+	switch name {
+	case modpacktag.EdgeModpack:
+		m.ClearModpack()
+		return nil
+	case modpacktag.EdgeTag:
+		m.ClearTag()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackTag unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ModpackTagMutation) ResetEdge(name string) error {
+	switch name {
+	case modpacktag.EdgeModpack:
+		m.ResetModpack()
+		return nil
+	case modpacktag.EdgeTag:
+		m.ResetTag()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackTag edge %s", name)
+}
+
+// ModpackTargetMutation represents an operation that mutates the ModpackTarget nodes in the graph.
+type ModpackTargetMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *string
+	target_name    *string
+	clearedFields  map[string]struct{}
+	modpack        *string
+	clearedmodpack bool
+	done           bool
+	oldValue       func(context.Context) (*ModpackTarget, error)
+	predicates     []predicate.ModpackTarget
+}
+
+var _ ent.Mutation = (*ModpackTargetMutation)(nil)
+
+// modpacktargetOption allows management of the mutation configuration using functional options.
+type modpacktargetOption func(*ModpackTargetMutation)
+
+// newModpackTargetMutation creates new mutation for the ModpackTarget entity.
+func newModpackTargetMutation(c config, op Op, opts ...modpacktargetOption) *ModpackTargetMutation {
+	m := &ModpackTargetMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeModpackTarget,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withModpackTargetID sets the ID field of the mutation.
+func withModpackTargetID(id string) modpacktargetOption {
+	return func(m *ModpackTargetMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ModpackTarget
+		)
+		m.oldValue = func(ctx context.Context) (*ModpackTarget, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ModpackTarget.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withModpackTarget sets the old ModpackTarget of the mutation.
+func withModpackTarget(node *ModpackTarget) modpacktargetOption {
+	return func(m *ModpackTargetMutation) {
+		m.oldValue = func(context.Context) (*ModpackTarget, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ModpackTargetMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ModpackTargetMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ModpackTarget entities.
+func (m *ModpackTargetMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ModpackTargetMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ModpackTargetMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ModpackTarget.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetModpackID sets the "modpack_id" field.
+func (m *ModpackTargetMutation) SetModpackID(s string) {
+	m.modpack = &s
+}
+
+// ModpackID returns the value of the "modpack_id" field in the mutation.
+func (m *ModpackTargetMutation) ModpackID() (r string, exists bool) {
+	v := m.modpack
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModpackID returns the old "modpack_id" field's value of the ModpackTarget entity.
+// If the ModpackTarget object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackTargetMutation) OldModpackID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModpackID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModpackID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModpackID: %w", err)
+	}
+	return oldValue.ModpackID, nil
+}
+
+// ResetModpackID resets all changes to the "modpack_id" field.
+func (m *ModpackTargetMutation) ResetModpackID() {
+	m.modpack = nil
+}
+
+// SetTargetName sets the "target_name" field.
+func (m *ModpackTargetMutation) SetTargetName(s string) {
+	m.target_name = &s
+}
+
+// TargetName returns the value of the "target_name" field in the mutation.
+func (m *ModpackTargetMutation) TargetName() (r string, exists bool) {
+	v := m.target_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetName returns the old "target_name" field's value of the ModpackTarget entity.
+// If the ModpackTarget object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackTargetMutation) OldTargetName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetName: %w", err)
+	}
+	return oldValue.TargetName, nil
+}
+
+// ResetTargetName resets all changes to the "target_name" field.
+func (m *ModpackTargetMutation) ResetTargetName() {
+	m.target_name = nil
+}
+
+// ClearModpack clears the "modpack" edge to the Modpack entity.
+func (m *ModpackTargetMutation) ClearModpack() {
+	m.clearedmodpack = true
+	m.clearedFields[modpacktarget.FieldModpackID] = struct{}{}
+}
+
+// ModpackCleared reports if the "modpack" edge to the Modpack entity was cleared.
+func (m *ModpackTargetMutation) ModpackCleared() bool {
+	return m.clearedmodpack
+}
+
+// ModpackIDs returns the "modpack" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ModpackID instead. It exists only for internal usage by the builders.
+func (m *ModpackTargetMutation) ModpackIDs() (ids []string) {
+	if id := m.modpack; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetModpack resets all changes to the "modpack" edge.
+func (m *ModpackTargetMutation) ResetModpack() {
+	m.modpack = nil
+	m.clearedmodpack = false
+}
+
+// Where appends a list predicates to the ModpackTargetMutation builder.
+func (m *ModpackTargetMutation) Where(ps ...predicate.ModpackTarget) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ModpackTargetMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ModpackTargetMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ModpackTarget, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ModpackTargetMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ModpackTargetMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ModpackTarget).
+func (m *ModpackTargetMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ModpackTargetMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.modpack != nil {
+		fields = append(fields, modpacktarget.FieldModpackID)
+	}
+	if m.target_name != nil {
+		fields = append(fields, modpacktarget.FieldTargetName)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ModpackTargetMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case modpacktarget.FieldModpackID:
+		return m.ModpackID()
+	case modpacktarget.FieldTargetName:
+		return m.TargetName()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ModpackTargetMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case modpacktarget.FieldModpackID:
+		return m.OldModpackID(ctx)
+	case modpacktarget.FieldTargetName:
+		return m.OldTargetName(ctx)
+	}
+	return nil, fmt.Errorf("unknown ModpackTarget field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackTargetMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case modpacktarget.FieldModpackID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModpackID(v)
+		return nil
+	case modpacktarget.FieldTargetName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetName(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackTarget field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ModpackTargetMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ModpackTargetMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModpackTargetMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ModpackTarget numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ModpackTargetMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ModpackTargetMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ModpackTargetMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ModpackTarget nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ModpackTargetMutation) ResetField(name string) error {
+	switch name {
+	case modpacktarget.FieldModpackID:
+		m.ResetModpackID()
+		return nil
+	case modpacktarget.FieldTargetName:
+		m.ResetTargetName()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackTarget field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ModpackTargetMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.modpack != nil {
+		edges = append(edges, modpacktarget.EdgeModpack)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ModpackTargetMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case modpacktarget.EdgeModpack:
+		if id := m.modpack; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ModpackTargetMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ModpackTargetMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ModpackTargetMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedmodpack {
+		edges = append(edges, modpacktarget.EdgeModpack)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ModpackTargetMutation) EdgeCleared(name string) bool {
+	switch name {
+	case modpacktarget.EdgeModpack:
+		return m.clearedmodpack
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ModpackTargetMutation) ClearEdge(name string) error {
+	switch name {
+	case modpacktarget.EdgeModpack:
+		m.ClearModpack()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackTarget unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ModpackTargetMutation) ResetEdge(name string) error {
+	switch name {
+	case modpacktarget.EdgeModpack:
+		m.ResetModpack()
+		return nil
+	}
+	return fmt.Errorf("unknown ModpackTarget edge %s", name)
 }
 
 // SatisfactoryVersionMutation represents an operation that mutates the SatisfactoryVersion nodes in the graph.
@@ -4795,24 +8477,27 @@ func (m *SatisfactoryVersionMutation) ResetEdge(name string) error {
 // TagMutation represents an operation that mutates the Tag nodes in the graph.
 type TagMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *string
-	created_at    *time.Time
-	updated_at    *time.Time
-	deleted_at    *time.Time
-	name          *string
-	description   *string
-	clearedFields map[string]struct{}
-	mods          map[string]struct{}
-	removedmods   map[string]struct{}
-	clearedmods   bool
-	guides        map[string]struct{}
-	removedguides map[string]struct{}
-	clearedguides bool
-	done          bool
-	oldValue      func(context.Context) (*Tag, error)
-	predicates    []predicate.Tag
+	op              Op
+	typ             string
+	id              *string
+	created_at      *time.Time
+	updated_at      *time.Time
+	deleted_at      *time.Time
+	name            *string
+	description     *string
+	clearedFields   map[string]struct{}
+	mods            map[string]struct{}
+	removedmods     map[string]struct{}
+	clearedmods     bool
+	guides          map[string]struct{}
+	removedguides   map[string]struct{}
+	clearedguides   bool
+	modpacks        map[string]struct{}
+	removedmodpacks map[string]struct{}
+	clearedmodpacks bool
+	done            bool
+	oldValue        func(context.Context) (*Tag, error)
+	predicates      []predicate.Tag
 }
 
 var _ ent.Mutation = (*TagMutation)(nil)
@@ -5233,6 +8918,60 @@ func (m *TagMutation) ResetGuides() {
 	m.removedguides = nil
 }
 
+// AddModpackIDs adds the "modpacks" edge to the Modpack entity by ids.
+func (m *TagMutation) AddModpackIDs(ids ...string) {
+	if m.modpacks == nil {
+		m.modpacks = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.modpacks[ids[i]] = struct{}{}
+	}
+}
+
+// ClearModpacks clears the "modpacks" edge to the Modpack entity.
+func (m *TagMutation) ClearModpacks() {
+	m.clearedmodpacks = true
+}
+
+// ModpacksCleared reports if the "modpacks" edge to the Modpack entity was cleared.
+func (m *TagMutation) ModpacksCleared() bool {
+	return m.clearedmodpacks
+}
+
+// RemoveModpackIDs removes the "modpacks" edge to the Modpack entity by IDs.
+func (m *TagMutation) RemoveModpackIDs(ids ...string) {
+	if m.removedmodpacks == nil {
+		m.removedmodpacks = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.modpacks, ids[i])
+		m.removedmodpacks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedModpacks returns the removed IDs of the "modpacks" edge to the Modpack entity.
+func (m *TagMutation) RemovedModpacksIDs() (ids []string) {
+	for id := range m.removedmodpacks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ModpacksIDs returns the "modpacks" edge IDs in the mutation.
+func (m *TagMutation) ModpacksIDs() (ids []string) {
+	for id := range m.modpacks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetModpacks resets all changes to the "modpacks" edge.
+func (m *TagMutation) ResetModpacks() {
+	m.modpacks = nil
+	m.clearedmodpacks = false
+	m.removedmodpacks = nil
+}
+
 // Where appends a list predicates to the TagMutation builder.
 func (m *TagMutation) Where(ps ...predicate.Tag) {
 	m.predicates = append(m.predicates, ps...)
@@ -5449,12 +9188,15 @@ func (m *TagMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TagMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.mods != nil {
 		edges = append(edges, tag.EdgeMods)
 	}
 	if m.guides != nil {
 		edges = append(edges, tag.EdgeGuides)
+	}
+	if m.modpacks != nil {
+		edges = append(edges, tag.EdgeModpacks)
 	}
 	return edges
 }
@@ -5475,18 +9217,27 @@ func (m *TagMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tag.EdgeModpacks:
+		ids := make([]ent.Value, 0, len(m.modpacks))
+		for id := range m.modpacks {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TagMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedmods != nil {
 		edges = append(edges, tag.EdgeMods)
 	}
 	if m.removedguides != nil {
 		edges = append(edges, tag.EdgeGuides)
+	}
+	if m.removedmodpacks != nil {
+		edges = append(edges, tag.EdgeModpacks)
 	}
 	return edges
 }
@@ -5507,18 +9258,27 @@ func (m *TagMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tag.EdgeModpacks:
+		ids := make([]ent.Value, 0, len(m.removedmodpacks))
+		for id := range m.removedmodpacks {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TagMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedmods {
 		edges = append(edges, tag.EdgeMods)
 	}
 	if m.clearedguides {
 		edges = append(edges, tag.EdgeGuides)
+	}
+	if m.clearedmodpacks {
+		edges = append(edges, tag.EdgeModpacks)
 	}
 	return edges
 }
@@ -5531,6 +9291,8 @@ func (m *TagMutation) EdgeCleared(name string) bool {
 		return m.clearedmods
 	case tag.EdgeGuides:
 		return m.clearedguides
+	case tag.EdgeModpacks:
+		return m.clearedmodpacks
 	}
 	return false
 }
@@ -5552,6 +9314,9 @@ func (m *TagMutation) ResetEdge(name string) error {
 		return nil
 	case tag.EdgeGuides:
 		m.ResetGuides()
+		return nil
+	case tag.EdgeModpacks:
+		m.ResetModpacks()
 		return nil
 	}
 	return fmt.Errorf("unknown Tag edge %s", name)

@@ -176,3 +176,15 @@ models:
     fields:
       mod:
         resolver: true
+
+  GetModpacks:
+    fields:
+      modpacks:
+        resolver: true
+      count:
+        resolver: true
+
+  Modpack:
+    fields:
+      children:
+        resolver: true

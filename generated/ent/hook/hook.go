@@ -69,6 +69,66 @@ func (f ModTagFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModTagMutation", m)
 }
 
+// The ModpackFunc type is an adapter to allow the use of ordinary
+// function as Modpack mutator.
+type ModpackFunc func(context.Context, *ent.ModpackMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModpackFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModpackMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModpackMutation", m)
+}
+
+// The ModpackModFunc type is an adapter to allow the use of ordinary
+// function as ModpackMod mutator.
+type ModpackModFunc func(context.Context, *ent.ModpackModMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModpackModFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModpackModMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModpackModMutation", m)
+}
+
+// The ModpackReleaseFunc type is an adapter to allow the use of ordinary
+// function as ModpackRelease mutator.
+type ModpackReleaseFunc func(context.Context, *ent.ModpackReleaseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModpackReleaseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModpackReleaseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModpackReleaseMutation", m)
+}
+
+// The ModpackTagFunc type is an adapter to allow the use of ordinary
+// function as ModpackTag mutator.
+type ModpackTagFunc func(context.Context, *ent.ModpackTagMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModpackTagFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModpackTagMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModpackTagMutation", m)
+}
+
+// The ModpackTargetFunc type is an adapter to allow the use of ordinary
+// function as ModpackTarget mutator.
+type ModpackTargetFunc func(context.Context, *ent.ModpackTargetMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModpackTargetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModpackTargetMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModpackTargetMutation", m)
+}
+
 // The SatisfactoryVersionFunc type is an adapter to allow the use of ordinary
 // function as SatisfactoryVersion mutator.
 type SatisfactoryVersionFunc func(context.Context, *ent.SatisfactoryVersionMutation) (ent.Value, error)

@@ -1,4 +1,414 @@
 basePath: /v1
+definitions:
+  generated.Compatibility:
+    properties:
+      note:
+        type: string
+      state:
+        $ref: '#/definitions/generated.CompatibilityState'
+    type: object
+  generated.CompatibilityInfo:
+    properties:
+      EA:
+        $ref: '#/definitions/generated.Compatibility'
+      EXP:
+        $ref: '#/definitions/generated.Compatibility'
+    type: object
+  generated.CompatibilityState:
+    enum:
+    - Works
+    - Damaged
+    - Broken
+    type: string
+    x-enum-varnames:
+    - CompatibilityStateWorks
+    - CompatibilityStateDamaged
+    - CompatibilityStateBroken
+  generated.Group:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  generated.Guide:
+    properties:
+      created_at:
+        type: string
+      guide:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      short_description:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/generated.Tag'
+        type: array
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/generated.User'
+      user_id:
+        type: string
+      views:
+        type: integer
+    type: object
+  generated.LatestVersions:
+    properties:
+      alpha:
+        $ref: '#/definitions/generated.Version'
+      beta:
+        $ref: '#/definitions/generated.Version'
+      release:
+        $ref: '#/definitions/generated.Version'
+    type: object
+  generated.Mod:
+    properties:
+      approved:
+        type: boolean
+      authors:
+        items:
+          $ref: '#/definitions/generated.UserMod'
+        type: array
+      compatibility:
+        $ref: '#/definitions/generated.CompatibilityInfo'
+      created_at:
+        type: string
+      creator_id:
+        type: string
+      downloads:
+        type: integer
+      full_description:
+        type: string
+      hidden:
+        type: boolean
+      hotness:
+        type: integer
+      id:
+        type: string
+      last_version_date:
+        type: string
+      latestVersions:
+        $ref: '#/definitions/generated.LatestVersions'
+      logo:
+        type: string
+      logo_thumbhash:
+        type: string
+      mod_reference:
+        type: string
+      name:
+        type: string
+      popularity:
+        type: integer
+      short_description:
+        type: string
+      source_url:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/generated.Tag'
+        type: array
+      toggle_explicit_content:
+        type: boolean
+      toggle_network_use:
+        type: boolean
+      updated_at:
+        type: string
+      version:
+        $ref: '#/definitions/generated.Version'
+      versions:
+        items:
+          $ref: '#/definitions/generated.Version'
+        type: array
+      views:
+        type: integer
+    type: object
+  generated.Modpack:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/generated.Modpack'
+        type: array
+      created_at:
+        type: string
+      creator:
+        $ref: '#/definitions/generated.User'
+      creator_id:
+        type: string
+      full_description:
+        type: string
+      hidden:
+        type: boolean
+      hotness:
+        type: integer
+      id:
+        type: string
+      installs:
+        type: integer
+      logo:
+        type: string
+      logo_thumbhash:
+        type: string
+      mods:
+        items:
+          $ref: '#/definitions/generated.ModpackModEntry'
+        type: array
+      name:
+        type: string
+      parent:
+        $ref: '#/definitions/generated.Modpack'
+      parent_id:
+        type: string
+      popularity:
+        type: integer
+      releases:
+        items:
+          $ref: '#/definitions/generated.ModpackRelease'
+        type: array
+      short_description:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/generated.Tag'
+        type: array
+      targets:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      views:
+        type: integer
+    type: object
+  generated.ModpackModEntry:
+    properties:
+      mod_id:
+        type: string
+      version_constraint:
+        type: string
+    type: object
+  generated.ModpackRelease:
+    properties:
+      changelog:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      lockfile:
+        type: string
+      version:
+        type: string
+    type: object
+  generated.Tag:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  generated.TargetName:
+    enum:
+    - Windows
+    - WindowsServer
+    - LinuxServer
+    type: string
+    x-enum-varnames:
+    - TargetNameWindows
+    - TargetNameWindowsServer
+    - TargetNameLinuxServer
+  generated.User:
+    properties:
+      avatar:
+        type: string
+      avatar_thumbhash:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      facebook_id:
+        type: string
+      github_id:
+        type: string
+      google_id:
+        type: string
+      groups:
+        items:
+          $ref: '#/definitions/generated.Group'
+        type: array
+      guides:
+        items:
+          $ref: '#/definitions/generated.Guide'
+        type: array
+      id:
+        type: string
+      mods:
+        items:
+          $ref: '#/definitions/generated.UserMod'
+        type: array
+      roles:
+        $ref: '#/definitions/generated.UserRoles'
+      username:
+        type: string
+    type: object
+  generated.UserMod:
+    properties:
+      mod:
+        $ref: '#/definitions/generated.Mod'
+      mod_id:
+        type: string
+      role:
+        type: string
+      user:
+        $ref: '#/definitions/generated.User'
+      user_id:
+        type: string
+    type: object
+  generated.UserRoles:
+    properties:
+      approveMods:
+        type: boolean
+      approveVersions:
+        type: boolean
+      deleteContent:
+        type: boolean
+      editAnyModCompatibility:
+        type: boolean
+      editBootstrapVersions:
+        type: boolean
+      editContent:
+        type: boolean
+      editSatisfactoryVersions:
+        type: boolean
+      editUsers:
+        type: boolean
+    type: object
+  generated.Version:
+    properties:
+      approved:
+        type: boolean
+      changelog:
+        type: string
+      created_at:
+        type: string
+      dependencies:
+        items:
+          $ref: '#/definitions/generated.VersionDependency'
+        type: array
+      downloads:
+        type: integer
+      game_version:
+        type: string
+      hash:
+        type: string
+      id:
+        type: string
+      link:
+        type: string
+      metadata:
+        type: string
+      mod:
+        $ref: '#/definitions/generated.Mod'
+      mod_id:
+        type: string
+      required_on_remote:
+        type: boolean
+      size:
+        type: integer
+      sml_version:
+        type: string
+      stability:
+        $ref: '#/definitions/generated.VersionStabilities'
+      targets:
+        items:
+          $ref: '#/definitions/generated.VersionTarget'
+        type: array
+      updated_at:
+        type: string
+      version:
+        type: string
+      virustotal_results:
+        items:
+          $ref: '#/definitions/generated.VirustotalResult'
+        type: array
+    type: object
+  generated.VersionDependency:
+    properties:
+      condition:
+        type: string
+      mod:
+        $ref: '#/definitions/generated.Mod'
+      mod_id:
+        type: string
+      mod_reference:
+        type: string
+      optional:
+        type: boolean
+      version:
+        $ref: '#/definitions/generated.Version'
+      version_id:
+        type: string
+    type: object
+  generated.VersionStabilities:
+    enum:
+    - alpha
+    - beta
+    - release
+    type: string
+    x-enum-varnames:
+    - VersionStabilitiesAlpha
+    - VersionStabilitiesBeta
+    - VersionStabilitiesRelease
+  generated.VersionTarget:
+    properties:
+      VersionID:
+        type: string
+      hash:
+        type: string
+      link:
+        type: string
+      size:
+        type: integer
+      targetName:
+        $ref: '#/definitions/generated.TargetName'
+    type: object
+  generated.VirustotalResult:
+    properties:
+      created_at:
+        type: string
+      file_name:
+        type: string
+      hash:
+        type: string
+      id:
+        type: string
+      safe:
+        type: boolean
+      updated_at:
+        type: string
+      version_id:
+        type: string
+    type: object
+  nodes.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  nodes.GenericResponse:
+    properties:
+      data: {}
+      error: {}
+      success:
+        type: boolean
+    type: object
 host: api.ficsit.app
 info:
   contact: {}
@@ -203,6 +613,140 @@ paths:
       summary: Retrieve all Mod Versions
       tags:
       - Mod
+  /modpacks:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of modpacks
+      parameters:
+      - description: How many modpacks to return
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for list of modpacks to return
+        in: query
+        name: offset
+        type: integer
+      - description: Order by field
+        enum:
+        - created_at
+        - updated_at
+        - name
+        - views
+        - installs
+        - hotness
+        - popularity
+        - search
+        in: query
+        name: order_by
+        type: string
+      - description: Order of results
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - description: Search string
+        in: query
+        name: search
+        type: string
+      - description: Include hidden modpacks
+        in: query
+        name: hidden
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/nodes.GenericResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/generated.Modpack'
+                  type: array
+              type: object
+      summary: Retrieve a list of Modpacks
+      tags:
+      - Modpacks
+  /modpacks/{modpackId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single modpack by ID
+      parameters:
+      - description: Modpack ID
+        in: path
+        name: modpackId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/nodes.GenericResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/generated.Modpack'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/nodes.GenericResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/nodes.ErrorResponse'
+              type: object
+      summary: Retrieve a single Modpack
+      tags:
+      - Modpacks
+  /modpacks/{modpackId}/releases/{version}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific release of a modpack
+      parameters:
+      - description: Modpack ID
+        in: path
+        name: modpackId
+        required: true
+        type: string
+      - description: Release Version
+        in: path
+        name: version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/nodes.GenericResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/generated.ModpackRelease'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/nodes.GenericResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/nodes.ErrorResponse'
+              type: object
+      summary: Retrieve a Modpack Release
+      tags:
+      - Modpacks
   /mods:
     get:
       consumes:

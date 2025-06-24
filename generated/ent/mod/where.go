@@ -1212,6 +1212,29 @@ func HasDependentsWith(preds ...predicate.Version) predicate.Mod {
 	})
 }
 
+// HasModpacks applies the HasEdge predicate on the "modpacks" edge.
+func HasModpacks() predicate.Mod {
+	return predicate.Mod(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ModpacksTable, ModpacksPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasModpacksWith applies the HasEdge predicate on the "modpacks" edge with a given conditions (other predicates).
+func HasModpacksWith(preds ...predicate.Modpack) predicate.Mod {
+	return predicate.Mod(func(s *sql.Selector) {
+		step := newModpacksStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasUserMods applies the HasEdge predicate on the "user_mods" edge.
 func HasUserMods() predicate.Mod {
 	return predicate.Mod(func(s *sql.Selector) {
@@ -1273,6 +1296,29 @@ func HasVersionDependencies() predicate.Mod {
 func HasVersionDependenciesWith(preds ...predicate.VersionDependency) predicate.Mod {
 	return predicate.Mod(func(s *sql.Selector) {
 		step := newVersionDependenciesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasModpackMods applies the HasEdge predicate on the "modpack_mods" edge.
+func HasModpackMods() predicate.Mod {
+	return predicate.Mod(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, ModpackModsTable, ModpackModsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasModpackModsWith applies the HasEdge predicate on the "modpack_mods" edge with a given conditions (other predicates).
+func HasModpackModsWith(preds ...predicate.ModpackMod) predicate.Mod {
+	return predicate.Mod(func(s *sql.Selector) {
+		step := newModpackModsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

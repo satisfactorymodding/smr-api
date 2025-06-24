@@ -33,5 +33,8 @@ func (Tag) Edges() []ent.Edge {
 		edge.From("guides", Guide.Type).
 			Ref("tags").
 			Through("guide_tags", GuideTag.Type),
+		edge.From("modpacks", Modpack.Type).
+			Ref("tags").
+			Through("modpack_tags", ModpackTag.Type),
 	}
 }

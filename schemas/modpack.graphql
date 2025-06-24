@@ -1,0 +1,125 @@
+### Types
+
+scalar ModpackID
+
+enum ModpackFields {
+    created_at
+    updated_at
+    name
+    views
+    installs
+    hotness
+    popularity
+    search
+}
+
+type Modpack {
+    id: ModpackID!
+    name: String!
+    short_description: String!
+    full_description: String!
+    logo: String
+    logo_thumbhash: String
+    creator_id: UserID!
+    creator: User!
+    views: Int!
+    installs: Int!
+    hotness: Int!
+    popularity: Int!
+    updated_at: Date!
+    created_at: Date!
+    hidden: Boolean!
+    parent_id: ModpackID
+
+    parent: Modpack
+    children: [Modpack!]!
+    tags: [Tag!]!
+    targets: [String!]!
+    mods: [ModpackModEntry!]!
+    releases: [ModpackRelease!]!
+}
+
+type ModpackModEntry {
+    mod_id: ModID!
+    version_constraint: String!
+}
+
+type ModpackRelease {
+    id: String!
+    version: String!
+    created_at: Date!
+    lockfile: String!
+    changelog: String!
+}
+
+type GetModpacks {
+    modpacks: [Modpack!]!
+    count: Int!
+}
+
+### Inputs
+
+input ModpackFilter {
+    limit: Int
+    offset: Int
+    order_by: ModpackFields
+    order: Order
+    search: String
+    ids: [ModpackID!]
+    hidden: Boolean
+    tagIDs: [TagID!]
+}
+
+input NewModpack {
+    name: String!
+    short_description: String!
+    full_description: String
+    logo: Upload
+    hidden: Boolean
+    tagIDs: [TagID!]
+    targets: [String!]!
+    mods: [ModpackModInput!]!
+    parent_id: ModpackID
+}
+
+input ModpackModInput {
+    mod_id: String!
+    version_constraint: String!
+}
+
+input UpdateModpack {
+    name: String
+    short_description: String
+    full_description: String
+    logo: Upload
+    hidden: Boolean
+    tagIDs: [TagID!]
+    targets: [String!]
+    mods: [ModpackModInput!]
+}
+
+input NewModpackRelease {
+    version: String!
+    changelog: String!
+}
+
+### Queries
+
+extend type Query {
+    getModpack(modpackID: ModpackID!): Modpack
+    getModpacks(filter: ModpackFilter): GetModpacks!
+
+    getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
+}
+
+### Mutations
+
+extend type Mutation {
+    createModpack(modpack: NewModpack!): Modpack @isLoggedIn
+    updateModpack(modpackID: ModpackID!, modpack: UpdateModpack!): Modpack! @canEditModpack(field: "modpackID") @isLoggedIn
+    deleteModpack(modpackID: ModpackID!): Boolean! @canEditModpack(field: "modpackID") @isLoggedIn
+    
+    createModpackRelease(modpackID: ModpackID!, release: NewModpackRelease!): ModpackRelease! @canEditModpack(field: "modpackID") @isLoggedIn
+    deleteModpackRelease(modpackID: ModpackID!, version: String!): Boolean! @canEditModpack(field: "modpackID") @isLoggedIn
+    resolveModpack(modpackID: ModpackID!, targets: [String!]!): String @canEditModpack(field: "modpackID") @isLoggedIn
+}

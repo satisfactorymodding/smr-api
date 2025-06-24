@@ -47,6 +47,11 @@ type GetGuides struct {
 	Count  int      `json:"count"`
 }
 
+type GetModpacks struct {
+	Modpacks []*Modpack `json:"modpacks"`
+	Count    int        `json:"count"`
+}
+
 type GetMods struct {
 	Mods  []*Mod `json:"mods"`
 	Count int    `json:"count"`
@@ -136,6 +141,60 @@ type ModVersionConstraint struct {
 	Version          string `json:"version"`
 }
 
+type Modpack struct {
+	ID               string             `json:"id"`
+	Name             string             `json:"name"`
+	ShortDescription string             `json:"short_description"`
+	FullDescription  string             `json:"full_description"`
+	Logo             *string            `json:"logo,omitempty"`
+	LogoThumbhash    *string            `json:"logo_thumbhash,omitempty"`
+	CreatorID        string             `json:"creator_id"`
+	Creator          *User              `json:"creator"`
+	Views            int                `json:"views"`
+	Installs         int                `json:"installs"`
+	Hotness          int                `json:"hotness"`
+	Popularity       int                `json:"popularity"`
+	UpdatedAt        string             `json:"updated_at"`
+	CreatedAt        string             `json:"created_at"`
+	Hidden           bool               `json:"hidden"`
+	ParentID         *string            `json:"parent_id,omitempty"`
+	Parent           *Modpack           `json:"parent,omitempty"`
+	Children         []*Modpack         `json:"children"`
+	Tags             []*Tag             `json:"tags"`
+	Targets          []string           `json:"targets"`
+	Mods             []*ModpackModEntry `json:"mods"`
+	Releases         []*ModpackRelease  `json:"releases"`
+}
+
+type ModpackFilter struct {
+	Limit   *int           `json:"limit,omitempty"`
+	Offset  *int           `json:"offset,omitempty"`
+	OrderBy *ModpackFields `json:"order_by,omitempty"`
+	Order   *Order         `json:"order,omitempty"`
+	Search  *string        `json:"search,omitempty"`
+	Ids     []string       `json:"ids,omitempty"`
+	Hidden  *bool          `json:"hidden,omitempty"`
+	TagIDs  []string       `json:"tagIDs,omitempty"`
+}
+
+type ModpackModEntry struct {
+	ModID             string `json:"mod_id"`
+	VersionConstraint string `json:"version_constraint"`
+}
+
+type ModpackModInput struct {
+	ModID             string `json:"mod_id"`
+	VersionConstraint string `json:"version_constraint"`
+}
+
+type ModpackRelease struct {
+	ID        string `json:"id"`
+	Version   string `json:"version"`
+	CreatedAt string `json:"created_at"`
+	Lockfile  string `json:"lockfile"`
+	Changelog string `json:"changelog"`
+}
+
 type Mutation struct {
 }
 
@@ -149,6 +208,23 @@ type NewGuide struct {
 	ShortDescription string   `json:"short_description"`
 	Guide            string   `json:"guide"`
 	TagIDs           []string `json:"tagIDs,omitempty"`
+}
+
+type NewModpack struct {
+	Name             string             `json:"name"`
+	ShortDescription string             `json:"short_description"`
+	FullDescription  *string            `json:"full_description,omitempty"`
+	Logo             *graphql.Upload    `json:"logo,omitempty"`
+	Hidden           *bool              `json:"hidden,omitempty"`
+	TagIDs           []string           `json:"tagIDs,omitempty"`
+	Targets          []string           `json:"targets"`
+	Mods             []*ModpackModInput `json:"mods"`
+	ParentID         *string            `json:"parent_id,omitempty"`
+}
+
+type NewModpackRelease struct {
+	Version   string `json:"version"`
+	Changelog string `json:"changelog"`
 }
 
 type NewSatisfactoryVersion struct {
@@ -226,6 +302,17 @@ type UpdateGuide struct {
 	ShortDescription *string  `json:"short_description,omitempty"`
 	Guide            *string  `json:"guide,omitempty"`
 	TagIDs           []string `json:"tagIDs,omitempty"`
+}
+
+type UpdateModpack struct {
+	Name             *string            `json:"name,omitempty"`
+	ShortDescription *string            `json:"short_description,omitempty"`
+	FullDescription  *string            `json:"full_description,omitempty"`
+	Logo             *graphql.Upload    `json:"logo,omitempty"`
+	Hidden           *bool              `json:"hidden,omitempty"`
+	TagIDs           []string           `json:"tagIDs,omitempty"`
+	Targets          []string           `json:"targets,omitempty"`
+	Mods             []*ModpackModInput `json:"mods,omitempty"`
 }
 
 type UpdateSatisfactoryVersion struct {
@@ -578,6 +665,73 @@ func (e *ModFields) UnmarshalJSON(b []byte) error {
 }
 
 func (e ModFields) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ModpackFields string
+
+const (
+	ModpackFieldsCreatedAt  ModpackFields = "created_at"
+	ModpackFieldsUpdatedAt  ModpackFields = "updated_at"
+	ModpackFieldsName       ModpackFields = "name"
+	ModpackFieldsViews      ModpackFields = "views"
+	ModpackFieldsInstalls   ModpackFields = "installs"
+	ModpackFieldsHotness    ModpackFields = "hotness"
+	ModpackFieldsPopularity ModpackFields = "popularity"
+	ModpackFieldsSearch     ModpackFields = "search"
+)
+
+var AllModpackFields = []ModpackFields{
+	ModpackFieldsCreatedAt,
+	ModpackFieldsUpdatedAt,
+	ModpackFieldsName,
+	ModpackFieldsViews,
+	ModpackFieldsInstalls,
+	ModpackFieldsHotness,
+	ModpackFieldsPopularity,
+	ModpackFieldsSearch,
+}
+
+func (e ModpackFields) IsValid() bool {
+	switch e {
+	case ModpackFieldsCreatedAt, ModpackFieldsUpdatedAt, ModpackFieldsName, ModpackFieldsViews, ModpackFieldsInstalls, ModpackFieldsHotness, ModpackFieldsPopularity, ModpackFieldsSearch:
+		return true
+	}
+	return false
+}
+
+func (e ModpackFields) String() string {
+	return string(e)
+}
+
+func (e *ModpackFields) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ModpackFields(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ModpackFields", str)
+	}
+	return nil
+}
+
+func (e ModpackFields) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ModpackFields) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ModpackFields) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

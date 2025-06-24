@@ -29,10 +29,14 @@ const (
 	EdgeMods = "mods"
 	// EdgeGuides holds the string denoting the guides edge name in mutations.
 	EdgeGuides = "guides"
+	// EdgeModpacks holds the string denoting the modpacks edge name in mutations.
+	EdgeModpacks = "modpacks"
 	// EdgeModTags holds the string denoting the mod_tags edge name in mutations.
 	EdgeModTags = "mod_tags"
 	// EdgeGuideTags holds the string denoting the guide_tags edge name in mutations.
 	EdgeGuideTags = "guide_tags"
+	// EdgeModpackTags holds the string denoting the modpack_tags edge name in mutations.
+	EdgeModpackTags = "modpack_tags"
 	// Table holds the table name of the tag in the database.
 	Table = "tags"
 	// ModsTable is the table that holds the mods relation/edge. The primary key declared below.
@@ -45,6 +49,11 @@ const (
 	// GuidesInverseTable is the table name for the Guide entity.
 	// It exists in this package in order to avoid circular dependency with the "guide" package.
 	GuidesInverseTable = "guides"
+	// ModpacksTable is the table that holds the modpacks relation/edge. The primary key declared below.
+	ModpacksTable = "modpack_tags"
+	// ModpacksInverseTable is the table name for the Modpack entity.
+	// It exists in this package in order to avoid circular dependency with the "modpack" package.
+	ModpacksInverseTable = "modpacks"
 	// ModTagsTable is the table that holds the mod_tags relation/edge.
 	ModTagsTable = "mod_tags"
 	// ModTagsInverseTable is the table name for the ModTag entity.
@@ -59,6 +68,13 @@ const (
 	GuideTagsInverseTable = "guide_tags"
 	// GuideTagsColumn is the table column denoting the guide_tags relation/edge.
 	GuideTagsColumn = "tag_id"
+	// ModpackTagsTable is the table that holds the modpack_tags relation/edge.
+	ModpackTagsTable = "modpack_tags"
+	// ModpackTagsInverseTable is the table name for the ModpackTag entity.
+	// It exists in this package in order to avoid circular dependency with the "modpacktag" package.
+	ModpackTagsInverseTable = "modpack_tags"
+	// ModpackTagsColumn is the table column denoting the modpack_tags relation/edge.
+	ModpackTagsColumn = "tag_id"
 )
 
 // Columns holds all SQL columns for tag fields.
@@ -78,6 +94,9 @@ var (
 	// GuidesPrimaryKey and GuidesColumn2 are the table columns denoting the
 	// primary key for the guides relation (M2M).
 	GuidesPrimaryKey = []string{"guide_id", "tag_id"}
+	// ModpacksPrimaryKey and ModpacksColumn2 are the table columns denoting the
+	// primary key for the modpacks relation (M2M).
+	ModpacksPrimaryKey = []string{"modpack_id", "tag_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -173,6 +192,20 @@ func ByGuides(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByModpacksCount orders the results by modpacks count.
+func ByModpacksCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newModpacksStep(), opts...)
+	}
+}
+
+// ByModpacks orders the results by modpacks terms.
+func ByModpacks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newModpacksStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByModTagsCount orders the results by mod_tags count.
 func ByModTagsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -200,6 +233,20 @@ func ByGuideTags(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newGuideTagsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByModpackTagsCount orders the results by modpack_tags count.
+func ByModpackTagsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newModpackTagsStep(), opts...)
+	}
+}
+
+// ByModpackTags orders the results by modpack_tags terms.
+func ByModpackTags(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newModpackTagsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newModsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -214,6 +261,13 @@ func newGuidesStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, true, GuidesTable, GuidesPrimaryKey...),
 	)
 }
+func newModpacksStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ModpacksInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ModpacksTable, ModpacksPrimaryKey...),
+	)
+}
 func newModTagsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -226,5 +280,12 @@ func newGuideTagsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(GuideTagsInverseTable, GuideTagsColumn),
 		sqlgraph.Edge(sqlgraph.O2M, true, GuideTagsTable, GuideTagsColumn),
+	)
+}
+func newModpackTagsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ModpackTagsInverseTable, ModpackTagsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, ModpackTagsTable, ModpackTagsColumn),
 	)
 }

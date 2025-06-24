@@ -27,6 +27,7 @@ func MakeDirective() generated.DirectiveRoot {
 		CanManageTags:               canManageTags,
 		CanEditModCompatibility:     canEditModCompatibility,
 		CanEditSatisfactoryVersions: canEditSatisfactoryVersions,
+		CanEditModpack:              canEditModpack,
 	}
 }
 
@@ -243,6 +244,28 @@ func canManageTags(ctx context.Context, _ interface{}, next graphql.Resolver) (i
 	}
 
 	if db.UserHas(ctx, auth.RoleManageTags, user) {
+		return next(ctx)
+	}
+
+	return nil, errors.New("user not authorized to perform this action")
+}
+
+func canEditModpack(ctx context.Context, _ interface{}, next graphql.Resolver, field string) (interface{}, error) {
+	user, _, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	g, err := db.From(ctx).Modpack.Get(ctx, getArgument(ctx, field).(string))
+	if err != nil {
+		return nil, err
+	}
+
+	if g.CreatorID == user.ID {
+		return next(ctx)
+	}
+
+	if db.UserHas(ctx, auth.RoleEditAnyContent, user) {
 		return next(ctx)
 	}
 

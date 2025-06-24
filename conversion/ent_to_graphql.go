@@ -127,6 +127,35 @@ type VirustotalResult interface {
 	ConvertSlice(source []*ent.VirustotalResult) []*generated.VirustotalResult
 }
 
+// goverter:converter
+// goverter:output:file ../generated/conv/modpack.go
+// goverter:output:package conv
+// goverter:extend TimeToString UIntToInt Int64ToInt EntModpackTargetToString
+type Modpack interface {
+	// goverter:map Edges.Targets Targets
+	// goverter:map Edges.Tags Tags
+	// goverter:map Edges.ModpackMods Mods
+	// goverter:map Edges.Parent Parent
+	// goverter:map Edges.Releases Releases
+	// goverter:map Edges.Children Children
+	// goverter:ignore Creator
+	Convert(source *ent.Modpack) *generated.Modpack
+	ConvertSlice(source []*ent.Modpack) []*generated.Modpack
+}
+
+func EntModpackTargetToString(t *ent.ModpackTarget) string {
+	return t.TargetName
+}
+
+// goverter:converter
+// goverter:output:file ../generated/conv/modpack_release.go
+// goverter:output:package conv
+// goverter:extend TimeToString
+type ModpackRelease interface {
+	Convert(source *ent.ModpackRelease) *generated.ModpackRelease
+	ConvertSlice(source []*ent.ModpackRelease) []*generated.ModpackRelease
+}
+
 func TimeToString(i time.Time) string {
 	return i.Format(time.RFC3339)
 }

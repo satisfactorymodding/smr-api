@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackmod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modtag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
@@ -33,9 +35,11 @@ type ModQuery struct {
 	withAuthors             *UserQuery
 	withTags                *TagQuery
 	withDependents          *VersionQuery
+	withModpacks            *ModpackQuery
 	withUserMods            *UserModQuery
 	withModTags             *ModTagQuery
 	withVersionDependencies *VersionDependencyQuery
+	withModpackMods         *ModpackModQuery
 	modifiers               []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -161,6 +165,28 @@ func (mq *ModQuery) QueryDependents() *VersionQuery {
 	return query
 }
 
+// QueryModpacks chains the current query on the "modpacks" edge.
+func (mq *ModQuery) QueryModpacks() *ModpackQuery {
+	query := (&ModpackClient{config: mq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := mq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := mq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(mod.Table, mod.FieldID, selector),
+			sqlgraph.To(modpack.Table, modpack.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, mod.ModpacksTable, mod.ModpacksPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryUserMods chains the current query on the "user_mods" edge.
 func (mq *ModQuery) QueryUserMods() *UserModQuery {
 	query := (&UserModClient{config: mq.config}).Query()
@@ -220,6 +246,28 @@ func (mq *ModQuery) QueryVersionDependencies() *VersionDependencyQuery {
 			sqlgraph.From(mod.Table, mod.FieldID, selector),
 			sqlgraph.To(versiondependency.Table, versiondependency.ModColumn),
 			sqlgraph.Edge(sqlgraph.O2M, true, mod.VersionDependenciesTable, mod.VersionDependenciesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryModpackMods chains the current query on the "modpack_mods" edge.
+func (mq *ModQuery) QueryModpackMods() *ModpackModQuery {
+	query := (&ModpackModClient{config: mq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := mq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := mq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(mod.Table, mod.FieldID, selector),
+			sqlgraph.To(modpackmod.Table, modpackmod.ModColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, mod.ModpackModsTable, mod.ModpackModsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -423,9 +471,11 @@ func (mq *ModQuery) Clone() *ModQuery {
 		withAuthors:             mq.withAuthors.Clone(),
 		withTags:                mq.withTags.Clone(),
 		withDependents:          mq.withDependents.Clone(),
+		withModpacks:            mq.withModpacks.Clone(),
 		withUserMods:            mq.withUserMods.Clone(),
 		withModTags:             mq.withModTags.Clone(),
 		withVersionDependencies: mq.withVersionDependencies.Clone(),
+		withModpackMods:         mq.withModpackMods.Clone(),
 		// clone intermediate query.
 		sql:       mq.sql.Clone(),
 		path:      mq.path,
@@ -477,6 +527,17 @@ func (mq *ModQuery) WithDependents(opts ...func(*VersionQuery)) *ModQuery {
 	return mq
 }
 
+// WithModpacks tells the query-builder to eager-load the nodes that are connected to
+// the "modpacks" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *ModQuery) WithModpacks(opts ...func(*ModpackQuery)) *ModQuery {
+	query := (&ModpackClient{config: mq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	mq.withModpacks = query
+	return mq
+}
+
 // WithUserMods tells the query-builder to eager-load the nodes that are connected to
 // the "user_mods" edge. The optional arguments are used to configure the query builder of the edge.
 func (mq *ModQuery) WithUserMods(opts ...func(*UserModQuery)) *ModQuery {
@@ -507,6 +568,17 @@ func (mq *ModQuery) WithVersionDependencies(opts ...func(*VersionDependencyQuery
 		opt(query)
 	}
 	mq.withVersionDependencies = query
+	return mq
+}
+
+// WithModpackMods tells the query-builder to eager-load the nodes that are connected to
+// the "modpack_mods" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *ModQuery) WithModpackMods(opts ...func(*ModpackModQuery)) *ModQuery {
+	query := (&ModpackModClient{config: mq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	mq.withModpackMods = query
 	return mq
 }
 
@@ -588,14 +660,16 @@ func (mq *ModQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Mod, err
 	var (
 		nodes       = []*Mod{}
 		_spec       = mq.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [9]bool{
 			mq.withVersions != nil,
 			mq.withAuthors != nil,
 			mq.withTags != nil,
 			mq.withDependents != nil,
+			mq.withModpacks != nil,
 			mq.withUserMods != nil,
 			mq.withModTags != nil,
 			mq.withVersionDependencies != nil,
+			mq.withModpackMods != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -647,6 +721,13 @@ func (mq *ModQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Mod, err
 			return nil, err
 		}
 	}
+	if query := mq.withModpacks; query != nil {
+		if err := mq.loadModpacks(ctx, query, nodes,
+			func(n *Mod) { n.Edges.Modpacks = []*Modpack{} },
+			func(n *Mod, e *Modpack) { n.Edges.Modpacks = append(n.Edges.Modpacks, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := mq.withUserMods; query != nil {
 		if err := mq.loadUserMods(ctx, query, nodes,
 			func(n *Mod) { n.Edges.UserMods = []*UserMod{} },
@@ -667,6 +748,13 @@ func (mq *ModQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Mod, err
 			func(n *Mod, e *VersionDependency) {
 				n.Edges.VersionDependencies = append(n.Edges.VersionDependencies, e)
 			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := mq.withModpackMods; query != nil {
+		if err := mq.loadModpackMods(ctx, query, nodes,
+			func(n *Mod) { n.Edges.ModpackMods = []*ModpackMod{} },
+			func(n *Mod, e *ModpackMod) { n.Edges.ModpackMods = append(n.Edges.ModpackMods, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -886,6 +974,67 @@ func (mq *ModQuery) loadDependents(ctx context.Context, query *VersionQuery, nod
 	}
 	return nil
 }
+func (mq *ModQuery) loadModpacks(ctx context.Context, query *ModpackQuery, nodes []*Mod, init func(*Mod), assign func(*Mod, *Modpack)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*Mod)
+	nids := make(map[string]map[*Mod]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(mod.ModpacksTable)
+		s.Join(joinT).On(s.C(modpack.FieldID), joinT.C(mod.ModpacksPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(mod.ModpacksPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(mod.ModpacksPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Mod]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Modpack](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "modpacks" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
 func (mq *ModQuery) loadUserMods(ctx context.Context, query *UserModQuery, nodes []*Mod, init func(*Mod), assign func(*Mod, *UserMod)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[string]*Mod)
@@ -961,6 +1110,36 @@ func (mq *ModQuery) loadVersionDependencies(ctx context.Context, query *VersionD
 	}
 	query.Where(predicate.VersionDependency(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(mod.VersionDependenciesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ModID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "mod_id" returned %v for node %v`, fk, n)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (mq *ModQuery) loadModpackMods(ctx context.Context, query *ModpackModQuery, nodes []*Mod, init func(*Mod), assign func(*Mod, *ModpackMod)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*Mod)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(modpackmod.FieldModID)
+	}
+	query.Where(predicate.ModpackMod(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(mod.ModpackModsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

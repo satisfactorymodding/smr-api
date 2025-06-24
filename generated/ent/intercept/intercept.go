@@ -12,6 +12,11 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guidetag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackmod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktag"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modtag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
@@ -215,6 +220,141 @@ func (f TraverseModTag) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.ModTagQuery", q)
+}
+
+// The ModpackFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ModpackFunc func(context.Context, *ent.ModpackQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ModpackFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ModpackQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ModpackQuery", q)
+}
+
+// The TraverseModpack type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseModpack func(context.Context, *ent.ModpackQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseModpack) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseModpack) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ModpackQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ModpackQuery", q)
+}
+
+// The ModpackModFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ModpackModFunc func(context.Context, *ent.ModpackModQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ModpackModFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ModpackModQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ModpackModQuery", q)
+}
+
+// The TraverseModpackMod type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseModpackMod func(context.Context, *ent.ModpackModQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseModpackMod) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseModpackMod) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ModpackModQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ModpackModQuery", q)
+}
+
+// The ModpackReleaseFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ModpackReleaseFunc func(context.Context, *ent.ModpackReleaseQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ModpackReleaseFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ModpackReleaseQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ModpackReleaseQuery", q)
+}
+
+// The TraverseModpackRelease type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseModpackRelease func(context.Context, *ent.ModpackReleaseQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseModpackRelease) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseModpackRelease) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ModpackReleaseQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ModpackReleaseQuery", q)
+}
+
+// The ModpackTagFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ModpackTagFunc func(context.Context, *ent.ModpackTagQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ModpackTagFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ModpackTagQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ModpackTagQuery", q)
+}
+
+// The TraverseModpackTag type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseModpackTag func(context.Context, *ent.ModpackTagQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseModpackTag) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseModpackTag) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ModpackTagQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ModpackTagQuery", q)
+}
+
+// The ModpackTargetFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ModpackTargetFunc func(context.Context, *ent.ModpackTargetQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ModpackTargetFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ModpackTargetQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ModpackTargetQuery", q)
+}
+
+// The TraverseModpackTarget type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseModpackTarget func(context.Context, *ent.ModpackTargetQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseModpackTarget) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseModpackTarget) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ModpackTargetQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ModpackTargetQuery", q)
 }
 
 // The SatisfactoryVersionFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -500,6 +640,16 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.ModQuery, predicate.Mod, mod.OrderOption]{typ: ent.TypeMod, tq: q}, nil
 	case *ent.ModTagQuery:
 		return &query[*ent.ModTagQuery, predicate.ModTag, modtag.OrderOption]{typ: ent.TypeModTag, tq: q}, nil
+	case *ent.ModpackQuery:
+		return &query[*ent.ModpackQuery, predicate.Modpack, modpack.OrderOption]{typ: ent.TypeModpack, tq: q}, nil
+	case *ent.ModpackModQuery:
+		return &query[*ent.ModpackModQuery, predicate.ModpackMod, modpackmod.OrderOption]{typ: ent.TypeModpackMod, tq: q}, nil
+	case *ent.ModpackReleaseQuery:
+		return &query[*ent.ModpackReleaseQuery, predicate.ModpackRelease, modpackrelease.OrderOption]{typ: ent.TypeModpackRelease, tq: q}, nil
+	case *ent.ModpackTagQuery:
+		return &query[*ent.ModpackTagQuery, predicate.ModpackTag, modpacktag.OrderOption]{typ: ent.TypeModpackTag, tq: q}, nil
+	case *ent.ModpackTargetQuery:
+		return &query[*ent.ModpackTargetQuery, predicate.ModpackTarget, modpacktarget.OrderOption]{typ: ent.TypeModpackTarget, tq: q}, nil
 	case *ent.SatisfactoryVersionQuery:
 		return &query[*ent.SatisfactoryVersionQuery, predicate.SatisfactoryVersion, satisfactoryversion.OrderOption]{typ: ent.TypeSatisfactoryVersion, tq: q}, nil
 	case *ent.TagQuery:

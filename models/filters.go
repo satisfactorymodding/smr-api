@@ -221,6 +221,57 @@ func ProcessGuideFilter(filter map[string]interface{}) (*GuideFilter, error) {
 	return base, nil
 }
 
+type ModpackFilter struct {
+	Limit   *int                     `json:"limit" validate:"omitempty,min=1,max=100"`
+	Offset  *int                     `json:"offset" validate:"omitempty,min=0"`
+	OrderBy *generated.ModpackFields `json:"order_by"`
+	Order   *generated.Order         `json:"order"`
+	Search  *string                  `json:"search" validate:"omitempty,min=3"`
+	IDs     []string                 `json:"ids" validate:"omitempty,max=100"`
+	TagIDs  []string                 `json:"tagIDs" validate:"omitempty,max=100"`
+	Hidden  *bool                    `json:"hidden"`
+}
+
+func (f ModpackFilter) Hash() (string, error) {
+	hash, err := hashstructure.Hash(f, hashstructure.FormatV2, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to hash ModpackFilter: %w", err)
+	}
+	return strconv.FormatUint(hash, 10), nil
+}
+
+func DefaultModpackFilter() *ModpackFilter {
+	limit := 10
+	offset := 0
+	order := generated.OrderDesc
+	orderBy := generated.ModpackFieldsCreatedAt
+	return &ModpackFilter{
+		Limit:   &limit,
+		Offset:  &offset,
+		IDs:     nil,
+		Order:   &order,
+		OrderBy: &orderBy,
+	}
+}
+
+func ProcessModpackFilter(filter *generated.ModpackFilter) (*ModpackFilter, error) {
+	base := DefaultModpackFilter()
+
+	if filter == nil {
+		return base, nil
+	}
+
+	if err := ApplyChanges(filter, base); err != nil {
+		return nil, err
+	}
+
+	if err := dataValidator.Struct(base); err != nil {
+		return nil, fmt.Errorf("failed to validate ModpackFilter: %w", err)
+	}
+
+	return base, nil
+}
+
 func ProcessSMLVersionFilter(filter map[string]interface{}) (*VersionFilter, error) {
 	base := DefaultVersionFilter()
 

@@ -9,6 +9,9 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/announcement"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
@@ -159,6 +162,81 @@ func init() {
 	modDescID := modMixinFields0[0].Descriptor()
 	// mod.DefaultID holds the default value on creation for the id field.
 	mod.DefaultID = modDescID.Default.(func() string)
+	modpackMixin := schema.Modpack{}.Mixin()
+	modpackMixinFields0 := modpackMixin[0].Fields()
+	_ = modpackMixinFields0
+	modpackMixinFields1 := modpackMixin[1].Fields()
+	_ = modpackMixinFields1
+	modpackFields := schema.Modpack{}.Fields()
+	_ = modpackFields
+	// modpackDescCreatedAt is the schema descriptor for created_at field.
+	modpackDescCreatedAt := modpackMixinFields1[0].Descriptor()
+	// modpack.DefaultCreatedAt holds the default value on creation for the created_at field.
+	modpack.DefaultCreatedAt = modpackDescCreatedAt.Default.(func() time.Time)
+	// modpackDescUpdatedAt is the schema descriptor for updated_at field.
+	modpackDescUpdatedAt := modpackMixinFields1[1].Descriptor()
+	// modpack.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	modpack.DefaultUpdatedAt = modpackDescUpdatedAt.Default.(func() time.Time)
+	// modpack.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	modpack.UpdateDefaultUpdatedAt = modpackDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// modpackDescShortDescription is the schema descriptor for short_description field.
+	modpackDescShortDescription := modpackFields[1].Descriptor()
+	// modpack.ShortDescriptionValidator is a validator for the "short_description" field. It is called by the builders before save.
+	modpack.ShortDescriptionValidator = modpackDescShortDescription.Validators[0].(func(string) error)
+	// modpackDescViews is the schema descriptor for views field.
+	modpackDescViews := modpackFields[6].Descriptor()
+	// modpack.DefaultViews holds the default value on creation for the views field.
+	modpack.DefaultViews = modpackDescViews.Default.(uint)
+	// modpackDescHotness is the schema descriptor for hotness field.
+	modpackDescHotness := modpackFields[7].Descriptor()
+	// modpack.DefaultHotness holds the default value on creation for the hotness field.
+	modpack.DefaultHotness = modpackDescHotness.Default.(uint)
+	// modpackDescInstalls is the schema descriptor for installs field.
+	modpackDescInstalls := modpackFields[8].Descriptor()
+	// modpack.DefaultInstalls holds the default value on creation for the installs field.
+	modpack.DefaultInstalls = modpackDescInstalls.Default.(uint)
+	// modpackDescPopularity is the schema descriptor for popularity field.
+	modpackDescPopularity := modpackFields[9].Descriptor()
+	// modpack.DefaultPopularity holds the default value on creation for the popularity field.
+	modpack.DefaultPopularity = modpackDescPopularity.Default.(uint)
+	// modpackDescHidden is the schema descriptor for hidden field.
+	modpackDescHidden := modpackFields[10].Descriptor()
+	// modpack.DefaultHidden holds the default value on creation for the hidden field.
+	modpack.DefaultHidden = modpackDescHidden.Default.(bool)
+	// modpackDescID is the schema descriptor for id field.
+	modpackDescID := modpackMixinFields0[0].Descriptor()
+	// modpack.DefaultID holds the default value on creation for the id field.
+	modpack.DefaultID = modpackDescID.Default.(func() string)
+	modpackreleaseMixin := schema.ModpackRelease{}.Mixin()
+	modpackreleaseMixinFields0 := modpackreleaseMixin[0].Fields()
+	_ = modpackreleaseMixinFields0
+	modpackreleaseMixinFields1 := modpackreleaseMixin[1].Fields()
+	_ = modpackreleaseMixinFields1
+	modpackreleaseFields := schema.ModpackRelease{}.Fields()
+	_ = modpackreleaseFields
+	// modpackreleaseDescCreatedAt is the schema descriptor for created_at field.
+	modpackreleaseDescCreatedAt := modpackreleaseMixinFields1[0].Descriptor()
+	// modpackrelease.DefaultCreatedAt holds the default value on creation for the created_at field.
+	modpackrelease.DefaultCreatedAt = modpackreleaseDescCreatedAt.Default.(func() time.Time)
+	// modpackreleaseDescUpdatedAt is the schema descriptor for updated_at field.
+	modpackreleaseDescUpdatedAt := modpackreleaseMixinFields1[1].Descriptor()
+	// modpackrelease.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	modpackrelease.DefaultUpdatedAt = modpackreleaseDescUpdatedAt.Default.(func() time.Time)
+	// modpackrelease.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	modpackrelease.UpdateDefaultUpdatedAt = modpackreleaseDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// modpackreleaseDescID is the schema descriptor for id field.
+	modpackreleaseDescID := modpackreleaseMixinFields0[0].Descriptor()
+	// modpackrelease.DefaultID holds the default value on creation for the id field.
+	modpackrelease.DefaultID = modpackreleaseDescID.Default.(func() string)
+	modpacktargetMixin := schema.ModpackTarget{}.Mixin()
+	modpacktargetMixinFields0 := modpacktargetMixin[0].Fields()
+	_ = modpacktargetMixinFields0
+	modpacktargetFields := schema.ModpackTarget{}.Fields()
+	_ = modpacktargetFields
+	// modpacktargetDescID is the schema descriptor for id field.
+	modpacktargetDescID := modpacktargetMixinFields0[0].Descriptor()
+	// modpacktarget.DefaultID holds the default value on creation for the id field.
+	modpacktarget.DefaultID = modpacktargetDescID.Default.(func() string)
 	satisfactoryversionMixin := schema.SatisfactoryVersion{}.Mixin()
 	satisfactoryversionMixinFields0 := satisfactoryversionMixin[0].Fields()
 	_ = satisfactoryversionMixinFields0

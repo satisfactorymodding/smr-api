@@ -162,6 +162,147 @@ var (
 			},
 		},
 	}
+	// ModpacksColumns holds the columns for the "modpacks" table.
+	ModpacksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString},
+		{Name: "short_description", Type: field.TypeString, Size: 128},
+		{Name: "full_description", Type: field.TypeString},
+		{Name: "logo", Type: field.TypeString, Nullable: true},
+		{Name: "logo_thumbhash", Type: field.TypeString, Nullable: true},
+		{Name: "creator_id", Type: field.TypeString},
+		{Name: "views", Type: field.TypeUint, Default: 0},
+		{Name: "hotness", Type: field.TypeUint, Default: 0},
+		{Name: "installs", Type: field.TypeUint, Default: 0},
+		{Name: "popularity", Type: field.TypeUint, Default: 0},
+		{Name: "hidden", Type: field.TypeBool, Default: false},
+		{Name: "parent_id", Type: field.TypeString, Nullable: true},
+	}
+	// ModpacksTable holds the schema information for the "modpacks" table.
+	ModpacksTable = &schema.Table{
+		Name:       "modpacks",
+		Columns:    ModpacksColumns,
+		PrimaryKey: []*schema.Column{ModpacksColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "modpacks_modpacks_children",
+				Columns:    []*schema.Column{ModpacksColumns[14]},
+				RefColumns: []*schema.Column{ModpacksColumns[0]},
+				OnDelete:   schema.Restrict,
+			},
+		},
+	}
+	// ModpackModsColumns holds the columns for the "modpack_mods" table.
+	ModpackModsColumns = []*schema.Column{
+		{Name: "version_constraint", Type: field.TypeString},
+		{Name: "modpack_id", Type: field.TypeString},
+		{Name: "mod_id", Type: field.TypeString},
+	}
+	// ModpackModsTable holds the schema information for the "modpack_mods" table.
+	ModpackModsTable = &schema.Table{
+		Name:       "modpack_mods",
+		Columns:    ModpackModsColumns,
+		PrimaryKey: []*schema.Column{ModpackModsColumns[1], ModpackModsColumns[2]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "modpack_mods_modpacks_modpack",
+				Columns:    []*schema.Column{ModpackModsColumns[1]},
+				RefColumns: []*schema.Column{ModpacksColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "modpack_mods_mods_mod",
+				Columns:    []*schema.Column{ModpackModsColumns[2]},
+				RefColumns: []*schema.Column{ModsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// ModpackReleasesColumns holds the columns for the "modpack_releases" table.
+	ModpackReleasesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeString},
+		{Name: "changelog", Type: field.TypeString},
+		{Name: "lockfile", Type: field.TypeString},
+		{Name: "modpack_id", Type: field.TypeString},
+	}
+	// ModpackReleasesTable holds the schema information for the "modpack_releases" table.
+	ModpackReleasesTable = &schema.Table{
+		Name:       "modpack_releases",
+		Columns:    ModpackReleasesColumns,
+		PrimaryKey: []*schema.Column{ModpackReleasesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "modpack_releases_modpacks_releases",
+				Columns:    []*schema.Column{ModpackReleasesColumns[6]},
+				RefColumns: []*schema.Column{ModpacksColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "modpackrelease_modpack_id_version",
+				Unique:  true,
+				Columns: []*schema.Column{ModpackReleasesColumns[6], ModpackReleasesColumns[3]},
+			},
+		},
+	}
+	// ModpackTagsColumns holds the columns for the "modpack_tags" table.
+	ModpackTagsColumns = []*schema.Column{
+		{Name: "modpack_id", Type: field.TypeString},
+		{Name: "tag_id", Type: field.TypeString},
+	}
+	// ModpackTagsTable holds the schema information for the "modpack_tags" table.
+	ModpackTagsTable = &schema.Table{
+		Name:       "modpack_tags",
+		Columns:    ModpackTagsColumns,
+		PrimaryKey: []*schema.Column{ModpackTagsColumns[0], ModpackTagsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "modpack_tags_modpacks_modpack",
+				Columns:    []*schema.Column{ModpackTagsColumns[0]},
+				RefColumns: []*schema.Column{ModpacksColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "modpack_tags_tags_tag",
+				Columns:    []*schema.Column{ModpackTagsColumns[1]},
+				RefColumns: []*schema.Column{TagsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// ModpackTargetsColumns holds the columns for the "modpack_targets" table.
+	ModpackTargetsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "target_name", Type: field.TypeString},
+		{Name: "modpack_id", Type: field.TypeString},
+	}
+	// ModpackTargetsTable holds the schema information for the "modpack_targets" table.
+	ModpackTargetsTable = &schema.Table{
+		Name:       "modpack_targets",
+		Columns:    ModpackTargetsColumns,
+		PrimaryKey: []*schema.Column{ModpackTargetsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "modpack_targets_modpacks_targets",
+				Columns:    []*schema.Column{ModpackTargetsColumns[2]},
+				RefColumns: []*schema.Column{ModpacksColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "modpacktarget_modpack_id_target_name",
+				Unique:  true,
+				Columns: []*schema.Column{ModpackTargetsColumns[2], ModpackTargetsColumns[1]},
+			},
+		},
+	}
 	// SatisfactoryVersionsColumns holds the columns for the "satisfactory_versions" table.
 	SatisfactoryVersionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -519,6 +660,11 @@ var (
 		GuideTagsTable,
 		ModsTable,
 		ModTagsTable,
+		ModpacksTable,
+		ModpackModsTable,
+		ModpackReleasesTable,
+		ModpackTagsTable,
+		ModpackTargetsTable,
 		SatisfactoryVersionsTable,
 		TagsTable,
 		UsersTable,
@@ -538,6 +684,13 @@ func init() {
 	GuideTagsTable.ForeignKeys[1].RefTable = TagsTable
 	ModTagsTable.ForeignKeys[0].RefTable = ModsTable
 	ModTagsTable.ForeignKeys[1].RefTable = TagsTable
+	ModpacksTable.ForeignKeys[0].RefTable = ModpacksTable
+	ModpackModsTable.ForeignKeys[0].RefTable = ModpacksTable
+	ModpackModsTable.ForeignKeys[1].RefTable = ModsTable
+	ModpackReleasesTable.ForeignKeys[0].RefTable = ModpacksTable
+	ModpackTagsTable.ForeignKeys[0].RefTable = ModpacksTable
+	ModpackTagsTable.ForeignKeys[1].RefTable = TagsTable
+	ModpackTargetsTable.ForeignKeys[0].RefTable = ModpacksTable
 	UserGroupsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[1].RefTable = ModsTable

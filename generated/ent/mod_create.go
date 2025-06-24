@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
@@ -359,6 +360,21 @@ func (mc *ModCreate) AddDependents(v ...*Version) *ModCreate {
 		ids[i] = v[i].ID
 	}
 	return mc.AddDependentIDs(ids...)
+}
+
+// AddModpackIDs adds the "modpacks" edge to the Modpack entity by IDs.
+func (mc *ModCreate) AddModpackIDs(ids ...string) *ModCreate {
+	mc.mutation.AddModpackIDs(ids...)
+	return mc
+}
+
+// AddModpacks adds the "modpacks" edges to the Modpack entity.
+func (mc *ModCreate) AddModpacks(m ...*Modpack) *ModCreate {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return mc.AddModpackIDs(ids...)
 }
 
 // Mutation returns the ModMutation object of the builder.
@@ -713,6 +729,22 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 		_ = createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := mc.mutation.ModpacksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   mod.ModpacksTable,
+			Columns: mod.ModpacksPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

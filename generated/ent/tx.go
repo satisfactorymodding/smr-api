@@ -24,6 +24,16 @@ type Tx struct {
 	Mod *ModClient
 	// ModTag is the client for interacting with the ModTag builders.
 	ModTag *ModTagClient
+	// Modpack is the client for interacting with the Modpack builders.
+	Modpack *ModpackClient
+	// ModpackMod is the client for interacting with the ModpackMod builders.
+	ModpackMod *ModpackModClient
+	// ModpackRelease is the client for interacting with the ModpackRelease builders.
+	ModpackRelease *ModpackReleaseClient
+	// ModpackTag is the client for interacting with the ModpackTag builders.
+	ModpackTag *ModpackTagClient
+	// ModpackTarget is the client for interacting with the ModpackTarget builders.
+	ModpackTarget *ModpackTargetClient
 	// SatisfactoryVersion is the client for interacting with the SatisfactoryVersion builders.
 	SatisfactoryVersion *SatisfactoryVersionClient
 	// Tag is the client for interacting with the Tag builders.
@@ -180,6 +190,11 @@ func (tx *Tx) init() {
 	tx.GuideTag = NewGuideTagClient(tx.config)
 	tx.Mod = NewModClient(tx.config)
 	tx.ModTag = NewModTagClient(tx.config)
+	tx.Modpack = NewModpackClient(tx.config)
+	tx.ModpackMod = NewModpackModClient(tx.config)
+	tx.ModpackRelease = NewModpackReleaseClient(tx.config)
+	tx.ModpackTag = NewModpackTagClient(tx.config)
+	tx.ModpackTarget = NewModpackTargetClient(tx.config)
 	tx.SatisfactoryVersion = NewSatisfactoryVersionClient(tx.config)
 	tx.Tag = NewTagClient(tx.config)
 	tx.User = NewUserClient(tx.config)

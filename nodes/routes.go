@@ -56,3 +56,12 @@ func RegisterVersionRoutes(router *echo.Group) {
 	router.GET("/:versionId/:target/download", downloadModTarget)
 	router.HEAD("/:versionId/:target/download", downloadModTarget)
 }
+
+func RegisterModpackRoutes(router *echo.Group) {
+	router.GET("/:modpackId", dataWrapper(getModpack))
+	router.GET("/:modpackId/releases/:version", dataWrapper(getModpackRelease))
+}
+
+func RegisterModpacksRoutes(router *echo.Group) {
+	router.GET("", dataWrapper(getModpacks))
+}
