@@ -11,18 +11,34 @@ The Satisfactory Mod Repository backend API - a Go-based service providing REST 
 
 ### Setup
 
-```bash
-# Install tools and start development services
-mise install
-# If this command fails, ensure you have Docker running and configured correctly
-mise run setup
+1. Install Tools
 
-# Generate code and start API
-mise run generate
-mise run api
-```
+   ```bash
+   # Install tools
+   mise install
+   ```
 
-If running `api` produces errors about the database fails to apply migrations,
+   If you are on Windows, due to a bug in mise, you will also need to do the following:
+
+   ```ps1
+   > mise where aqua:minio/mc
+   <some folder path>
+   # Go to the folder
+   # Rename the `mc` file to give it an extension: `mc.exe`
+   ```
+
+2. Start Development Services
+
+   ```bash
+   # If this command fails, ensure you have Docker running and configured correctly
+   mise run setup
+
+   # Generate code and start API
+   mise run generate
+   mise run api
+   ```
+
+If running `api` produces errors about the database failing to apply migrations,
 you may have switched branches without cleaning up after database changes you were working on.
 The easiest way to get back from this state
 is to delete the `postgres` Docker container
@@ -47,6 +63,9 @@ mise run lint
 # Environment management
 mise run setup     # Start PostgreSQL, Redis, MinIO
 mise run teardown  # Stop services
+
+# Windows: activate an interactive PowerShell with Mise tools loaded. Requires Powershell >= 7
+mise activate pwsh | Out-String | Invoke-Expression
 ```
 
 ### Database Access
