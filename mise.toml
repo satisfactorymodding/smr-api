@@ -12,7 +12,11 @@ protoc-gen-go-grpc = "1.5.1"
 run = "go run cmd/api/serve.go"
 
 [tasks.test]
-run = "go test -p 1 -v -timeout 1h ./..."
+run = "go test -parallel 1 -v -timeout 1h ./..."
+
+# Run the tests without the verbose flag so it is easier to parse the output for local development
+[tasks.localtest]
+run = "go test -parallel 1 -timeout 1h ./..."
 
 [tasks.coverage]
 run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -p 1 -timeout 1h ./..."
