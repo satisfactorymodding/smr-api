@@ -66,3 +66,5 @@ vendor/
 
 /config*.json
 !config.sample.json
+
+coverage.txt
