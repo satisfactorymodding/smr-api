@@ -3,13 +3,11 @@
 package version
 
 import (
-	"fmt"
 	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
 const (
@@ -37,8 +35,6 @@ const (
 	FieldDownloads = "downloads"
 	// FieldKey holds the string denoting the key field in the database.
 	FieldKey = "key"
-	// FieldStability holds the string denoting the stability field in the database.
-	FieldStability = "stability"
 	// FieldApproved holds the string denoting the approved field in the database.
 	FieldApproved = "approved"
 	// FieldHotness holds the string denoting the hotness field in the database.
@@ -119,7 +115,6 @@ var Columns = []string{
 	FieldChangelog,
 	FieldDownloads,
 	FieldKey,
-	FieldStability,
 	FieldApproved,
 	FieldHotness,
 	FieldDenied,
@@ -182,18 +177,6 @@ var (
 	DefaultID func() string
 )
 
-const DefaultStability util.Stability = "release"
-
-// StabilityValidator is a validator for the "stability" field enum values. It is called by the builders before save.
-func StabilityValidator(s util.Stability) error {
-	switch s {
-	case "release", "beta", "alpha":
-		return nil
-	default:
-		return fmt.Errorf("version: invalid enum value for stability field: %q", s)
-	}
-}
-
 // OrderOption defines the ordering options for the Version queries.
 type OrderOption func(*sql.Selector)
 
@@ -250,11 +233,6 @@ func ByDownloads(opts ...sql.OrderTermOption) OrderOption {
 // ByKey orders the results by the key field.
 func ByKey(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKey, opts...).ToFunc()
-}
-
-// ByStability orders the results by the stability field.
-func ByStability(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStability, opts...).ToFunc()
 }
 
 // ByApproved orders the results by the approved field.

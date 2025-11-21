@@ -141,7 +141,6 @@ func (r *mutationResolver) UpdateVersion(ctx context.Context, versionID string, 
 	update := dbVersion.Update()
 
 	SetINNOEF(version.Changelog, update.SetChangelog)
-	SetStabilityINNF(version.Stability, update.SetStability)
 
 	dbVersion, err := update.Save(ctx)
 	if err != nil {

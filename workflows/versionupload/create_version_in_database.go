@@ -11,7 +11,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	mod2 "github.com/satisfactorymodding/smr-api/generated/ent/mod"
-	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
 
@@ -40,7 +39,6 @@ func (*A) CreateVersionInDatabaseActivity(ctx context.Context, args CreateVersio
 			SetRequiredOnRemote(args.ModInfo.RequiredOnRemote).
 			SetChangelog(args.Version.Changelog).
 			SetModID(args.ModID).
-			SetStability(util.Stability(args.Version.Stability)).
 			SetModReference(args.ModInfo.ModReference).
 			SetKey(args.FileKey).
 			SetSize(args.ModInfo.Size).

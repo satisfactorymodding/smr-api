@@ -26,11 +26,16 @@ type SMLVersion interface {
 	// goverter:map Edges.Targets Targets
 	// goverter:map CreatedAt Date
 	// goverter:map GameVersion SatisfactoryVersion | SMLSatisfactoryVersion
+	// goverter:map . Stability | DefaultStability
 	// goverter:ignore EngineVersion BootstrapVersion Link
 	Convert(source *ent.Version) *generated.SMLVersion
 	ConvertSlice(source []*ent.Version) []*generated.SMLVersion
 	// goverter:ignore Link
 	ConvertTarget(source ent.VersionTarget) generated.SMLVersionTarget
+}
+
+func DefaultStability(_ *ent.Version) generated.VersionStabilities {
+	return generated.VersionStabilitiesRelease
 }
 
 // goverter:converter
@@ -99,6 +104,7 @@ type Mod interface {
 // goverter:extend TimeToString UIntToInt Int64ToInt
 type Version interface {
 	// goverter:map Edges.Targets Targets
+	// goverter:map . Stability | DefaultStability
 	// goverter:ignore Link Mod Dependencies SmlVersion VirustotalResults
 	Convert(source *ent.Version) *generated.Version
 	ConvertSlice(source []*ent.Version) []*generated.Version

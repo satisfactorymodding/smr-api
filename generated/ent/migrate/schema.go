@@ -355,7 +355,6 @@ var (
 		{Name: "changelog", Type: field.TypeString, Nullable: true},
 		{Name: "downloads", Type: field.TypeUint, Default: 0},
 		{Name: "key", Type: field.TypeString, Nullable: true},
-		{Name: "stability", Type: field.TypeEnum, Enums: []string{"release", "beta", "alpha"}, Default: "release"},
 		{Name: "approved", Type: field.TypeBool, Default: false},
 		{Name: "hotness", Type: field.TypeUint, Default: 0},
 		{Name: "denied", Type: field.TypeBool, Default: false},
@@ -376,7 +375,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "versions_mods_versions",
-				Columns:    []*schema.Column{VersionsColumns[21]},
+				Columns:    []*schema.Column{VersionsColumns[20]},
 				RefColumns: []*schema.Column{ModsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -390,17 +389,17 @@ var (
 			{
 				Name:    "version_approved",
 				Unique:  false,
-				Columns: []*schema.Column{VersionsColumns[11]},
+				Columns: []*schema.Column{VersionsColumns[10]},
 			},
 			{
 				Name:    "version_denied",
 				Unique:  false,
-				Columns: []*schema.Column{VersionsColumns[13]},
+				Columns: []*schema.Column{VersionsColumns[12]},
 			},
 			{
 				Name:    "version_mod_id",
 				Unique:  false,
-				Columns: []*schema.Column{VersionsColumns[21]},
+				Columns: []*schema.Column{VersionsColumns[20]},
 			},
 		},
 	}

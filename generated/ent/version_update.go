@@ -16,7 +16,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/virustotalresult"
-	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // VersionUpdate is the builder for updating Version entities.
@@ -173,20 +172,6 @@ func (vu *VersionUpdate) SetNillableKey(s *string) *VersionUpdate {
 // ClearKey clears the value of the "key" field.
 func (vu *VersionUpdate) ClearKey() *VersionUpdate {
 	vu.mutation.ClearKey()
-	return vu
-}
-
-// SetStability sets the "stability" field.
-func (vu *VersionUpdate) SetStability(u util.Stability) *VersionUpdate {
-	vu.mutation.SetStability(u)
-	return vu
-}
-
-// SetNillableStability sets the "stability" field if the given value is not nil.
-func (vu *VersionUpdate) SetNillableStability(u *util.Stability) *VersionUpdate {
-	if u != nil {
-		vu.SetStability(*u)
-	}
 	return vu
 }
 
@@ -574,11 +559,6 @@ func (vu *VersionUpdate) check() error {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Version.version": %w`, err)}
 		}
 	}
-	if v, ok := vu.mutation.Stability(); ok {
-		if err := version.StabilityValidator(v); err != nil {
-			return &ValidationError{Name: "stability", err: fmt.Errorf(`ent: validator failed for field "Version.stability": %w`, err)}
-		}
-	}
 	if v, ok := vu.mutation.ModReference(); ok {
 		if err := version.ModReferenceValidator(v); err != nil {
 			return &ValidationError{Name: "mod_reference", err: fmt.Errorf(`ent: validator failed for field "Version.mod_reference": %w`, err)}
@@ -648,9 +628,6 @@ func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if vu.mutation.KeyCleared() {
 		_spec.ClearField(version.FieldKey, field.TypeString)
-	}
-	if value, ok := vu.mutation.Stability(); ok {
-		_spec.SetField(version.FieldStability, field.TypeEnum, value)
 	}
 	if value, ok := vu.mutation.Approved(); ok {
 		_spec.SetField(version.FieldApproved, field.TypeBool, value)
@@ -1056,20 +1033,6 @@ func (vuo *VersionUpdateOne) ClearKey() *VersionUpdateOne {
 	return vuo
 }
 
-// SetStability sets the "stability" field.
-func (vuo *VersionUpdateOne) SetStability(u util.Stability) *VersionUpdateOne {
-	vuo.mutation.SetStability(u)
-	return vuo
-}
-
-// SetNillableStability sets the "stability" field if the given value is not nil.
-func (vuo *VersionUpdateOne) SetNillableStability(u *util.Stability) *VersionUpdateOne {
-	if u != nil {
-		vuo.SetStability(*u)
-	}
-	return vuo
-}
-
 // SetApproved sets the "approved" field.
 func (vuo *VersionUpdateOne) SetApproved(b bool) *VersionUpdateOne {
 	vuo.mutation.SetApproved(b)
@@ -1467,11 +1430,6 @@ func (vuo *VersionUpdateOne) check() error {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "Version.version": %w`, err)}
 		}
 	}
-	if v, ok := vuo.mutation.Stability(); ok {
-		if err := version.StabilityValidator(v); err != nil {
-			return &ValidationError{Name: "stability", err: fmt.Errorf(`ent: validator failed for field "Version.stability": %w`, err)}
-		}
-	}
 	if v, ok := vuo.mutation.ModReference(); ok {
 		if err := version.ModReferenceValidator(v); err != nil {
 			return &ValidationError{Name: "mod_reference", err: fmt.Errorf(`ent: validator failed for field "Version.mod_reference": %w`, err)}
@@ -1558,9 +1516,6 @@ func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err e
 	}
 	if vuo.mutation.KeyCleared() {
 		_spec.ClearField(version.FieldKey, field.TypeString)
-	}
-	if value, ok := vuo.mutation.Stability(); ok {
-		_spec.SetField(version.FieldStability, field.TypeEnum, value)
 	}
 	if value, ok := vuo.mutation.Approved(); ok {
 		_spec.SetField(version.FieldApproved, field.TypeBool, value)

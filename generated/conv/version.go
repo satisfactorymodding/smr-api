@@ -85,7 +85,7 @@ func (c *VersionImpl) Convert(source *ent.Version) *generated.Version {
 		generatedVersion.RequiredOnRemote = (*source).RequiredOnRemote
 		generatedVersion.Changelog = (*source).Changelog
 		generatedVersion.Downloads = conversion.UIntToInt((*source).Downloads)
-		generatedVersion.Stability = generated.VersionStabilities((*source).Stability)
+		generatedVersion.Stability = conversion.DefaultStability(source)
 		generatedVersion.Approved = (*source).Approved
 		generatedVersion.UpdatedAt = conversion.TimeToString((*source).UpdatedAt)
 		generatedVersion.CreatedAt = conversion.TimeToString((*source).CreatedAt)

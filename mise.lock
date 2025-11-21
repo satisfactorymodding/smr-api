@@ -6,8 +6,11 @@ backend = "aqua:minio/mc"
 "mc.RELEASE.2025-04-08T15-39-49Z" = "sha256:43d44d801a936e48390c8d2dc02c1c1cc1e973becbe71897f28ca06a9f456489"
 
 [tools.atlas]
-version = "0.32.0"
+version = "0.35.0"
 backend = "aqua:ariga/atlas"
+
+[tools.atlas.checksums]
+"atlas-linux-amd64-v0.35.0" = "sha256:8e8e9b256498c58bdfc96211942402632e12151ec87dd0f9153294f56f2879e6"
 
 [tools.go]
 version = "1.24.4"

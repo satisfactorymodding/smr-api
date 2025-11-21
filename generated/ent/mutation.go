@@ -8761,7 +8761,6 @@ type VersionMutation struct {
 	downloads                 *uint
 	adddownloads              *int
 	key                       *string
-	stability                 *util.Stability
 	approved                  *bool
 	hotness                   *uint
 	addhotness                *int
@@ -9315,42 +9314,6 @@ func (m *VersionMutation) KeyCleared() bool {
 func (m *VersionMutation) ResetKey() {
 	m.key = nil
 	delete(m.clearedFields, version.FieldKey)
-}
-
-// SetStability sets the "stability" field.
-func (m *VersionMutation) SetStability(u util.Stability) {
-	m.stability = &u
-}
-
-// Stability returns the value of the "stability" field in the mutation.
-func (m *VersionMutation) Stability() (r util.Stability, exists bool) {
-	v := m.stability
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStability returns the old "stability" field's value of the Version entity.
-// If the Version object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *VersionMutation) OldStability(ctx context.Context) (v util.Stability, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldStability is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldStability requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStability: %w", err)
-	}
-	return oldValue.Stability, nil
-}
-
-// ResetStability resets all changes to the "stability" field.
-func (m *VersionMutation) ResetStability() {
-	m.stability = nil
 }
 
 // SetApproved sets the "approved" field.
@@ -10118,7 +10081,7 @@ func (m *VersionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *VersionMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 20)
 	if m.created_at != nil {
 		fields = append(fields, version.FieldCreatedAt)
 	}
@@ -10148,9 +10111,6 @@ func (m *VersionMutation) Fields() []string {
 	}
 	if m.key != nil {
 		fields = append(fields, version.FieldKey)
-	}
-	if m.stability != nil {
-		fields = append(fields, version.FieldStability)
 	}
 	if m.approved != nil {
 		fields = append(fields, version.FieldApproved)
@@ -10210,8 +10170,6 @@ func (m *VersionMutation) Field(name string) (ent.Value, bool) {
 		return m.Downloads()
 	case version.FieldKey:
 		return m.Key()
-	case version.FieldStability:
-		return m.Stability()
 	case version.FieldApproved:
 		return m.Approved()
 	case version.FieldHotness:
@@ -10261,8 +10219,6 @@ func (m *VersionMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldDownloads(ctx)
 	case version.FieldKey:
 		return m.OldKey(ctx)
-	case version.FieldStability:
-		return m.OldStability(ctx)
 	case version.FieldApproved:
 		return m.OldApproved(ctx)
 	case version.FieldHotness:
@@ -10361,13 +10317,6 @@ func (m *VersionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetKey(v)
-		return nil
-	case version.FieldStability:
-		v, ok := value.(util.Stability)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStability(v)
 		return nil
 	case version.FieldApproved:
 		v, ok := value.(bool)
@@ -10649,9 +10598,6 @@ func (m *VersionMutation) ResetField(name string) error {
 		return nil
 	case version.FieldKey:
 		m.ResetKey()
-		return nil
-	case version.FieldStability:
-		m.ResetStability()
 		return nil
 	case version.FieldApproved:
 		m.ResetApproved()
