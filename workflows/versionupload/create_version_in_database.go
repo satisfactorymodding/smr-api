@@ -34,7 +34,6 @@ func (*A) CreateVersionInDatabaseActivity(ctx context.Context, args CreateVersio
 
 	var dbVersion *ent.Version
 	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
-
 		dbVersion, err = tx.Version.Create().
 			SetVersion(args.ModInfo.Version).
 			SetGameVersion(args.ModInfo.GameVersion).
