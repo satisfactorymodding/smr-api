@@ -6,13 +6,11 @@ import (
 
 	"github.com/Vilsol/slox"
 	"go.temporal.io/sdk/temporal"
-	"fmt"
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	mod2 "github.com/satisfactorymodding/smr-api/generated/ent/mod"
-	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
@@ -36,14 +34,6 @@ func (*A) CreateVersionInDatabaseActivity(ctx context.Context, args CreateVersio
 
 	var dbVersion *ent.Version
 	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
-		
-		exists, err := tx.Version.Query().Where(version.Version(args.ModInfo.Version), Version.ModID(args.ModID)).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if exists {
-			return fmt.Errorf("version %s already exists for mod %s", args.ModInfo.Version, args.ModID)
-		}
 
 		dbVersion, err = tx.Version.Create().
 			SetVersion(args.ModInfo.Version).
