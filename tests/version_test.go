@@ -61,6 +61,14 @@ func TestSameVersion(t *testing.T) {
 	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this name")
 }
 
+func TestSameSemver(t *testing.T) {
+	ctx, client, stop := setup()
+	defer stop()
+
+	modID := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "")
+	RunVersionTest(ctx, t, client, "testdata/DuplicateSemverMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this semver")
+}
+
 func TestModWithMissingDependency(t *testing.T) {
 	RunVersionTestWrapper(t, "testdata/ModWithMissingDependency.smod", false, "ModWithMissingDependency", "ent: mod not found")
 }
