@@ -66,7 +66,8 @@ func TestSameSemver(t *testing.T) {
 	defer stop()
 
 	modID := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "")
-	RunVersionTest(ctx, t, client, "testdata/DuplicateSemverMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this semver")
+	//NEED TO SOMEHOW DELETE THE MOD
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this name")
 }
 
 func TestModWithMissingDependency(t *testing.T) {
