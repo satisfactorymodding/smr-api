@@ -64,7 +64,6 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 	}
 
 	if modInfo.Semver != nil {
-		version := modInfo.Version
 		major := int(modInfo.Semver.Major())
 		minor := int(modInfo.Semver.Minor())
 		patch := int(modInfo.Semver.Patch())
@@ -72,7 +71,6 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 		semverCount, err := db.From(schema.SkipSoftDelete(ctx)).Version.Query().
 			Where(
 				version2.ModID(mod.ID),
-				version2.VersionNEQ(version),
 				version2.VersionMajor(major),
 				version2.VersionMinor(minor),
 				version2.VersionPatch(patch),
