@@ -35,7 +35,7 @@ func (r *mutationResolver) CreateGuide(ctx context.Context, g generated.NewGuide
 		return nil, err
 	}
 
-	// Allow only 8util.GuidesPer24h new guides per 24h
+	// Allow only util.GuidesPer24h new guides per 24h
 	guides, err := db.From(ctx).Guide.Query().
 		Order(guide.ByCreatedAt(sql.OrderAsc())).
 		Where(
