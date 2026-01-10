@@ -11,6 +11,11 @@ The Satisfactory Mod Repository backend API - a Go-based service providing REST 
 
 ### Setup
 
+> Note: A [devcontainer](https://code.visualstudio.com/docs/devcontainers/containers) exists in this repository,
+> but it has not been tested since we switched to using Mise for tool management.
+> **You should follow the normal installation instructions below instead of using the devcontainer.**
+> We offer no guarantee that it works correctly, but you are welcome to try it out and submit fixes if needed.
+
 1. Install Tools
 
    ```bash
@@ -18,7 +23,7 @@ The Satisfactory Mod Repository backend API - a Go-based service providing REST 
    mise install
    ```
 
-   If you are on Windows, due to a bug in mise, you will also need to do the following:
+   If you are on Windows, due to a bug in [mise and aqua](https://github.com/aquaproj/aqua-registry/pull/42498/), you will also need to do the following:
 
    ```ps1
    > mise where aqua:minio/mc
