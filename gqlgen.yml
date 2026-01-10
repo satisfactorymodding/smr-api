@@ -12,8 +12,6 @@ model:
 resolver:
   filename: ./gql/resolver.go
   type: Resolver
-  preserve_resolver: true
-
   # https://github.com/99designs/gqlgen/issues/3321
   preserve_resolver: true
 
