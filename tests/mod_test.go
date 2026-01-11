@@ -271,6 +271,10 @@ func TestMods(t *testing.T) {
 									note: "World",
 									state: Works
 								}
+								Controller: {
+									note: "Foobar"
+									state: Partial
+								}
 							}
 						}
 					) {
