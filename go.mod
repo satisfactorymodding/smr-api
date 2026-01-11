@@ -3,9 +3,6 @@ module github.com/satisfactorymodding/smr-api
 // when updating, also update .devcontainer/Dockerfile
 go 1.24.4
 
-// TODO include this directive? - https://go.dev/blog/toolchain
-// toolchain go1.24.4
-
 require (
 	ariga.io/entcache v0.1.0
 	entgo.io/ent v0.14.4
