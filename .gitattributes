@@ -4,3 +4,6 @@
 * text=auto
 *.sh text eol=lf
 *.env* text eol=lf
+
+# Atlas migration hashes are different if file get windows line endings
+*.sql text eol=lf
