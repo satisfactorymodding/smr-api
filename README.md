@@ -57,6 +57,13 @@ The Satisfactory Mod Repository backend API - a Go-based service providing REST 
 ## Development Commands
 
 ```bash
+# Get information about all available mise tasks
+mise tasks
+
+# Environment management
+mise run setup     # Start PostgreSQL, Redis, MinIO, etc. containers
+mise run teardown  # Stop services
+
 # Code generation (run after schema changes)
 mise run generate
 
@@ -69,10 +76,6 @@ mise run coverage
 
 # Linting
 mise run lint
-
-# Environment management
-mise run setup     # Start PostgreSQL, Redis, MinIO
-mise run teardown  # Stop services
 
 # Linux (bash): activate an interactive bash shell with Mise tools loaded
 eval "$(mise activate bash)"
@@ -169,15 +172,10 @@ See `config/config.go` for full configuration structure.
 **Before submitting:**
 
 ```bash
-mise run lint     # Check code quality
-mise run test     # Run test suite
-mise run generate # Regenerate if needed
-```
-
-Some linting issues can be auto-fixed:
-
-```bash
-mise run format
+mise run lint       # Check code quality
+mise run format     # Some linting issues can be auto-fixed
+mise run localtest  # Run test suite
+mise run generate   # Regenerate if needed
 ```
 
 **Development patterns:**

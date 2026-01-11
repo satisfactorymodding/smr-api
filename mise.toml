@@ -9,19 +9,24 @@ protoc-gen-go = "1.36.6"
 protoc-gen-go-grpc = "1.5.1"
 
 [tasks.api]
+description = "Run the API server. Make sure containers are running via `mise run setup` first."
 run = "go run cmd/api/serve.go"
 
 [tasks.test]
+description = "Run all tests (with verbose output, for CI)"
 run = "go test -parallel 1 -v -timeout 1h ./..."
 
 # Run the tests without the verbose flag so it is easier to parse the output for local development
 [tasks.localtest]
+description = "Run all tests (without the verbose flag, so it's easier to parse the output for local development)"
 run = "go test -parallel 1 -timeout 1h ./..."
 
 [tasks.coverage]
+description = "TODO @Vilsol description? Run all tests and output coverage details"
 run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -p 1 -timeout 1h ./..."
 
 [tasks.test_coverage_junit]
+description = "TODO @Vilsol description? Run all tests and produce a JUnit coverage report in an XML"
 run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -p 1 -timeout 1h ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out junit.xml"
 
 [tasks.migrate_hash]
@@ -31,9 +36,11 @@ run = "atlas migrate hash --dir \"file://migrations/sql?format=golang-migrate\""
 run_windows = 'atlas migrate hash --dir file://migrations/sql?format=golang-migrate'
 
 [tasks.generate]
+description = "Update Golang generated code"
 run = "go generate -tags tools -x ./..."
 
 [tasks.setup]
+description = "Start docker containers and setup minio access"
 run = [
     "docker compose --file docker-compose-dev.yml up --detach --wait && sleep 5",
     "mc alias set local http://localhost:9000 minio minio123",
@@ -50,10 +57,13 @@ run_windows = [
 ]
 
 [tasks.teardown]
+description = "Stop and destroy docker containers. Volumes are preserved."
 run = "docker compose --file docker-compose-dev.yml down"
 
 [tasks.lint]
+description = "Check for linting issues"
 run = "golangci-lint run"
 
 [tasks.format]
+description = "Try to automatically fix linting issues"
 run = "golangci-lint run --fix"
