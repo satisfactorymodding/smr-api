@@ -1,4 +1,4 @@
-h1:UFnk5AKtC+Wym0+LsyibDPFlFPKxHrrC8nWPfXA62H4=
+h1:m6O8MtHIxeJQhdyVwK5doujEkWDrIUgKxqAtphtLcNg=
 000001_create_initial_tables.down.sql h1:TAv6ggW4lbUwOkOMZXmU4dTtFHhFzbUoR4sO11ziCfc=
 000001_create_initial_tables.up.sql h1:kKhn2SgX9TQdLhBRg3qEZ3U7UDUkcH5TxS6OX6UHUEw=
 000002_create_user_group_table.down.sql h1:f+tCUAVsan7L2YiEgoIM44P9VmbiLabWlnuMsMrdC8o=
@@ -79,5 +79,5 @@ h1:UFnk5AKtC+Wym0+LsyibDPFlFPKxHrrC8nWPfXA62H4=
 20241003161005_create_virustotal_results_table.up.sql h1:oSgJ3hMhfiAm8qI9KRzON9vsKjhBmvmschos1rOLyWs=
 20241008092121_nullable_mod_logo.down.sql h1:QRySsschX3aPUeAFSm4kUNfxaQH5B77eqz05MrNERrE=
 20241008092121_nullable_mod_logo.up.sql h1:deO7iGJdjR3epppZ9lzqjhYAO+AuW/zaGW2+4b6RT1s=
-20250411023207_AddNetworkUsageDislosure.down.sql h1:UyzVHEVLcGjTdj/NnckYlTH9yZKzXyivITzasuUCr2g=
-20250411023207_AddNetworkUsageDislosure.up.sql h1:rj9Ab0pJj0MCycdrOXtVLHy3DA48ez5fvIxxR5cWliE=
+20250411023207_AddNetworkUsageDisclosure.down.sql h1:MWSCWoBKT4ROX0Db653hWJUnrwzVWTjNkodnu8Qi0MY=
+20250411023207_AddNetworkUsageDisclosure.up.sql h1:1CqJ3pLTirIG2ToWQfWaBH1KmYKgva0kH1eoj4qrpjI=
