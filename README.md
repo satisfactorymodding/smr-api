@@ -74,8 +74,14 @@ mise run lint
 mise run setup     # Start PostgreSQL, Redis, MinIO
 mise run teardown  # Stop services
 
+# Linux (bash): activate an interactive bash shell with Mise tools loaded
+eval "$(mise activate bash)"
+
 # Windows: activate an interactive PowerShell with Mise tools loaded. Requires Powershell >= 7
 mise activate pwsh | Out-String | Invoke-Expression
+
+# Database migrations. See `mise tasks` for more info.
+mise run migrate_diff
 ```
 
 ### Local Testing
@@ -98,7 +104,7 @@ The credentials are specified in `docker-compose-dev.yml`.
 Once logged in, add a server.
 The "Host name/address" should be `postgres`, username should be `postgres`, password should be `POSTGRES_PASSWORD` from `docker-compose.yml`.
 
-You can view tables via `Servers >(name)> Databases > postgres > Schemas > public > Tables`.
+You can view tables via `Servers > (name) > Databases > postgres > Schemas > public > Tables`.
 
 ## Architecture
 
@@ -106,6 +112,7 @@ You can view tables via `Servers >(name)> Databases > postgres > Schemas > publi
 
 - **Framework**: Echo v4 with middleware
 - **Database**: PostgreSQL with Ent ORM
+  - [Atlas versioned migrations](https://atlasgo.io/versioned/intro)
 - **GraphQL**: gqlgen with custom resolvers
 - **Authentication**: Multi-provider OAuth + PASETO tokens
 - **Storage**: S3-compatible (MinIO for dev)
@@ -145,7 +152,8 @@ See `config/config.go` for full configuration structure.
    - Database schemas (`db/schema/*.go`)
    - Swagger annotations
 
-2. **Database Changes**: Use Atlas migrations
+2. **Database Changes**: Use Atlas migrations (entgo has integration with it via golang-migrate)
+   - Use mise tasks to create migration files (`mise tasks` for more details)
    - SQL migrations in `migrations/sql/`
    - Code migrations in `migrations/code/`
 

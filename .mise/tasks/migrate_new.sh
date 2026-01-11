@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#MISE description="Use Atlas to create a new manual SQL migration file (see https://atlasgo.io/versioned/new)"
 
 echo -n 'Migration Name: '
 
