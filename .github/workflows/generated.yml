@@ -23,8 +23,13 @@ jobs:
       - name: Tidy
         run: go mod tidy
 
-      - name: Ensure no changes
-        run: git diff --exit-code
+      - name: Ensure freshly generated hashes match committed ones
+        run: |
+          if ! git diff --exit-code; then
+            echo "Error: Generating migration hashes again produced output that doesn't match those committed to the repo."
+            echo "Run 'mise run migrate_hash' and commit the changes."
+            exit 1
+          fi
 
   go:
     runs-on: ubuntu-latest
@@ -41,5 +46,10 @@ jobs:
       - name: Tidy
         run: go mod tidy
 
-      - name: Ensure no changes
-        run: git diff --exit-code
+      - name: Ensure freshly generated code matches committed code
+        run: |
+          if ! git diff --exit-code; then
+            echo "Error: Regenerating the generated code produced output that doesn't match the code committed to the repo."
+            echo "Run 'mise run generate' and commit the changes."
+            exit 1
+          fi
