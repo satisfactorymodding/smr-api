@@ -1,0 +1,6 @@
+# Auto detect text files and perform LF normalization
+#	This keeps unix/windows machines from wanting to change every file
+#	from the other because of the line ending (\r vs \r\n)
+* text=auto
+*.sh text eol=lf
+*.env* text eol=lf
