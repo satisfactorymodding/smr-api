@@ -21,10 +21,10 @@ func (Mod) Mixin() []ent.Mixin {
 	}
 }
 
-// type AiUseDisclosure struct {
-// 	Type string
-// 	Note string
-// }
+type AiUseDisclosure struct {
+	Type string
+	Note string
+}
 
 func (Mod) Fields() []ent.Field {
 	return []ent.Field{
@@ -47,8 +47,7 @@ func (Mod) Fields() []ent.Field {
 		field.JSON("compatibility", &util.CompatibilityInfo{}).Optional(),
 		field.Bool("toggle_network_use").Default(false),
 		field.String("network_use_disclosure").Optional().Nillable(),
-		// field.JSON("ai_use_disclosure", &AiUseDisclosure{}).Optional(),
-		// field.String("ai_use_disclosure").Optional(),
+		field.JSON("ai_use_disclosure", &AiUseDisclosure{}).Optional(),
 		field.Bool("toggle_explicit_content").Default(false),
 	}
 }
