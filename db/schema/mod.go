@@ -21,15 +21,6 @@ func (Mod) Mixin() []ent.Mixin {
 	}
 }
 
-<<<<<<< Updated upstream
-type AiUseDisclosure struct {
-	Type string
-	Note string
-}
-=======
-
->>>>>>> Stashed changes
-
 func (Mod) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").MaxLen(32),
@@ -51,12 +42,8 @@ func (Mod) Fields() []ent.Field {
 		field.JSON("compatibility", &util.CompatibilityInfo{}).Optional(),
 		field.Bool("toggle_network_use").Default(false),
 		field.String("network_use_disclosure").Optional().Nillable(),
-<<<<<<< Updated upstream
-		field.JSON("ai_use_disclosure", &AiUseDisclosure{}).Optional(),
-=======
 		field.JSON("ai_use_disclosure", &util.AiUseDisclosure{}).Optional(),
 		// field.String("ai_use_disclosure").Optional(),
->>>>>>> Stashed changes
 		field.Bool("toggle_explicit_content").Default(false),
 	}
 }
