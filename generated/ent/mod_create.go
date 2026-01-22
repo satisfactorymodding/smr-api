@@ -289,8 +289,13 @@ func (mc *ModCreate) SetNillableNetworkUseDisclosure(s *string) *ModCreate {
 }
 
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
+<<<<<<< Updated upstream
 func (mc *ModCreate) SetAiUseDisclosure(sud *schema.AiUseDisclosure) *ModCreate {
 	mc.mutation.SetAiUseDisclosure(sud)
+=======
+func (mc *ModCreate) SetAiUseDisclosure(uud *util.AiUseDisclosure) *ModCreate {
+	mc.mutation.SetAiUseDisclosure(uud)
+>>>>>>> Stashed changes
 	return mc
 }
 
@@ -1115,7 +1120,11 @@ func (u *ModUpsert) ClearNetworkUseDisclosure() *ModUpsert {
 }
 
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
+<<<<<<< Updated upstream
 func (u *ModUpsert) SetAiUseDisclosure(v *schema.AiUseDisclosure) *ModUpsert {
+=======
+func (u *ModUpsert) SetAiUseDisclosure(v *util.AiUseDisclosure) *ModUpsert {
+>>>>>>> Stashed changes
 	u.Set(mod.FieldAiUseDisclosure, v)
 	return u
 }
@@ -1567,7 +1576,11 @@ func (u *ModUpsertOne) ClearNetworkUseDisclosure() *ModUpsertOne {
 }
 
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
+<<<<<<< Updated upstream
 func (u *ModUpsertOne) SetAiUseDisclosure(v *schema.AiUseDisclosure) *ModUpsertOne {
+=======
+func (u *ModUpsertOne) SetAiUseDisclosure(v *util.AiUseDisclosure) *ModUpsertOne {
+>>>>>>> Stashed changes
 	return u.Update(func(s *ModUpsert) {
 		s.SetAiUseDisclosure(v)
 	})
@@ -2191,7 +2204,11 @@ func (u *ModUpsertBulk) ClearNetworkUseDisclosure() *ModUpsertBulk {
 }
 
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
+<<<<<<< Updated upstream
 func (u *ModUpsertBulk) SetAiUseDisclosure(v *schema.AiUseDisclosure) *ModUpsertBulk {
+=======
+func (u *ModUpsertBulk) SetAiUseDisclosure(v *util.AiUseDisclosure) *ModUpsertBulk {
+>>>>>>> Stashed changes
 	return u.Update(func(s *ModUpsert) {
 		s.SetAiUseDisclosure(v)
 	})

@@ -1964,7 +1964,11 @@ type ModMutation struct {
 	compatibility           **util.CompatibilityInfo
 	toggle_network_use      *bool
 	network_use_disclosure  *string
+<<<<<<< Updated upstream
 	ai_use_disclosure       **schema.AiUseDisclosure
+=======
+	ai_use_disclosure       **util.AiUseDisclosure
+>>>>>>> Stashed changes
 	toggle_explicit_content *bool
 	clearedFields           map[string]struct{}
 	versions                map[string]struct{}
@@ -3052,12 +3056,21 @@ func (m *ModMutation) ResetNetworkUseDisclosure() {
 }
 
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
+<<<<<<< Updated upstream
 func (m *ModMutation) SetAiUseDisclosure(sud *schema.AiUseDisclosure) {
 	m.ai_use_disclosure = &sud
 }
 
 // AiUseDisclosure returns the value of the "ai_use_disclosure" field in the mutation.
 func (m *ModMutation) AiUseDisclosure() (r *schema.AiUseDisclosure, exists bool) {
+=======
+func (m *ModMutation) SetAiUseDisclosure(uud *util.AiUseDisclosure) {
+	m.ai_use_disclosure = &uud
+}
+
+// AiUseDisclosure returns the value of the "ai_use_disclosure" field in the mutation.
+func (m *ModMutation) AiUseDisclosure() (r *util.AiUseDisclosure, exists bool) {
+>>>>>>> Stashed changes
 	v := m.ai_use_disclosure
 	if v == nil {
 		return
@@ -3068,7 +3081,11 @@ func (m *ModMutation) AiUseDisclosure() (r *schema.AiUseDisclosure, exists bool)
 // OldAiUseDisclosure returns the old "ai_use_disclosure" field's value of the Mod entity.
 // If the Mod object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+<<<<<<< Updated upstream
 func (m *ModMutation) OldAiUseDisclosure(ctx context.Context) (v *schema.AiUseDisclosure, err error) {
+=======
+func (m *ModMutation) OldAiUseDisclosure(ctx context.Context) (v *util.AiUseDisclosure, err error) {
+>>>>>>> Stashed changes
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldAiUseDisclosure is only allowed on UpdateOne operations")
 	}
@@ -3736,7 +3753,11 @@ func (m *ModMutation) SetField(name string, value ent.Value) error {
 		m.SetNetworkUseDisclosure(v)
 		return nil
 	case mod.FieldAiUseDisclosure:
+<<<<<<< Updated upstream
 		v, ok := value.(*schema.AiUseDisclosure)
+=======
+		v, ok := value.(*util.AiUseDisclosure)
+>>>>>>> Stashed changes
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
