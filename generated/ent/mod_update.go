@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/satisfactorymodding/smr-api/db/schema"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
@@ -381,6 +382,18 @@ func (mu *ModUpdate) ClearNetworkUseDisclosure() *ModUpdate {
 	return mu
 }
 
+// SetAiUseDisclosure sets the "ai_use_disclosure" field.
+func (mu *ModUpdate) SetAiUseDisclosure(sud *schema.AiUseDisclosure) *ModUpdate {
+	mu.mutation.SetAiUseDisclosure(sud)
+	return mu
+}
+
+// ClearAiUseDisclosure clears the value of the "ai_use_disclosure" field.
+func (mu *ModUpdate) ClearAiUseDisclosure() *ModUpdate {
+	mu.mutation.ClearAiUseDisclosure()
+	return mu
+}
+
 // SetToggleExplicitContent sets the "toggle_explicit_content" field.
 func (mu *ModUpdate) SetToggleExplicitContent(b bool) *ModUpdate {
 	mu.mutation.SetToggleExplicitContent(b)
@@ -719,6 +732,12 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if mu.mutation.NetworkUseDisclosureCleared() {
 		_spec.ClearField(mod.FieldNetworkUseDisclosure, field.TypeString)
+	}
+	if value, ok := mu.mutation.AiUseDisclosure(); ok {
+		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeJSON, value)
+	}
+	if mu.mutation.AiUseDisclosureCleared() {
+		_spec.ClearField(mod.FieldAiUseDisclosure, field.TypeJSON)
 	}
 	if value, ok := mu.mutation.ToggleExplicitContent(); ok {
 		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
@@ -1285,6 +1304,18 @@ func (muo *ModUpdateOne) ClearNetworkUseDisclosure() *ModUpdateOne {
 	return muo
 }
 
+// SetAiUseDisclosure sets the "ai_use_disclosure" field.
+func (muo *ModUpdateOne) SetAiUseDisclosure(sud *schema.AiUseDisclosure) *ModUpdateOne {
+	muo.mutation.SetAiUseDisclosure(sud)
+	return muo
+}
+
+// ClearAiUseDisclosure clears the value of the "ai_use_disclosure" field.
+func (muo *ModUpdateOne) ClearAiUseDisclosure() *ModUpdateOne {
+	muo.mutation.ClearAiUseDisclosure()
+	return muo
+}
+
 // SetToggleExplicitContent sets the "toggle_explicit_content" field.
 func (muo *ModUpdateOne) SetToggleExplicitContent(b bool) *ModUpdateOne {
 	muo.mutation.SetToggleExplicitContent(b)
@@ -1653,6 +1684,12 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	}
 	if muo.mutation.NetworkUseDisclosureCleared() {
 		_spec.ClearField(mod.FieldNetworkUseDisclosure, field.TypeString)
+	}
+	if value, ok := muo.mutation.AiUseDisclosure(); ok {
+		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeJSON, value)
+	}
+	if muo.mutation.AiUseDisclosureCleared() {
+		_spec.ClearField(mod.FieldAiUseDisclosure, field.TypeJSON)
 	}
 	if value, ok := muo.mutation.ToggleExplicitContent(); ok {
 		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
