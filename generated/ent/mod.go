@@ -65,7 +65,11 @@ type Mod struct {
 	// NetworkUseDisclosure holds the value of the "network_use_disclosure" field.
 	NetworkUseDisclosure *string `json:"network_use_disclosure,omitempty"`
 	// AiUseDisclosure holds the value of the "ai_use_disclosure" field.
+<<<<<<< Updated upstream
 	AiUseDisclosure *schema.AiUseDisclosure `json:"ai_use_disclosure,omitempty"`
+=======
+	AiUseDisclosure *util.AiUseDisclosure `json:"ai_use_disclosure,omitempty"`
+>>>>>>> Stashed changes
 	// ToggleExplicitContent holds the value of the "toggle_explicit_content" field.
 	ToggleExplicitContent bool `json:"toggle_explicit_content,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.

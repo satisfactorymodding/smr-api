@@ -383,8 +383,13 @@ func (mu *ModUpdate) ClearNetworkUseDisclosure() *ModUpdate {
 }
 
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
+<<<<<<< Updated upstream
 func (mu *ModUpdate) SetAiUseDisclosure(sud *schema.AiUseDisclosure) *ModUpdate {
 	mu.mutation.SetAiUseDisclosure(sud)
+=======
+func (mu *ModUpdate) SetAiUseDisclosure(uud *util.AiUseDisclosure) *ModUpdate {
+	mu.mutation.SetAiUseDisclosure(uud)
+>>>>>>> Stashed changes
 	return mu
 }
 
@@ -1305,8 +1310,13 @@ func (muo *ModUpdateOne) ClearNetworkUseDisclosure() *ModUpdateOne {
 }
 
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
+<<<<<<< Updated upstream
 func (muo *ModUpdateOne) SetAiUseDisclosure(sud *schema.AiUseDisclosure) *ModUpdateOne {
 	muo.mutation.SetAiUseDisclosure(sud)
+=======
+func (muo *ModUpdateOne) SetAiUseDisclosure(uud *util.AiUseDisclosure) *ModUpdateOne {
+	muo.mutation.SetAiUseDisclosure(uud)
+>>>>>>> Stashed changes
 	return muo
 }
 
