@@ -23,7 +23,6 @@ func (Mod) Mixin() []ent.Mixin {
 
 type AiUseDisclosure struct {
 	Type string
-
 	Note string
 }
 
