@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/satisfactorymodding/smr-api/db/schema"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
@@ -284,6 +285,12 @@ func (mc *ModCreate) SetNillableNetworkUseDisclosure(s *string) *ModCreate {
 	if s != nil {
 		mc.SetNetworkUseDisclosure(*s)
 	}
+	return mc
+}
+
+// SetAiUseDisclosure sets the "ai_use_disclosure" field.
+func (mc *ModCreate) SetAiUseDisclosure(sud *schema.AiUseDisclosure) *ModCreate {
+	mc.mutation.SetAiUseDisclosure(sud)
 	return mc
 }
 
@@ -660,6 +667,10 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 	if value, ok := mc.mutation.NetworkUseDisclosure(); ok {
 		_spec.SetField(mod.FieldNetworkUseDisclosure, field.TypeString, value)
 		_node.NetworkUseDisclosure = &value
+	}
+	if value, ok := mc.mutation.AiUseDisclosure(); ok {
+		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeJSON, value)
+		_node.AiUseDisclosure = value
 	}
 	if value, ok := mc.mutation.ToggleExplicitContent(); ok {
 		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
@@ -1103,6 +1114,24 @@ func (u *ModUpsert) ClearNetworkUseDisclosure() *ModUpsert {
 	return u
 }
 
+// SetAiUseDisclosure sets the "ai_use_disclosure" field.
+func (u *ModUpsert) SetAiUseDisclosure(v *schema.AiUseDisclosure) *ModUpsert {
+	u.Set(mod.FieldAiUseDisclosure, v)
+	return u
+}
+
+// UpdateAiUseDisclosure sets the "ai_use_disclosure" field to the value that was provided on create.
+func (u *ModUpsert) UpdateAiUseDisclosure() *ModUpsert {
+	u.SetExcluded(mod.FieldAiUseDisclosure)
+	return u
+}
+
+// ClearAiUseDisclosure clears the value of the "ai_use_disclosure" field.
+func (u *ModUpsert) ClearAiUseDisclosure() *ModUpsert {
+	u.SetNull(mod.FieldAiUseDisclosure)
+	return u
+}
+
 // SetToggleExplicitContent sets the "toggle_explicit_content" field.
 func (u *ModUpsert) SetToggleExplicitContent(v bool) *ModUpsert {
 	u.Set(mod.FieldToggleExplicitContent, v)
@@ -1534,6 +1563,27 @@ func (u *ModUpsertOne) UpdateNetworkUseDisclosure() *ModUpsertOne {
 func (u *ModUpsertOne) ClearNetworkUseDisclosure() *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.ClearNetworkUseDisclosure()
+	})
+}
+
+// SetAiUseDisclosure sets the "ai_use_disclosure" field.
+func (u *ModUpsertOne) SetAiUseDisclosure(v *schema.AiUseDisclosure) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetAiUseDisclosure(v)
+	})
+}
+
+// UpdateAiUseDisclosure sets the "ai_use_disclosure" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateAiUseDisclosure() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateAiUseDisclosure()
+	})
+}
+
+// ClearAiUseDisclosure clears the value of the "ai_use_disclosure" field.
+func (u *ModUpsertOne) ClearAiUseDisclosure() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearAiUseDisclosure()
 	})
 }
 
@@ -2137,6 +2187,27 @@ func (u *ModUpsertBulk) UpdateNetworkUseDisclosure() *ModUpsertBulk {
 func (u *ModUpsertBulk) ClearNetworkUseDisclosure() *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.ClearNetworkUseDisclosure()
+	})
+}
+
+// SetAiUseDisclosure sets the "ai_use_disclosure" field.
+func (u *ModUpsertBulk) SetAiUseDisclosure(v *schema.AiUseDisclosure) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetAiUseDisclosure(v)
+	})
+}
+
+// UpdateAiUseDisclosure sets the "ai_use_disclosure" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateAiUseDisclosure() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateAiUseDisclosure()
+	})
+}
+
+// ClearAiUseDisclosure clears the value of the "ai_use_disclosure" field.
+func (u *ModUpsertBulk) ClearAiUseDisclosure() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearAiUseDisclosure()
 	})
 }
 
