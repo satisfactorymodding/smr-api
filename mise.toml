@@ -31,9 +31,7 @@ run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -
 
 [tasks.migrate_hash]
 description = "Recalculate Atlas migration hashes (see https://atlasgo.io/versioned/new#recalculating-the-directory-hash)"
-run = "atlas migrate hash --dir \"file://migrations/sql?format=golang-migrate\""
-# windows has different escaping or something?
-run_windows = 'atlas migrate hash --dir file://migrations/sql?format=golang-migrate'
+run = 'atlas migrate hash --dir file://migrations/sql?format=golang-migrate'
 
 [tasks.generate]
 description = "Update Golang generated code"
