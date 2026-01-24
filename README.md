@@ -91,6 +91,7 @@ mise run migrate_diff
 
 To run specific tests:
 
+- Make sure you have started the containers first via `mise run setup`
 - In VSCode, the [Go Companion](https://marketplace.visualstudio.com/items?itemName=ethan-reesor.exp-vscode-go) suggested extension adds Go test support to VSCode's testing integration.
   Note you may need to reload VSCode (`Developer: Reload Window`) after adding or removing tests.
 - From the command line, use `go test -v run TestNameHere`
