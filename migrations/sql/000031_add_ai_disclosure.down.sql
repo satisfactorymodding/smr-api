@@ -1,2 +1,2 @@
 ALTER TABLE mods
-    DROP COLUMN compatibility
+    DROP COLUMN ai_use_disclosure
