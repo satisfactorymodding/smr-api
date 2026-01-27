@@ -11,6 +11,16 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+type AiUseDisclosure struct {
+	Type AiUseDisclosureType `json:"type"`
+	Note *string             `json:"note,omitempty"`
+}
+
+type AiUseDisclosureInput struct {
+	Type *AiUseDisclosureType `json:"type,omitempty"`
+	Note *string              `json:"note,omitempty"`
+}
+
 type Announcement struct {
 	ID         string                 `json:"id"`
 	Message    string                 `json:"message"`
@@ -131,6 +141,7 @@ type Mod struct {
 	Compatibility         *CompatibilityInfo `json:"compatibility,omitempty"`
 	ToggleNetworkUse      bool               `json:"toggle_network_use"`
 	NetworkUseDisclosure  *string            `json:"network_use_disclosure,omitempty"`
+	AiUseDisclosure       *AiUseDisclosure   `json:"ai_use_disclosure"`
 	ToggleExplicitContent bool               `json:"toggle_explicit_content"`
 	Authors               []*UserMod         `json:"authors"`
 	Version               *Version           `json:"version,omitempty"`
@@ -350,6 +361,65 @@ type VirustotalResult struct {
 	VersionID string  `json:"version_id"`
 	CreatedAt string  `json:"created_at"`
 	UpdatedAt *string `json:"updated_at,omitempty"`
+}
+
+type AiUseDisclosureType string
+
+const (
+	AiUseDisclosureTypeNotUsed       AiUseDisclosureType = "NotUsed"
+	AiUseDisclosureTypeRuntimeUsed   AiUseDisclosureType = "RuntimeUsed"
+	AiUseDisclosureTypeAiContentUsed AiUseDisclosureType = "AiContentUsed"
+	AiUseDisclosureTypeNoAnswer      AiUseDisclosureType = "NoAnswer"
+)
+
+var AllAiUseDisclosureType = []AiUseDisclosureType{
+	AiUseDisclosureTypeNotUsed,
+	AiUseDisclosureTypeRuntimeUsed,
+	AiUseDisclosureTypeAiContentUsed,
+	AiUseDisclosureTypeNoAnswer,
+}
+
+func (e AiUseDisclosureType) IsValid() bool {
+	switch e {
+	case AiUseDisclosureTypeNotUsed, AiUseDisclosureTypeRuntimeUsed, AiUseDisclosureTypeAiContentUsed, AiUseDisclosureTypeNoAnswer:
+		return true
+	}
+	return false
+}
+
+func (e AiUseDisclosureType) String() string {
+	return string(e)
+}
+
+func (e *AiUseDisclosureType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AiUseDisclosureType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AiUseDisclosureType", str)
+	}
+	return nil
+}
+
+func (e AiUseDisclosureType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AiUseDisclosureType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AiUseDisclosureType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type AnnouncementImportance string

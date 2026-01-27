@@ -21,6 +21,11 @@ func (Mod) Mixin() []ent.Mixin {
 	}
 }
 
+type AiUseDisclosure struct {
+	Type string
+	Note string
+}
+
 func (Mod) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").MaxLen(32),
