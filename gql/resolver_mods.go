@@ -81,6 +81,7 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 	SetINNF(newMod.Hidden, dbMod.SetHidden)
 	SetINNF(newMod.ToggleNetworkUse, dbMod.SetToggleNetworkUse)
 	SetINNF(newMod.ToggleExplicitContent, dbMod.SetToggleExplicitContent)
+	SetINNF(newMod.AiUseDisclosure, dbMod.SetAiUseDisclosure)
 
 	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
@@ -188,6 +189,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 	SetINNF(updateMod.Hidden, dbUpdate.SetHidden)
 	SetCompatibilityINNF(updateMod.Compatibility, dbUpdate.SetCompatibility)
 	SetINNF(updateMod.ToggleNetworkUse, dbUpdate.SetToggleNetworkUse)
+	SetINNF(updateMod.AiUseDisclosure, dbUpdate.SetAiUseDisclosure)
 
 	newNetworkDisclosure, isSet := updateMod.NetworkUseDisclosure.ValueOK()
 	if isSet {

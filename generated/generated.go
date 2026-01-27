@@ -73,6 +73,11 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AiUseDisclosure struct {
+		Note func(childComplexity int) int
+		Type func(childComplexity int) int
+	}
+
 	Announcement struct {
 		ID         func(childComplexity int) int
 		Importance func(childComplexity int) int
@@ -155,6 +160,7 @@ type ComplexityRoot struct {
 	}
 
 	Mod struct {
+		AiUseDisclosure       func(childComplexity int) int
 		Approved              func(childComplexity int) int
 		Authors               func(childComplexity int) int
 		Compatibility         func(childComplexity int) int
@@ -545,6 +551,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AiUseDisclosure.note":
+		if e.complexity.AiUseDisclosure.Note == nil {
+			break
+		}
+
+		return e.complexity.AiUseDisclosure.Note(childComplexity), true
+
+	case "AiUseDisclosure.type":
+		if e.complexity.AiUseDisclosure.Type == nil {
+			break
+		}
+
+		return e.complexity.AiUseDisclosure.Type(childComplexity), true
+
 	case "Announcement.id":
 		if e.complexity.Announcement.ID == nil {
 			break
@@ -817,6 +837,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.LatestVersions.Release(childComplexity), true
+
+	case "Mod.ai_use_disclosure":
+		if e.complexity.Mod.AiUseDisclosure == nil {
+			break
+		}
+
+		return e.complexity.Mod.AiUseDisclosure(childComplexity), true
 
 	case "Mod.approved":
 		if e.complexity.Mod.Approved == nil {
@@ -2412,6 +2439,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputAiUseDisclosureInput,
 		ec.unmarshalInputCompatibilityInfoInput,
 		ec.unmarshalInputCompatibilityInput,
 		ec.unmarshalInputControllerCompatibilityInput,
@@ -2752,16 +2780,17 @@ enum ModFields {
     search
 }
 
-# enum AiUseDisclosureType {
-#     NotUsed
-#     AdaMessages
-#     Used
-# }
+enum AiUseDisclosureType {
+    NotUsed
+    RuntimeUsed
+    AiContentUsed
+    NoAnswer
+}
 
-# type AiUseDisclosure {
-#     type: AiUseDisclosureType!
-#     note: String
-# }
+type AiUseDisclosure {
+    type: AiUseDisclosureType!
+    note: String
+}
 
 type Mod {
     id: ModID!
@@ -2786,7 +2815,7 @@ type Mod {
     compatibility: CompatibilityInfo
     toggle_network_use: Boolean!
     network_use_disclosure: String
-    # ai_use_disclosure: AiUseDisclosure
+    ai_use_disclosure: AiUseDisclosure!
     toggle_explicit_content: Boolean!
 
     authors: [UserMod!]!
@@ -2813,6 +2842,11 @@ type ModVersion {
 
 ### Inputs
 
+input AiUseDisclosureInput {
+    type: AiUseDisclosureType
+    note: String
+}
+
 input ModFilter {
     limit: Int
     offset: Int
@@ -2836,6 +2870,7 @@ input NewMod {
     tagIDs: [TagID!]
     toggle_network_use: Boolean
     toggle_explicit_content: Boolean
+    ai_use_disclosure: AiUseDisclosureInput!
 }
 
 input UpdateMod {
@@ -2851,7 +2886,7 @@ input UpdateMod {
     compatibility: CompatibilityInfoInput
     toggle_network_use: Boolean
     network_use_disclosure: String
-    # ai_use_disclosure: AiUseDisclosureInput
+    ai_use_disclosure: AiUseDisclosureInput!
     toggle_explicit_content: Boolean
 }
 
@@ -5758,6 +5793,91 @@ func (ec *executionContext) field___Type_fields_argsIncludeDeprecated(
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _AiUseDisclosure_type(ctx context.Context, field graphql.CollectedField, obj *AiUseDisclosure) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AiUseDisclosure_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(AiUseDisclosureType)
+	fc.Result = res
+	return ec.marshalNAiUseDisclosureType2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosureType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AiUseDisclosure_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AiUseDisclosure",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AiUseDisclosureType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AiUseDisclosure_note(ctx context.Context, field graphql.CollectedField, obj *AiUseDisclosure) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AiUseDisclosure_note(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Note, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AiUseDisclosure_note(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AiUseDisclosure",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Announcement_id(ctx context.Context, field graphql.CollectedField, obj *Announcement) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Announcement_id(ctx, field)
 	if err != nil {
@@ -6530,6 +6650,8 @@ func (ec *executionContext) fieldContext_GetMods_mods(_ context.Context, field g
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -6674,6 +6796,8 @@ func (ec *executionContext) fieldContext_GetMyMods_mods(_ context.Context, field
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -8882,6 +9006,56 @@ func (ec *executionContext) fieldContext_Mod_network_use_disclosure(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mod_ai_use_disclosure(ctx context.Context, field graphql.CollectedField, obj *Mod) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AiUseDisclosure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*AiUseDisclosure)
+	fc.Result = res
+	return ec.marshalNAiUseDisclosure2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosure(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mod_ai_use_disclosure(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mod",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_AiUseDisclosure_type(ctx, field)
+			case "note":
+				return ec.fieldContext_AiUseDisclosure_note(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AiUseDisclosure", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mod_toggle_explicit_content(ctx context.Context, field graphql.CollectedField, obj *Mod) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 	if err != nil {
@@ -10309,6 +10483,8 @@ func (ec *executionContext) fieldContext_Mutation_createMod(ctx context.Context,
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -10454,6 +10630,8 @@ func (ec *executionContext) fieldContext_Mutation_updateMod(ctx context.Context,
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -13026,6 +13204,8 @@ func (ec *executionContext) fieldContext_Query_getMod(ctx context.Context, field
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -13134,6 +13314,8 @@ func (ec *executionContext) fieldContext_Query_getModByReference(ctx context.Con
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -13242,6 +13424,8 @@ func (ec *executionContext) fieldContext_Query_getModByIdOrReference(ctx context
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -17029,6 +17213,8 @@ func (ec *executionContext) fieldContext_UserMod_mod(_ context.Context, field gr
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -18276,6 +18462,8 @@ func (ec *executionContext) fieldContext_Version_mod(_ context.Context, field gr
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -18713,6 +18901,8 @@ func (ec *executionContext) fieldContext_VersionDependency_mod(_ context.Context
 				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
+			case "ai_use_disclosure":
+				return ec.fieldContext_Mod_ai_use_disclosure(ctx, field)
 			case "toggle_explicit_content":
 				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
 			case "authors":
@@ -21280,6 +21470,40 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAiUseDisclosureInput(ctx context.Context, obj any) (AiUseDisclosureInput, error) {
+	var it AiUseDisclosureInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"type", "note"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOAiUseDisclosureType2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosureType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "note":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Note = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCompatibilityInfoInput(ctx context.Context, obj any) (CompatibilityInfoInput, error) {
 	var it CompatibilityInfoInput
 	asMap := map[string]any{}
@@ -21664,7 +21888,7 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj any) (
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "hidden", "tagIDs", "toggle_network_use", "toggle_explicit_content"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "hidden", "tagIDs", "toggle_network_use", "toggle_explicit_content", "ai_use_disclosure"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21741,6 +21965,13 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj any) (
 				return it, err
 			}
 			it.ToggleExplicitContent = data
+		case "ai_use_disclosure":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ai_use_disclosure"))
+			data, err := ec.unmarshalNAiUseDisclosureInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosureInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AiUseDisclosure = data
 		}
 	}
 
@@ -22055,7 +22286,7 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj any
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "authors", "hidden", "tagIDs", "compatibility", "toggle_network_use", "network_use_disclosure", "toggle_explicit_content"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "authors", "hidden", "tagIDs", "compatibility", "toggle_network_use", "network_use_disclosure", "ai_use_disclosure", "toggle_explicit_content"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -22146,6 +22377,13 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj any
 				return it, err
 			}
 			it.NetworkUseDisclosure = graphql.OmittableOf(data)
+		case "ai_use_disclosure":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ai_use_disclosure"))
+			data, err := ec.unmarshalNAiUseDisclosureInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosureInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AiUseDisclosure = data
 		case "toggle_explicit_content":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toggle_explicit_content"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -22395,6 +22633,47 @@ func (ec *executionContext) unmarshalInputVersionFilter(ctx context.Context, obj
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var aiUseDisclosureImplementors = []string{"AiUseDisclosure"}
+
+func (ec *executionContext) _AiUseDisclosure(ctx context.Context, sel ast.SelectionSet, obj *AiUseDisclosure) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, aiUseDisclosureImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AiUseDisclosure")
+		case "type":
+			out.Values[i] = ec._AiUseDisclosure_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "note":
+			out.Values[i] = ec._AiUseDisclosure_note(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var announcementImplementors = []string{"Announcement"}
 
@@ -23549,6 +23828,11 @@ func (ec *executionContext) _Mod(ctx context.Context, sel ast.SelectionSet, obj 
 			}
 		case "network_use_disclosure":
 			out.Values[i] = ec._Mod_network_use_disclosure(ctx, field, obj)
+		case "ai_use_disclosure":
+			out.Values[i] = ec._Mod_ai_use_disclosure(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "toggle_explicit_content":
 			out.Values[i] = ec._Mod_toggle_explicit_content(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -26458,6 +26742,31 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAiUseDisclosure2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosure(ctx context.Context, sel ast.SelectionSet, v *AiUseDisclosure) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AiUseDisclosure(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAiUseDisclosureInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosureInput(ctx context.Context, v any) (*AiUseDisclosureInput, error) {
+	res, err := ec.unmarshalInputAiUseDisclosureInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAiUseDisclosureType2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosureType(ctx context.Context, v any) (AiUseDisclosureType, error) {
+	var res AiUseDisclosureType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAiUseDisclosureType2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosureType(ctx context.Context, sel ast.SelectionSet, v AiUseDisclosureType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNAnnouncement2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncement(ctx context.Context, sel ast.SelectionSet, v Announcement) graphql.Marshaler {
 	return ec._Announcement(ctx, sel, &v)
 }
@@ -28166,6 +28475,22 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalOAiUseDisclosureType2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosureType(ctx context.Context, v any) (*AiUseDisclosureType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(AiUseDisclosureType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAiUseDisclosureType2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAiUseDisclosureType(ctx context.Context, sel ast.SelectionSet, v *AiUseDisclosureType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOAnnouncement2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAnnouncement(ctx context.Context, sel ast.SelectionSet, v *Announcement) graphql.Marshaler {
