@@ -59,8 +59,6 @@ const (
 	FieldToggleNetworkUse = "toggle_network_use"
 	// FieldNetworkUseDisclosure holds the string denoting the network_use_disclosure field in the database.
 	FieldNetworkUseDisclosure = "network_use_disclosure"
-	// FieldAiUseDisclosure holds the string denoting the ai_use_disclosure field in the database.
-	FieldAiUseDisclosure = "ai_use_disclosure"
 	// FieldToggleExplicitContent holds the string denoting the toggle_explicit_content field in the database.
 	FieldToggleExplicitContent = "toggle_explicit_content"
 	// EdgeVersions holds the string denoting the versions edge name in mutations.
@@ -149,7 +147,6 @@ var Columns = []string{
 	FieldCompatibility,
 	FieldToggleNetworkUse,
 	FieldNetworkUseDisclosure,
-	FieldAiUseDisclosure,
 	FieldToggleExplicitContent,
 }
 
