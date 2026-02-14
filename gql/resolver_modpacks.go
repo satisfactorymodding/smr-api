@@ -38,7 +38,7 @@ func (r *queryResolver) GetModpack(ctx context.Context, modpackID string) (*gene
 		WithTags().
 		WithTargets().
 		WithReleases().
-		WithMods().
+		WithModpackMods().
 		WithParent().
 		WithChildren().
 		First(ctx)
@@ -234,7 +234,7 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 	resultModpack, err = db.From(ctx).Modpack.Query().
 		WithTags().
 		WithTargets().
-		WithMods().
+		WithModpackMods().
 		Where(modpack.ID(resultModpack.ID)).
 		First(ctx)
 	if err != nil {
@@ -408,7 +408,7 @@ func (r *modpackResolver) Children(ctx context.Context, m *generated.Modpack) ([
 	packs, err := db.From(ctx).Modpack.Query().
 		WithTags().
 		WithTargets().
-		WithMods().
+		WithModpackMods().
 		Where(modpack.ParentID(m.ID)).
 		All(ctx)
 	if err != nil {
