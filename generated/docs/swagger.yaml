@@ -132,6 +132,8 @@ definitions:
         items:
           $ref: '#/definitions/generated.Modpack'
         type: array
+      compatibility:
+        $ref: '#/definitions/generated.CompatibilityInfo'
       created_at:
         type: string
       creator:

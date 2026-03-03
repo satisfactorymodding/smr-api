@@ -795,6 +795,16 @@ func HiddenNEQ(v bool) predicate.Modpack {
 	return predicate.Modpack(sql.FieldNEQ(FieldHidden, v))
 }
 
+// CompatibilityIsNil applies the IsNil predicate on the "compatibility" field.
+func CompatibilityIsNil() predicate.Modpack {
+	return predicate.Modpack(sql.FieldIsNull(FieldCompatibility))
+}
+
+// CompatibilityNotNil applies the NotNil predicate on the "compatibility" field.
+func CompatibilityNotNil() predicate.Modpack {
+	return predicate.Modpack(sql.FieldNotNull(FieldCompatibility))
+}
+
 // ParentIDEQ applies the EQ predicate on the "parent_id" field.
 func ParentIDEQ(v string) predicate.Modpack {
 	return predicate.Modpack(sql.FieldEQ(FieldParentID, v))

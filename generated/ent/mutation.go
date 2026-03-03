@@ -4486,6 +4486,7 @@ type ModpackMutation struct {
 	popularity        *uint
 	addpopularity     *int
 	hidden            *bool
+	compatibility     **util.CompatibilityInfo
 	clearedFields     map[string]struct{}
 	children          map[string]struct{}
 	removedchildren   map[string]struct{}
@@ -5187,6 +5188,55 @@ func (m *ModpackMutation) ResetHidden() {
 	m.hidden = nil
 }
 
+// SetCompatibility sets the "compatibility" field.
+func (m *ModpackMutation) SetCompatibility(ui *util.CompatibilityInfo) {
+	m.compatibility = &ui
+}
+
+// Compatibility returns the value of the "compatibility" field in the mutation.
+func (m *ModpackMutation) Compatibility() (r *util.CompatibilityInfo, exists bool) {
+	v := m.compatibility
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompatibility returns the old "compatibility" field's value of the Modpack entity.
+// If the Modpack object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModpackMutation) OldCompatibility(ctx context.Context) (v *util.CompatibilityInfo, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompatibility is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompatibility requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompatibility: %w", err)
+	}
+	return oldValue.Compatibility, nil
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (m *ModpackMutation) ClearCompatibility() {
+	m.compatibility = nil
+	m.clearedFields[modpack.FieldCompatibility] = struct{}{}
+}
+
+// CompatibilityCleared returns if the "compatibility" field was cleared in this mutation.
+func (m *ModpackMutation) CompatibilityCleared() bool {
+	_, ok := m.clearedFields[modpack.FieldCompatibility]
+	return ok
+}
+
+// ResetCompatibility resets all changes to the "compatibility" field.
+func (m *ModpackMutation) ResetCompatibility() {
+	m.compatibility = nil
+	delete(m.clearedFields, modpack.FieldCompatibility)
+}
+
 // SetParentID sets the "parent_id" field.
 func (m *ModpackMutation) SetParentID(s string) {
 	m.parent = &s
@@ -5567,7 +5617,7 @@ func (m *ModpackMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ModpackMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 15)
 	if m.created_at != nil {
 		fields = append(fields, modpack.FieldCreatedAt)
 	}
@@ -5607,6 +5657,9 @@ func (m *ModpackMutation) Fields() []string {
 	if m.hidden != nil {
 		fields = append(fields, modpack.FieldHidden)
 	}
+	if m.compatibility != nil {
+		fields = append(fields, modpack.FieldCompatibility)
+	}
 	if m.parent != nil {
 		fields = append(fields, modpack.FieldParentID)
 	}
@@ -5644,6 +5697,8 @@ func (m *ModpackMutation) Field(name string) (ent.Value, bool) {
 		return m.Popularity()
 	case modpack.FieldHidden:
 		return m.Hidden()
+	case modpack.FieldCompatibility:
+		return m.Compatibility()
 	case modpack.FieldParentID:
 		return m.ParentID()
 	}
@@ -5681,6 +5736,8 @@ func (m *ModpackMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldPopularity(ctx)
 	case modpack.FieldHidden:
 		return m.OldHidden(ctx)
+	case modpack.FieldCompatibility:
+		return m.OldCompatibility(ctx)
 	case modpack.FieldParentID:
 		return m.OldParentID(ctx)
 	}
@@ -5783,6 +5840,13 @@ func (m *ModpackMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetHidden(v)
 		return nil
+	case modpack.FieldCompatibility:
+		v, ok := value.(*util.CompatibilityInfo)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompatibility(v)
+		return nil
 	case modpack.FieldParentID:
 		v, ok := value.(string)
 		if !ok {
@@ -5877,6 +5941,9 @@ func (m *ModpackMutation) ClearedFields() []string {
 	if m.FieldCleared(modpack.FieldLogoThumbhash) {
 		fields = append(fields, modpack.FieldLogoThumbhash)
 	}
+	if m.FieldCleared(modpack.FieldCompatibility) {
+		fields = append(fields, modpack.FieldCompatibility)
+	}
 	if m.FieldCleared(modpack.FieldParentID) {
 		fields = append(fields, modpack.FieldParentID)
 	}
@@ -5899,6 +5966,9 @@ func (m *ModpackMutation) ClearField(name string) error {
 		return nil
 	case modpack.FieldLogoThumbhash:
 		m.ClearLogoThumbhash()
+		return nil
+	case modpack.FieldCompatibility:
+		m.ClearCompatibility()
 		return nil
 	case modpack.FieldParentID:
 		m.ClearParentID()
@@ -5949,6 +6019,9 @@ func (m *ModpackMutation) ResetField(name string) error {
 		return nil
 	case modpack.FieldHidden:
 		m.ResetHidden()
+		return nil
+	case modpack.FieldCompatibility:
+		m.ResetCompatibility()
 		return nil
 	case modpack.FieldParentID:
 		m.ResetParentID()

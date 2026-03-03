@@ -1181,6 +1181,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/generated.Modpack"
                     }
                 },
+                "compatibility": {
+                    "$ref": "#/definitions/generated.CompatibilityInfo"
+                },
                 "created_at": {
                     "type": "string"
                 },

@@ -193,6 +193,7 @@ type ComplexityRoot struct {
 
 	Modpack struct {
 		Children         func(childComplexity int) int
+		Compatibility    func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
 		Creator          func(childComplexity int) int
 		CreatorID        func(childComplexity int) int
@@ -1094,6 +1095,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Modpack.Children(childComplexity), true
+
+	case "Modpack.compatibility":
+		if e.complexity.Modpack.Compatibility == nil {
+			break
+		}
+
+		return e.complexity.Modpack.Compatibility(childComplexity), true
 
 	case "Modpack.created_at":
 		if e.complexity.Modpack.CreatedAt == nil {
@@ -3254,6 +3262,7 @@ type Modpack {
     created_at: Date!
     hidden: Boolean!
     parent_id: ModpackID
+    compatibility: CompatibilityInfo
 
     parent: Modpack
     children: [Modpack!]!
@@ -3320,6 +3329,7 @@ input UpdateModpack {
     tagIDs: [TagID!]
     targets: [String!]
     mods: [ModpackModInput!]
+    compatibility: CompatibilityInfoInput
 }
 
 input NewModpackRelease {
@@ -7234,6 +7244,8 @@ func (ec *executionContext) fieldContext_GetModpacks_modpacks(_ context.Context,
 				return ec.fieldContext_Modpack_hidden(ctx, field)
 			case "parent_id":
 				return ec.fieldContext_Modpack_parent_id(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Modpack_compatibility(ctx, field)
 			case "parent":
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
@@ -10925,6 +10937,53 @@ func (ec *executionContext) fieldContext_Modpack_parent_id(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Modpack_compatibility(ctx context.Context, field graphql.CollectedField, obj *Modpack) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Modpack_compatibility(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Compatibility, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*CompatibilityInfo)
+	fc.Result = res
+	return ec.marshalOCompatibilityInfo2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Modpack_compatibility(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Modpack",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "EA":
+				return ec.fieldContext_CompatibilityInfo_EA(ctx, field)
+			case "EXP":
+				return ec.fieldContext_CompatibilityInfo_EXP(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CompatibilityInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Modpack_parent(ctx context.Context, field graphql.CollectedField, obj *Modpack) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Modpack_parent(ctx, field)
 	if err != nil {
@@ -10993,6 +11052,8 @@ func (ec *executionContext) fieldContext_Modpack_parent(_ context.Context, field
 				return ec.fieldContext_Modpack_hidden(ctx, field)
 			case "parent_id":
 				return ec.fieldContext_Modpack_parent_id(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Modpack_compatibility(ctx, field)
 			case "parent":
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
@@ -11083,6 +11144,8 @@ func (ec *executionContext) fieldContext_Modpack_children(_ context.Context, fie
 				return ec.fieldContext_Modpack_hidden(ctx, field)
 			case "parent_id":
 				return ec.fieldContext_Modpack_parent_id(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Modpack_compatibility(ctx, field)
 			case "parent":
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
@@ -13038,6 +13101,8 @@ func (ec *executionContext) fieldContext_Mutation_createModpack(ctx context.Cont
 				return ec.fieldContext_Modpack_hidden(ctx, field)
 			case "parent_id":
 				return ec.fieldContext_Modpack_parent_id(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Modpack_compatibility(ctx, field)
 			case "parent":
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
@@ -13173,6 +13238,8 @@ func (ec *executionContext) fieldContext_Mutation_updateModpack(ctx context.Cont
 				return ec.fieldContext_Modpack_hidden(ctx, field)
 			case "parent_id":
 				return ec.fieldContext_Modpack_parent_id(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Modpack_compatibility(ctx, field)
 			case "parent":
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
@@ -16596,6 +16663,8 @@ func (ec *executionContext) fieldContext_Query_getModpack(ctx context.Context, f
 				return ec.fieldContext_Modpack_hidden(ctx, field)
 			case "parent_id":
 				return ec.fieldContext_Modpack_parent_id(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Modpack_compatibility(ctx, field)
 			case "parent":
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
@@ -25385,7 +25454,7 @@ func (ec *executionContext) unmarshalInputUpdateModpack(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "hidden", "tagIDs", "targets", "mods"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "hidden", "tagIDs", "targets", "mods", "compatibility"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -25448,6 +25517,13 @@ func (ec *executionContext) unmarshalInputUpdateModpack(ctx context.Context, obj
 				return it, err
 			}
 			it.Mods = data
+		case "compatibility":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("compatibility"))
+			data, err := ec.unmarshalOCompatibilityInfoInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Compatibility = data
 		}
 	}
 
@@ -27202,6 +27278,8 @@ func (ec *executionContext) _Modpack(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "parent_id":
 			out.Values[i] = ec._Modpack_parent_id(ctx, field, obj)
+		case "compatibility":
+			out.Values[i] = ec._Modpack_compatibility(ctx, field, obj)
 		case "parent":
 			out.Values[i] = ec._Modpack_parent(ctx, field, obj)
 		case "children":

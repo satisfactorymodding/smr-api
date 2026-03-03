@@ -16,6 +16,7 @@ CREATE TABLE "modpacks"
     "popularity"        bigint            NOT NULL DEFAULT 0,
     "hidden"            boolean           NOT NULL DEFAULT false,
     "parent_id"         character varying NULL,
+    "compatibility"     jsonb             NULL,
     PRIMARY KEY ("id"),
     CONSTRAINT "modpacks_modpacks_children" FOREIGN KEY ("parent_id") REFERENCES "modpacks" ("id") ON UPDATE NO ACTION ON DELETE RESTRICT
 );

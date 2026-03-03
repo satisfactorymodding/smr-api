@@ -5,6 +5,8 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 type Modpack struct {
@@ -31,6 +33,7 @@ func (Modpack) Fields() []ent.Field {
 		field.Uint("installs").Default(0),
 		field.Uint("popularity").Default(0),
 		field.Bool("hidden").Default(false),
+		field.JSON("compatibility", &util.CompatibilityInfo{}).Optional(),
 		field.String("parent_id").Optional().Immutable(),
 	}
 }

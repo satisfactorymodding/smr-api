@@ -7,6 +7,7 @@ import (
 	conversion "github.com/satisfactorymodding/smr-api/conversion"
 	generated "github.com/satisfactorymodding/smr-api/generated"
 	ent "github.com/satisfactorymodding/smr-api/generated/ent"
+	util "github.com/satisfactorymodding/smr-api/util"
 )
 
 type ModpackImpl struct{}
@@ -33,6 +34,7 @@ func (c *ModpackImpl) Convert(source *ent.Modpack) *generated.Modpack {
 		generatedModpack.Hidden = (*source).Hidden
 		pString3 := (*source).ParentID
 		generatedModpack.ParentID = &pString3
+		generatedModpack.Compatibility = c.pUtilCompatibilityInfoToPGeneratedCompatibilityInfo((*source).Compatibility)
 		generatedModpack.Parent = c.Convert((*source).Edges.Parent)
 		generatedModpack.Children = c.ConvertSlice((*source).Edges.Children)
 		if (*source).Edges.Tags != nil {
@@ -106,4 +108,21 @@ func (c *ModpackImpl) pEntTagToPGeneratedTag(source *ent.Tag) *generated.Tag {
 		pGeneratedTag = &generatedTag
 	}
 	return pGeneratedTag
+}
+func (c *ModpackImpl) pUtilCompatibilityInfoToPGeneratedCompatibilityInfo(source *util.CompatibilityInfo) *generated.CompatibilityInfo {
+	var pGeneratedCompatibilityInfo *generated.CompatibilityInfo
+	if source != nil {
+		var generatedCompatibilityInfo generated.CompatibilityInfo
+		generatedCompatibilityInfo.Ea = c.utilCompatibilityToPGeneratedCompatibility((*source).Ea)
+		generatedCompatibilityInfo.Exp = c.utilCompatibilityToPGeneratedCompatibility((*source).Exp)
+		pGeneratedCompatibilityInfo = &generatedCompatibilityInfo
+	}
+	return pGeneratedCompatibilityInfo
+}
+func (c *ModpackImpl) utilCompatibilityToPGeneratedCompatibility(source util.Compatibility) *generated.Compatibility {
+	var generatedCompatibility generated.Compatibility
+	generatedCompatibility.State = generated.CompatibilityState(source.State)
+	pString := source.Note
+	generatedCompatibility.Note = &pString
+	return &generatedCompatibility
 }

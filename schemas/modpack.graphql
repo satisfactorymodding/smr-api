@@ -30,6 +30,7 @@ type Modpack {
     created_at: Date!
     hidden: Boolean!
     parent_id: ModpackID
+    compatibility: CompatibilityInfo
 
     parent: Modpack
     children: [Modpack!]!
@@ -96,6 +97,7 @@ input UpdateModpack {
     tagIDs: [TagID!]
     targets: [String!]
     mods: [ModpackModInput!]
+    compatibility: CompatibilityInfoInput
 }
 
 input NewModpackRelease {

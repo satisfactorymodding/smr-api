@@ -17,6 +17,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // ModpackUpdate is the builder for updating Modpack entities.
@@ -230,6 +231,18 @@ func (mu *ModpackUpdate) SetNillableHidden(b *bool) *ModpackUpdate {
 	if b != nil {
 		mu.SetHidden(*b)
 	}
+	return mu
+}
+
+// SetCompatibility sets the "compatibility" field.
+func (mu *ModpackUpdate) SetCompatibility(ui *util.CompatibilityInfo) *ModpackUpdate {
+	mu.mutation.SetCompatibility(ui)
+	return mu
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (mu *ModpackUpdate) ClearCompatibility() *ModpackUpdate {
+	mu.mutation.ClearCompatibility()
 	return mu
 }
 
@@ -535,6 +548,12 @@ func (mu *ModpackUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := mu.mutation.Hidden(); ok {
 		_spec.SetField(modpack.FieldHidden, field.TypeBool, value)
+	}
+	if value, ok := mu.mutation.Compatibility(); ok {
+		_spec.SetField(modpack.FieldCompatibility, field.TypeJSON, value)
+	}
+	if mu.mutation.CompatibilityCleared() {
+		_spec.ClearField(modpack.FieldCompatibility, field.TypeJSON)
 	}
 	if mu.mutation.ChildrenCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -983,6 +1002,18 @@ func (muo *ModpackUpdateOne) SetNillableHidden(b *bool) *ModpackUpdateOne {
 	return muo
 }
 
+// SetCompatibility sets the "compatibility" field.
+func (muo *ModpackUpdateOne) SetCompatibility(ui *util.CompatibilityInfo) *ModpackUpdateOne {
+	muo.mutation.SetCompatibility(ui)
+	return muo
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (muo *ModpackUpdateOne) ClearCompatibility() *ModpackUpdateOne {
+	muo.mutation.ClearCompatibility()
+	return muo
+}
+
 // AddChildIDs adds the "children" edge to the Modpack entity by IDs.
 func (muo *ModpackUpdateOne) AddChildIDs(ids ...string) *ModpackUpdateOne {
 	muo.mutation.AddChildIDs(ids...)
@@ -1315,6 +1346,12 @@ func (muo *ModpackUpdateOne) sqlSave(ctx context.Context) (_node *Modpack, err e
 	}
 	if value, ok := muo.mutation.Hidden(); ok {
 		_spec.SetField(modpack.FieldHidden, field.TypeBool, value)
+	}
+	if value, ok := muo.mutation.Compatibility(); ok {
+		_spec.SetField(modpack.FieldCompatibility, field.TypeJSON, value)
+	}
+	if muo.mutation.CompatibilityCleared() {
+		_spec.ClearField(modpack.FieldCompatibility, field.TypeJSON)
 	}
 	if muo.mutation.ChildrenCleared() {
 		edge := &sqlgraph.EdgeSpec{

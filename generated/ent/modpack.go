@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // Modpack is the model entity for the Modpack schema.
@@ -43,6 +45,8 @@ type Modpack struct {
 	Popularity uint `json:"popularity,omitempty"`
 	// Hidden holds the value of the "hidden" field.
 	Hidden bool `json:"hidden,omitempty"`
+	// Compatibility holds the value of the "compatibility" field.
+	Compatibility *util.CompatibilityInfo `json:"compatibility,omitempty"`
 	// ParentID holds the value of the "parent_id" field.
 	ParentID string `json:"parent_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -153,6 +157,8 @@ func (*Modpack) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case modpack.FieldCompatibility:
+			values[i] = new([]byte)
 		case modpack.FieldHidden:
 			values[i] = new(sql.NullBool)
 		case modpack.FieldViews, modpack.FieldHotness, modpack.FieldInstalls, modpack.FieldPopularity:
@@ -259,6 +265,14 @@ func (m *Modpack) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field hidden", values[i])
 			} else if value.Valid {
 				m.Hidden = value.Bool
+			}
+		case modpack.FieldCompatibility:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field compatibility", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &m.Compatibility); err != nil {
+					return fmt.Errorf("unmarshal field compatibility: %w", err)
+				}
 			}
 		case modpack.FieldParentID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -380,6 +394,9 @@ func (m *Modpack) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("hidden=")
 	builder.WriteString(fmt.Sprintf("%v", m.Hidden))
+	builder.WriteString(", ")
+	builder.WriteString("compatibility=")
+	builder.WriteString(fmt.Sprintf("%v", m.Compatibility))
 	builder.WriteString(", ")
 	builder.WriteString("parent_id=")
 	builder.WriteString(m.ParentID)

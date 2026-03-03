@@ -40,6 +40,8 @@ const (
 	FieldPopularity = "popularity"
 	// FieldHidden holds the string denoting the hidden field in the database.
 	FieldHidden = "hidden"
+	// FieldCompatibility holds the string denoting the compatibility field in the database.
+	FieldCompatibility = "compatibility"
 	// FieldParentID holds the string denoting the parent_id field in the database.
 	FieldParentID = "parent_id"
 	// EdgeChildren holds the string denoting the children edge name in mutations.
@@ -124,6 +126,7 @@ var Columns = []string{
 	FieldInstalls,
 	FieldPopularity,
 	FieldHidden,
+	FieldCompatibility,
 	FieldParentID,
 }
 

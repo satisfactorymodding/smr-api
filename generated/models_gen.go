@@ -158,6 +158,7 @@ type Modpack struct {
 	CreatedAt        string             `json:"created_at"`
 	Hidden           bool               `json:"hidden"`
 	ParentID         *string            `json:"parent_id,omitempty"`
+	Compatibility    *CompatibilityInfo `json:"compatibility,omitempty"`
 	Parent           *Modpack           `json:"parent,omitempty"`
 	Children         []*Modpack         `json:"children"`
 	Tags             []*Tag             `json:"tags"`
@@ -305,14 +306,15 @@ type UpdateGuide struct {
 }
 
 type UpdateModpack struct {
-	Name             *string            `json:"name,omitempty"`
-	ShortDescription *string            `json:"short_description,omitempty"`
-	FullDescription  *string            `json:"full_description,omitempty"`
-	Logo             *graphql.Upload    `json:"logo,omitempty"`
-	Hidden           *bool              `json:"hidden,omitempty"`
-	TagIDs           []string           `json:"tagIDs,omitempty"`
-	Targets          []string           `json:"targets,omitempty"`
-	Mods             []*ModpackModInput `json:"mods,omitempty"`
+	Name             *string                 `json:"name,omitempty"`
+	ShortDescription *string                 `json:"short_description,omitempty"`
+	FullDescription  *string                 `json:"full_description,omitempty"`
+	Logo             *graphql.Upload         `json:"logo,omitempty"`
+	Hidden           *bool                   `json:"hidden,omitempty"`
+	TagIDs           []string                `json:"tagIDs,omitempty"`
+	Targets          []string                `json:"targets,omitempty"`
+	Mods             []*ModpackModInput      `json:"mods,omitempty"`
+	Compatibility    *CompatibilityInfoInput `json:"compatibility,omitempty"`
 }
 
 type UpdateSatisfactoryVersion struct {

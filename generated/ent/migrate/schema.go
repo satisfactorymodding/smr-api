@@ -178,6 +178,7 @@ var (
 		{Name: "installs", Type: field.TypeUint, Default: 0},
 		{Name: "popularity", Type: field.TypeUint, Default: 0},
 		{Name: "hidden", Type: field.TypeBool, Default: false},
+		{Name: "compatibility", Type: field.TypeJSON, Nullable: true},
 		{Name: "parent_id", Type: field.TypeString, Nullable: true},
 	}
 	// ModpacksTable holds the schema information for the "modpacks" table.
@@ -188,7 +189,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "modpacks_modpacks_children",
-				Columns:    []*schema.Column{ModpacksColumns[14]},
+				Columns:    []*schema.Column{ModpacksColumns[15]},
 				RefColumns: []*schema.Column{ModpacksColumns[0]},
 				OnDelete:   schema.Restrict,
 			},

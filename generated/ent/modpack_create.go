@@ -17,6 +17,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 // ModpackCreate is the builder for creating a Modpack entity.
@@ -174,6 +175,12 @@ func (mc *ModpackCreate) SetNillableHidden(b *bool) *ModpackCreate {
 	if b != nil {
 		mc.SetHidden(*b)
 	}
+	return mc
+}
+
+// SetCompatibility sets the "compatibility" field.
+func (mc *ModpackCreate) SetCompatibility(ui *util.CompatibilityInfo) *ModpackCreate {
+	mc.mutation.SetCompatibility(ui)
 	return mc
 }
 
@@ -481,6 +488,10 @@ func (mc *ModpackCreate) createSpec() (*Modpack, *sqlgraph.CreateSpec) {
 	if value, ok := mc.mutation.Hidden(); ok {
 		_spec.SetField(modpack.FieldHidden, field.TypeBool, value)
 		_node.Hidden = value
+	}
+	if value, ok := mc.mutation.Compatibility(); ok {
+		_spec.SetField(modpack.FieldCompatibility, field.TypeJSON, value)
+		_node.Compatibility = value
 	}
 	if nodes := mc.mutation.ChildrenIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -811,6 +822,24 @@ func (u *ModpackUpsert) UpdateHidden() *ModpackUpsert {
 	return u
 }
 
+// SetCompatibility sets the "compatibility" field.
+func (u *ModpackUpsert) SetCompatibility(v *util.CompatibilityInfo) *ModpackUpsert {
+	u.Set(modpack.FieldCompatibility, v)
+	return u
+}
+
+// UpdateCompatibility sets the "compatibility" field to the value that was provided on create.
+func (u *ModpackUpsert) UpdateCompatibility() *ModpackUpsert {
+	u.SetExcluded(modpack.FieldCompatibility)
+	return u
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (u *ModpackUpsert) ClearCompatibility() *ModpackUpsert {
+	u.SetNull(modpack.FieldCompatibility)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1072,6 +1101,27 @@ func (u *ModpackUpsertOne) SetHidden(v bool) *ModpackUpsertOne {
 func (u *ModpackUpsertOne) UpdateHidden() *ModpackUpsertOne {
 	return u.Update(func(s *ModpackUpsert) {
 		s.UpdateHidden()
+	})
+}
+
+// SetCompatibility sets the "compatibility" field.
+func (u *ModpackUpsertOne) SetCompatibility(v *util.CompatibilityInfo) *ModpackUpsertOne {
+	return u.Update(func(s *ModpackUpsert) {
+		s.SetCompatibility(v)
+	})
+}
+
+// UpdateCompatibility sets the "compatibility" field to the value that was provided on create.
+func (u *ModpackUpsertOne) UpdateCompatibility() *ModpackUpsertOne {
+	return u.Update(func(s *ModpackUpsert) {
+		s.UpdateCompatibility()
+	})
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (u *ModpackUpsertOne) ClearCompatibility() *ModpackUpsertOne {
+	return u.Update(func(s *ModpackUpsert) {
+		s.ClearCompatibility()
 	})
 }
 
@@ -1503,6 +1553,27 @@ func (u *ModpackUpsertBulk) SetHidden(v bool) *ModpackUpsertBulk {
 func (u *ModpackUpsertBulk) UpdateHidden() *ModpackUpsertBulk {
 	return u.Update(func(s *ModpackUpsert) {
 		s.UpdateHidden()
+	})
+}
+
+// SetCompatibility sets the "compatibility" field.
+func (u *ModpackUpsertBulk) SetCompatibility(v *util.CompatibilityInfo) *ModpackUpsertBulk {
+	return u.Update(func(s *ModpackUpsert) {
+		s.SetCompatibility(v)
+	})
+}
+
+// UpdateCompatibility sets the "compatibility" field to the value that was provided on create.
+func (u *ModpackUpsertBulk) UpdateCompatibility() *ModpackUpsertBulk {
+	return u.Update(func(s *ModpackUpsert) {
+		s.UpdateCompatibility()
+	})
+}
+
+// ClearCompatibility clears the value of the "compatibility" field.
+func (u *ModpackUpsertBulk) ClearCompatibility() *ModpackUpsertBulk {
+	return u.Update(func(s *ModpackUpsert) {
+		s.ClearCompatibility()
 	})
 }
 
