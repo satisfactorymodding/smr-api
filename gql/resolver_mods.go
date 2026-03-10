@@ -81,7 +81,8 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 	SetINNF(newMod.Hidden, dbMod.SetHidden)
 	SetINNF(newMod.ToggleNetworkUse, dbMod.SetToggleNetworkUse)
 	SetINNF(newMod.ToggleExplicitContent, dbMod.SetToggleExplicitContent)
-	//SetINNF(newMod.AiUseDisclosure, dbMod.SetAiUseDisclosure)
+	SetINNF(newMod.AiUseDisclosureType, dbMod.SetAiUseDisclosureType)
+	SetINNF(newMod.AiUseDisclosure, dbMod.SetAiUseDisclosure)
 
 	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
@@ -189,7 +190,8 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 	SetINNF(updateMod.Hidden, dbUpdate.SetHidden)
 	SetCompatibilityINNF(updateMod.Compatibility, dbUpdate.SetCompatibility)
 	SetINNF(updateMod.ToggleNetworkUse, dbUpdate.SetToggleNetworkUse)
-	//SetINNF(updateMod.AiUseDisclosure, dbUpdate.SetAiUseDisclosure)
+	SetINNF(updateMod.AiUseDisclosureType, dbUpdate.SetAiUseDisclosureType)
+	SetINNF(updateMod.AiUseDisclosure, dbUpdate.SetAiUseDisclosure)
 
 	newNetworkDisclosure, isSet := updateMod.NetworkUseDisclosure.ValueOK()
 	if isSet {
@@ -199,7 +201,6 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 			dbUpdate.SetNetworkUseDisclosure(*newNetworkDisclosure)
 		}
 	}
-	// SetINNF(updateMod.AiUseDisclosure, dbUpdate.SetAiUseDisclosure)
 	SetINNF(updateMod.ToggleExplicitContent, dbUpdate.SetToggleExplicitContent)
 
 	if updateMod.Logo != nil {

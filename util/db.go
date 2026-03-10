@@ -26,8 +26,3 @@ type Compatibility struct {
 	State string
 	Note  string
 }
-
-type AiUseDisclosure struct {
-	Type string
-	Note string
-}

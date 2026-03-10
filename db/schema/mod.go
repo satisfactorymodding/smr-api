@@ -42,8 +42,8 @@ func (Mod) Fields() []ent.Field {
 		field.JSON("compatibility", &util.CompatibilityInfo{}).Optional(),
 		field.Bool("toggle_network_use").Default(false),
 		field.String("network_use_disclosure").Optional().Nillable(),
-		field.JSON("ai_use_disclosure", &util.AiUseDisclosure{}).Optional(),
-		// field.String("ai_use_disclosure").Optional(),
+		field.String("ai_use_disclosure_type").Optional(),
+		field.String("ai_use_disclosure").Optional(),
 		field.Bool("toggle_explicit_content").Default(false),
 	}
 }

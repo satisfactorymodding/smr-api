@@ -78,7 +78,7 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 		return nil, temporal.NewNonRetryableApplicationError("reusing the version name of a deleted mod version is not allowed", "fatal", nil)
 	}
 
-	if mod.AiUseDisclosure.Type == "" {
+	if mod.AiUseDisclosureType == "" {
 		return nil, temporal.NewNonRetryableApplicationError("ai use disclosure is required", "fatal", nil)
 	}
 

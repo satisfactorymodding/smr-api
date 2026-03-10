@@ -15,18 +15,6 @@ enum ModFields {
     search
 }
 
-enum AiUseDisclosureType {
-    NotUsed
-    RuntimeUsed
-    AiContentUsed
-    NoAnswer
-}
-
-type AiUseDisclosure {
-    type: AiUseDisclosureType!
-    note: String
-}
-
 type Mod {
     id: ModID!
     name: String!
@@ -50,7 +38,8 @@ type Mod {
     compatibility: CompatibilityInfo
     toggle_network_use: Boolean!
     network_use_disclosure: String
-    ai_use_disclosure: AiUseDisclosure!
+    ai_use_disclosure_type: String!
+    ai_use_disclosure: String
     toggle_explicit_content: Boolean!
 
     authors: [UserMod!]!
@@ -77,11 +66,6 @@ type ModVersion {
 
 ### Inputs
 
-input AiUseDisclosureInput {
-    type: AiUseDisclosureType
-    note: String
-}
-
 input ModFilter {
     limit: Int
     offset: Int
@@ -105,7 +89,8 @@ input NewMod {
     tagIDs: [TagID!]
     toggle_network_use: Boolean
     toggle_explicit_content: Boolean
-    ai_use_disclosure: AiUseDisclosureInput!
+    ai_use_disclosure_type: String!
+    ai_use_disclosure: String
 }
 
 input UpdateMod {
@@ -121,7 +106,8 @@ input UpdateMod {
     compatibility: CompatibilityInfoInput
     toggle_network_use: Boolean
     network_use_disclosure: String
-    ai_use_disclosure: AiUseDisclosureInput!
+    ai_use_disclosure_type: String!
+    ai_use_disclosure: String
     toggle_explicit_content: Boolean
 }
 

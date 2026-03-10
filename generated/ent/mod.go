@@ -63,8 +63,10 @@ type Mod struct {
 	ToggleNetworkUse bool `json:"toggle_network_use,omitempty"`
 	// NetworkUseDisclosure holds the value of the "network_use_disclosure" field.
 	NetworkUseDisclosure *string `json:"network_use_disclosure,omitempty"`
+	// AiUseDisclosureType holds the value of the "ai_use_disclosure_type" field.
+	AiUseDisclosureType string `json:"ai_use_disclosure_type,omitempty"`
 	// AiUseDisclosure holds the value of the "ai_use_disclosure" field.
-	AiUseDisclosure *util.AiUseDisclosure `json:"ai_use_disclosure,omitempty"`
+	AiUseDisclosure string `json:"ai_use_disclosure,omitempty"`
 	// ToggleExplicitContent holds the value of the "toggle_explicit_content" field.
 	ToggleExplicitContent bool `json:"toggle_explicit_content,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -162,13 +164,13 @@ func (*Mod) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case mod.FieldCompatibility, mod.FieldAiUseDisclosure:
+		case mod.FieldCompatibility:
 			values[i] = new([]byte)
 		case mod.FieldApproved, mod.FieldDenied, mod.FieldHidden, mod.FieldToggleNetworkUse, mod.FieldToggleExplicitContent:
 			values[i] = new(sql.NullBool)
 		case mod.FieldViews, mod.FieldHotness, mod.FieldPopularity, mod.FieldDownloads:
 			values[i] = new(sql.NullInt64)
-		case mod.FieldID, mod.FieldName, mod.FieldShortDescription, mod.FieldFullDescription, mod.FieldLogo, mod.FieldLogoThumbhash, mod.FieldSourceURL, mod.FieldCreatorID, mod.FieldModReference, mod.FieldNetworkUseDisclosure:
+		case mod.FieldID, mod.FieldName, mod.FieldShortDescription, mod.FieldFullDescription, mod.FieldLogo, mod.FieldLogoThumbhash, mod.FieldSourceURL, mod.FieldCreatorID, mod.FieldModReference, mod.FieldNetworkUseDisclosure, mod.FieldAiUseDisclosureType, mod.FieldAiUseDisclosure:
 			values[i] = new(sql.NullString)
 		case mod.FieldCreatedAt, mod.FieldUpdatedAt, mod.FieldDeletedAt, mod.FieldLastVersionDate:
 			values[i] = new(sql.NullTime)
@@ -328,13 +330,17 @@ func (m *Mod) assignValues(columns []string, values []any) error {
 				m.NetworkUseDisclosure = new(string)
 				*m.NetworkUseDisclosure = value.String
 			}
+		case mod.FieldAiUseDisclosureType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ai_use_disclosure_type", values[i])
+			} else if value.Valid {
+				m.AiUseDisclosureType = value.String
+			}
 		case mod.FieldAiUseDisclosure:
-			if value, ok := values[i].(*[]byte); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ai_use_disclosure", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &m.AiUseDisclosure); err != nil {
-					return fmt.Errorf("unmarshal field ai_use_disclosure: %w", err)
-				}
+			} else if value.Valid {
+				m.AiUseDisclosure = value.String
 			}
 		case mod.FieldToggleExplicitContent:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -481,8 +487,11 @@ func (m *Mod) String() string {
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
+	builder.WriteString("ai_use_disclosure_type=")
+	builder.WriteString(m.AiUseDisclosureType)
+	builder.WriteString(", ")
 	builder.WriteString("ai_use_disclosure=")
-	builder.WriteString(fmt.Sprintf("%v", m.AiUseDisclosure))
+	builder.WriteString(m.AiUseDisclosure)
 	builder.WriteString(", ")
 	builder.WriteString("toggle_explicit_content=")
 	builder.WriteString(fmt.Sprintf("%v", m.ToggleExplicitContent))
