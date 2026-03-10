@@ -287,9 +287,31 @@ func (mc *ModCreate) SetNillableNetworkUseDisclosure(s *string) *ModCreate {
 	return mc
 }
 
+// SetAiUseDisclosureType sets the "ai_use_disclosure_type" field.
+func (mc *ModCreate) SetAiUseDisclosureType(s string) *ModCreate {
+	mc.mutation.SetAiUseDisclosureType(s)
+	return mc
+}
+
+// SetNillableAiUseDisclosureType sets the "ai_use_disclosure_type" field if the given value is not nil.
+func (mc *ModCreate) SetNillableAiUseDisclosureType(s *string) *ModCreate {
+	if s != nil {
+		mc.SetAiUseDisclosureType(*s)
+	}
+	return mc
+}
+
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
-func (mc *ModCreate) SetAiUseDisclosure(uud *util.AiUseDisclosure) *ModCreate {
-	mc.mutation.SetAiUseDisclosure(uud)
+func (mc *ModCreate) SetAiUseDisclosure(s string) *ModCreate {
+	mc.mutation.SetAiUseDisclosure(s)
+	return mc
+}
+
+// SetNillableAiUseDisclosure sets the "ai_use_disclosure" field if the given value is not nil.
+func (mc *ModCreate) SetNillableAiUseDisclosure(s *string) *ModCreate {
+	if s != nil {
+		mc.SetAiUseDisclosure(*s)
+	}
 	return mc
 }
 
@@ -667,8 +689,12 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 		_spec.SetField(mod.FieldNetworkUseDisclosure, field.TypeString, value)
 		_node.NetworkUseDisclosure = &value
 	}
+	if value, ok := mc.mutation.AiUseDisclosureType(); ok {
+		_spec.SetField(mod.FieldAiUseDisclosureType, field.TypeString, value)
+		_node.AiUseDisclosureType = value
+	}
 	if value, ok := mc.mutation.AiUseDisclosure(); ok {
-		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeJSON, value)
+		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeString, value)
 		_node.AiUseDisclosure = value
 	}
 	if value, ok := mc.mutation.ToggleExplicitContent(); ok {
@@ -1113,8 +1139,26 @@ func (u *ModUpsert) ClearNetworkUseDisclosure() *ModUpsert {
 	return u
 }
 
+// SetAiUseDisclosureType sets the "ai_use_disclosure_type" field.
+func (u *ModUpsert) SetAiUseDisclosureType(v string) *ModUpsert {
+	u.Set(mod.FieldAiUseDisclosureType, v)
+	return u
+}
+
+// UpdateAiUseDisclosureType sets the "ai_use_disclosure_type" field to the value that was provided on create.
+func (u *ModUpsert) UpdateAiUseDisclosureType() *ModUpsert {
+	u.SetExcluded(mod.FieldAiUseDisclosureType)
+	return u
+}
+
+// ClearAiUseDisclosureType clears the value of the "ai_use_disclosure_type" field.
+func (u *ModUpsert) ClearAiUseDisclosureType() *ModUpsert {
+	u.SetNull(mod.FieldAiUseDisclosureType)
+	return u
+}
+
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
-func (u *ModUpsert) SetAiUseDisclosure(v *util.AiUseDisclosure) *ModUpsert {
+func (u *ModUpsert) SetAiUseDisclosure(v string) *ModUpsert {
 	u.Set(mod.FieldAiUseDisclosure, v)
 	return u
 }
@@ -1565,8 +1609,29 @@ func (u *ModUpsertOne) ClearNetworkUseDisclosure() *ModUpsertOne {
 	})
 }
 
+// SetAiUseDisclosureType sets the "ai_use_disclosure_type" field.
+func (u *ModUpsertOne) SetAiUseDisclosureType(v string) *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.SetAiUseDisclosureType(v)
+	})
+}
+
+// UpdateAiUseDisclosureType sets the "ai_use_disclosure_type" field to the value that was provided on create.
+func (u *ModUpsertOne) UpdateAiUseDisclosureType() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateAiUseDisclosureType()
+	})
+}
+
+// ClearAiUseDisclosureType clears the value of the "ai_use_disclosure_type" field.
+func (u *ModUpsertOne) ClearAiUseDisclosureType() *ModUpsertOne {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearAiUseDisclosureType()
+	})
+}
+
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
-func (u *ModUpsertOne) SetAiUseDisclosure(v *util.AiUseDisclosure) *ModUpsertOne {
+func (u *ModUpsertOne) SetAiUseDisclosure(v string) *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.SetAiUseDisclosure(v)
 	})
@@ -2189,8 +2254,29 @@ func (u *ModUpsertBulk) ClearNetworkUseDisclosure() *ModUpsertBulk {
 	})
 }
 
+// SetAiUseDisclosureType sets the "ai_use_disclosure_type" field.
+func (u *ModUpsertBulk) SetAiUseDisclosureType(v string) *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.SetAiUseDisclosureType(v)
+	})
+}
+
+// UpdateAiUseDisclosureType sets the "ai_use_disclosure_type" field to the value that was provided on create.
+func (u *ModUpsertBulk) UpdateAiUseDisclosureType() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.UpdateAiUseDisclosureType()
+	})
+}
+
+// ClearAiUseDisclosureType clears the value of the "ai_use_disclosure_type" field.
+func (u *ModUpsertBulk) ClearAiUseDisclosureType() *ModUpsertBulk {
+	return u.Update(func(s *ModUpsert) {
+		s.ClearAiUseDisclosureType()
+	})
+}
+
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
-func (u *ModUpsertBulk) SetAiUseDisclosure(v *util.AiUseDisclosure) *ModUpsertBulk {
+func (u *ModUpsertBulk) SetAiUseDisclosure(v string) *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.SetAiUseDisclosure(v)
 	})
