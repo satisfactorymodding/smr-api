@@ -62,7 +62,7 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 		return nil, temporal.NewNonRetryableApplicationError("this mod already has a version with this name", "fatal", nil)
 	}
 
-	if mod.AiUseDisclosure.Type == "" {
+	if mod.AiUseDisclosureType == "" {
 		return nil, temporal.NewNonRetryableApplicationError("ai use disclosure is required", "fatal", nil)
 	}
 
