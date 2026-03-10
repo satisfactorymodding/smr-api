@@ -1190,6 +1190,16 @@ func NetworkUseDisclosureContainsFold(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldContainsFold(FieldNetworkUseDisclosure, v))
 }
 
+// AiUseDisclosureIsNil applies the IsNil predicate on the "ai_use_disclosure" field.
+func AiUseDisclosureIsNil() predicate.Mod {
+	return predicate.Mod(sql.FieldIsNull(FieldAiUseDisclosure))
+}
+
+// AiUseDisclosureNotNil applies the NotNil predicate on the "ai_use_disclosure" field.
+func AiUseDisclosureNotNil() predicate.Mod {
+	return predicate.Mod(sql.FieldNotNull(FieldAiUseDisclosure))
+}
+
 // ToggleExplicitContentEQ applies the EQ predicate on the "toggle_explicit_content" field.
 func ToggleExplicitContentEQ(v bool) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldToggleExplicitContent, v))

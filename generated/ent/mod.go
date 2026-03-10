@@ -63,6 +63,8 @@ type Mod struct {
 	ToggleNetworkUse bool `json:"toggle_network_use,omitempty"`
 	// NetworkUseDisclosure holds the value of the "network_use_disclosure" field.
 	NetworkUseDisclosure *string `json:"network_use_disclosure,omitempty"`
+	// AiUseDisclosure holds the value of the "ai_use_disclosure" field.
+	AiUseDisclosure *util.AiUseDisclosure `json:"ai_use_disclosure,omitempty"`
 	// ToggleExplicitContent holds the value of the "toggle_explicit_content" field.
 	ToggleExplicitContent bool `json:"toggle_explicit_content,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -160,7 +162,7 @@ func (*Mod) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case mod.FieldCompatibility:
+		case mod.FieldCompatibility, mod.FieldAiUseDisclosure:
 			values[i] = new([]byte)
 		case mod.FieldApproved, mod.FieldDenied, mod.FieldHidden, mod.FieldToggleNetworkUse, mod.FieldToggleExplicitContent:
 			values[i] = new(sql.NullBool)
@@ -326,6 +328,14 @@ func (m *Mod) assignValues(columns []string, values []any) error {
 				m.NetworkUseDisclosure = new(string)
 				*m.NetworkUseDisclosure = value.String
 			}
+		case mod.FieldAiUseDisclosure:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field ai_use_disclosure", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &m.AiUseDisclosure); err != nil {
+					return fmt.Errorf("unmarshal field ai_use_disclosure: %w", err)
+				}
+			}
 		case mod.FieldToggleExplicitContent:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field toggle_explicit_content", values[i])
@@ -470,6 +480,9 @@ func (m *Mod) String() string {
 		builder.WriteString("network_use_disclosure=")
 		builder.WriteString(*v)
 	}
+	builder.WriteString(", ")
+	builder.WriteString("ai_use_disclosure=")
+	builder.WriteString(fmt.Sprintf("%v", m.AiUseDisclosure))
 	builder.WriteString(", ")
 	builder.WriteString("toggle_explicit_content=")
 	builder.WriteString(fmt.Sprintf("%v", m.ToggleExplicitContent))
