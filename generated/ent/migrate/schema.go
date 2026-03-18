@@ -449,6 +449,32 @@ var (
 			},
 		},
 	}
+	// UserModpacksColumns holds the columns for the "user_modpacks" table.
+	UserModpacksColumns = []*schema.Column{
+		{Name: "role", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "modpack_id", Type: field.TypeString},
+	}
+	// UserModpacksTable holds the schema information for the "user_modpacks" table.
+	UserModpacksTable = &schema.Table{
+		Name:       "user_modpacks",
+		Columns:    UserModpacksColumns,
+		PrimaryKey: []*schema.Column{UserModpacksColumns[1], UserModpacksColumns[2]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_modpacks_users_user",
+				Columns:    []*schema.Column{UserModpacksColumns[1]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "user_modpacks_modpacks_modpack",
+				Columns:    []*schema.Column{UserModpacksColumns[2]},
+				RefColumns: []*schema.Column{ModpacksColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// UserSessionsColumns holds the columns for the "user_sessions" table.
 	UserSessionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -671,6 +697,7 @@ var (
 		UsersTable,
 		UserGroupsTable,
 		UserModsTable,
+		UserModpacksTable,
 		UserSessionsTable,
 		VersionsTable,
 		VersionDependenciesTable,
@@ -695,6 +722,8 @@ func init() {
 	UserGroupsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[1].RefTable = ModsTable
+	UserModpacksTable.ForeignKeys[0].RefTable = UsersTable
+	UserModpacksTable.ForeignKeys[1].RefTable = ModpacksTable
 	UserSessionsTable.ForeignKeys[0].RefTable = UsersTable
 	VersionsTable.ForeignKeys[0].RefTable = ModsTable
 	VersionDependenciesTable.ForeignKeys[0].RefTable = VersionsTable

@@ -53,6 +53,7 @@ type ResolverRoot interface {
 	SMLVersionTarget() SMLVersionTargetResolver
 	User() UserResolver
 	UserMod() UserModResolver
+	UserModpack() UserModpackResolver
 	Version() VersionResolver
 	VersionDependency() VersionDependencyResolver
 	VersionTarget() VersionTargetResolver
@@ -197,6 +198,7 @@ type ComplexityRoot struct {
 	}
 
 	Modpack struct {
+		Authors          func(childComplexity int) int
 		Children         func(childComplexity int) int
 		Compatibility    func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
@@ -364,6 +366,7 @@ type ComplexityRoot struct {
 		Groups          func(childComplexity int) int
 		Guides          func(childComplexity int) int
 		ID              func(childComplexity int) int
+		Modpacks        func(childComplexity int) int
 		Mods            func(childComplexity int) int
 		Roles           func(childComplexity int) int
 		Username        func(childComplexity int) int
@@ -375,6 +378,14 @@ type ComplexityRoot struct {
 		Role   func(childComplexity int) int
 		User   func(childComplexity int) int
 		UserID func(childComplexity int) int
+	}
+
+	UserModpack struct {
+		Modpack   func(childComplexity int) int
+		ModpackID func(childComplexity int) int
+		Role      func(childComplexity int) int
+		User      func(childComplexity int) int
+		UserID    func(childComplexity int) int
 	}
 
 	UserRoles struct {
@@ -574,11 +585,16 @@ type UserResolver interface {
 	Roles(ctx context.Context, obj *User) (*UserRoles, error)
 	Groups(ctx context.Context, obj *User) ([]*Group, error)
 	Mods(ctx context.Context, obj *User) ([]*UserMod, error)
+
 	Guides(ctx context.Context, obj *User) ([]*Guide, error)
 }
 type UserModResolver interface {
 	User(ctx context.Context, obj *UserMod) (*User, error)
 	Mod(ctx context.Context, obj *UserMod) (*Mod, error)
+}
+type UserModpackResolver interface {
+	User(ctx context.Context, obj *UserModpack) (*User, error)
+	Modpack(ctx context.Context, obj *UserModpack) (*Modpack, error)
 }
 type VersionResolver interface {
 	SmlVersion(ctx context.Context, obj *Version) (string, error)
@@ -1109,6 +1125,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ModVersion.Versions(childComplexity), true
+
+	case "Modpack.authors":
+		if e.complexity.Modpack.Authors == nil {
+			break
+		}
+
+		return e.complexity.Modpack.Authors(childComplexity), true
 
 	case "Modpack.children":
 		if e.complexity.Modpack.Children == nil {
@@ -2414,6 +2437,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.User.ID(childComplexity), true
 
+	case "User.modpacks":
+		if e.complexity.User.Modpacks == nil {
+			break
+		}
+
+		return e.complexity.User.Modpacks(childComplexity), true
+
 	case "User.mods":
 		if e.complexity.User.Mods == nil {
 			break
@@ -2469,6 +2499,41 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UserMod.UserID(childComplexity), true
+
+	case "UserModpack.modpack":
+		if e.complexity.UserModpack.Modpack == nil {
+			break
+		}
+
+		return e.complexity.UserModpack.Modpack(childComplexity), true
+
+	case "UserModpack.modpack_id":
+		if e.complexity.UserModpack.ModpackID == nil {
+			break
+		}
+
+		return e.complexity.UserModpack.ModpackID(childComplexity), true
+
+	case "UserModpack.role":
+		if e.complexity.UserModpack.Role == nil {
+			break
+		}
+
+		return e.complexity.UserModpack.Role(childComplexity), true
+
+	case "UserModpack.user":
+		if e.complexity.UserModpack.User == nil {
+			break
+		}
+
+		return e.complexity.UserModpack.User(childComplexity), true
+
+	case "UserModpack.user_id":
+		if e.complexity.UserModpack.UserID == nil {
+			break
+		}
+
+		return e.complexity.UserModpack.UserID(childComplexity), true
 
 	case "UserRoles.approveMods":
 		if e.complexity.UserRoles.ApproveMods == nil {
@@ -2838,6 +2903,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateSatisfactoryVersion,
 		ec.unmarshalInputUpdateUser,
 		ec.unmarshalInputUpdateUserMod,
+		ec.unmarshalInputUpdateUserModpack,
 		ec.unmarshalInputUpdateVersion,
 		ec.unmarshalInputVersionFilter,
 	)
@@ -3299,6 +3365,7 @@ type Modpack {
 
     parent: Modpack
     children: [Modpack!]!
+    authors: [UserModpack!]!
     tags: [Tag!]!
     targets: [String!]!
     mods: [ModpackModEntry!]!
@@ -3364,10 +3431,16 @@ input UpdateModpack {
     full_description: String
     logo: Upload
     hidden: Boolean
+    authors: [UpdateUserModpack!]
     tagIDs: [TagID!]
     targets: [String!]
     mods: [ModpackModInput!]
     compatibility: CompatibilityInfoInput
+}
+
+input UpdateUserModpack {
+    user_id: UserID!
+    role: String!
 }
 
 input NewModpackRelease {
@@ -3565,6 +3638,7 @@ type User {
     groups: [Group!]! @canEditUser(field: "ID", object: true) @isLoggedIn
 
     mods: [UserMod!]!
+    modpacks: [UserModpack!]!
     guides: [Guide!]!
 }
 
@@ -3580,6 +3654,16 @@ type UserMod {
     user: User!
     mod: Mod!
 }
+
+type UserModpack {
+    user_id: UserID!
+    modpack_id: ModpackID!
+    role: String!
+
+    user: User!
+    modpack: Modpack!
+}
+
 
 ### Inputs
 
@@ -7317,6 +7401,8 @@ func (ec *executionContext) fieldContext_GetModpacks_modpacks(_ context.Context,
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
 				return ec.fieldContext_Modpack_children(ctx, field)
+			case "authors":
+				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
 			case "targets":
@@ -8589,6 +8675,8 @@ func (ec *executionContext) fieldContext_Guide_user(_ context.Context, field gra
 				return ec.fieldContext_User_groups(ctx, field)
 			case "mods":
 				return ec.fieldContext_User_mods(ctx, field)
+			case "modpacks":
+				return ec.fieldContext_User_modpacks(ctx, field)
 			case "guides":
 				return ec.fieldContext_User_guides(ctx, field)
 			}
@@ -10842,6 +10930,8 @@ func (ec *executionContext) fieldContext_Modpack_creator(_ context.Context, fiel
 				return ec.fieldContext_User_groups(ctx, field)
 			case "mods":
 				return ec.fieldContext_User_mods(ctx, field)
+			case "modpacks":
+				return ec.fieldContext_User_modpacks(ctx, field)
 			case "guides":
 				return ec.fieldContext_User_guides(ctx, field)
 			}
@@ -11321,6 +11411,8 @@ func (ec *executionContext) fieldContext_Modpack_parent(_ context.Context, field
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
 				return ec.fieldContext_Modpack_children(ctx, field)
+			case "authors":
+				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
 			case "targets":
@@ -11413,6 +11505,8 @@ func (ec *executionContext) fieldContext_Modpack_children(_ context.Context, fie
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
 				return ec.fieldContext_Modpack_children(ctx, field)
+			case "authors":
+				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
 			case "targets":
@@ -11423,6 +11517,62 @@ func (ec *executionContext) fieldContext_Modpack_children(_ context.Context, fie
 				return ec.fieldContext_Modpack_releases(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Modpack", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Modpack_authors(ctx context.Context, field graphql.CollectedField, obj *Modpack) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Modpack_authors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Authors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*UserModpack)
+	fc.Result = res
+	return ec.marshalNUserModpack2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUserModpackᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Modpack_authors(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Modpack",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "user_id":
+				return ec.fieldContext_UserModpack_user_id(ctx, field)
+			case "modpack_id":
+				return ec.fieldContext_UserModpack_modpack_id(ctx, field)
+			case "role":
+				return ec.fieldContext_UserModpack_role(ctx, field)
+			case "user":
+				return ec.fieldContext_UserModpack_user(ctx, field)
+			case "modpack":
+				return ec.fieldContext_UserModpack_modpack(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserModpack", field.Name)
 		},
 	}
 	return fc, nil
@@ -13370,6 +13520,8 @@ func (ec *executionContext) fieldContext_Mutation_createModpack(ctx context.Cont
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
 				return ec.fieldContext_Modpack_children(ctx, field)
+			case "authors":
+				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
 			case "targets":
@@ -13507,6 +13659,8 @@ func (ec *executionContext) fieldContext_Mutation_updateModpack(ctx context.Cont
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
 				return ec.fieldContext_Modpack_children(ctx, field)
+			case "authors":
+				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
 			case "targets":
@@ -14625,6 +14779,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_groups(ctx, field)
 			case "mods":
 				return ec.fieldContext_User_mods(ctx, field)
+			case "modpacks":
+				return ec.fieldContext_User_modpacks(ctx, field)
 			case "guides":
 				return ec.fieldContext_User_guides(ctx, field)
 			}
@@ -16932,6 +17088,8 @@ func (ec *executionContext) fieldContext_Query_getModpack(ctx context.Context, f
 				return ec.fieldContext_Modpack_parent(ctx, field)
 			case "children":
 				return ec.fieldContext_Modpack_children(ctx, field)
+			case "authors":
+				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
 			case "targets":
@@ -17600,6 +17758,8 @@ func (ec *executionContext) fieldContext_Query_getMe(_ context.Context, field gr
 				return ec.fieldContext_User_groups(ctx, field)
 			case "mods":
 				return ec.fieldContext_User_mods(ctx, field)
+			case "modpacks":
+				return ec.fieldContext_User_modpacks(ctx, field)
 			case "guides":
 				return ec.fieldContext_User_guides(ctx, field)
 			}
@@ -17669,6 +17829,8 @@ func (ec *executionContext) fieldContext_Query_getUser(ctx context.Context, fiel
 				return ec.fieldContext_User_groups(ctx, field)
 			case "mods":
 				return ec.fieldContext_User_mods(ctx, field)
+			case "modpacks":
+				return ec.fieldContext_User_modpacks(ctx, field)
 			case "guides":
 				return ec.fieldContext_User_guides(ctx, field)
 			}
@@ -17752,6 +17914,8 @@ func (ec *executionContext) fieldContext_Query_getUsers(ctx context.Context, fie
 				return ec.fieldContext_User_groups(ctx, field)
 			case "mods":
 				return ec.fieldContext_User_mods(ctx, field)
+			case "modpacks":
+				return ec.fieldContext_User_modpacks(ctx, field)
 			case "guides":
 				return ec.fieldContext_User_guides(ctx, field)
 			}
@@ -20115,6 +20279,62 @@ func (ec *executionContext) fieldContext_User_mods(_ context.Context, field grap
 	return fc, nil
 }
 
+func (ec *executionContext) _User_modpacks(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_modpacks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Modpacks, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*UserModpack)
+	fc.Result = res
+	return ec.marshalNUserModpack2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUserModpackᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_modpacks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "user_id":
+				return ec.fieldContext_UserModpack_user_id(ctx, field)
+			case "modpack_id":
+				return ec.fieldContext_UserModpack_modpack_id(ctx, field)
+			case "role":
+				return ec.fieldContext_UserModpack_role(ctx, field)
+			case "user":
+				return ec.fieldContext_UserModpack_user(ctx, field)
+			case "modpack":
+				return ec.fieldContext_UserModpack_modpack(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserModpack", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_guides(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_guides(ctx, field)
 	if err != nil {
@@ -20376,6 +20596,8 @@ func (ec *executionContext) fieldContext_UserMod_user(_ context.Context, field g
 				return ec.fieldContext_User_groups(ctx, field)
 			case "mods":
 				return ec.fieldContext_User_mods(ctx, field)
+			case "modpacks":
+				return ec.fieldContext_User_modpacks(ctx, field)
 			case "guides":
 				return ec.fieldContext_User_guides(ctx, field)
 			}
@@ -20478,6 +20700,306 @@ func (ec *executionContext) fieldContext_UserMod_mod(_ context.Context, field gr
 				return ec.fieldContext_Mod_latestVersions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Mod", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserModpack_user_id(ctx context.Context, field graphql.CollectedField, obj *UserModpack) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserModpack_user_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNUserID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserModpack_user_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserModpack",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UserID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserModpack_modpack_id(ctx context.Context, field graphql.CollectedField, obj *UserModpack) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserModpack_modpack_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModpackID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNModpackID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserModpack_modpack_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserModpack",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ModpackID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserModpack_role(ctx context.Context, field graphql.CollectedField, obj *UserModpack) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserModpack_role(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Role, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserModpack_role(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserModpack",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserModpack_user(ctx context.Context, field graphql.CollectedField, obj *UserModpack) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserModpack_user(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.UserModpack().User(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserModpack_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserModpack",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "avatar_thumbhash":
+				return ec.fieldContext_User_avatar_thumbhash(ctx, field)
+			case "created_at":
+				return ec.fieldContext_User_created_at(ctx, field)
+			case "github_id":
+				return ec.fieldContext_User_github_id(ctx, field)
+			case "google_id":
+				return ec.fieldContext_User_google_id(ctx, field)
+			case "facebook_id":
+				return ec.fieldContext_User_facebook_id(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "groups":
+				return ec.fieldContext_User_groups(ctx, field)
+			case "mods":
+				return ec.fieldContext_User_mods(ctx, field)
+			case "modpacks":
+				return ec.fieldContext_User_modpacks(ctx, field)
+			case "guides":
+				return ec.fieldContext_User_guides(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserModpack_modpack(ctx context.Context, field graphql.CollectedField, obj *UserModpack) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserModpack_modpack(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.UserModpack().Modpack(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*Modpack)
+	fc.Result = res
+	return ec.marshalNModpack2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpack(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserModpack_modpack(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserModpack",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Modpack_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Modpack_name(ctx, field)
+			case "short_description":
+				return ec.fieldContext_Modpack_short_description(ctx, field)
+			case "full_description":
+				return ec.fieldContext_Modpack_full_description(ctx, field)
+			case "logo":
+				return ec.fieldContext_Modpack_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Modpack_logo_thumbhash(ctx, field)
+			case "creator_id":
+				return ec.fieldContext_Modpack_creator_id(ctx, field)
+			case "creator":
+				return ec.fieldContext_Modpack_creator(ctx, field)
+			case "views":
+				return ec.fieldContext_Modpack_views(ctx, field)
+			case "installs":
+				return ec.fieldContext_Modpack_installs(ctx, field)
+			case "hotness":
+				return ec.fieldContext_Modpack_hotness(ctx, field)
+			case "popularity":
+				return ec.fieldContext_Modpack_popularity(ctx, field)
+			case "updated_at":
+				return ec.fieldContext_Modpack_updated_at(ctx, field)
+			case "created_at":
+				return ec.fieldContext_Modpack_created_at(ctx, field)
+			case "hidden":
+				return ec.fieldContext_Modpack_hidden(ctx, field)
+			case "parent_id":
+				return ec.fieldContext_Modpack_parent_id(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Modpack_compatibility(ctx, field)
+			case "parent":
+				return ec.fieldContext_Modpack_parent(ctx, field)
+			case "children":
+				return ec.fieldContext_Modpack_children(ctx, field)
+			case "authors":
+				return ec.fieldContext_Modpack_authors(ctx, field)
+			case "tags":
+				return ec.fieldContext_Modpack_tags(ctx, field)
+			case "targets":
+				return ec.fieldContext_Modpack_targets(ctx, field)
+			case "mods":
+				return ec.fieldContext_Modpack_mods(ctx, field)
+			case "releases":
+				return ec.fieldContext_Modpack_releases(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Modpack", field.Name)
 		},
 	}
 	return fc, nil
@@ -25778,7 +26300,7 @@ func (ec *executionContext) unmarshalInputUpdateModpack(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "hidden", "tagIDs", "targets", "mods", "compatibility"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "hidden", "authors", "tagIDs", "targets", "mods", "compatibility"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -25820,6 +26342,13 @@ func (ec *executionContext) unmarshalInputUpdateModpack(ctx context.Context, obj
 				return it, err
 			}
 			it.Hidden = data
+		case "authors":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authors"))
+			data, err := ec.unmarshalOUpdateUserModpack2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserModpackᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Authors = data
 		case "tagIDs":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagIDs"))
 			data, err := ec.unmarshalOTagID2ᚕstringᚄ(ctx, v)
@@ -25955,6 +26484,40 @@ func (ec *executionContext) unmarshalInputUpdateUser(ctx context.Context, obj an
 
 func (ec *executionContext) unmarshalInputUpdateUserMod(ctx context.Context, obj any) (UpdateUserMod, error) {
 	var it UpdateUserMod
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"user_id", "role"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "user_id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
+			data, err := ec.unmarshalNUserID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "role":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("role"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Role = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateUserModpack(ctx context.Context, obj any) (UpdateUserModpack, error) {
+	var it UpdateUserModpack
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -27686,6 +28249,11 @@ func (ec *executionContext) _Modpack(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "authors":
+			out.Values[i] = ec._Modpack_authors(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "tags":
 			out.Values[i] = ec._Modpack_tags(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -29430,6 +29998,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "modpacks":
+			out.Values[i] = ec._User_modpacks(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "guides":
 			field := field
 
@@ -29561,6 +30134,127 @@ func (ec *executionContext) _UserMod(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._UserMod_mod(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userModpackImplementors = []string{"UserModpack"}
+
+func (ec *executionContext) _UserModpack(ctx context.Context, sel ast.SelectionSet, obj *UserModpack) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userModpackImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserModpack")
+		case "user_id":
+			out.Values[i] = ec._UserModpack_user_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "modpack_id":
+			out.Values[i] = ec._UserModpack_modpack_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "role":
+			out.Values[i] = ec._UserModpack_role(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserModpack_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "modpack":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserModpack_modpack(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -31889,6 +32583,11 @@ func (ec *executionContext) unmarshalNUpdateUserMod2githubᚗcomᚋsatisfactorym
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpdateUserModpack2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserModpack(ctx context.Context, v any) (*UpdateUserModpack, error) {
+	res, err := ec.unmarshalInputUpdateUserModpack(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNUpdateVersion2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateVersion(ctx context.Context, v any) (UpdateVersion, error) {
 	res, err := ec.unmarshalInputUpdateVersion(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -32060,6 +32759,60 @@ func (ec *executionContext) marshalNUserMod2ᚖgithubᚗcomᚋsatisfactorymoddin
 		return graphql.Null
 	}
 	return ec._UserMod(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUserModpack2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUserModpackᚄ(ctx context.Context, sel ast.SelectionSet, v []*UserModpack) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUserModpack2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUserModpack(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUserModpack2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUserModpack(ctx context.Context, sel ast.SelectionSet, v *UserModpack) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserModpack(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUserRoles2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUserRoles(ctx context.Context, sel ast.SelectionSet, v UserRoles) graphql.Marshaler {
@@ -33100,6 +33853,24 @@ func (ec *executionContext) unmarshalOUpdateUserMod2ᚕgithubᚗcomᚋsatisfacto
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
 		res[i], err = ec.unmarshalNUpdateUserMod2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserMod(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOUpdateUserModpack2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserModpackᚄ(ctx context.Context, v any) ([]*UpdateUserModpack, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*UpdateUserModpack, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpdateUserModpack2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateUserModpack(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}

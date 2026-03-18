@@ -44,6 +44,8 @@ type Tx struct {
 	UserGroup *UserGroupClient
 	// UserMod is the client for interacting with the UserMod builders.
 	UserMod *UserModClient
+	// UserModpack is the client for interacting with the UserModpack builders.
+	UserModpack *UserModpackClient
 	// UserSession is the client for interacting with the UserSession builders.
 	UserSession *UserSessionClient
 	// Version is the client for interacting with the Version builders.
@@ -200,6 +202,7 @@ func (tx *Tx) init() {
 	tx.User = NewUserClient(tx.config)
 	tx.UserGroup = NewUserGroupClient(tx.config)
 	tx.UserMod = NewUserModClient(tx.config)
+	tx.UserModpack = NewUserModpackClient(tx.config)
 	tx.UserSession = NewUserSessionClient(tx.config)
 	tx.Version = NewVersionClient(tx.config)
 	tx.VersionDependency = NewVersionDependencyClient(tx.config)

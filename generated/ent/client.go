@@ -30,6 +30,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
@@ -74,6 +75,8 @@ type Client struct {
 	UserGroup *UserGroupClient
 	// UserMod is the client for interacting with the UserMod builders.
 	UserMod *UserModClient
+	// UserModpack is the client for interacting with the UserModpack builders.
+	UserModpack *UserModpackClient
 	// UserSession is the client for interacting with the UserSession builders.
 	UserSession *UserSessionClient
 	// Version is the client for interacting with the Version builders.
@@ -110,6 +113,7 @@ func (c *Client) init() {
 	c.User = NewUserClient(c.config)
 	c.UserGroup = NewUserGroupClient(c.config)
 	c.UserMod = NewUserModClient(c.config)
+	c.UserModpack = NewUserModpackClient(c.config)
 	c.UserSession = NewUserSessionClient(c.config)
 	c.Version = NewVersionClient(c.config)
 	c.VersionDependency = NewVersionDependencyClient(c.config)
@@ -222,6 +226,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		User:                NewUserClient(cfg),
 		UserGroup:           NewUserGroupClient(cfg),
 		UserMod:             NewUserModClient(cfg),
+		UserModpack:         NewUserModpackClient(cfg),
 		UserSession:         NewUserSessionClient(cfg),
 		Version:             NewVersionClient(cfg),
 		VersionDependency:   NewVersionDependencyClient(cfg),
@@ -261,6 +266,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		User:                NewUserClient(cfg),
 		UserGroup:           NewUserGroupClient(cfg),
 		UserMod:             NewUserModClient(cfg),
+		UserModpack:         NewUserModpackClient(cfg),
 		UserSession:         NewUserSessionClient(cfg),
 		Version:             NewVersionClient(cfg),
 		VersionDependency:   NewVersionDependencyClient(cfg),
@@ -297,8 +303,8 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.Modpack, c.ModpackMod,
 		c.ModpackRelease, c.ModpackTag, c.ModpackTarget, c.SatisfactoryVersion, c.Tag,
-		c.User, c.UserGroup, c.UserMod, c.UserSession, c.Version, c.VersionDependency,
-		c.VersionTarget, c.VirustotalResult,
+		c.User, c.UserGroup, c.UserMod, c.UserModpack, c.UserSession, c.Version,
+		c.VersionDependency, c.VersionTarget, c.VirustotalResult,
 	} {
 		n.Use(hooks...)
 	}
@@ -310,8 +316,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Announcement, c.Guide, c.GuideTag, c.Mod, c.ModTag, c.Modpack, c.ModpackMod,
 		c.ModpackRelease, c.ModpackTag, c.ModpackTarget, c.SatisfactoryVersion, c.Tag,
-		c.User, c.UserGroup, c.UserMod, c.UserSession, c.Version, c.VersionDependency,
-		c.VersionTarget, c.VirustotalResult,
+		c.User, c.UserGroup, c.UserMod, c.UserModpack, c.UserSession, c.Version,
+		c.VersionDependency, c.VersionTarget, c.VirustotalResult,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -350,6 +356,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.UserGroup.mutate(ctx, m)
 	case *UserModMutation:
 		return c.UserMod.mutate(ctx, m)
+	case *UserModpackMutation:
+		return c.UserModpack.mutate(ctx, m)
 	case *UserSessionMutation:
 		return c.UserSession.mutate(ctx, m)
 	case *VersionMutation:
@@ -1382,6 +1390,22 @@ func (c *ModpackClient) QueryMods(m *Modpack) *ModQuery {
 	return query
 }
 
+// QueryAuthors queries the authors edge of a Modpack.
+func (c *ModpackClient) QueryAuthors(m *Modpack) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(modpack.Table, modpack.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, modpack.AuthorsTable, modpack.AuthorsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryTags queries the tags edge of a Modpack.
 func (c *ModpackClient) QueryTags(m *Modpack) *TagQuery {
 	query := (&TagClient{config: c.config}).Query()
@@ -1407,6 +1431,22 @@ func (c *ModpackClient) QueryModpackMods(m *Modpack) *ModpackModQuery {
 			sqlgraph.From(modpack.Table, modpack.FieldID, id),
 			sqlgraph.To(modpackmod.Table, modpackmod.ModpackColumn),
 			sqlgraph.Edge(sqlgraph.O2M, true, modpack.ModpackModsTable, modpack.ModpackModsColumn),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserModpacks queries the user_modpacks edge of a Modpack.
+func (c *ModpackClient) QueryUserModpacks(m *Modpack) *UserModpackQuery {
+	query := (&UserModpackClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(modpack.Table, modpack.FieldID, id),
+			sqlgraph.To(usermodpack.Table, usermodpack.ModpackColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, modpack.UserModpacksTable, modpack.UserModpacksColumn),
 		)
 		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
 		return fromV, nil
@@ -2505,6 +2545,22 @@ func (c *UserClient) QueryMods(u *User) *ModQuery {
 	return query
 }
 
+// QueryModpacks queries the modpacks edge of a User.
+func (c *UserClient) QueryModpacks(u *User) *ModpackQuery {
+	query := (&ModpackClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(modpack.Table, modpack.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.ModpacksTable, user.ModpacksPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryGroups queries the groups edge of a User.
 func (c *UserClient) QueryGroups(u *User) *UserGroupQuery {
 	query := (&UserGroupClient{config: c.config}).Query()
@@ -2530,6 +2586,22 @@ func (c *UserClient) QueryUserMods(u *User) *UserModQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(usermod.Table, usermod.UserColumn),
 			sqlgraph.Edge(sqlgraph.O2M, true, user.UserModsTable, user.UserModsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserModpacks queries the user_modpacks edge of a User.
+func (c *UserClient) QueryUserModpacks(u *User) *UserModpackQuery {
+	query := (&UserModpackClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(usermodpack.Table, usermodpack.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.UserModpacksTable, user.UserModpacksColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -2828,6 +2900,122 @@ func (c *UserModClient) mutate(ctx context.Context, m *UserModMutation) (Value, 
 		return (&UserModDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown UserMod mutation op: %q", m.Op())
+	}
+}
+
+// UserModpackClient is a client for the UserModpack schema.
+type UserModpackClient struct {
+	config
+}
+
+// NewUserModpackClient returns a client for the UserModpack from the given config.
+func NewUserModpackClient(c config) *UserModpackClient {
+	return &UserModpackClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usermodpack.Hooks(f(g(h())))`.
+func (c *UserModpackClient) Use(hooks ...Hook) {
+	c.hooks.UserModpack = append(c.hooks.UserModpack, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usermodpack.Intercept(f(g(h())))`.
+func (c *UserModpackClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserModpack = append(c.inters.UserModpack, interceptors...)
+}
+
+// Create returns a builder for creating a UserModpack entity.
+func (c *UserModpackClient) Create() *UserModpackCreate {
+	mutation := newUserModpackMutation(c.config, OpCreate)
+	return &UserModpackCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserModpack entities.
+func (c *UserModpackClient) CreateBulk(builders ...*UserModpackCreate) *UserModpackCreateBulk {
+	return &UserModpackCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserModpackClient) MapCreateBulk(slice any, setFunc func(*UserModpackCreate, int)) *UserModpackCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserModpackCreateBulk{err: fmt.Errorf("calling to UserModpackClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserModpackCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserModpackCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserModpack.
+func (c *UserModpackClient) Update() *UserModpackUpdate {
+	mutation := newUserModpackMutation(c.config, OpUpdate)
+	return &UserModpackUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserModpackClient) UpdateOne(um *UserModpack) *UserModpackUpdateOne {
+	mutation := newUserModpackMutation(c.config, OpUpdateOne)
+	mutation.user = &um.UserID
+	mutation.modpack = &um.ModpackID
+	return &UserModpackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserModpack.
+func (c *UserModpackClient) Delete() *UserModpackDelete {
+	mutation := newUserModpackMutation(c.config, OpDelete)
+	return &UserModpackDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Query returns a query builder for UserModpack.
+func (c *UserModpackClient) Query() *UserModpackQuery {
+	return &UserModpackQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserModpack},
+		inters: c.Interceptors(),
+	}
+}
+
+// QueryUser queries the user edge of a UserModpack.
+func (c *UserModpackClient) QueryUser(um *UserModpack) *UserQuery {
+	return c.Query().
+		Where(usermodpack.UserID(um.UserID), usermodpack.ModpackID(um.ModpackID)).
+		QueryUser()
+}
+
+// QueryModpack queries the modpack edge of a UserModpack.
+func (c *UserModpackClient) QueryModpack(um *UserModpack) *ModpackQuery {
+	return c.Query().
+		Where(usermodpack.UserID(um.UserID), usermodpack.ModpackID(um.ModpackID)).
+		QueryModpack()
+}
+
+// Hooks returns the client hooks.
+func (c *UserModpackClient) Hooks() []Hook {
+	return c.hooks.UserModpack
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserModpackClient) Interceptors() []Interceptor {
+	return c.inters.UserModpack
+}
+
+func (c *UserModpackClient) mutate(ctx context.Context, m *UserModpackMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserModpackCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserModpackUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserModpackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserModpackDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserModpack mutation op: %q", m.Op())
 	}
 }
 
@@ -3618,13 +3806,13 @@ type (
 	hooks struct {
 		Announcement, Guide, GuideTag, Mod, ModTag, Modpack, ModpackMod, ModpackRelease,
 		ModpackTag, ModpackTarget, SatisfactoryVersion, Tag, User, UserGroup, UserMod,
-		UserSession, Version, VersionDependency, VersionTarget,
+		UserModpack, UserSession, Version, VersionDependency, VersionTarget,
 		VirustotalResult []ent.Hook
 	}
 	inters struct {
 		Announcement, Guide, GuideTag, Mod, ModTag, Modpack, ModpackMod, ModpackRelease,
 		ModpackTag, ModpackTarget, SatisfactoryVersion, Tag, User, UserGroup, UserMod,
-		UserSession, Version, VersionDependency, VersionTarget,
+		UserModpack, UserSession, Version, VersionDependency, VersionTarget,
 		VirustotalResult []ent.Interceptor
 	}
 )

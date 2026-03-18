@@ -47,10 +47,14 @@ const (
 	EdgeSessions = "sessions"
 	// EdgeMods holds the string denoting the mods edge name in mutations.
 	EdgeMods = "mods"
+	// EdgeModpacks holds the string denoting the modpacks edge name in mutations.
+	EdgeModpacks = "modpacks"
 	// EdgeGroups holds the string denoting the groups edge name in mutations.
 	EdgeGroups = "groups"
 	// EdgeUserMods holds the string denoting the user_mods edge name in mutations.
 	EdgeUserMods = "user_mods"
+	// EdgeUserModpacks holds the string denoting the user_modpacks edge name in mutations.
+	EdgeUserModpacks = "user_modpacks"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// GuidesTable is the table that holds the guides relation/edge.
@@ -72,6 +76,11 @@ const (
 	// ModsInverseTable is the table name for the Mod entity.
 	// It exists in this package in order to avoid circular dependency with the "mod" package.
 	ModsInverseTable = "mods"
+	// ModpacksTable is the table that holds the modpacks relation/edge. The primary key declared below.
+	ModpacksTable = "user_modpacks"
+	// ModpacksInverseTable is the table name for the Modpack entity.
+	// It exists in this package in order to avoid circular dependency with the "modpack" package.
+	ModpacksInverseTable = "modpacks"
 	// GroupsTable is the table that holds the groups relation/edge.
 	GroupsTable = "user_groups"
 	// GroupsInverseTable is the table name for the UserGroup entity.
@@ -86,6 +95,13 @@ const (
 	UserModsInverseTable = "user_mods"
 	// UserModsColumn is the table column denoting the user_mods relation/edge.
 	UserModsColumn = "user_id"
+	// UserModpacksTable is the table that holds the user_modpacks relation/edge.
+	UserModpacksTable = "user_modpacks"
+	// UserModpacksInverseTable is the table name for the UserModpack entity.
+	// It exists in this package in order to avoid circular dependency with the "usermodpack" package.
+	UserModpacksInverseTable = "user_modpacks"
+	// UserModpacksColumn is the table column denoting the user_modpacks relation/edge.
+	UserModpacksColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -110,6 +126,9 @@ var (
 	// ModsPrimaryKey and ModsColumn2 are the table columns denoting the
 	// primary key for the mods relation (M2M).
 	ModsPrimaryKey = []string{"user_id", "mod_id"}
+	// ModpacksPrimaryKey and ModpacksColumn2 are the table columns denoting the
+	// primary key for the modpacks relation (M2M).
+	ModpacksPrimaryKey = []string{"user_id", "modpack_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -269,6 +288,20 @@ func ByMods(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByModpacksCount orders the results by modpacks count.
+func ByModpacksCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newModpacksStep(), opts...)
+	}
+}
+
+// ByModpacks orders the results by modpacks terms.
+func ByModpacks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newModpacksStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByGroupsCount orders the results by groups count.
 func ByGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -296,6 +329,20 @@ func ByUserMods(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserModsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByUserModpacksCount orders the results by user_modpacks count.
+func ByUserModpacksCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserModpacksStep(), opts...)
+	}
+}
+
+// ByUserModpacks orders the results by user_modpacks terms.
+func ByUserModpacks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserModpacksStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newGuidesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -317,6 +364,13 @@ func newModsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, false, ModsTable, ModsPrimaryKey...),
 	)
 }
+func newModpacksStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ModpacksInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ModpacksTable, ModpacksPrimaryKey...),
+	)
+}
 func newGroupsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -329,5 +383,12 @@ func newUserModsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserModsInverseTable, UserModsColumn),
 		sqlgraph.Edge(sqlgraph.O2M, true, UserModsTable, UserModsColumn),
+	)
+}
+func newUserModpacksStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserModpacksInverseTable, UserModpacksColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, UserModpacksTable, UserModpacksColumn),
 	)
 }

@@ -50,6 +50,8 @@ func (User) Edges() []ent.Edge {
 			StorageKey(edge.Column("user_id")),
 		edge.To("mods", Mod.Type).
 			Through("user_mods", UserMod.Type),
+		edge.To("modpacks", Modpack.Type).
+			Through("user_modpacks", UserModpack.Type),
 		edge.To("groups", UserGroup.Type),
 	}
 }

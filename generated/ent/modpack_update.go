@@ -17,6 +17,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
+	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -306,6 +307,21 @@ func (mu *ModpackUpdate) AddMods(m ...*Mod) *ModpackUpdate {
 	return mu.AddModIDs(ids...)
 }
 
+// AddAuthorIDs adds the "authors" edge to the User entity by IDs.
+func (mu *ModpackUpdate) AddAuthorIDs(ids ...string) *ModpackUpdate {
+	mu.mutation.AddAuthorIDs(ids...)
+	return mu
+}
+
+// AddAuthors adds the "authors" edges to the User entity.
+func (mu *ModpackUpdate) AddAuthors(u ...*User) *ModpackUpdate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return mu.AddAuthorIDs(ids...)
+}
+
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
 func (mu *ModpackUpdate) AddTagIDs(ids ...string) *ModpackUpdate {
 	mu.mutation.AddTagIDs(ids...)
@@ -408,6 +424,27 @@ func (mu *ModpackUpdate) RemoveMods(m ...*Mod) *ModpackUpdate {
 		ids[i] = m[i].ID
 	}
 	return mu.RemoveModIDs(ids...)
+}
+
+// ClearAuthors clears all "authors" edges to the User entity.
+func (mu *ModpackUpdate) ClearAuthors() *ModpackUpdate {
+	mu.mutation.ClearAuthors()
+	return mu
+}
+
+// RemoveAuthorIDs removes the "authors" edge to User entities by IDs.
+func (mu *ModpackUpdate) RemoveAuthorIDs(ids ...string) *ModpackUpdate {
+	mu.mutation.RemoveAuthorIDs(ids...)
+	return mu
+}
+
+// RemoveAuthors removes "authors" edges to User entities.
+func (mu *ModpackUpdate) RemoveAuthors(u ...*User) *ModpackUpdate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return mu.RemoveAuthorIDs(ids...)
 }
 
 // ClearTags clears all "tags" edges to the Tag entity.
@@ -728,6 +765,51 @@ func (mu *ModpackUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mod.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if mu.mutation.AuthorsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   modpack.AuthorsTable,
+			Columns: modpack.AuthorsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mu.mutation.RemovedAuthorsIDs(); len(nodes) > 0 && !mu.mutation.AuthorsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   modpack.AuthorsTable,
+			Columns: modpack.AuthorsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mu.mutation.AuthorsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   modpack.AuthorsTable,
+			Columns: modpack.AuthorsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -1074,6 +1156,21 @@ func (muo *ModpackUpdateOne) AddMods(m ...*Mod) *ModpackUpdateOne {
 	return muo.AddModIDs(ids...)
 }
 
+// AddAuthorIDs adds the "authors" edge to the User entity by IDs.
+func (muo *ModpackUpdateOne) AddAuthorIDs(ids ...string) *ModpackUpdateOne {
+	muo.mutation.AddAuthorIDs(ids...)
+	return muo
+}
+
+// AddAuthors adds the "authors" edges to the User entity.
+func (muo *ModpackUpdateOne) AddAuthors(u ...*User) *ModpackUpdateOne {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return muo.AddAuthorIDs(ids...)
+}
+
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
 func (muo *ModpackUpdateOne) AddTagIDs(ids ...string) *ModpackUpdateOne {
 	muo.mutation.AddTagIDs(ids...)
@@ -1176,6 +1273,27 @@ func (muo *ModpackUpdateOne) RemoveMods(m ...*Mod) *ModpackUpdateOne {
 		ids[i] = m[i].ID
 	}
 	return muo.RemoveModIDs(ids...)
+}
+
+// ClearAuthors clears all "authors" edges to the User entity.
+func (muo *ModpackUpdateOne) ClearAuthors() *ModpackUpdateOne {
+	muo.mutation.ClearAuthors()
+	return muo
+}
+
+// RemoveAuthorIDs removes the "authors" edge to User entities by IDs.
+func (muo *ModpackUpdateOne) RemoveAuthorIDs(ids ...string) *ModpackUpdateOne {
+	muo.mutation.RemoveAuthorIDs(ids...)
+	return muo
+}
+
+// RemoveAuthors removes "authors" edges to User entities.
+func (muo *ModpackUpdateOne) RemoveAuthors(u ...*User) *ModpackUpdateOne {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return muo.RemoveAuthorIDs(ids...)
 }
 
 // ClearTags clears all "tags" edges to the Tag entity.
@@ -1526,6 +1644,51 @@ func (muo *ModpackUpdateOne) sqlSave(ctx context.Context) (_node *Modpack, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mod.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if muo.mutation.AuthorsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   modpack.AuthorsTable,
+			Columns: modpack.AuthorsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := muo.mutation.RemovedAuthorsIDs(); len(nodes) > 0 && !muo.mutation.AuthorsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   modpack.AuthorsTable,
+			Columns: modpack.AuthorsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := muo.mutation.AuthorsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   modpack.AuthorsTable,
+			Columns: modpack.AuthorsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

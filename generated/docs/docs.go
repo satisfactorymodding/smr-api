@@ -778,6 +778,26 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/me/modpacks": {
+            "get": {
+                "description": "Retrieve the users modpacks associated with the token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Retrieve Current Users Modpacks",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/user/me/mods": {
             "get": {
                 "description": "Retrieve the users mods associated with the token",
@@ -811,6 +831,35 @@ const docTemplate = `{
                     "User"
                 ],
                 "summary": "Retrieve a User",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/user/{userId}/modpacks": {
+            "get": {
+                "description": "Retrieve a users modpacks by user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Retrieve a Users Modpacks",
                 "parameters": [
                     {
                         "type": "string",
@@ -1175,6 +1224,12 @@ const docTemplate = `{
         "generated.Modpack": {
             "type": "object",
             "properties": {
+                "authors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.UserModpack"
+                    }
+                },
                 "children": {
                     "type": "array",
                     "items": {
@@ -1358,6 +1413,12 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "modpacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.UserModpack"
+                    }
+                },
                 "mods": {
                     "type": "array",
                     "items": {
@@ -1379,6 +1440,26 @@ const docTemplate = `{
                     "$ref": "#/definitions/generated.Mod"
                 },
                 "mod_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/generated.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.UserModpack": {
+            "type": "object",
+            "properties": {
+                "modpack": {
+                    "$ref": "#/definitions/generated.Modpack"
+                },
+                "modpack_id": {
                     "type": "string"
                 },
                 "role": {

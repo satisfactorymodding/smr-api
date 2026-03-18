@@ -17,6 +17,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
+	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/util"
 )
 
@@ -275,6 +276,21 @@ func (mc *ModpackCreate) AddMods(m ...*Mod) *ModpackCreate {
 		ids[i] = m[i].ID
 	}
 	return mc.AddModIDs(ids...)
+}
+
+// AddAuthorIDs adds the "authors" edge to the User entity by IDs.
+func (mc *ModpackCreate) AddAuthorIDs(ids ...string) *ModpackCreate {
+	mc.mutation.AddAuthorIDs(ids...)
+	return mc
+}
+
+// AddAuthors adds the "authors" edges to the User entity.
+func (mc *ModpackCreate) AddAuthors(u ...*User) *ModpackCreate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return mc.AddAuthorIDs(ids...)
 }
 
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
@@ -567,6 +583,22 @@ func (mc *ModpackCreate) createSpec() (*Modpack, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mod.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := mc.mutation.AuthorsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   modpack.AuthorsTable,
+			Columns: modpack.AuthorsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

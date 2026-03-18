@@ -54,10 +54,14 @@ const (
 	EdgeReleases = "releases"
 	// EdgeMods holds the string denoting the mods edge name in mutations.
 	EdgeMods = "mods"
+	// EdgeAuthors holds the string denoting the authors edge name in mutations.
+	EdgeAuthors = "authors"
 	// EdgeTags holds the string denoting the tags edge name in mutations.
 	EdgeTags = "tags"
 	// EdgeModpackMods holds the string denoting the modpack_mods edge name in mutations.
 	EdgeModpackMods = "modpack_mods"
+	// EdgeUserModpacks holds the string denoting the user_modpacks edge name in mutations.
+	EdgeUserModpacks = "user_modpacks"
 	// EdgeModpackTags holds the string denoting the modpack_tags edge name in mutations.
 	EdgeModpackTags = "modpack_tags"
 	// Table holds the table name of the modpack in the database.
@@ -89,6 +93,11 @@ const (
 	// ModsInverseTable is the table name for the Mod entity.
 	// It exists in this package in order to avoid circular dependency with the "mod" package.
 	ModsInverseTable = "mods"
+	// AuthorsTable is the table that holds the authors relation/edge. The primary key declared below.
+	AuthorsTable = "user_modpacks"
+	// AuthorsInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	AuthorsInverseTable = "users"
 	// TagsTable is the table that holds the tags relation/edge. The primary key declared below.
 	TagsTable = "modpack_tags"
 	// TagsInverseTable is the table name for the Tag entity.
@@ -101,6 +110,13 @@ const (
 	ModpackModsInverseTable = "modpack_mods"
 	// ModpackModsColumn is the table column denoting the modpack_mods relation/edge.
 	ModpackModsColumn = "modpack_id"
+	// UserModpacksTable is the table that holds the user_modpacks relation/edge.
+	UserModpacksTable = "user_modpacks"
+	// UserModpacksInverseTable is the table name for the UserModpack entity.
+	// It exists in this package in order to avoid circular dependency with the "usermodpack" package.
+	UserModpacksInverseTable = "user_modpacks"
+	// UserModpacksColumn is the table column denoting the user_modpacks relation/edge.
+	UserModpacksColumn = "modpack_id"
 	// ModpackTagsTable is the table that holds the modpack_tags relation/edge.
 	ModpackTagsTable = "modpack_tags"
 	// ModpackTagsInverseTable is the table name for the ModpackTag entity.
@@ -134,6 +150,9 @@ var (
 	// ModsPrimaryKey and ModsColumn2 are the table columns denoting the
 	// primary key for the mods relation (M2M).
 	ModsPrimaryKey = []string{"modpack_id", "mod_id"}
+	// AuthorsPrimaryKey and AuthorsColumn2 are the table columns denoting the
+	// primary key for the authors relation (M2M).
+	AuthorsPrimaryKey = []string{"user_id", "modpack_id"}
 	// TagsPrimaryKey and TagsColumn2 are the table columns denoting the
 	// primary key for the tags relation (M2M).
 	TagsPrimaryKey = []string{"modpack_id", "tag_id"}
@@ -313,6 +332,20 @@ func ByMods(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByAuthorsCount orders the results by authors count.
+func ByAuthorsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAuthorsStep(), opts...)
+	}
+}
+
+// ByAuthors orders the results by authors terms.
+func ByAuthors(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAuthorsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByTagsCount orders the results by tags count.
 func ByTagsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -338,6 +371,20 @@ func ByModpackModsCount(opts ...sql.OrderTermOption) OrderOption {
 func ByModpackMods(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newModpackModsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUserModpacksCount orders the results by user_modpacks count.
+func ByUserModpacksCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserModpacksStep(), opts...)
+	}
+}
+
+// ByUserModpacks orders the results by user_modpacks terms.
+func ByUserModpacks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserModpacksStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -389,6 +436,13 @@ func newModsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, false, ModsTable, ModsPrimaryKey...),
 	)
 }
+func newAuthorsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AuthorsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, AuthorsTable, AuthorsPrimaryKey...),
+	)
+}
 func newTagsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -401,6 +455,13 @@ func newModpackModsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ModpackModsInverseTable, ModpackModsColumn),
 		sqlgraph.Edge(sqlgraph.O2M, true, ModpackModsTable, ModpackModsColumn),
+	)
+}
+func newUserModpacksStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserModpacksInverseTable, UserModpacksColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, UserModpacksTable, UserModpacksColumn),
 	)
 }
 func newModpackTagsStep() *sqlgraph.Step {

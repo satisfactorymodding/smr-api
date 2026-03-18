@@ -57,13 +57,17 @@ type UserEdges struct {
 	Sessions []*UserSession `json:"sessions,omitempty"`
 	// Mods holds the value of the mods edge.
 	Mods []*Mod `json:"mods,omitempty"`
+	// Modpacks holds the value of the modpacks edge.
+	Modpacks []*Modpack `json:"modpacks,omitempty"`
 	// Groups holds the value of the groups edge.
 	Groups []*UserGroup `json:"groups,omitempty"`
 	// UserMods holds the value of the user_mods edge.
 	UserMods []*UserMod `json:"user_mods,omitempty"`
+	// UserModpacks holds the value of the user_modpacks edge.
+	UserModpacks []*UserModpack `json:"user_modpacks,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [7]bool
 }
 
 // GuidesOrErr returns the Guides value or an error if the edge
@@ -93,10 +97,19 @@ func (e UserEdges) ModsOrErr() ([]*Mod, error) {
 	return nil, &NotLoadedError{edge: "mods"}
 }
 
+// ModpacksOrErr returns the Modpacks value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ModpacksOrErr() ([]*Modpack, error) {
+	if e.loadedTypes[3] {
+		return e.Modpacks, nil
+	}
+	return nil, &NotLoadedError{edge: "modpacks"}
+}
+
 // GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GroupsOrErr() ([]*UserGroup, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.Groups, nil
 	}
 	return nil, &NotLoadedError{edge: "groups"}
@@ -105,10 +118,19 @@ func (e UserEdges) GroupsOrErr() ([]*UserGroup, error) {
 // UserModsOrErr returns the UserMods value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserModsOrErr() ([]*UserMod, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.UserMods, nil
 	}
 	return nil, &NotLoadedError{edge: "user_mods"}
+}
+
+// UserModpacksOrErr returns the UserModpacks value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UserModpacksOrErr() ([]*UserModpack, error) {
+	if e.loadedTypes[6] {
+		return e.UserModpacks, nil
+	}
+	return nil, &NotLoadedError{edge: "user_modpacks"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -251,6 +273,11 @@ func (u *User) QueryMods() *ModQuery {
 	return NewUserClient(u.config).QueryMods(u)
 }
 
+// QueryModpacks queries the "modpacks" edge of the User entity.
+func (u *User) QueryModpacks() *ModpackQuery {
+	return NewUserClient(u.config).QueryModpacks(u)
+}
+
 // QueryGroups queries the "groups" edge of the User entity.
 func (u *User) QueryGroups() *UserGroupQuery {
 	return NewUserClient(u.config).QueryGroups(u)
@@ -259,6 +286,11 @@ func (u *User) QueryGroups() *UserGroupQuery {
 // QueryUserMods queries the "user_mods" edge of the User entity.
 func (u *User) QueryUserMods() *UserModQuery {
 	return NewUserClient(u.config).QueryUserMods(u)
+}
+
+// QueryUserModpacks queries the "user_modpacks" edge of the User entity.
+func (u *User) QueryUserModpacks() *UserModpackQuery {
+	return NewUserClient(u.config).QueryUserModpacks(u)
 }
 
 // Update returns a builder for updating this User.
