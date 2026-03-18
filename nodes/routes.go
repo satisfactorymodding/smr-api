@@ -43,6 +43,7 @@ func RegisterUserRoutes(router *echo.Group) {
 
 	router.GET("/:userId", dataWrapper(getUser))
 	router.GET("/:userId/mods", dataWrapper(getUserMods))
+	router.GET("/:userId/modpacks", dataWrapper(getUserModpacks))
 }
 
 func RegisterUsersRoutes(router *echo.Group) {

@@ -26,6 +26,10 @@ func (r *Resolver) UserMod() generated.UserModResolver {
 	return &userModResolver{r}
 }
 
+func (r *Resolver) UserModpack() generated.UserModpackResolver {
+	return &userModpackResolver{r}
+}
+
 func (r *Resolver) VersionTarget() generated.VersionTargetResolver {
 	return &versionTargetResolver{r}
 }

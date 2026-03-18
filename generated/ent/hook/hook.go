@@ -189,6 +189,18 @@ func (f UserModFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserModMutation", m)
 }
 
+// The UserModpackFunc type is an adapter to allow the use of ordinary
+// function as UserModpack mutator.
+type UserModpackFunc func(context.Context, *ent.UserModpackMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserModpackFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserModpackMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserModpackMutation", m)
+}
+
 // The UserSessionFunc type is an adapter to allow the use of ordinary
 // function as UserSession mutator.
 type UserSessionFunc func(context.Context, *ent.UserSessionMutation) (ent.Value, error)

@@ -34,6 +34,7 @@ type Modpack {
 
     parent: Modpack
     children: [Modpack!]!
+    authors: [UserModpack!]!
     tags: [Tag!]!
     targets: [String!]!
     mods: [ModpackModEntry!]!
@@ -99,10 +100,16 @@ input UpdateModpack {
     full_description: String
     logo: Upload
     hidden: Boolean
+    authors: [UpdateUserModpack!]
     tagIDs: [TagID!]
     targets: [String!]
     mods: [ModpackModInput!]
     compatibility: CompatibilityInfoInput
+}
+
+input UpdateUserModpack {
+    user_id: UserID!
+    role: String!
 }
 
 input NewModpackRelease {

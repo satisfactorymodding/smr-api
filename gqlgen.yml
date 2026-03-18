@@ -61,6 +61,13 @@ models:
       mod:
         resolver: true
 
+  UserModpack:
+    fields:
+      user:
+        resolver: true
+      modpack:
+        resolver: true
+
   Version:
     fields:
       link:

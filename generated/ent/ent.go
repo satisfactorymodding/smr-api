@@ -27,6 +27,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
@@ -107,6 +108,7 @@ func checkColumn(table, column string) error {
 			user.Table:                user.ValidColumn,
 			usergroup.Table:           usergroup.ValidColumn,
 			usermod.Table:             usermod.ValidColumn,
+			usermodpack.Table:         usermodpack.ValidColumn,
 			usersession.Table:         usersession.ValidColumn,
 			version.Table:             version.ValidColumn,
 			versiondependency.Table:   versiondependency.ValidColumn,

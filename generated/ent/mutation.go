@@ -27,6 +27,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
@@ -59,6 +60,7 @@ const (
 	TypeUser                = "User"
 	TypeUserGroup           = "UserGroup"
 	TypeUserMod             = "UserMod"
+	TypeUserModpack         = "UserModpack"
 	TypeUserSession         = "UserSession"
 	TypeVersion             = "Version"
 	TypeVersionDependency   = "VersionDependency"
@@ -4502,6 +4504,9 @@ type ModpackMutation struct {
 	mods              map[string]struct{}
 	removedmods       map[string]struct{}
 	clearedmods       bool
+	authors           map[string]struct{}
+	removedauthors    map[string]struct{}
+	clearedauthors    bool
 	tags              map[string]struct{}
 	removedtags       map[string]struct{}
 	clearedtags       bool
@@ -5529,6 +5534,60 @@ func (m *ModpackMutation) ResetMods() {
 	m.removedmods = nil
 }
 
+// AddAuthorIDs adds the "authors" edge to the User entity by ids.
+func (m *ModpackMutation) AddAuthorIDs(ids ...string) {
+	if m.authors == nil {
+		m.authors = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.authors[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAuthors clears the "authors" edge to the User entity.
+func (m *ModpackMutation) ClearAuthors() {
+	m.clearedauthors = true
+}
+
+// AuthorsCleared reports if the "authors" edge to the User entity was cleared.
+func (m *ModpackMutation) AuthorsCleared() bool {
+	return m.clearedauthors
+}
+
+// RemoveAuthorIDs removes the "authors" edge to the User entity by IDs.
+func (m *ModpackMutation) RemoveAuthorIDs(ids ...string) {
+	if m.removedauthors == nil {
+		m.removedauthors = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.authors, ids[i])
+		m.removedauthors[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAuthors returns the removed IDs of the "authors" edge to the User entity.
+func (m *ModpackMutation) RemovedAuthorsIDs() (ids []string) {
+	for id := range m.removedauthors {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AuthorsIDs returns the "authors" edge IDs in the mutation.
+func (m *ModpackMutation) AuthorsIDs() (ids []string) {
+	for id := range m.authors {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAuthors resets all changes to the "authors" edge.
+func (m *ModpackMutation) ResetAuthors() {
+	m.authors = nil
+	m.clearedauthors = false
+	m.removedauthors = nil
+}
+
 // AddTagIDs adds the "tags" edge to the Tag entity by ids.
 func (m *ModpackMutation) AddTagIDs(ids ...string) {
 	if m.tags == nil {
@@ -6032,7 +6091,7 @@ func (m *ModpackMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ModpackMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.children != nil {
 		edges = append(edges, modpack.EdgeChildren)
 	}
@@ -6047,6 +6106,9 @@ func (m *ModpackMutation) AddedEdges() []string {
 	}
 	if m.mods != nil {
 		edges = append(edges, modpack.EdgeMods)
+	}
+	if m.authors != nil {
+		edges = append(edges, modpack.EdgeAuthors)
 	}
 	if m.tags != nil {
 		edges = append(edges, modpack.EdgeTags)
@@ -6086,6 +6148,12 @@ func (m *ModpackMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case modpack.EdgeAuthors:
+		ids := make([]ent.Value, 0, len(m.authors))
+		for id := range m.authors {
+			ids = append(ids, id)
+		}
+		return ids
 	case modpack.EdgeTags:
 		ids := make([]ent.Value, 0, len(m.tags))
 		for id := range m.tags {
@@ -6098,7 +6166,7 @@ func (m *ModpackMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ModpackMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.removedchildren != nil {
 		edges = append(edges, modpack.EdgeChildren)
 	}
@@ -6110,6 +6178,9 @@ func (m *ModpackMutation) RemovedEdges() []string {
 	}
 	if m.removedmods != nil {
 		edges = append(edges, modpack.EdgeMods)
+	}
+	if m.removedauthors != nil {
+		edges = append(edges, modpack.EdgeAuthors)
 	}
 	if m.removedtags != nil {
 		edges = append(edges, modpack.EdgeTags)
@@ -6145,6 +6216,12 @@ func (m *ModpackMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case modpack.EdgeAuthors:
+		ids := make([]ent.Value, 0, len(m.removedauthors))
+		for id := range m.removedauthors {
+			ids = append(ids, id)
+		}
+		return ids
 	case modpack.EdgeTags:
 		ids := make([]ent.Value, 0, len(m.removedtags))
 		for id := range m.removedtags {
@@ -6157,7 +6234,7 @@ func (m *ModpackMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ModpackMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.clearedchildren {
 		edges = append(edges, modpack.EdgeChildren)
 	}
@@ -6172,6 +6249,9 @@ func (m *ModpackMutation) ClearedEdges() []string {
 	}
 	if m.clearedmods {
 		edges = append(edges, modpack.EdgeMods)
+	}
+	if m.clearedauthors {
+		edges = append(edges, modpack.EdgeAuthors)
 	}
 	if m.clearedtags {
 		edges = append(edges, modpack.EdgeTags)
@@ -6193,6 +6273,8 @@ func (m *ModpackMutation) EdgeCleared(name string) bool {
 		return m.clearedreleases
 	case modpack.EdgeMods:
 		return m.clearedmods
+	case modpack.EdgeAuthors:
+		return m.clearedauthors
 	case modpack.EdgeTags:
 		return m.clearedtags
 	}
@@ -6228,6 +6310,9 @@ func (m *ModpackMutation) ResetEdge(name string) error {
 		return nil
 	case modpack.EdgeMods:
 		m.ResetMods()
+		return nil
+	case modpack.EdgeAuthors:
+		m.ResetAuthors()
 		return nil
 	case modpack.EdgeTags:
 		m.ResetTags()
@@ -9425,6 +9510,9 @@ type UserMutation struct {
 	mods             map[string]struct{}
 	removedmods      map[string]struct{}
 	clearedmods      bool
+	modpacks         map[string]struct{}
+	removedmodpacks  map[string]struct{}
+	clearedmodpacks  bool
 	groups           map[string]struct{}
 	removedgroups    map[string]struct{}
 	clearedgroups    bool
@@ -10278,6 +10366,60 @@ func (m *UserMutation) ResetMods() {
 	m.removedmods = nil
 }
 
+// AddModpackIDs adds the "modpacks" edge to the Modpack entity by ids.
+func (m *UserMutation) AddModpackIDs(ids ...string) {
+	if m.modpacks == nil {
+		m.modpacks = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.modpacks[ids[i]] = struct{}{}
+	}
+}
+
+// ClearModpacks clears the "modpacks" edge to the Modpack entity.
+func (m *UserMutation) ClearModpacks() {
+	m.clearedmodpacks = true
+}
+
+// ModpacksCleared reports if the "modpacks" edge to the Modpack entity was cleared.
+func (m *UserMutation) ModpacksCleared() bool {
+	return m.clearedmodpacks
+}
+
+// RemoveModpackIDs removes the "modpacks" edge to the Modpack entity by IDs.
+func (m *UserMutation) RemoveModpackIDs(ids ...string) {
+	if m.removedmodpacks == nil {
+		m.removedmodpacks = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.modpacks, ids[i])
+		m.removedmodpacks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedModpacks returns the removed IDs of the "modpacks" edge to the Modpack entity.
+func (m *UserMutation) RemovedModpacksIDs() (ids []string) {
+	for id := range m.removedmodpacks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ModpacksIDs returns the "modpacks" edge IDs in the mutation.
+func (m *UserMutation) ModpacksIDs() (ids []string) {
+	for id := range m.modpacks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetModpacks resets all changes to the "modpacks" edge.
+func (m *UserMutation) ResetModpacks() {
+	m.modpacks = nil
+	m.clearedmodpacks = false
+	m.removedmodpacks = nil
+}
+
 // AddGroupIDs adds the "groups" edge to the UserGroup entity by ids.
 func (m *UserMutation) AddGroupIDs(ids ...string) {
 	if m.groups == nil {
@@ -10729,7 +10871,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.guides != nil {
 		edges = append(edges, user.EdgeGuides)
 	}
@@ -10738,6 +10880,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.mods != nil {
 		edges = append(edges, user.EdgeMods)
+	}
+	if m.modpacks != nil {
+		edges = append(edges, user.EdgeModpacks)
 	}
 	if m.groups != nil {
 		edges = append(edges, user.EdgeGroups)
@@ -10767,6 +10912,12 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeModpacks:
+		ids := make([]ent.Value, 0, len(m.modpacks))
+		for id := range m.modpacks {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeGroups:
 		ids := make([]ent.Value, 0, len(m.groups))
 		for id := range m.groups {
@@ -10779,7 +10930,7 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedguides != nil {
 		edges = append(edges, user.EdgeGuides)
 	}
@@ -10788,6 +10939,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedmods != nil {
 		edges = append(edges, user.EdgeMods)
+	}
+	if m.removedmodpacks != nil {
+		edges = append(edges, user.EdgeModpacks)
 	}
 	if m.removedgroups != nil {
 		edges = append(edges, user.EdgeGroups)
@@ -10817,6 +10971,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeModpacks:
+		ids := make([]ent.Value, 0, len(m.removedmodpacks))
+		for id := range m.removedmodpacks {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeGroups:
 		ids := make([]ent.Value, 0, len(m.removedgroups))
 		for id := range m.removedgroups {
@@ -10829,7 +10989,7 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedguides {
 		edges = append(edges, user.EdgeGuides)
 	}
@@ -10838,6 +10998,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedmods {
 		edges = append(edges, user.EdgeMods)
+	}
+	if m.clearedmodpacks {
+		edges = append(edges, user.EdgeModpacks)
 	}
 	if m.clearedgroups {
 		edges = append(edges, user.EdgeGroups)
@@ -10855,6 +11018,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedsessions
 	case user.EdgeMods:
 		return m.clearedmods
+	case user.EdgeModpacks:
+		return m.clearedmodpacks
 	case user.EdgeGroups:
 		return m.clearedgroups
 	}
@@ -10881,6 +11046,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeMods:
 		m.ResetMods()
+		return nil
+	case user.EdgeModpacks:
+		m.ResetModpacks()
 		return nil
 	case user.EdgeGroups:
 		m.ResetGroups()
@@ -11925,6 +12093,420 @@ func (m *UserModMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown UserMod edge %s", name)
+}
+
+// UserModpackMutation represents an operation that mutates the UserModpack nodes in the graph.
+type UserModpackMutation struct {
+	config
+	op             Op
+	typ            string
+	role           *string
+	clearedFields  map[string]struct{}
+	user           *string
+	cleareduser    bool
+	modpack        *string
+	clearedmodpack bool
+	done           bool
+	oldValue       func(context.Context) (*UserModpack, error)
+	predicates     []predicate.UserModpack
+}
+
+var _ ent.Mutation = (*UserModpackMutation)(nil)
+
+// usermodpackOption allows management of the mutation configuration using functional options.
+type usermodpackOption func(*UserModpackMutation)
+
+// newUserModpackMutation creates new mutation for the UserModpack entity.
+func newUserModpackMutation(c config, op Op, opts ...usermodpackOption) *UserModpackMutation {
+	m := &UserModpackMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUserModpack,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UserModpackMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UserModpackMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *UserModpackMutation) SetUserID(s string) {
+	m.user = &s
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *UserModpackMutation) UserID() (r string, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *UserModpackMutation) ResetUserID() {
+	m.user = nil
+}
+
+// SetModpackID sets the "modpack_id" field.
+func (m *UserModpackMutation) SetModpackID(s string) {
+	m.modpack = &s
+}
+
+// ModpackID returns the value of the "modpack_id" field in the mutation.
+func (m *UserModpackMutation) ModpackID() (r string, exists bool) {
+	v := m.modpack
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModpackID resets all changes to the "modpack_id" field.
+func (m *UserModpackMutation) ResetModpackID() {
+	m.modpack = nil
+}
+
+// SetRole sets the "role" field.
+func (m *UserModpackMutation) SetRole(s string) {
+	m.role = &s
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *UserModpackMutation) Role() (r string, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *UserModpackMutation) ResetRole() {
+	m.role = nil
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *UserModpackMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[usermodpack.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *UserModpackMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *UserModpackMutation) UserIDs() (ids []string) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *UserModpackMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// ClearModpack clears the "modpack" edge to the Modpack entity.
+func (m *UserModpackMutation) ClearModpack() {
+	m.clearedmodpack = true
+	m.clearedFields[usermodpack.FieldModpackID] = struct{}{}
+}
+
+// ModpackCleared reports if the "modpack" edge to the Modpack entity was cleared.
+func (m *UserModpackMutation) ModpackCleared() bool {
+	return m.clearedmodpack
+}
+
+// ModpackIDs returns the "modpack" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ModpackID instead. It exists only for internal usage by the builders.
+func (m *UserModpackMutation) ModpackIDs() (ids []string) {
+	if id := m.modpack; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetModpack resets all changes to the "modpack" edge.
+func (m *UserModpackMutation) ResetModpack() {
+	m.modpack = nil
+	m.clearedmodpack = false
+}
+
+// Where appends a list predicates to the UserModpackMutation builder.
+func (m *UserModpackMutation) Where(ps ...predicate.UserModpack) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UserModpackMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UserModpackMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UserModpack, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UserModpackMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UserModpackMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UserModpack).
+func (m *UserModpackMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UserModpackMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.user != nil {
+		fields = append(fields, usermodpack.FieldUserID)
+	}
+	if m.modpack != nil {
+		fields = append(fields, usermodpack.FieldModpackID)
+	}
+	if m.role != nil {
+		fields = append(fields, usermodpack.FieldRole)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UserModpackMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case usermodpack.FieldUserID:
+		return m.UserID()
+	case usermodpack.FieldModpackID:
+		return m.ModpackID()
+	case usermodpack.FieldRole:
+		return m.Role()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UserModpackMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	return nil, errors.New("edge schema UserModpack does not support getting old values")
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserModpackMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case usermodpack.FieldUserID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case usermodpack.FieldModpackID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModpackID(v)
+		return nil
+	case usermodpack.FieldRole:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UserModpack field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UserModpackMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UserModpackMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserModpackMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown UserModpack numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UserModpackMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UserModpackMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UserModpackMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown UserModpack nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UserModpackMutation) ResetField(name string) error {
+	switch name {
+	case usermodpack.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case usermodpack.FieldModpackID:
+		m.ResetModpackID()
+		return nil
+	case usermodpack.FieldRole:
+		m.ResetRole()
+		return nil
+	}
+	return fmt.Errorf("unknown UserModpack field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UserModpackMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.user != nil {
+		edges = append(edges, usermodpack.EdgeUser)
+	}
+	if m.modpack != nil {
+		edges = append(edges, usermodpack.EdgeModpack)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UserModpackMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case usermodpack.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	case usermodpack.EdgeModpack:
+		if id := m.modpack; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UserModpackMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UserModpackMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UserModpackMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.cleareduser {
+		edges = append(edges, usermodpack.EdgeUser)
+	}
+	if m.clearedmodpack {
+		edges = append(edges, usermodpack.EdgeModpack)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UserModpackMutation) EdgeCleared(name string) bool {
+	switch name {
+	case usermodpack.EdgeUser:
+		return m.cleareduser
+	case usermodpack.EdgeModpack:
+		return m.clearedmodpack
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UserModpackMutation) ClearEdge(name string) error {
+	switch name {
+	case usermodpack.EdgeUser:
+		m.ClearUser()
+		return nil
+	case usermodpack.EdgeModpack:
+		m.ClearModpack()
+		return nil
+	}
+	return fmt.Errorf("unknown UserModpack unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UserModpackMutation) ResetEdge(name string) error {
+	switch name {
+	case usermodpack.EdgeUser:
+		m.ResetUser()
+		return nil
+	case usermodpack.EdgeModpack:
+		m.ResetModpack()
+		return nil
+	}
+	return fmt.Errorf("unknown UserModpack edge %s", name)
 }
 
 // UserSessionMutation represents an operation that mutates the UserSession nodes in the graph.

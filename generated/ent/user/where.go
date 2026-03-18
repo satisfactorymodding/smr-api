@@ -959,6 +959,29 @@ func HasModsWith(preds ...predicate.Mod) predicate.User {
 	})
 }
 
+// HasModpacks applies the HasEdge predicate on the "modpacks" edge.
+func HasModpacks() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, ModpacksTable, ModpacksPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasModpacksWith applies the HasEdge predicate on the "modpacks" edge with a given conditions (other predicates).
+func HasModpacksWith(preds ...predicate.Modpack) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newModpacksStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasGroups applies the HasEdge predicate on the "groups" edge.
 func HasGroups() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -997,6 +1020,29 @@ func HasUserMods() predicate.User {
 func HasUserModsWith(preds ...predicate.UserMod) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newUserModsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUserModpacks applies the HasEdge predicate on the "user_modpacks" edge.
+func HasUserModpacks() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, UserModpacksTable, UserModpacksColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserModpacksWith applies the HasEdge predicate on the "user_modpacks" edge with a given conditions (other predicates).
+func HasUserModpacksWith(preds ...predicate.UserModpack) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newUserModpacksStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

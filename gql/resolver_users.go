@@ -24,9 +24,11 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/storage"
 	"github.com/satisfactorymodding/smr-api/util"
@@ -199,6 +201,18 @@ func (r *userResolver) Mods(ctx context.Context, obj *generated.User) ([]*genera
 	return (*conv.UserModImpl)(nil).ConvertSlice(result), nil
 }
 
+func (r *userResolver) Modpacks(ctx context.Context, obj *generated.User) ([]*generated.UserModpack, error) {
+	result, err := db.From(ctx).UserModpack.
+		Query().
+		Where(usermodpack.UserID(obj.ID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.UserModpackImpl)(nil).ConvertSlice(result), nil
+}
+
 func (r *userResolver) Guides(ctx context.Context, obj *generated.User) ([]*generated.Guide, error) {
 	result, err := db.From(ctx).Guide.Query().Where(guide.UserID(obj.ID)).WithTags().All(ctx)
 	if err != nil {
@@ -306,6 +320,26 @@ func (r *userModResolver) Mod(ctx context.Context, obj *generated.UserMod) (*gen
 	}
 
 	return (*conv.ModImpl)(nil).Convert(result), nil
+}
+
+type userModpackResolver struct{ *Resolver }
+
+func (r *userModpackResolver) User(ctx context.Context, obj *generated.UserModpack) (*generated.User, error) {
+	result, err := dataloader.For(ctx).UserByID.Load(ctx, obj.UserID)()
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.UserImpl)(nil).Convert(result), nil
+}
+
+func (r *userModpackResolver) Modpack(ctx context.Context, obj *generated.UserModpack) (*generated.Modpack, error) {
+	result, err := db.From(ctx).Modpack.Query().WithTags().Where(modpack.ID(obj.ModpackID)).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.ModpackImpl)(nil).Convert(result), nil
 }
 
 func (r *mutationResolver) DiscourseSso(ctx context.Context, sso string, sig string) (*string, error) {

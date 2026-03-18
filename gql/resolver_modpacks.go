@@ -118,6 +118,14 @@ func (r *mutationResolver) CreateModpack(ctx context.Context, newModpack generat
 			dbModpack = dbModpack.AddTargets(targets)
 		}
 
+		if err := db.From(ctx).UserModpack.Create().
+			SetRole("creator").
+			SetModpackID(resultModpack.ID).
+			SetUserID(user.ID).
+			Exec(ctx); err != nil {
+			return err
+		}
+
 		// Create modpack mod relationships
 		for _, modInput := range newModpack.Mods {
 			if err := tx.ModpackMod.Create().
@@ -246,6 +254,7 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 }
 
 func (r *mutationResolver) UpdateModpackCompatibility(ctx context.Context, modpackID string, compatibility generated.CompatibilityInfoInput) (bool, error) {
+	// TODO copied from resolver_mods.go. Probably unnecessary since everything should be done during creation?
 	updateModpack := generated.UpdateModpack{
 		Compatibility: &compatibility,
 	}

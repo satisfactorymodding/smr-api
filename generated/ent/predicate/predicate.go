@@ -51,6 +51,9 @@ type UserGroup func(*sql.Selector)
 // UserMod is the predicate function for usermod builders.
 type UserMod func(*sql.Selector)
 
+// UserModpack is the predicate function for usermodpack builders.
+type UserModpack func(*sql.Selector)
+
 // UserSession is the predicate function for usersession builders.
 type UserSession func(*sql.Selector)
 

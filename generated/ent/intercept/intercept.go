@@ -24,6 +24,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
@@ -492,6 +493,33 @@ func (f TraverseUserMod) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.UserModQuery", q)
 }
 
+// The UserModpackFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UserModpackFunc func(context.Context, *ent.UserModpackQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f UserModpackFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.UserModpackQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.UserModpackQuery", q)
+}
+
+// The TraverseUserModpack type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUserModpack func(context.Context, *ent.UserModpackQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUserModpack) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUserModpack) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UserModpackQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.UserModpackQuery", q)
+}
+
 // The UserSessionFunc type is an adapter to allow the use of ordinary function as a Querier.
 type UserSessionFunc func(context.Context, *ent.UserSessionQuery) (ent.Value, error)
 
@@ -660,6 +688,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.UserGroupQuery, predicate.UserGroup, usergroup.OrderOption]{typ: ent.TypeUserGroup, tq: q}, nil
 	case *ent.UserModQuery:
 		return &query[*ent.UserModQuery, predicate.UserMod, usermod.OrderOption]{typ: ent.TypeUserMod, tq: q}, nil
+	case *ent.UserModpackQuery:
+		return &query[*ent.UserModpackQuery, predicate.UserModpack, usermodpack.OrderOption]{typ: ent.TypeUserModpack, tq: q}, nil
 	case *ent.UserSessionQuery:
 		return &query[*ent.UserSessionQuery, predicate.UserSession, usersession.OrderOption]{typ: ent.TypeUserSession, tq: q}, nil
 	case *ent.VersionQuery:

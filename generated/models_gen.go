@@ -166,6 +166,7 @@ type Modpack struct {
 	Compatibility    *CompatibilityInfo `json:"compatibility,omitempty"`
 	Parent           *Modpack           `json:"parent,omitempty"`
 	Children         []*Modpack         `json:"children"`
+	Authors          []*UserModpack     `json:"authors"`
 	Tags             []*Tag             `json:"tags"`
 	Targets          []string           `json:"targets"`
 	Mods             []*ModpackModEntry `json:"mods"`
@@ -316,6 +317,7 @@ type UpdateModpack struct {
 	FullDescription  *string                 `json:"full_description,omitempty"`
 	Logo             *graphql.Upload         `json:"logo,omitempty"`
 	Hidden           *bool                   `json:"hidden,omitempty"`
+	Authors          []*UpdateUserModpack    `json:"authors,omitempty"`
 	TagIDs           []string                `json:"tagIDs,omitempty"`
 	Targets          []string                `json:"targets,omitempty"`
 	Mods             []*ModpackModInput      `json:"mods,omitempty"`
@@ -338,25 +340,31 @@ type UpdateUserMod struct {
 	Role   string `json:"role"`
 }
 
+type UpdateUserModpack struct {
+	UserID string `json:"user_id"`
+	Role   string `json:"role"`
+}
+
 type UpdateVersion struct {
 	Changelog *string             `json:"changelog,omitempty"`
 	Stability *VersionStabilities `json:"stability,omitempty"`
 }
 
 type User struct {
-	ID              string     `json:"id"`
-	Email           *string    `json:"email,omitempty"`
-	Username        string     `json:"username"`
-	Avatar          *string    `json:"avatar,omitempty"`
-	AvatarThumbhash *string    `json:"avatar_thumbhash,omitempty"`
-	CreatedAt       string     `json:"created_at"`
-	GithubID        *string    `json:"github_id,omitempty"`
-	GoogleID        *string    `json:"google_id,omitempty"`
-	FacebookID      *string    `json:"facebook_id,omitempty"`
-	Roles           *UserRoles `json:"roles"`
-	Groups          []*Group   `json:"groups"`
-	Mods            []*UserMod `json:"mods"`
-	Guides          []*Guide   `json:"guides"`
+	ID              string         `json:"id"`
+	Email           *string        `json:"email,omitempty"`
+	Username        string         `json:"username"`
+	Avatar          *string        `json:"avatar,omitempty"`
+	AvatarThumbhash *string        `json:"avatar_thumbhash,omitempty"`
+	CreatedAt       string         `json:"created_at"`
+	GithubID        *string        `json:"github_id,omitempty"`
+	GoogleID        *string        `json:"google_id,omitempty"`
+	FacebookID      *string        `json:"facebook_id,omitempty"`
+	Roles           *UserRoles     `json:"roles"`
+	Groups          []*Group       `json:"groups"`
+	Mods            []*UserMod     `json:"mods"`
+	Modpacks        []*UserModpack `json:"modpacks"`
+	Guides          []*Guide       `json:"guides"`
 }
 
 type UserMod struct {
@@ -365,6 +373,14 @@ type UserMod struct {
 	Role   string `json:"role"`
 	User   *User  `json:"user"`
 	Mod    *Mod   `json:"mod"`
+}
+
+type UserModpack struct {
+	UserID    string   `json:"user_id"`
+	ModpackID string   `json:"modpack_id"`
+	Role      string   `json:"role"`
+	User      *User    `json:"user"`
+	Modpack   *Modpack `json:"modpack"`
 }
 
 type UserRoles struct {

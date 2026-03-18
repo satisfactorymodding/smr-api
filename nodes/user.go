@@ -12,6 +12,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 )
 
@@ -88,6 +89,23 @@ func getMyMods(user *ent.User, c echo.Context) (interface{}, *ErrorResponse) {
 	return (*conv.UserModImpl)(nil).ConvertSlice(mods), nil
 }
 
+// // @Summary Retrieve Current Users Modpacks
+// // @Tags User
+// // @Description Retrieve the users modpacks associated with the token
+// // @Accept  json
+// // @Produce  json
+// // @Success 200
+// // @Router /user/me/modpacks [get]
+// func getMyModpacks(user *ent.User, c echo.Context) (interface{}, *ErrorResponse) {
+// 	modpacks, err := db.From(c.Request().Context()).UserModpack.Query().Where(usermodpack.UserID(user.ID)).All(c.Request().Context())
+// 	if err != nil {
+// 		slox.Error(c.Request().Context(), "failed fetching modpacks", slog.Any("err", err))
+// 		return nil, &ErrorUserNotFound
+// 	}
+
+// 	return (*conv.UserModpackImpl)(nil).ConvertSlice(modpacks), nil
+// }
+
 // @Summary Retrieve a list of Users
 // @Tags Users
 // @Description Retrieve a list of users by user ID
@@ -140,6 +158,36 @@ func getUserMods(c echo.Context) (interface{}, *ErrorResponse) {
 	}
 
 	return (*conv.UserModImpl)(nil).ConvertSlice(mods), nil
+}
+
+// @Summary Retrieve a Users Modpacks
+// @Tags User
+// @Description Retrieve a users modpacks by user ID
+// @Accept  json
+// @Produce  json
+// @Param userId path string true "User ID"
+// @Success 200
+// @Router /user/{userId}/modpacks [get]
+func getUserModpacks(c echo.Context) (interface{}, *ErrorResponse) {
+	userID := c.Param("userId")
+
+	user, err := db.From(c.Request().Context()).User.Get(c.Request().Context(), userID)
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching modpacks", slog.Any("err", err))
+		return nil, &ErrorUserNotFound
+	}
+
+	if user == nil {
+		return nil, &ErrorUserNotFound
+	}
+
+	modpacks, err := db.From(c.Request().Context()).UserModpack.Query().Where(usermodpack.UserID(user.ID)).All(c.Request().Context())
+	if err != nil {
+		slox.Error(c.Request().Context(), "failed fetching modpacks", slog.Any("err", err))
+		return nil, &ErrorModpackNotFound
+	}
+
+	return (*conv.UserModpackImpl)(nil).ConvertSlice(modpacks), nil
 }
 
 // @Summary Retrieve a User

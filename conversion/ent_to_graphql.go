@@ -47,7 +47,7 @@ type SatisfactoryVersion interface {
 // goverter:output:package conv
 // goverter:extend TimeToString
 type User interface {
-	// goverter:ignore Roles Groups Mods Guides
+	// goverter:ignore Roles Groups Mods Guides Modpacks
 	Convert(source *ent.User) *generated.User
 	ConvertSlice(source []*ent.User) []*generated.User
 }
@@ -80,6 +80,16 @@ type UserMod interface {
 	// goverter:ignore User Mod
 	Convert(source *ent.UserMod) *generated.UserMod
 	ConvertSlice(source []*ent.UserMod) []*generated.UserMod
+}
+
+// goverter:converter
+// goverter:output:file ../generated/conv/user_modpack.go
+// goverter:output:package conv
+// goverter:extend TimeToString
+type UserModpack interface {
+	// goverter:ignore User Modpack
+	Convert(source *ent.UserModpack) *generated.UserModpack
+	ConvertSlice(source []*ent.UserModpack) []*generated.UserModpack
 }
 
 // goverter:converter
@@ -138,7 +148,7 @@ type Modpack interface {
 	// goverter:map Edges.Parent Parent
 	// goverter:map Edges.Releases Releases
 	// goverter:map Edges.Children Children
-	// goverter:ignore Creator
+	// goverter:ignore Creator Authors
 	Convert(source *ent.Modpack) *generated.Modpack
 	ConvertSlice(source []*ent.Modpack) []*generated.Modpack
 }

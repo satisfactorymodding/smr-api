@@ -34,6 +34,7 @@ type User {
     groups: [Group!]! @canEditUser(field: "ID", object: true) @isLoggedIn
 
     mods: [UserMod!]!
+    modpacks: [UserModpack!]!
     guides: [Guide!]!
 }
 
@@ -49,6 +50,16 @@ type UserMod {
     user: User!
     mod: Mod!
 }
+
+type UserModpack {
+    user_id: UserID!
+    modpack_id: ModpackID!
+    role: String!
+
+    user: User!
+    modpack: Modpack!
+}
+
 
 ### Inputs
 
