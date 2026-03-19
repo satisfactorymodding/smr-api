@@ -57,6 +57,11 @@ type GetMods struct {
 	Count int    `json:"count"`
 }
 
+type GetMyModpacks struct {
+	Modpacks []*Modpack `json:"modpacks"`
+	Count    int        `json:"count"`
+}
+
 type GetMyMods struct {
 	Mods  []*Mod `json:"mods"`
 	Count int    `json:"count"`

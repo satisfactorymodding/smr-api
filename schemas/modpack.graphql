@@ -64,6 +64,11 @@ type ModCompatibilities{
     worstEXP: [Mod!]!
 }
 
+type GetMyModpacks {
+    modpacks: [Modpack!]!
+    count: Int!
+}
+
 ### Inputs
 
 input ModpackFilter {
@@ -122,6 +127,8 @@ input NewModpackRelease {
 extend type Query {
     getModpack(modpackID: ModpackID!): Modpack
     getModpacks(filter: ModpackFilter): GetModpacks!
+
+    getMyModpacks(filter: ModpackFilter): GetMyModpacks! @isLoggedIn
 
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
     getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!

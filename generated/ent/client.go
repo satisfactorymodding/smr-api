@@ -1472,12 +1472,14 @@ func (c *ModpackClient) QueryModpackTags(m *Modpack) *ModpackTagQuery {
 
 // Hooks returns the client hooks.
 func (c *ModpackClient) Hooks() []Hook {
-	return c.hooks.Modpack
+	hooks := c.hooks.Modpack
+	return append(hooks[:len(hooks):len(hooks)], modpack.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *ModpackClient) Interceptors() []Interceptor {
-	return c.inters.Modpack
+	inters := c.inters.Modpack
+	return append(inters[:len(inters):len(inters)], modpack.Interceptors[:]...)
 }
 
 func (c *ModpackClient) mutate(ctx context.Context, m *ModpackMutation) (Value, error) {

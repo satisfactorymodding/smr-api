@@ -23,6 +23,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/models"
@@ -118,7 +119,7 @@ func (r *mutationResolver) CreateModpack(ctx context.Context, newModpack generat
 			dbModpack = dbModpack.AddTargets(targets)
 		}
 
-		if err := db.From(ctx).UserModpack.Create().
+		if err := tx.UserModpack.Create().
 			SetRole("creator").
 			SetModpackID(resultModpack.ID).
 			SetUserID(user.ID).
@@ -556,6 +557,10 @@ func (l lockfileResolver) GetModName(_ context.Context, modReference string) (*r
 	}, nil
 }
 
+func (r *queryResolver) GetMyModpacks(ctx context.Context, filter *generated.ModpackFilter) (*generated.GetMyModpacks, error) {
+	return &generated.GetMyModpacks{}, nil
+}
+
 func resolveModpackToLockfile(ctx context.Context, modpackID string, targets []resolver.TargetName) (string, error) {
 	pack, err := db.From(ctx).Modpack.Query().
 		WithModpackMods().
@@ -607,4 +612,53 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string, targets []r
 	}
 
 	return string(b), nil
+}
+
+type getMyModpacksResolver struct{ *Resolver }
+
+func (r *getMyModpacksResolver) Modpacks(ctx context.Context, _ *generated.GetMyModpacks) ([]*generated.Modpack, error) {
+    resolverContext := graphql.GetFieldContext(ctx)
+
+    filterArg := resolverContext.Parent.Args["filter"].(*generated.ModpackFilter)
+    modpackFilter, err := models.ProcessModpackFilter(filterArg)
+    if err != nil {
+        return nil, err
+    }
+
+    user, _, err := db.UserFromGQLContext(ctx)
+    if err != nil {
+        return nil, err
+    }
+
+	fmt.Printf("Looking for UserID: %s\n", user.ID)
+
+	query := db.From(ctx).Modpack.Query()
+
+    query := db.From(ctx).Modpack.Query().
+        Where(modpack.HasUserModpacksWith(usermodpack.UserID(user.ID))).
+        WithTags()
+
+    query = db.ConvertModpackFilter(query, modpackFilter, false)
+
+    result, err := query.All(ctx)
+    if err != nil {
+        return nil, err
+    }
+
+    return (*conv.ModpackImpl)(nil).ConvertSlice(result), nil
+}
+
+func (r *getMyModpacksResolver) Count(ctx context.Context, _ *generated.GetMyModpacks) (int, error) {
+    resolverContext := graphql.GetFieldContext(ctx)
+    filterArg := resolverContext.Parent.Args["filter"].(*generated.ModpackFilter)
+
+    modpackFilter, _ := models.ProcessModpackFilter(filterArg)
+    user, _, _ := db.UserFromGQLContext(ctx)
+
+    query := db.From(ctx).Modpack.Query().
+        Where(modpack.HasUserModpacksWith(usermodpack.UserID(user.ID)))
+
+    query = db.ConvertModpackFilter(query, modpackFilter, true)
+
+    return query.Count(ctx)
 }

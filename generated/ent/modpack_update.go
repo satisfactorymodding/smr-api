@@ -41,6 +41,26 @@ func (mu *ModpackUpdate) SetUpdatedAt(t time.Time) *ModpackUpdate {
 	return mu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (mu *ModpackUpdate) SetDeletedAt(t time.Time) *ModpackUpdate {
+	mu.mutation.SetDeletedAt(t)
+	return mu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (mu *ModpackUpdate) SetNillableDeletedAt(t *time.Time) *ModpackUpdate {
+	if t != nil {
+		mu.SetDeletedAt(*t)
+	}
+	return mu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (mu *ModpackUpdate) ClearDeletedAt() *ModpackUpdate {
+	mu.mutation.ClearDeletedAt()
+	return mu
+}
+
 // SetName sets the "name" field.
 func (mu *ModpackUpdate) SetName(s string) *ModpackUpdate {
 	mu.mutation.SetName(s)
@@ -470,7 +490,9 @@ func (mu *ModpackUpdate) RemoveTags(t ...*Tag) *ModpackUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (mu *ModpackUpdate) Save(ctx context.Context) (int, error) {
-	mu.defaults()
+	if err := mu.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, mu.sqlSave, mu.mutation, mu.hooks)
 }
 
@@ -497,11 +519,15 @@ func (mu *ModpackUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (mu *ModpackUpdate) defaults() {
+func (mu *ModpackUpdate) defaults() error {
 	if _, ok := mu.mutation.UpdatedAt(); !ok {
+		if modpack.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized modpack.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := modpack.UpdateDefaultUpdatedAt()
 		mu.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -534,6 +560,12 @@ func (mu *ModpackUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := mu.mutation.UpdatedAt(); ok {
 		_spec.SetField(modpack.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := mu.mutation.DeletedAt(); ok {
+		_spec.SetField(modpack.FieldDeletedAt, field.TypeTime, value)
+	}
+	if mu.mutation.DeletedAtCleared() {
+		_spec.ClearField(modpack.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := mu.mutation.Name(); ok {
 		_spec.SetField(modpack.FieldName, field.TypeString, value)
@@ -887,6 +919,26 @@ type ModpackUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (muo *ModpackUpdateOne) SetUpdatedAt(t time.Time) *ModpackUpdateOne {
 	muo.mutation.SetUpdatedAt(t)
+	return muo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (muo *ModpackUpdateOne) SetDeletedAt(t time.Time) *ModpackUpdateOne {
+	muo.mutation.SetDeletedAt(t)
+	return muo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (muo *ModpackUpdateOne) SetNillableDeletedAt(t *time.Time) *ModpackUpdateOne {
+	if t != nil {
+		muo.SetDeletedAt(*t)
+	}
+	return muo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (muo *ModpackUpdateOne) ClearDeletedAt() *ModpackUpdateOne {
+	muo.mutation.ClearDeletedAt()
 	return muo
 }
 
@@ -1332,7 +1384,9 @@ func (muo *ModpackUpdateOne) Select(field string, fields ...string) *ModpackUpda
 
 // Save executes the query and returns the updated Modpack entity.
 func (muo *ModpackUpdateOne) Save(ctx context.Context) (*Modpack, error) {
-	muo.defaults()
+	if err := muo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, muo.sqlSave, muo.mutation, muo.hooks)
 }
 
@@ -1359,11 +1413,15 @@ func (muo *ModpackUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (muo *ModpackUpdateOne) defaults() {
+func (muo *ModpackUpdateOne) defaults() error {
 	if _, ok := muo.mutation.UpdatedAt(); !ok {
+		if modpack.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized modpack.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := modpack.UpdateDefaultUpdatedAt()
 		muo.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -1413,6 +1471,12 @@ func (muo *ModpackUpdateOne) sqlSave(ctx context.Context) (_node *Modpack, err e
 	}
 	if value, ok := muo.mutation.UpdatedAt(); ok {
 		_spec.SetField(modpack.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := muo.mutation.DeletedAt(); ok {
+		_spec.SetField(modpack.FieldDeletedAt, field.TypeTime, value)
+	}
+	if muo.mutation.DeletedAtCleared() {
+		_spec.ClearField(modpack.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := muo.mutation.Name(); ok {
 		_spec.SetField(modpack.FieldName, field.TypeString, value)

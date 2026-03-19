@@ -163,6 +163,10 @@ func init() {
 	// mod.DefaultID holds the default value on creation for the id field.
 	mod.DefaultID = modDescID.Default.(func() string)
 	modpackMixin := schema.Modpack{}.Mixin()
+	modpackMixinHooks2 := modpackMixin[2].Hooks()
+	modpack.Hooks[0] = modpackMixinHooks2[0]
+	modpackMixinInters2 := modpackMixin[2].Interceptors()
+	modpack.Interceptors[0] = modpackMixinInters2[0]
 	modpackMixinFields0 := modpackMixin[0].Fields()
 	_ = modpackMixinFields0
 	modpackMixinFields1 := modpackMixin[1].Fields()

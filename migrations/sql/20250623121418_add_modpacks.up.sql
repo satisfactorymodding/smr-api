@@ -4,6 +4,7 @@ CREATE TABLE "modpacks"
     "id"                character varying NOT NULL,
     "created_at"        timestamptz       NOT NULL,
     "updated_at"        timestamptz       NOT NULL,
+    "deleted_at"        timestamptz       NULL,
     "name"              character varying NOT NULL,
     "short_description" character varying NOT NULL,
     "full_description"  character varying NOT NULL,

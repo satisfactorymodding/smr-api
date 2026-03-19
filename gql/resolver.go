@@ -54,6 +54,10 @@ func (r *Resolver) GetMyMods() generated.GetMyModsResolver {
 	return &getMyModsResolver{r}
 }
 
+func (r *Resolver) GetMyModpacks() generated.GetMyModpacksResolver {
+	return &getMyModpacksResolver{r}
+}
+
 func (r *Resolver) GetVersions() generated.GetVersionsResolver {
 	return &getVersionsResolver{r}
 }
