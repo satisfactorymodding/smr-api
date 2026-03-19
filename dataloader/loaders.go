@@ -81,7 +81,6 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 				UserModpacksByModpackID: dataloader.NewBatchedLoader(func(ctx context.Context, ids []string) []*dataloader.Result[[]*ent.UserModpack] {
 					// TODO Query only selected fields from context
 					entities, err := db.From(ctx).UserModpack.Query().Where(usermodpack.ModpackIDIn(ids...)).All(ctx)
-
 					if err != nil {
 						return nil
 					}

@@ -26,15 +26,15 @@ func (UserModpack) Fields() []ent.Field {
 }
 
 func (UserModpack) Edges() []ent.Edge {
-    return []ent.Edge{
-        edge.To("user", User.Type).
-            Unique().
-            Required().
-            Field("user_id"),
+	return []ent.Edge{
+		edge.To("modpack", Modpack.Type).
+			Unique().
+			Required().
+			Field("modpack_id"),
 
-        edge.To("modpack", Modpack.Type).
-            Unique().
-            Required().
-            Field("modpack_id"),
-    }
+		edge.To("user", User.Type).
+			Unique().
+			Required().
+			Field("user_id"),
+	}
 }

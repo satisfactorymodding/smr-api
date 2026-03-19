@@ -57,8 +57,8 @@ func (Modpack) Edges() []ent.Edge {
 			Through("modpack_mods", ModpackMod.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.From("authors", User.Type).
-    		Ref("modpacks").
-    		Through("user_modpacks", UserModpack.Type),
+			Ref("modpacks").
+			Through("user_modpacks", UserModpack.Type),
 		edge.To("tags", Tag.Type).
 			Through("modpack_tags", ModpackTag.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade)),
