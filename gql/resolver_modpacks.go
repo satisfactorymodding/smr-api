@@ -617,28 +617,28 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string, targets []r
 type getMyModpacksResolver struct{ *Resolver }
 
 func (r *getMyModpacksResolver) Modpacks(ctx context.Context, _ *generated.GetMyModpacks) ([]*generated.Modpack, error) {
-    resolverContext := graphql.GetFieldContext(ctx)
-
-    filterArg := resolverContext.Parent.Args["filter"].(*generated.ModpackFilter)
-    modpackFilter, err := models.ProcessModpackFilter(filterArg)
-    if err != nil {
-        return nil, err
-    }
+    fmt.Println("--- DEBUG: Fetching My Modpacks ---")
 
     user, _, err := db.UserFromGQLContext(ctx)
-    if err != nil {
-        return nil, err
+    if err != nil || user == nil {
+        return nil, fmt.Errorf("unauthorized")
     }
 
-	fmt.Printf("Looking for UserID: %s\n", user.ID)
-
-	query := db.From(ctx).Modpack.Query()
+    fc := graphql.GetFieldContext(ctx)
+    filterArg, ok := fc.Parent.Args["filter"].(*generated.ModpackFilter)
+    
+    var modpackFilter *models.ModpackFilter
+    if ok && filterArg != nil {
+        modpackFilter, _ = models.ProcessModpackFilter(filterArg)
+    }
 
     query := db.From(ctx).Modpack.Query().
         Where(modpack.HasUserModpacksWith(usermodpack.UserID(user.ID))).
         WithTags()
 
-    query = db.ConvertModpackFilter(query, modpackFilter, false)
+    if modpackFilter != nil {
+        query = db.ConvertModpackFilter(query, modpackFilter, false)
+    }
 
     result, err := query.All(ctx)
     if err != nil {
@@ -649,16 +649,12 @@ func (r *getMyModpacksResolver) Modpacks(ctx context.Context, _ *generated.GetMy
 }
 
 func (r *getMyModpacksResolver) Count(ctx context.Context, _ *generated.GetMyModpacks) (int, error) {
-    resolverContext := graphql.GetFieldContext(ctx)
-    filterArg := resolverContext.Parent.Args["filter"].(*generated.ModpackFilter)
-
-    modpackFilter, _ := models.ProcessModpackFilter(filterArg)
     user, _, _ := db.UserFromGQLContext(ctx)
+    if user == nil {
+        return 0, nil
+    }
 
-    query := db.From(ctx).Modpack.Query().
-        Where(modpack.HasUserModpacksWith(usermodpack.UserID(user.ID)))
-
-    query = db.ConvertModpackFilter(query, modpackFilter, true)
-
-    return query.Count(ctx)
+    return db.From(ctx).Modpack.Query().
+        Where(modpack.HasUserModpacksWith(usermodpack.UserID(user.ID))).
+        Count(ctx)
 }
