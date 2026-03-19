@@ -42,6 +42,8 @@ models:
         resolver: true
       groups:
         resolver: true
+      modpacks:
+        resolver: true
 
   Mod:
     fields:
