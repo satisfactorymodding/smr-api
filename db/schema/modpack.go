@@ -17,6 +17,7 @@ func (Modpack) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		IDMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }
 

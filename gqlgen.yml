@@ -118,6 +118,13 @@ models:
       count:
         resolver: true
 
+  GetMyModpacks:
+    fields:
+      modpacks:
+        resolver: true
+      count:
+        resolver: true
+
   GetVersions:
     fields:
       versions:

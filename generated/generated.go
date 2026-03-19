@@ -40,6 +40,7 @@ type ResolverRoot interface {
 	GetGuides() GetGuidesResolver
 	GetModpacks() GetModpacksResolver
 	GetMods() GetModsResolver
+	GetMyModpacks() GetMyModpacksResolver
 	GetMyMods() GetMyModsResolver
 	GetMyVersions() GetMyVersionsResolver
 	GetSMLVersions() GetSMLVersionsResolver
@@ -111,6 +112,11 @@ type ComplexityRoot struct {
 	GetMods struct {
 		Count func(childComplexity int) int
 		Mods  func(childComplexity int) int
+	}
+
+	GetMyModpacks struct {
+		Count    func(childComplexity int) int
+		Modpacks func(childComplexity int) int
 	}
 
 	GetMyMods struct {
@@ -302,6 +308,7 @@ type ComplexityRoot struct {
 		GetModpackRelease            func(childComplexity int, modpackID string, version string) int
 		GetModpacks                  func(childComplexity int, filter *ModpackFilter) int
 		GetMods                      func(childComplexity int, filter map[string]interface{}) int
+		GetMyModpacks                func(childComplexity int, filter *ModpackFilter) int
 		GetMyMods                    func(childComplexity int, filter map[string]interface{}) int
 		GetMyUnapprovedMods          func(childComplexity int, filter map[string]interface{}) int
 		GetMyUnapprovedVersions      func(childComplexity int, filter map[string]interface{}) int
@@ -467,6 +474,10 @@ type GetModsResolver interface {
 	Mods(ctx context.Context, obj *GetMods) ([]*Mod, error)
 	Count(ctx context.Context, obj *GetMods) (int, error)
 }
+type GetMyModpacksResolver interface {
+	Modpacks(ctx context.Context, obj *GetMyModpacks) ([]*Modpack, error)
+	Count(ctx context.Context, obj *GetMyModpacks) (int, error)
+}
 type GetMyModsResolver interface {
 	Mods(ctx context.Context, obj *GetMyMods) ([]*Mod, error)
 	Count(ctx context.Context, obj *GetMyMods) (int, error)
@@ -554,6 +565,7 @@ type QueryResolver interface {
 	GetModAssetList(ctx context.Context, modReference string) ([]string, error)
 	GetModpack(ctx context.Context, modpackID string) (*Modpack, error)
 	GetModpacks(ctx context.Context, filter *ModpackFilter) (*GetModpacks, error)
+	GetMyModpacks(ctx context.Context, filter *ModpackFilter) (*GetMyModpacks, error)
 	GetModpackRelease(ctx context.Context, modpackID string, version string) (*ModpackRelease, error)
 	GetModCompatibilities(ctx context.Context, modpackID string) (*ModCompatibilities, error)
 	GetSatisfactoryVersions(ctx context.Context) ([]*SatisfactoryVersion, error)
@@ -737,6 +749,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.GetMods.Mods(childComplexity), true
+
+	case "GetMyModpacks.count":
+		if e.complexity.GetMyModpacks.Count == nil {
+			break
+		}
+
+		return e.complexity.GetMyModpacks.Count(childComplexity), true
+
+	case "GetMyModpacks.modpacks":
+		if e.complexity.GetMyModpacks.Modpacks == nil {
+			break
+		}
+
+		return e.complexity.GetMyModpacks.Modpacks(childComplexity), true
 
 	case "GetMyMods.count":
 		if e.complexity.GetMyMods.Count == nil {
@@ -2008,6 +2034,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.GetMods(childComplexity, args["filter"].(map[string]interface{})), true
+
+	case "Query.getMyModpacks":
+		if e.complexity.Query.GetMyModpacks == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getMyModpacks_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetMyModpacks(childComplexity, args["filter"].(*ModpackFilter)), true
 
 	case "Query.getMyMods":
 		if e.complexity.Query.GetMyMods == nil {
@@ -3395,6 +3433,11 @@ type ModCompatibilities{
     worstEXP: [Mod!]!
 }
 
+type GetMyModpacks {
+    modpacks: [Modpack!]!
+    count: Int!
+}
+
 ### Inputs
 
 input ModpackFilter {
@@ -3453,6 +3496,8 @@ input NewModpackRelease {
 extend type Query {
     getModpack(modpackID: ModpackID!): Modpack
     getModpacks(filter: ModpackFilter): GetModpacks!
+
+    getMyModpacks(filter: ModpackFilter): GetMyModpacks! @isLoggedIn
 
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
     getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!
@@ -6174,6 +6219,34 @@ func (ec *executionContext) field_Query_getMods_argsFilter(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_getMyModpacks_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getMyModpacks_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_getMyModpacks_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*ModpackFilter, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal *ModpackFilter
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+	if tmp, ok := rawArgs["filter"]; ok {
+		return ec.unmarshalOModpackFilter2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackFilter(ctx, tmp)
+	}
+
+	var zeroVal *ModpackFilter
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_getMyMods_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -7594,6 +7667,144 @@ func (ec *executionContext) _GetMods_count(ctx context.Context, field graphql.Co
 func (ec *executionContext) fieldContext_GetMods_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GetMods",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GetMyModpacks_modpacks(ctx context.Context, field graphql.CollectedField, obj *GetMyModpacks) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GetMyModpacks_modpacks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.GetMyModpacks().Modpacks(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*Modpack)
+	fc.Result = res
+	return ec.marshalNModpack2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GetMyModpacks_modpacks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GetMyModpacks",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Modpack_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Modpack_name(ctx, field)
+			case "short_description":
+				return ec.fieldContext_Modpack_short_description(ctx, field)
+			case "full_description":
+				return ec.fieldContext_Modpack_full_description(ctx, field)
+			case "logo":
+				return ec.fieldContext_Modpack_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Modpack_logo_thumbhash(ctx, field)
+			case "creator_id":
+				return ec.fieldContext_Modpack_creator_id(ctx, field)
+			case "creator":
+				return ec.fieldContext_Modpack_creator(ctx, field)
+			case "views":
+				return ec.fieldContext_Modpack_views(ctx, field)
+			case "installs":
+				return ec.fieldContext_Modpack_installs(ctx, field)
+			case "hotness":
+				return ec.fieldContext_Modpack_hotness(ctx, field)
+			case "popularity":
+				return ec.fieldContext_Modpack_popularity(ctx, field)
+			case "updated_at":
+				return ec.fieldContext_Modpack_updated_at(ctx, field)
+			case "created_at":
+				return ec.fieldContext_Modpack_created_at(ctx, field)
+			case "hidden":
+				return ec.fieldContext_Modpack_hidden(ctx, field)
+			case "parent_id":
+				return ec.fieldContext_Modpack_parent_id(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Modpack_compatibility(ctx, field)
+			case "parent":
+				return ec.fieldContext_Modpack_parent(ctx, field)
+			case "children":
+				return ec.fieldContext_Modpack_children(ctx, field)
+			case "authors":
+				return ec.fieldContext_Modpack_authors(ctx, field)
+			case "tags":
+				return ec.fieldContext_Modpack_tags(ctx, field)
+			case "targets":
+				return ec.fieldContext_Modpack_targets(ctx, field)
+			case "mods":
+				return ec.fieldContext_Modpack_mods(ctx, field)
+			case "releases":
+				return ec.fieldContext_Modpack_releases(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Modpack", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GetMyModpacks_count(ctx context.Context, field graphql.CollectedField, obj *GetMyModpacks) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GetMyModpacks_count(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.GetMyModpacks().Count(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GetMyModpacks_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GetMyModpacks",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -17171,6 +17382,89 @@ func (ec *executionContext) fieldContext_Query_getModpacks(ctx context.Context, 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getModpacks_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getMyModpacks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getMyModpacks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().GetMyModpacks(rctx, fc.Args["filter"].(*ModpackFilter))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			if ec.directives.IsLoggedIn == nil {
+				var zeroVal *GetMyModpacks
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
+			}
+			return ec.directives.IsLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*GetMyModpacks); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/satisfactorymodding/smr-api/generated.GetMyModpacks`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*GetMyModpacks)
+	fc.Result = res
+	return ec.marshalNGetMyModpacks2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGetMyModpacks(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getMyModpacks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modpacks":
+				return ec.fieldContext_GetMyModpacks_modpacks(ctx, field)
+			case "count":
+				return ec.fieldContext_GetMyModpacks_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GetMyModpacks", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getMyModpacks_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -27147,6 +27441,112 @@ func (ec *executionContext) _GetMods(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var getMyModpacksImplementors = []string{"GetMyModpacks"}
+
+func (ec *executionContext) _GetMyModpacks(ctx context.Context, sel ast.SelectionSet, obj *GetMyModpacks) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, getMyModpacksImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GetMyModpacks")
+		case "modpacks":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._GetMyModpacks_modpacks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "count":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._GetMyModpacks_count(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var getMyModsImplementors = []string{"GetMyMods"}
 
 func (ec *executionContext) _GetMyMods(ctx context.Context, sel ast.SelectionSet, obj *GetMyMods) graphql.Marshaler {
@@ -29097,6 +29497,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getModpacks(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getMyModpacks":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getMyModpacks(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -31521,6 +31943,20 @@ func (ec *executionContext) marshalNGetMods2ᚖgithubᚗcomᚋsatisfactorymoddin
 		return graphql.Null
 	}
 	return ec._GetMods(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNGetMyModpacks2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGetMyModpacks(ctx context.Context, sel ast.SelectionSet, v GetMyModpacks) graphql.Marshaler {
+	return ec._GetMyModpacks(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGetMyModpacks2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGetMyModpacks(ctx context.Context, sel ast.SelectionSet, v *GetMyModpacks) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GetMyModpacks(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNGetMyMods2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐGetMyMods(ctx context.Context, sel ast.SelectionSet, v GetMyMods) graphql.Marshaler {

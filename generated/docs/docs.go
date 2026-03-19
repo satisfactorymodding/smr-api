@@ -778,26 +778,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/me/modpacks": {
-            "get": {
-                "description": "Retrieve the users modpacks associated with the token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Retrieve Current Users Modpacks",
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
         "/user/me/mods": {
             "get": {
                 "description": "Retrieve the users mods associated with the token",

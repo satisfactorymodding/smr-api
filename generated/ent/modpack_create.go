@@ -57,6 +57,20 @@ func (mc *ModpackCreate) SetNillableUpdatedAt(t *time.Time) *ModpackCreate {
 	return mc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (mc *ModpackCreate) SetDeletedAt(t time.Time) *ModpackCreate {
+	mc.mutation.SetDeletedAt(t)
+	return mc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (mc *ModpackCreate) SetNillableDeletedAt(t *time.Time) *ModpackCreate {
+	if t != nil {
+		mc.SetDeletedAt(*t)
+	}
+	return mc
+}
+
 // SetName sets the "name" field.
 func (mc *ModpackCreate) SetName(s string) *ModpackCreate {
 	mc.mutation.SetName(s)
@@ -315,7 +329,9 @@ func (mc *ModpackCreate) Mutation() *ModpackMutation {
 
 // Save creates the Modpack in the database.
 func (mc *ModpackCreate) Save(ctx context.Context) (*Modpack, error) {
-	mc.defaults()
+	if err := mc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, mc.sqlSave, mc.mutation, mc.hooks)
 }
 
@@ -342,12 +358,18 @@ func (mc *ModpackCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (mc *ModpackCreate) defaults() {
+func (mc *ModpackCreate) defaults() error {
 	if _, ok := mc.mutation.CreatedAt(); !ok {
+		if modpack.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized modpack.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := modpack.DefaultCreatedAt()
 		mc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := mc.mutation.UpdatedAt(); !ok {
+		if modpack.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized modpack.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := modpack.DefaultUpdatedAt()
 		mc.mutation.SetUpdatedAt(v)
 	}
@@ -372,9 +394,13 @@ func (mc *ModpackCreate) defaults() {
 		mc.mutation.SetHidden(v)
 	}
 	if _, ok := mc.mutation.ID(); !ok {
+		if modpack.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized modpack.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := modpack.DefaultID()
 		mc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -460,6 +486,10 @@ func (mc *ModpackCreate) createSpec() (*Modpack, *sqlgraph.CreateSpec) {
 	if value, ok := mc.mutation.UpdatedAt(); ok {
 		_spec.SetField(modpack.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := mc.mutation.DeletedAt(); ok {
+		_spec.SetField(modpack.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
 	}
 	if value, ok := mc.mutation.Name(); ok {
 		_spec.SetField(modpack.FieldName, field.TypeString, value)
@@ -683,6 +713,24 @@ func (u *ModpackUpsert) SetUpdatedAt(v time.Time) *ModpackUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *ModpackUpsert) UpdateUpdatedAt() *ModpackUpsert {
 	u.SetExcluded(modpack.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ModpackUpsert) SetDeletedAt(v time.Time) *ModpackUpsert {
+	u.Set(modpack.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ModpackUpsert) UpdateDeletedAt() *ModpackUpsert {
+	u.SetExcluded(modpack.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ModpackUpsert) ClearDeletedAt() *ModpackUpsert {
+	u.SetNull(modpack.FieldDeletedAt)
 	return u
 }
 
@@ -937,6 +985,27 @@ func (u *ModpackUpsertOne) SetUpdatedAt(v time.Time) *ModpackUpsertOne {
 func (u *ModpackUpsertOne) UpdateUpdatedAt() *ModpackUpsertOne {
 	return u.Update(func(s *ModpackUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ModpackUpsertOne) SetDeletedAt(v time.Time) *ModpackUpsertOne {
+	return u.Update(func(s *ModpackUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ModpackUpsertOne) UpdateDeletedAt() *ModpackUpsertOne {
+	return u.Update(func(s *ModpackUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ModpackUpsertOne) ClearDeletedAt() *ModpackUpsertOne {
+	return u.Update(func(s *ModpackUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1389,6 +1458,27 @@ func (u *ModpackUpsertBulk) SetUpdatedAt(v time.Time) *ModpackUpsertBulk {
 func (u *ModpackUpsertBulk) UpdateUpdatedAt() *ModpackUpsertBulk {
 	return u.Update(func(s *ModpackUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ModpackUpsertBulk) SetDeletedAt(v time.Time) *ModpackUpsertBulk {
+	return u.Update(func(s *ModpackUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ModpackUpsertBulk) UpdateDeletedAt() *ModpackUpsertBulk {
+	return u.Update(func(s *ModpackUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ModpackUpsertBulk) ClearDeletedAt() *ModpackUpsertBulk {
+	return u.Update(func(s *ModpackUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

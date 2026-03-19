@@ -990,19 +990,6 @@ paths:
       summary: Log Out Current User
       tags:
       - User
-  /user/me/modpacks:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve the users modpacks associated with the token
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-      summary: Retrieve Current Users Modpacks
-      tags:
-      - User
   /user/me/mods:
     get:
       consumes:

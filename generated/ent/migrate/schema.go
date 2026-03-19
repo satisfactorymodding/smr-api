@@ -167,6 +167,7 @@ var (
 		{Name: "id", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "short_description", Type: field.TypeString, Size: 128},
 		{Name: "full_description", Type: field.TypeString},
@@ -189,9 +190,16 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "modpacks_modpacks_children",
-				Columns:    []*schema.Column{ModpacksColumns[15]},
+				Columns:    []*schema.Column{ModpacksColumns[16]},
 				RefColumns: []*schema.Column{ModpacksColumns[0]},
 				OnDelete:   schema.Restrict,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "modpack_deleted_at",
+				Unique:  false,
+				Columns: []*schema.Column{ModpacksColumns[3]},
 			},
 		},
 	}
