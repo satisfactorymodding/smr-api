@@ -89,23 +89,6 @@ func getMyMods(user *ent.User, c echo.Context) (interface{}, *ErrorResponse) {
 	return (*conv.UserModImpl)(nil).ConvertSlice(mods), nil
 }
 
-// // @Summary Retrieve Current Users Modpacks
-// // @Tags User
-// // @Description Retrieve the users modpacks associated with the token
-// // @Accept  json
-// // @Produce  json
-// // @Success 200
-// // @Router /user/me/modpacks [get]
-// func getMyModpacks(user *ent.User, c echo.Context) (interface{}, *ErrorResponse) {
-// 	modpacks, err := db.From(c.Request().Context()).UserModpack.Query().Where(usermodpack.UserID(user.ID)).All(c.Request().Context())
-// 	if err != nil {
-// 		slox.Error(c.Request().Context(), "failed fetching modpacks", slog.Any("err", err))
-// 		return nil, &ErrorUserNotFound
-// 	}
-
-// 	return (*conv.UserModpackImpl)(nil).ConvertSlice(modpacks), nil
-// }
-
 // @Summary Retrieve a list of Users
 // @Tags Users
 // @Description Retrieve a list of users by user ID
