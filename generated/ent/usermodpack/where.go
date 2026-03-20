@@ -218,29 +218,6 @@ func RoleContainsFold(v string) predicate.UserModpack {
 	return predicate.UserModpack(sql.FieldContainsFold(FieldRole, v))
 }
 
-// HasUser applies the HasEdge predicate on the "user" edge.
-func HasUser() predicate.UserModpack {
-	return predicate.UserModpack(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, UserColumn),
-			sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
-func HasUserWith(preds ...predicate.User) predicate.UserModpack {
-	return predicate.UserModpack(func(s *sql.Selector) {
-		step := newUserStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasModpack applies the HasEdge predicate on the "modpack" edge.
 func HasModpack() predicate.UserModpack {
 	return predicate.UserModpack(func(s *sql.Selector) {
@@ -256,6 +233,29 @@ func HasModpack() predicate.UserModpack {
 func HasModpackWith(preds ...predicate.Modpack) predicate.UserModpack {
 	return predicate.UserModpack(func(s *sql.Selector) {
 		step := newModpackStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUser applies the HasEdge predicate on the "user" edge.
+func HasUser() predicate.UserModpack {
+	return predicate.UserModpack(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
+func HasUserWith(preds ...predicate.User) predicate.UserModpack {
+	return predicate.UserModpack(func(s *sql.Selector) {
+		step := newUserStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

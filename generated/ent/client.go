@@ -2982,18 +2982,18 @@ func (c *UserModpackClient) Query() *UserModpackQuery {
 	}
 }
 
-// QueryUser queries the user edge of a UserModpack.
-func (c *UserModpackClient) QueryUser(um *UserModpack) *UserQuery {
-	return c.Query().
-		Where(usermodpack.UserID(um.UserID), usermodpack.ModpackID(um.ModpackID)).
-		QueryUser()
-}
-
 // QueryModpack queries the modpack edge of a UserModpack.
 func (c *UserModpackClient) QueryModpack(um *UserModpack) *ModpackQuery {
 	return c.Query().
 		Where(usermodpack.UserID(um.UserID), usermodpack.ModpackID(um.ModpackID)).
 		QueryModpack()
+}
+
+// QueryUser queries the user edge of a UserModpack.
+func (c *UserModpackClient) QueryUser(um *UserModpack) *UserQuery {
+	return c.Query().
+		Where(usermodpack.UserID(um.UserID), usermodpack.ModpackID(um.ModpackID)).
+		QueryUser()
 }
 
 // Hooks returns the client hooks.

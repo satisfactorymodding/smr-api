@@ -23,8 +23,8 @@ type UserModpackQuery struct {
 	order       []usermodpack.OrderOption
 	inters      []Interceptor
 	predicates  []predicate.UserModpack
-	withUser    *UserQuery
 	withModpack *ModpackQuery
+	withUser    *UserQuery
 	modifiers   []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -62,28 +62,6 @@ func (umq *UserModpackQuery) Order(o ...usermodpack.OrderOption) *UserModpackQue
 	return umq
 }
 
-// QueryUser chains the current query on the "user" edge.
-func (umq *UserModpackQuery) QueryUser() *UserQuery {
-	query := (&UserClient{config: umq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := umq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := umq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(usermodpack.Table, usermodpack.UserColumn, selector),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, usermodpack.UserTable, usermodpack.UserColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(umq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // QueryModpack chains the current query on the "modpack" edge.
 func (umq *UserModpackQuery) QueryModpack() *ModpackQuery {
 	query := (&ModpackClient{config: umq.config}).Query()
@@ -99,6 +77,28 @@ func (umq *UserModpackQuery) QueryModpack() *ModpackQuery {
 			sqlgraph.From(usermodpack.Table, usermodpack.ModpackColumn, selector),
 			sqlgraph.To(modpack.Table, modpack.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, usermodpack.ModpackTable, usermodpack.ModpackColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(umq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUser chains the current query on the "user" edge.
+func (umq *UserModpackQuery) QueryUser() *UserQuery {
+	query := (&UserClient{config: umq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := umq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := umq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usermodpack.Table, usermodpack.UserColumn, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, usermodpack.UserTable, usermodpack.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(umq.driver.Dialect(), step)
 		return fromU, nil
@@ -226,24 +226,13 @@ func (umq *UserModpackQuery) Clone() *UserModpackQuery {
 		order:       append([]usermodpack.OrderOption{}, umq.order...),
 		inters:      append([]Interceptor{}, umq.inters...),
 		predicates:  append([]predicate.UserModpack{}, umq.predicates...),
-		withUser:    umq.withUser.Clone(),
 		withModpack: umq.withModpack.Clone(),
+		withUser:    umq.withUser.Clone(),
 		// clone intermediate query.
 		sql:       umq.sql.Clone(),
 		path:      umq.path,
 		modifiers: append([]func(*sql.Selector){}, umq.modifiers...),
 	}
-}
-
-// WithUser tells the query-builder to eager-load the nodes that are connected to
-// the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (umq *UserModpackQuery) WithUser(opts ...func(*UserQuery)) *UserModpackQuery {
-	query := (&UserClient{config: umq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	umq.withUser = query
-	return umq
 }
 
 // WithModpack tells the query-builder to eager-load the nodes that are connected to
@@ -254,6 +243,17 @@ func (umq *UserModpackQuery) WithModpack(opts ...func(*ModpackQuery)) *UserModpa
 		opt(query)
 	}
 	umq.withModpack = query
+	return umq
+}
+
+// WithUser tells the query-builder to eager-load the nodes that are connected to
+// the "user" edge. The optional arguments are used to configure the query builder of the edge.
+func (umq *UserModpackQuery) WithUser(opts ...func(*UserQuery)) *UserModpackQuery {
+	query := (&UserClient{config: umq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	umq.withUser = query
 	return umq
 }
 
@@ -336,8 +336,8 @@ func (umq *UserModpackQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		nodes       = []*UserModpack{}
 		_spec       = umq.querySpec()
 		loadedTypes = [2]bool{
-			umq.withUser != nil,
 			umq.withModpack != nil,
+			umq.withUser != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -361,50 +361,21 @@ func (umq *UserModpackQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := umq.withUser; query != nil {
-		if err := umq.loadUser(ctx, query, nodes, nil,
-			func(n *UserModpack, e *User) { n.Edges.User = e }); err != nil {
-			return nil, err
-		}
-	}
 	if query := umq.withModpack; query != nil {
 		if err := umq.loadModpack(ctx, query, nodes, nil,
 			func(n *UserModpack, e *Modpack) { n.Edges.Modpack = e }); err != nil {
 			return nil, err
 		}
 	}
+	if query := umq.withUser; query != nil {
+		if err := umq.loadUser(ctx, query, nodes, nil,
+			func(n *UserModpack, e *User) { n.Edges.User = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
-func (umq *UserModpackQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*UserModpack, init func(*UserModpack), assign func(*UserModpack, *User)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*UserModpack)
-	for i := range nodes {
-		fk := nodes[i].UserID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(user.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
 func (umq *UserModpackQuery) loadModpack(ctx context.Context, query *ModpackQuery, nodes []*UserModpack, init func(*UserModpack), assign func(*UserModpack, *Modpack)) error {
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*UserModpack)
@@ -427,6 +398,35 @@ func (umq *UserModpackQuery) loadModpack(ctx context.Context, query *ModpackQuer
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "modpack_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (umq *UserModpackQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*UserModpack, init func(*UserModpack), assign func(*UserModpack, *User)) error {
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*UserModpack)
+	for i := range nodes {
+		fk := nodes[i].UserID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -458,11 +458,11 @@ func (umq *UserModpackQuery) querySpec() *sqlgraph.QuerySpec {
 		for i := range fields {
 			_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 		}
-		if umq.withUser != nil {
-			_spec.Node.AddColumnOnce(usermodpack.FieldUserID)
-		}
 		if umq.withModpack != nil {
 			_spec.Node.AddColumnOnce(usermodpack.FieldModpackID)
+		}
+		if umq.withUser != nil {
+			_spec.Node.AddColumnOnce(usermodpack.FieldUserID)
 		}
 	}
 	if ps := umq.predicates; len(ps) > 0 {

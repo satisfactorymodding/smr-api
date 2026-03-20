@@ -41,14 +41,14 @@ func (umc *UserModpackCreate) SetRole(s string) *UserModpackCreate {
 	return umc
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (umc *UserModpackCreate) SetUser(u *User) *UserModpackCreate {
-	return umc.SetUserID(u.ID)
-}
-
 // SetModpack sets the "modpack" edge to the Modpack entity.
 func (umc *UserModpackCreate) SetModpack(m *Modpack) *UserModpackCreate {
 	return umc.SetModpackID(m.ID)
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (umc *UserModpackCreate) SetUser(u *User) *UserModpackCreate {
+	return umc.SetUserID(u.ID)
 }
 
 // Mutation returns the UserModpackMutation object of the builder.
@@ -94,11 +94,11 @@ func (umc *UserModpackCreate) check() error {
 	if _, ok := umc.mutation.Role(); !ok {
 		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "UserModpack.role"`)}
 	}
-	if len(umc.mutation.UserIDs()) == 0 {
-		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "UserModpack.user"`)}
-	}
 	if len(umc.mutation.ModpackIDs()) == 0 {
 		return &ValidationError{Name: "modpack", err: errors.New(`ent: missing required edge "UserModpack.modpack"`)}
+	}
+	if len(umc.mutation.UserIDs()) == 0 {
+		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "UserModpack.user"`)}
 	}
 	return nil
 }
@@ -127,23 +127,6 @@ func (umc *UserModpackCreate) createSpec() (*UserModpack, *sqlgraph.CreateSpec) 
 		_spec.SetField(usermodpack.FieldRole, field.TypeString, value)
 		_node.Role = value
 	}
-	if nodes := umc.mutation.UserIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   usermodpack.UserTable,
-			Columns: []string{usermodpack.UserColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.UserID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := umc.mutation.ModpackIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -159,6 +142,23 @@ func (umc *UserModpackCreate) createSpec() (*UserModpack, *sqlgraph.CreateSpec) 
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.ModpackID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := umc.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   usermodpack.UserTable,
+			Columns: []string{usermodpack.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.UserID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
