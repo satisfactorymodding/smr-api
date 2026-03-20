@@ -72,14 +72,14 @@ func (umu *UserModpackUpdate) SetNillableRole(s *string) *UserModpackUpdate {
 	return umu
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (umu *UserModpackUpdate) SetUser(u *User) *UserModpackUpdate {
-	return umu.SetUserID(u.ID)
-}
-
 // SetModpack sets the "modpack" edge to the Modpack entity.
 func (umu *UserModpackUpdate) SetModpack(m *Modpack) *UserModpackUpdate {
 	return umu.SetModpackID(m.ID)
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (umu *UserModpackUpdate) SetUser(u *User) *UserModpackUpdate {
+	return umu.SetUserID(u.ID)
 }
 
 // Mutation returns the UserModpackMutation object of the builder.
@@ -87,15 +87,15 @@ func (umu *UserModpackUpdate) Mutation() *UserModpackMutation {
 	return umu.mutation
 }
 
-// ClearUser clears the "user" edge to the User entity.
-func (umu *UserModpackUpdate) ClearUser() *UserModpackUpdate {
-	umu.mutation.ClearUser()
-	return umu
-}
-
 // ClearModpack clears the "modpack" edge to the Modpack entity.
 func (umu *UserModpackUpdate) ClearModpack() *UserModpackUpdate {
 	umu.mutation.ClearModpack()
+	return umu
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (umu *UserModpackUpdate) ClearUser() *UserModpackUpdate {
+	umu.mutation.ClearUser()
 	return umu
 }
 
@@ -128,11 +128,11 @@ func (umu *UserModpackUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (umu *UserModpackUpdate) check() error {
-	if umu.mutation.UserCleared() && len(umu.mutation.UserIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "UserModpack.user"`)
-	}
 	if umu.mutation.ModpackCleared() && len(umu.mutation.ModpackIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserModpack.modpack"`)
+	}
+	if umu.mutation.UserCleared() && len(umu.mutation.UserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "UserModpack.user"`)
 	}
 	return nil
 }
@@ -158,35 +158,6 @@ func (umu *UserModpackUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := umu.mutation.Role(); ok {
 		_spec.SetField(usermodpack.FieldRole, field.TypeString, value)
 	}
-	if umu.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   usermodpack.UserTable,
-			Columns: []string{usermodpack.UserColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := umu.mutation.UserIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   usermodpack.UserTable,
-			Columns: []string{usermodpack.UserColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if umu.mutation.ModpackCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -209,6 +180,35 @@ func (umu *UserModpackUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if umu.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   usermodpack.UserTable,
+			Columns: []string{usermodpack.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := umu.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   usermodpack.UserTable,
+			Columns: []string{usermodpack.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -280,14 +280,14 @@ func (umuo *UserModpackUpdateOne) SetNillableRole(s *string) *UserModpackUpdateO
 	return umuo
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (umuo *UserModpackUpdateOne) SetUser(u *User) *UserModpackUpdateOne {
-	return umuo.SetUserID(u.ID)
-}
-
 // SetModpack sets the "modpack" edge to the Modpack entity.
 func (umuo *UserModpackUpdateOne) SetModpack(m *Modpack) *UserModpackUpdateOne {
 	return umuo.SetModpackID(m.ID)
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (umuo *UserModpackUpdateOne) SetUser(u *User) *UserModpackUpdateOne {
+	return umuo.SetUserID(u.ID)
 }
 
 // Mutation returns the UserModpackMutation object of the builder.
@@ -295,15 +295,15 @@ func (umuo *UserModpackUpdateOne) Mutation() *UserModpackMutation {
 	return umuo.mutation
 }
 
-// ClearUser clears the "user" edge to the User entity.
-func (umuo *UserModpackUpdateOne) ClearUser() *UserModpackUpdateOne {
-	umuo.mutation.ClearUser()
-	return umuo
-}
-
 // ClearModpack clears the "modpack" edge to the Modpack entity.
 func (umuo *UserModpackUpdateOne) ClearModpack() *UserModpackUpdateOne {
 	umuo.mutation.ClearModpack()
+	return umuo
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (umuo *UserModpackUpdateOne) ClearUser() *UserModpackUpdateOne {
+	umuo.mutation.ClearUser()
 	return umuo
 }
 
@@ -349,11 +349,11 @@ func (umuo *UserModpackUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (umuo *UserModpackUpdateOne) check() error {
-	if umuo.mutation.UserCleared() && len(umuo.mutation.UserIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "UserModpack.user"`)
-	}
 	if umuo.mutation.ModpackCleared() && len(umuo.mutation.ModpackIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserModpack.modpack"`)
+	}
+	if umuo.mutation.UserCleared() && len(umuo.mutation.UserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "UserModpack.user"`)
 	}
 	return nil
 }
@@ -398,35 +398,6 @@ func (umuo *UserModpackUpdateOne) sqlSave(ctx context.Context) (_node *UserModpa
 	if value, ok := umuo.mutation.Role(); ok {
 		_spec.SetField(usermodpack.FieldRole, field.TypeString, value)
 	}
-	if umuo.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   usermodpack.UserTable,
-			Columns: []string{usermodpack.UserColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := umuo.mutation.UserIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   usermodpack.UserTable,
-			Columns: []string{usermodpack.UserColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if umuo.mutation.ModpackCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -449,6 +420,35 @@ func (umuo *UserModpackUpdateOne) sqlSave(ctx context.Context) (_node *UserModpa
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if umuo.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   usermodpack.UserTable,
+			Columns: []string{usermodpack.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := umuo.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   usermodpack.UserTable,
+			Columns: []string{usermodpack.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

@@ -30,24 +30,13 @@ type UserModpack struct {
 
 // UserModpackEdges holds the relations/edges for other nodes in the graph.
 type UserModpackEdges struct {
-	// User holds the value of the user edge.
-	User *User `json:"user,omitempty"`
 	// Modpack holds the value of the modpack edge.
 	Modpack *Modpack `json:"modpack,omitempty"`
+	// User holds the value of the user edge.
+	User *User `json:"user,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
-}
-
-// UserOrErr returns the User value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e UserModpackEdges) UserOrErr() (*User, error) {
-	if e.User != nil {
-		return e.User, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: user.Label}
-	}
-	return nil, &NotLoadedError{edge: "user"}
 }
 
 // ModpackOrErr returns the Modpack value or an error if the edge
@@ -55,10 +44,21 @@ func (e UserModpackEdges) UserOrErr() (*User, error) {
 func (e UserModpackEdges) ModpackOrErr() (*Modpack, error) {
 	if e.Modpack != nil {
 		return e.Modpack, nil
-	} else if e.loadedTypes[1] {
+	} else if e.loadedTypes[0] {
 		return nil, &NotFoundError{label: modpack.Label}
 	}
 	return nil, &NotLoadedError{edge: "modpack"}
+}
+
+// UserOrErr returns the User value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserModpackEdges) UserOrErr() (*User, error) {
+	if e.User != nil {
+		return e.User, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -114,14 +114,14 @@ func (um *UserModpack) Value(name string) (ent.Value, error) {
 	return um.selectValues.Get(name)
 }
 
-// QueryUser queries the "user" edge of the UserModpack entity.
-func (um *UserModpack) QueryUser() *UserQuery {
-	return NewUserModpackClient(um.config).QueryUser(um)
-}
-
 // QueryModpack queries the "modpack" edge of the UserModpack entity.
 func (um *UserModpack) QueryModpack() *ModpackQuery {
 	return NewUserModpackClient(um.config).QueryModpack(um)
+}
+
+// QueryUser queries the "user" edge of the UserModpack entity.
+func (um *UserModpack) QueryUser() *UserQuery {
+	return NewUserModpackClient(um.config).QueryUser(um)
 }
 
 // Update returns a builder for updating this UserModpack.

@@ -16,23 +16,16 @@ const (
 	FieldModpackID = "modpack_id"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
-	// EdgeUser holds the string denoting the user edge name in mutations.
-	EdgeUser = "user"
 	// EdgeModpack holds the string denoting the modpack edge name in mutations.
 	EdgeModpack = "modpack"
-	// UserFieldID holds the string denoting the ID field of the User.
-	UserFieldID = "id"
+	// EdgeUser holds the string denoting the user edge name in mutations.
+	EdgeUser = "user"
 	// ModpackFieldID holds the string denoting the ID field of the Modpack.
 	ModpackFieldID = "id"
+	// UserFieldID holds the string denoting the ID field of the User.
+	UserFieldID = "id"
 	// Table holds the table name of the usermodpack in the database.
 	Table = "user_modpacks"
-	// UserTable is the table that holds the user relation/edge.
-	UserTable = "user_modpacks"
-	// UserInverseTable is the table name for the User entity.
-	// It exists in this package in order to avoid circular dependency with the "user" package.
-	UserInverseTable = "users"
-	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_id"
 	// ModpackTable is the table that holds the modpack relation/edge.
 	ModpackTable = "user_modpacks"
 	// ModpackInverseTable is the table name for the Modpack entity.
@@ -40,6 +33,13 @@ const (
 	ModpackInverseTable = "modpacks"
 	// ModpackColumn is the table column denoting the modpack relation/edge.
 	ModpackColumn = "modpack_id"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "user_modpacks"
+	// UserInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	UserInverseTable = "users"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_id"
 )
 
 // Columns holds all SQL columns for usermodpack fields.
@@ -77,30 +77,30 @@ func ByRole(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRole, opts...).ToFunc()
 }
 
-// ByUserField orders the results by user field.
-func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
-	}
-}
-
 // ByModpackField orders the results by modpack field.
 func ByModpackField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newModpackStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newUserStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, UserColumn),
-		sqlgraph.To(UserInverseTable, UserFieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
-	)
+
+// ByUserField orders the results by user field.
+func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
+	}
 }
 func newModpackStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, ModpackColumn),
 		sqlgraph.To(ModpackInverseTable, ModpackFieldID),
 		sqlgraph.Edge(sqlgraph.M2O, false, ModpackTable, ModpackColumn),
+	)
+}
+func newUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, UserColumn),
+		sqlgraph.To(UserInverseTable, UserFieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
 	)
 }
