@@ -54,3 +54,14 @@ run = "golangci-lint run"
 
 [tasks.format]
 run = "golangci-lint run --fix"
+
+[tasks.lock]
+run = [
+    "mise lock --platform linux-x64",
+    "mise lock --platform linux-x64-musl",
+    "mise lock --platform linux-arm64",
+    "mise lock --platform linux-arm64-musl",
+    "mise lock --platform macos-arm64",
+    "mise lock --platform macos-x64",
+    "mise lock --platform windows-x64"
+]
