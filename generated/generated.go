@@ -185,6 +185,11 @@ type ComplexityRoot struct {
 		Views                 func(childComplexity int) int
 	}
 
+	ModCompatibilities struct {
+		WorstEa  func(childComplexity int) int
+		WorstExp func(childComplexity int) int
+	}
+
 	ModVersion struct {
 		ID           func(childComplexity int) int
 		ModReference func(childComplexity int) int
@@ -290,6 +295,7 @@ type ComplexityRoot struct {
 		GetModAssetList              func(childComplexity int, modReference string) int
 		GetModByIDOrReference        func(childComplexity int, modIDOrReference string) int
 		GetModByReference            func(childComplexity int, modReference string) int
+		GetModCompatibilities        func(childComplexity int, modpackID string) int
 		GetModpack                   func(childComplexity int, modpackID string) int
 		GetModpackRelease            func(childComplexity int, modpackID string, version string) int
 		GetModpacks                  func(childComplexity int, filter *ModpackFilter) int
@@ -538,6 +544,7 @@ type QueryResolver interface {
 	GetModpack(ctx context.Context, modpackID string) (*Modpack, error)
 	GetModpacks(ctx context.Context, filter *ModpackFilter) (*GetModpacks, error)
 	GetModpackRelease(ctx context.Context, modpackID string, version string) (*ModpackRelease, error)
+	GetModCompatibilities(ctx context.Context, modpackID string) (*ModCompatibilities, error)
 	GetSatisfactoryVersions(ctx context.Context) ([]*SatisfactoryVersion, error)
 	GetSatisfactoryVersion(ctx context.Context, id string) (*SatisfactoryVersion, error)
 	GetSMLVersion(ctx context.Context, smlVersionID string) (*SMLVersion, error)
@@ -1067,6 +1074,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mod.Views(childComplexity), true
+
+	case "ModCompatibilities.worstEA":
+		if e.complexity.ModCompatibilities.WorstEa == nil {
+			break
+		}
+
+		return e.complexity.ModCompatibilities.WorstEa(childComplexity), true
+
+	case "ModCompatibilities.worstEXP":
+		if e.complexity.ModCompatibilities.WorstExp == nil {
+			break
+		}
+
+		return e.complexity.ModCompatibilities.WorstExp(childComplexity), true
 
 	case "ModVersion.id":
 		if e.complexity.ModVersion.ID == nil {
@@ -1904,6 +1925,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.GetModByReference(childComplexity, args["modReference"].(string)), true
+
+	case "Query.getModCompatibilities":
+		if e.complexity.Query.GetModCompatibilities == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getModCompatibilities_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetModCompatibilities(childComplexity, args["modpackID"].(string)), true
 
 	case "Query.getModpack":
 		if e.complexity.Query.GetModpack == nil {
@@ -3290,6 +3323,11 @@ type GetModpacks {
     count: Int!
 }
 
+type ModCompatibilities{
+    worstEA: [Mod!]!
+    worstEXP: [Mod!]!
+}
+
 ### Inputs
 
 input ModpackFilter {
@@ -3344,6 +3382,7 @@ extend type Query {
     getModpacks(filter: ModpackFilter): GetModpacks!
 
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
+    getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!
 }
 
 ### Mutations
@@ -3352,7 +3391,7 @@ extend type Mutation {
     createModpack(modpack: NewModpack!): Modpack @isLoggedIn
     updateModpack(modpackID: ModpackID!, modpack: UpdateModpack!): Modpack! @canEditModpack(field: "modpackID") @isLoggedIn
     deleteModpack(modpackID: ModpackID!): Boolean! @canEditModpack(field: "modpackID") @isLoggedIn
-    
+
     createModpackRelease(modpackID: ModpackID!, release: NewModpackRelease!): ModpackRelease! @canEditModpack(field: "modpackID") @isLoggedIn
     deleteModpackRelease(modpackID: ModpackID!, version: String!): Boolean! @canEditModpack(field: "modpackID") @isLoggedIn
     resolveModpack(modpackID: ModpackID!, targets: [String!]!): String @canEditModpack(field: "modpackID") @isLoggedIn
@@ -5854,6 +5893,34 @@ func (ec *executionContext) field_Query_getModByReference_argsModReference(
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modReference"))
 	if tmp, ok := rawArgs["modReference"]; ok {
 		return ec.unmarshalNModReference2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getModCompatibilities_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getModCompatibilities_argsModpackID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["modpackID"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_getModCompatibilities_argsModpackID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modpackID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modpackID"))
+	if tmp, ok := rawArgs["modpackID"]; ok {
+		return ec.unmarshalNModpackID2string(ctx, tmp)
 	}
 
 	var zeroVal string
@@ -10035,6 +10102,202 @@ func (ec *executionContext) fieldContext_Mod_latestVersions(_ context.Context, f
 				return ec.fieldContext_LatestVersions_release(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LatestVersions", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModCompatibilities_worstEA(ctx context.Context, field graphql.CollectedField, obj *ModCompatibilities) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModCompatibilities_worstEA(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorstEa, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*Mod)
+	fc.Result = res
+	return ec.marshalNMod2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModCompatibilities_worstEA(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModCompatibilities",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Mod_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Mod_name(ctx, field)
+			case "short_description":
+				return ec.fieldContext_Mod_short_description(ctx, field)
+			case "full_description":
+				return ec.fieldContext_Mod_full_description(ctx, field)
+			case "logo":
+				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
+			case "source_url":
+				return ec.fieldContext_Mod_source_url(ctx, field)
+			case "creator_id":
+				return ec.fieldContext_Mod_creator_id(ctx, field)
+			case "approved":
+				return ec.fieldContext_Mod_approved(ctx, field)
+			case "views":
+				return ec.fieldContext_Mod_views(ctx, field)
+			case "downloads":
+				return ec.fieldContext_Mod_downloads(ctx, field)
+			case "hotness":
+				return ec.fieldContext_Mod_hotness(ctx, field)
+			case "popularity":
+				return ec.fieldContext_Mod_popularity(ctx, field)
+			case "updated_at":
+				return ec.fieldContext_Mod_updated_at(ctx, field)
+			case "created_at":
+				return ec.fieldContext_Mod_created_at(ctx, field)
+			case "last_version_date":
+				return ec.fieldContext_Mod_last_version_date(ctx, field)
+			case "mod_reference":
+				return ec.fieldContext_Mod_mod_reference(ctx, field)
+			case "hidden":
+				return ec.fieldContext_Mod_hidden(ctx, field)
+			case "tags":
+				return ec.fieldContext_Mod_tags(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
+			case "authors":
+				return ec.fieldContext_Mod_authors(ctx, field)
+			case "version":
+				return ec.fieldContext_Mod_version(ctx, field)
+			case "versions":
+				return ec.fieldContext_Mod_versions(ctx, field)
+			case "latestVersions":
+				return ec.fieldContext_Mod_latestVersions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Mod", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModCompatibilities_worstEXP(ctx context.Context, field graphql.CollectedField, obj *ModCompatibilities) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModCompatibilities_worstEXP(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorstExp, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*Mod)
+	fc.Result = res
+	return ec.marshalNMod2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModCompatibilities_worstEXP(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModCompatibilities",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Mod_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Mod_name(ctx, field)
+			case "short_description":
+				return ec.fieldContext_Mod_short_description(ctx, field)
+			case "full_description":
+				return ec.fieldContext_Mod_full_description(ctx, field)
+			case "logo":
+				return ec.fieldContext_Mod_logo(ctx, field)
+			case "logo_thumbhash":
+				return ec.fieldContext_Mod_logo_thumbhash(ctx, field)
+			case "source_url":
+				return ec.fieldContext_Mod_source_url(ctx, field)
+			case "creator_id":
+				return ec.fieldContext_Mod_creator_id(ctx, field)
+			case "approved":
+				return ec.fieldContext_Mod_approved(ctx, field)
+			case "views":
+				return ec.fieldContext_Mod_views(ctx, field)
+			case "downloads":
+				return ec.fieldContext_Mod_downloads(ctx, field)
+			case "hotness":
+				return ec.fieldContext_Mod_hotness(ctx, field)
+			case "popularity":
+				return ec.fieldContext_Mod_popularity(ctx, field)
+			case "updated_at":
+				return ec.fieldContext_Mod_updated_at(ctx, field)
+			case "created_at":
+				return ec.fieldContext_Mod_created_at(ctx, field)
+			case "last_version_date":
+				return ec.fieldContext_Mod_last_version_date(ctx, field)
+			case "mod_reference":
+				return ec.fieldContext_Mod_mod_reference(ctx, field)
+			case "hidden":
+				return ec.fieldContext_Mod_hidden(ctx, field)
+			case "tags":
+				return ec.fieldContext_Mod_tags(ctx, field)
+			case "compatibility":
+				return ec.fieldContext_Mod_compatibility(ctx, field)
+			case "toggle_network_use":
+				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
+			case "toggle_explicit_content":
+				return ec.fieldContext_Mod_toggle_explicit_content(ctx, field)
+			case "authors":
+				return ec.fieldContext_Mod_authors(ctx, field)
+			case "version":
+				return ec.fieldContext_Mod_version(ctx, field)
+			case "versions":
+				return ec.fieldContext_Mod_versions(ctx, field)
+			case "latestVersions":
+				return ec.fieldContext_Mod_latestVersions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Mod", field.Name)
 		},
 	}
 	return fc, nil
@@ -16814,6 +17077,67 @@ func (ec *executionContext) fieldContext_Query_getModpackRelease(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getModpackRelease_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getModCompatibilities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getModCompatibilities(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetModCompatibilities(rctx, fc.Args["modpackID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ModCompatibilities)
+	fc.Result = res
+	return ec.marshalNModCompatibilities2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModCompatibilities(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getModCompatibilities(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "worstEA":
+				return ec.fieldContext_ModCompatibilities_worstEA(ctx, field)
+			case "worstEXP":
+				return ec.fieldContext_ModCompatibilities_worstEXP(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ModCompatibilities", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getModCompatibilities_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -27147,6 +27471,50 @@ func (ec *executionContext) _Mod(ctx context.Context, sel ast.SelectionSet, obj 
 	return out
 }
 
+var modCompatibilitiesImplementors = []string{"ModCompatibilities"}
+
+func (ec *executionContext) _ModCompatibilities(ctx context.Context, sel ast.SelectionSet, obj *ModCompatibilities) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, modCompatibilitiesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ModCompatibilities")
+		case "worstEA":
+			out.Values[i] = ec._ModCompatibilities_worstEA(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "worstEXP":
+			out.Values[i] = ec._ModCompatibilities_worstEXP(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var modVersionImplementors = []string{"ModVersion"}
 
 func (ec *executionContext) _ModVersion(ctx context.Context, sel ast.SelectionSet, obj *ModVersion) graphql.Marshaler {
@@ -28183,6 +28551,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getModpackRelease(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getModCompatibilities":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getModCompatibilities(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -30709,6 +31099,20 @@ func (ec *executionContext) marshalNMod2ᚖgithubᚗcomᚋsatisfactorymoddingᚋ
 		return graphql.Null
 	}
 	return ec._Mod(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNModCompatibilities2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModCompatibilities(ctx context.Context, sel ast.SelectionSet, v ModCompatibilities) graphql.Marshaler {
+	return ec._ModCompatibilities(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNModCompatibilities2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModCompatibilities(ctx context.Context, sel ast.SelectionSet, v *ModCompatibilities) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ModCompatibilities(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNModID2string(ctx context.Context, v any) (string, error) {

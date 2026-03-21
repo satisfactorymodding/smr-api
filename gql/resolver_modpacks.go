@@ -288,6 +288,43 @@ func (r *queryResolver) GetModpackRelease(ctx context.Context, modpackID string,
 	return (*conv.ModpackReleaseImpl)(nil).Convert(dbRelease), nil
 }
 
+func (r *queryResolver) GetModCompatibilities(ctx context.Context, modpackID string) (*generated.ModCompatibilities, error) {
+	mods, err := db.From(ctx).Modpack.Query().
+		Where(modpack.ID(modpackID)).QueryModpackMods().QueryMod().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	EAlist := []*generated.Mod{}
+	worstEA := generated.CompatibilityStateWorks
+	EXPlist := []*generated.Mod{}
+	worstEXP := generated.CompatibilityStateWorks
+
+	for _, mod := range mods {
+		// check worst EA
+		if generated.CompatibilityState(mod.Compatibility.Ea.State) == generated.CompatibilityStateBroken {
+			worstEA = generated.CompatibilityStateBroken
+		} else if generated.CompatibilityState(mod.Compatibility.Ea.State) == generated.CompatibilityStateDamaged && worstEA != generated.CompatibilityStateBroken {
+			worstEA = generated.CompatibilityStateDamaged
+		}
+		// check worst EXP
+		if generated.CompatibilityState(mod.Compatibility.Exp.State) == generated.CompatibilityStateBroken {
+			worstEXP = generated.CompatibilityStateBroken
+		} else if generated.CompatibilityState(mod.Compatibility.Exp.State) == generated.CompatibilityStateDamaged && worstEXP != generated.CompatibilityStateBroken {
+			worstEXP = generated.CompatibilityStateDamaged
+		}
+	}
+	// get list of mods
+	for _, mod := range mods {
+		if generated.CompatibilityState(mod.Compatibility.Ea.State) == worstEA {
+			EAlist = append(EAlist, (*conv.ModImpl)(nil).Convert(mod))
+		}
+		if generated.CompatibilityState(mod.Compatibility.Exp.State) == worstEXP {
+			EXPlist = append(EXPlist, (*conv.ModImpl)(nil).Convert(mod))
+		}
+	}
+	return &generated.ModCompatibilities{WorstEa: EAlist, WorstExp: EXPlist}, nil
+}
+
 func (r *mutationResolver) CreateModpackRelease(ctx context.Context, modpackID string, release generated.NewModpackRelease) (*generated.ModpackRelease, error) {
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&release); err != nil {

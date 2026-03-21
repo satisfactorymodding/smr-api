@@ -130,6 +130,11 @@ type Mod struct {
 	LatestVersions        *LatestVersions    `json:"latestVersions"`
 }
 
+type ModCompatibilities struct {
+	WorstEa  []*Mod `json:"worstEA"`
+	WorstExp []*Mod `json:"worstEXP"`
+}
+
 type ModVersion struct {
 	ID           string     `json:"id"`
 	ModReference string     `json:"mod_reference"`
