@@ -3,6 +3,11 @@
 [[tools."aqua:minio/mc"]]
 version = "RELEASE.2025-04-08T15-39-49Z"
 backend = "aqua:minio/mc"
+"platforms.linux-arm64" = { checksum = "sha256:ac7448b6d3188fb94cea48c762d700584e7a0e467e21e1be4cfc823755c026eb", url = "https://dl.min.io/client/mc/release/linux-arm64/archive/mc.RELEASE.2025-04-08T15-39-49Z"}
+"platforms.linux-x64" = { checksum = "sha256:43d44d801a936e48390c8d2dc02c1c1cc1e973becbe71897f28ca06a9f456489", url = "https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2025-04-08T15-39-49Z"}
+"platforms.macos-arm64" = { checksum = "sha256:0ffce1b14eff6b3d410ed400ffbf0530ff4b11d8372115f1afa6f9b483ba5a40", url = "https://dl.min.io/client/mc/release/darwin-arm64/archive/mc.RELEASE.2025-04-08T15-39-49Z"}
+"platforms.macos-x64" = { checksum = "sha256:90407d70b69de8251731ed8cf644dd78836c49f1b3f559ae0c2b70dedeaf79aa", url = "https://dl.min.io/client/mc/release/darwin-amd64/archive/mc.RELEASE.2025-04-08T15-39-49Z"}
+"platforms.windows-x64" = { checksum = "sha256:45fb732d67cf26a1568c3750a1629d762c2f7b6990995cd02c4b1bb0c3de5770", url = "https://dl.min.io/client/mc/release/windows-amd64/archive/mc.RELEASE.2025-04-08T15-39-49Z"}
 
 [tools."aqua:minio/mc"."platforms.linux-arm64"]
 checksum = "sha256:ac7448b6d3188fb94cea48c762d700584e7a0e467e21e1be4cfc823755c026eb"
@@ -35,6 +40,11 @@ url = "https://dl.min.io/client/mc/release/windows-amd64/archive/mc.RELEASE.2025
 [[tools.atlas]]
 version = "0.32.0"
 backend = "aqua:ariga/atlas"
+"platforms.linux-arm64" = { url = "https://release.ariga.io/atlas/atlas-linux-arm64-v0.32.0"}
+"platforms.linux-x64" = { url = "https://release.ariga.io/atlas/atlas-linux-amd64-v0.32.0"}
+"platforms.macos-arm64" = { url = "https://release.ariga.io/atlas/atlas-darwin-arm64-v0.32.0"}
+"platforms.macos-x64" = { url = "https://release.ariga.io/atlas/atlas-darwin-amd64-v0.32.0"}
+"platforms.windows-x64" = { checksum = "sha256:53bcef1bb201eec85406025472f6d86626f360b05dacfea808e595a85d8ce632", url = "https://release.ariga.io/atlas/atlas-windows-amd64-v0.32.0.exe"}
 
 [tools.atlas."platforms.linux-arm64"]
 checksum = "sha256:15eda758084b52358a477bf7f8b8093ef811ec6e31f635095d0c41a8ebe6aa52"
@@ -67,6 +77,11 @@ url = "https://release.ariga.io/atlas/atlas-windows-amd64-v0.32.0.exe"
 [[tools.go]]
 version = "1.24.4"
 backend = "core:go"
+"platforms.linux-arm64" = { checksum = "sha256:d5501ee5aca0f258d5fe9bfaed401958445014495dc115f202d43d5210b45241", url = "https://dl.google.com/go/go1.24.4.linux-arm64.tar.gz"}
+"platforms.linux-x64" = { checksum = "sha256:77e5da33bb72aeaef1ba4418b6fe511bc4d041873cbf82e5aa6318740df98717", url = "https://dl.google.com/go/go1.24.4.linux-amd64.tar.gz"}
+"platforms.macos-arm64" = { checksum = "sha256:27973684b515eaf461065054e6b572d9390c05e69ba4a423076c160165336470", url = "https://dl.google.com/go/go1.24.4.darwin-arm64.tar.gz"}
+"platforms.macos-x64" = { checksum = "sha256:69bef555e114b4a2252452b6e7049afc31fbdf2d39790b669165e89525cd3f5c", url = "https://dl.google.com/go/go1.24.4.darwin-amd64.tar.gz"}
+"platforms.windows-x64" = { checksum = "sha256:b751a1136cb9d8a2e7ebb22c538c4f02c09b98138c7c8bfb78a54a4566c013b1", url = "https://dl.google.com/go/go1.24.4.windows-amd64.zip"}
 
 [tools.go."platforms.linux-arm64"]
 checksum = "sha256:d5501ee5aca0f258d5fe9bfaed401958445014495dc115f202d43d5210b45241"
@@ -118,6 +133,11 @@ url = "https://github.com/jstemmer/go-junit-report/releases/download/v2.1.0/go-j
 [[tools.golangci-lint]]
 version = "2.1.6"
 backend = "aqua:golangci/golangci-lint"
+"platforms.linux-arm64" = { checksum = "sha256:582eb73880f4408d7fb89f12b502d577bd7b0b63d8c681da92bb6b9d934d4363", url = "https://github.com/golangci/golangci-lint/releases/download/v2.1.6/golangci-lint-2.1.6-linux-arm64.tar.gz"}
+"platforms.linux-x64" = { checksum = "sha256:e55e0eb515936c0fbd178bce504798a9bd2f0b191e5e357768b18fd5415ee541", url = "https://github.com/golangci/golangci-lint/releases/download/v2.1.6/golangci-lint-2.1.6-linux-amd64.tar.gz"}
+"platforms.macos-arm64" = { checksum = "sha256:90783fa092a0f64a4f7b7d419f3da1f53207e300261773babe962957240e9ea6", url = "https://github.com/golangci/golangci-lint/releases/download/v2.1.6/golangci-lint-2.1.6-darwin-arm64.tar.gz"}
+"platforms.macos-x64" = { checksum = "sha256:e091107c4ca7e283902343ba3a09d14fb56b86e071effd461ce9d67193ef580e", url = "https://github.com/golangci/golangci-lint/releases/download/v2.1.6/golangci-lint-2.1.6-darwin-amd64.tar.gz"}
+"platforms.windows-x64" = { checksum = "sha256:fd7298019c76cf414ab083491f87f6c0a3e537ed6d727d6ff9135e503d6f9c32", url = "https://github.com/golangci/golangci-lint/releases/download/v2.1.6/golangci-lint-2.1.6-windows-amd64.zip"}
 
 [tools.golangci-lint."platforms.linux-arm64"]
 checksum = "sha256:582eb73880f4408d7fb89f12b502d577bd7b0b63d8c681da92bb6b9d934d4363"
@@ -150,6 +170,7 @@ url = "https://github.com/golangci/golangci-lint/releases/download/v2.1.6/golang
 [[tools.protoc]]
 version = "31.1"
 backend = "aqua:protocolbuffers/protobuf/protoc"
+"platforms.windows-x64" = { url = "https://github.com/protocolbuffers/protobuf/releases/download/v31.1/protoc-31.1-win64.zip"}
 
 [tools.protoc."platforms.linux-arm64"]
 url = "https://github.com/protocolbuffers/protobuf/releases/download/v31.1/protoc-31.1-linux-aarch_64.zip"
@@ -175,6 +196,11 @@ url = "https://github.com/protocolbuffers/protobuf/releases/download/v31.1/proto
 [[tools.protoc-gen-go]]
 version = "1.36.6"
 backend = "aqua:protocolbuffers/protobuf-go/protoc-gen-go"
+"platforms.linux-arm64" = { url = "https://github.com/protocolbuffers/protobuf-go/releases/download/v1.36.6/protoc-gen-go.v1.36.6.linux.arm64.tar.gz"}
+"platforms.linux-x64" = { url = "https://github.com/protocolbuffers/protobuf-go/releases/download/v1.36.6/protoc-gen-go.v1.36.6.linux.amd64.tar.gz"}
+"platforms.macos-arm64" = { url = "https://github.com/protocolbuffers/protobuf-go/releases/download/v1.36.6/protoc-gen-go.v1.36.6.darwin.arm64.tar.gz"}
+"platforms.macos-x64" = { url = "https://github.com/protocolbuffers/protobuf-go/releases/download/v1.36.6/protoc-gen-go.v1.36.6.darwin.amd64.tar.gz"}
+"platforms.windows-x64" = { url = "https://github.com/protocolbuffers/protobuf-go/releases/download/v1.36.6/protoc-gen-go.v1.36.6.windows.amd64.zip"}
 
 [tools.protoc-gen-go."platforms.linux-arm64"]
 url = "https://github.com/protocolbuffers/protobuf-go/releases/download/v1.36.6/protoc-gen-go.v1.36.6.linux.arm64.tar.gz"
