@@ -196,7 +196,7 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 	SetINNF(updatedModpack.ShortDescription, update.SetShortDescription)
 	SetINNF(updatedModpack.FullDescription, update.SetFullDescription)
 	SetINNF(updatedModpack.Hidden, update.SetHidden)
-	SetCompatibilityINNF(updatedModpack.Compatibility, update.SetCompatibility) //Perhaps have it check mods for compatibility instead of taking an Input?
+	SetCompatibilityINNF(updatedModpack.Compatibility, update.SetCompatibility)
 
 	resultModpack, err := update.Save(ctx)
 	if err != nil {
@@ -246,7 +246,6 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 }
 
 func (r *mutationResolver) UpdateModpackCompatibility(ctx context.Context, modpackID string, compatibility generated.CompatibilityInfoInput) (bool, error) {
-	//copied from resolver_mods.go. Probably unnecessary since everything should be done during creation.
 	updateModpack := generated.UpdateModpack{
 		Compatibility: &compatibility,
 	}
