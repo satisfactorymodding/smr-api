@@ -105,7 +105,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Setup
-        run: mise run setup && mise --version && mise version
+        run: mise run setup
 
       - name: Download and seed database
         run: |
