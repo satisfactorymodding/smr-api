@@ -27,7 +27,7 @@ jobs:
         run: git diff --exit-code
 
       - name: Solving issues (temp)
-        run: mise --version
+        run: mise --version && mise doctor
 
   go:
     runs-on: ubuntu-latest
@@ -46,3 +46,6 @@ jobs:
 
       - name: Ensure no changes
         run: git diff --exit-code
+
+      - name: Solving issues (temp)
+        run: mise --version && mise doctor
