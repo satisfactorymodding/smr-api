@@ -73,7 +73,7 @@ func TestModpackCompatibility(t *testing.T) {
 		objID = createResponse.CreateModpack.ID
 	})
 
-	t.Run("Working Compatibility", func(t *testing.T) {
+	t.Run("Single mod compatibility", func(t *testing.T) {
 		// First mod: EA Broken, EXP Works
 		updateRequest1 := authRequest(`mutation ($id: ModID!) {
 			updateMod(
@@ -163,5 +163,95 @@ func TestModpackCompatibility(t *testing.T) {
 		testza.AssertEqual(t, 1, len(queryResponse.GetModCompatibilities.WorstExp))
 		testza.AssertEqual(t, mods[1], queryResponse.GetModCompatibilities.WorstExp[0].ID)
 		testza.AssertEqual(t, generated.CompatibilityStateDamaged, queryResponse.GetModCompatibilities.WorstExp[0].Compatibility.Exp.State)
+	})
+
+	t.Run("Multi mod compatibility", func(t *testing.T) {
+		// First mod: EA Broken, EXP Works
+		updateRequest1 := authRequest(`mutation ($id: ModID!) {
+			updateMod(
+				modId: $id,
+				mod: {
+					compatibility: {	
+						EA: {
+							note: "Hello"
+							state: Broken
+						}
+						EXP: {
+							note: "World",
+							state: Works
+						}
+					}		
+				}
+			) {
+				id
+			}}`, token)
+		updateRequest1.Var("id", mods[0])
+		err = client.Run(ctx, updateRequest1, nil)
+		testza.AssertNoError(t, err)
+
+		// Second mod: EA Broken, EXP Works
+		updateRequest2 := authRequest(`mutation ($id: ModID!) {
+			updateMod(
+				modId: $id,
+				mod: {
+					compatibility: {
+						EA: {
+							note: "Hello"
+							state: Broken
+						}
+						EXP: {
+							note: "World",
+							state: Works
+						}
+					}
+				}
+			) {
+				id
+			}}`, token)
+		updateRequest2.Var("id", mods[1])
+		err = client.Run(ctx, updateRequest2, nil)
+		testza.AssertNoError(t, err)
+
+		queryRequest := authRequest(`query ($modpackID: ModpackID!) {
+				getModCompatibilities(modpackID: $modpackID) {
+					worstEA {
+						id
+						name
+						compatibility {
+                			EA {
+                    			state
+              			  }
+            			    EXP {
+            			        state
+            			    }
+          				}
+					}
+					worstEXP {
+						id
+						name
+						compatibility {
+                			EA {
+                    			state
+              			  }
+            			    EXP {
+            			        state
+            			    }
+          				}
+					}
+				}
+			}`, token)
+		queryRequest.Var("modpackID", objID)
+
+		var queryResponse struct {
+			GetModCompatibilities generated.ModCompatibilities
+		}
+		err = client.Run(ctx, queryRequest, &queryResponse)
+		testza.AssertNoError(t, err)
+
+		testza.AssertEqual(t, 2, len(queryResponse.GetModCompatibilities.WorstEa))
+		testza.AssertEqual(t, generated.CompatibilityStateBroken, queryResponse.GetModCompatibilities.WorstEa[0].Compatibility.Ea.State)
+
+		testza.AssertEqual(t, 0, len(queryResponse.GetModCompatibilities.WorstExp))
+		testza.AssertEqual(t, generated.CompatibilityStateWorks, queryResponse.GetModCompatibilities.WorstExp[0].Compatibility.Exp.State)
 	})
 }
