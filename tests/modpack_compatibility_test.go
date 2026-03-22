@@ -250,8 +250,6 @@ func TestModpackCompatibility(t *testing.T) {
 
 		testza.AssertEqual(t, 2, len(queryResponse.GetModCompatibilities.WorstEa))
 		testza.AssertEqual(t, generated.CompatibilityStateBroken, queryResponse.GetModCompatibilities.WorstEa[0].Compatibility.Ea.State)
-
 		testza.AssertEqual(t, 0, len(queryResponse.GetModCompatibilities.WorstExp))
-		testza.AssertEqual(t, generated.CompatibilityStateWorks, queryResponse.GetModCompatibilities.WorstExp[0].Compatibility.Exp.State)
 	})
 }
