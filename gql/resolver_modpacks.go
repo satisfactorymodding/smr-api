@@ -314,11 +314,15 @@ func (r *queryResolver) GetModCompatibilities(ctx context.Context, modpackID str
 	}
 	// get list of mods
 	for _, mod := range mods {
-		if generated.CompatibilityState(mod.Compatibility.Ea.State) == worstEA {
-			EAlist = append(EAlist, (*conv.ModImpl)(nil).Convert(mod))
+		if worstEA != generated.CompatibilityStateWorks {
+			if generated.CompatibilityState(mod.Compatibility.Ea.State) == worstEA {
+				EAlist = append(EAlist, (*conv.ModImpl)(nil).Convert(mod))
+			}
 		}
-		if generated.CompatibilityState(mod.Compatibility.Exp.State) == worstEXP {
-			EXPlist = append(EXPlist, (*conv.ModImpl)(nil).Convert(mod))
+		if worstEXP != generated.CompatibilityStateWorks {
+			if generated.CompatibilityState(mod.Compatibility.Exp.State) == worstEXP {
+				EXPlist = append(EXPlist, (*conv.ModImpl)(nil).Convert(mod))
+			}
 		}
 	}
 	return &generated.ModCompatibilities{WorstEa: EAlist, WorstExp: EXPlist}, nil
