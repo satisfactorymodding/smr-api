@@ -36,15 +36,6 @@ func GenAIDisclosureInfoToDBAIDisclosureInfo(gen *generated.AIUseDisclosureInput
 	if gen == nil {
 		return nil
 	}
-
-	//DisclosureType AIUseDisclosureType
-	//DisclosureString string
-	/*
-	return &util.AIUseDisclosureInfo{
-		DisclosureType:         GenAIDTToDBAIDT(gen.DisclosureType),
-		DisclosureString:        gen.DisclosureString,
-	}
-*/
 	r := &util.AIUseDisclosureInfo{
 		DisclosureType: string(gen.DisclosureType),
 	}
