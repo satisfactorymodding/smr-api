@@ -51,9 +51,7 @@ func (c *ModImpl) Convert(source *ent.Mod) *generated.Mod {
 			xstring := *(*source).NetworkUseDisclosure
 			generatedMod.NetworkUseDisclosure = &xstring
 		}
-		generatedMod.AiUseDisclosureType = (*source).AiUseDisclosureType
-		pString5 := (*source).AiUseDisclosure
-		generatedMod.AiUseDisclosure = &pString5
+		generatedMod.AiUseDisclosure = c.pUtilAIUseDisclosureInfoToPGeneratedAIUseDisclosureInfo((*source).AiUseDisclosure)
 		generatedMod.ToggleExplicitContent = (*source).ToggleExplicitContent
 		pGeneratedMod = &generatedMod
 	}
@@ -79,6 +77,17 @@ func (c *ModImpl) pEntTagToPGeneratedTag(source *ent.Tag) *generated.Tag {
 		pGeneratedTag = &generatedTag
 	}
 	return pGeneratedTag
+}
+func (c *ModImpl) pUtilAIUseDisclosureInfoToPGeneratedAIUseDisclosureInfo(source *util.AIUseDisclosureInfo) *generated.AIUseDisclosureInfo {
+	var pGeneratedAIUseDisclosureInfo *generated.AIUseDisclosureInfo
+	if source != nil {
+		var generatedAIUseDisclosureInfo generated.AIUseDisclosureInfo
+		generatedAIUseDisclosureInfo.DisclosureType = generated.AIUseDisclosureType((*source).DisclosureType)
+		pString := (*source).DisclosureString
+		generatedAIUseDisclosureInfo.DisclosureString = &pString
+		pGeneratedAIUseDisclosureInfo = &generatedAIUseDisclosureInfo
+	}
+	return pGeneratedAIUseDisclosureInfo
 }
 func (c *ModImpl) pUtilCompatibilityInfoToPGeneratedCompatibilityInfo(source *util.CompatibilityInfo) *generated.CompatibilityInfo {
 	var pGeneratedCompatibilityInfo *generated.CompatibilityInfo

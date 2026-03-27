@@ -78,10 +78,6 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 		return nil, temporal.NewNonRetryableApplicationError("reusing the version name of a deleted mod version is not allowed", "fatal", nil)
 	}
 
-	if mod.AiUseDisclosureType == "" {
-		return nil, temporal.NewNonRetryableApplicationError("ai use disclosure is required", "fatal", nil)
-	}
-
 	// Allow only new 5 versions per 24h
 	versions, err := db.From(ctx).Version.Query().
 		Order(version2.ByCreatedAt(sql.OrderAsc())).

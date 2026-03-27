@@ -15,6 +15,12 @@ enum ModFields {
     search
 }
 
+enum AIUseDisclosureType {
+    no_ai_usage
+    ai_usage
+    runtime_ai_usage
+}
+
 type Mod {
     id: ModID!
     name: String!
@@ -38,8 +44,7 @@ type Mod {
     compatibility: CompatibilityInfo
     toggle_network_use: Boolean!
     network_use_disclosure: String
-    ai_use_disclosure_type: String!
-    ai_use_disclosure: String
+    ai_use_disclosure: AIUseDisclosureInfo
     toggle_explicit_content: Boolean!
 
     authors: [UserMod!]!
@@ -62,6 +67,11 @@ type ModVersion {
     id: ModID!
     mod_reference: ModReference!
     versions: [Version!]!
+}
+
+type AIUseDisclosureInfo {
+    disclosure_type: AIUseDisclosureType!
+    disclosure_string: String
 }
 
 ### Inputs
@@ -89,8 +99,7 @@ input NewMod {
     tagIDs: [TagID!]
     toggle_network_use: Boolean
     toggle_explicit_content: Boolean
-    ai_use_disclosure_type: String!
-    ai_use_disclosure: String
+    ai_use_disclosure: AIUseDisclosureInput
 }
 
 input UpdateMod {
@@ -106,8 +115,7 @@ input UpdateMod {
     compatibility: CompatibilityInfoInput
     toggle_network_use: Boolean
     network_use_disclosure: String
-    ai_use_disclosure_type: String!
-    ai_use_disclosure: String
+    ai_use_disclosure: AIUseDisclosureInput
     toggle_explicit_content: Boolean
 }
 
@@ -119,6 +127,11 @@ input UpdateUserMod {
 input ModVersionConstraint {
     modIdOrReference: String!
     version: String!
+}
+
+input AIUseDisclosureInput {
+    disclosure_type: AIUseDisclosureType!
+    disclosure_string: String
 }
 
 ### Queries

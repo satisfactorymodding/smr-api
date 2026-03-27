@@ -1963,8 +1963,7 @@ type ModMutation struct {
 	compatibility           **util.CompatibilityInfo
 	toggle_network_use      *bool
 	network_use_disclosure  *string
-	ai_use_disclosure_type  *string
-	ai_use_disclosure       *string
+	ai_use_disclosure       **util.AIUseDisclosureInfo
 	toggle_explicit_content *bool
 	clearedFields           map[string]struct{}
 	versions                map[string]struct{}
@@ -3051,62 +3050,13 @@ func (m *ModMutation) ResetNetworkUseDisclosure() {
 	delete(m.clearedFields, mod.FieldNetworkUseDisclosure)
 }
 
-// SetAiUseDisclosureType sets the "ai_use_disclosure_type" field.
-func (m *ModMutation) SetAiUseDisclosureType(s string) {
-	m.ai_use_disclosure_type = &s
-}
-
-// AiUseDisclosureType returns the value of the "ai_use_disclosure_type" field in the mutation.
-func (m *ModMutation) AiUseDisclosureType() (r string, exists bool) {
-	v := m.ai_use_disclosure_type
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAiUseDisclosureType returns the old "ai_use_disclosure_type" field's value of the Mod entity.
-// If the Mod object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ModMutation) OldAiUseDisclosureType(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAiUseDisclosureType is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAiUseDisclosureType requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAiUseDisclosureType: %w", err)
-	}
-	return oldValue.AiUseDisclosureType, nil
-}
-
-// ClearAiUseDisclosureType clears the value of the "ai_use_disclosure_type" field.
-func (m *ModMutation) ClearAiUseDisclosureType() {
-	m.ai_use_disclosure_type = nil
-	m.clearedFields[mod.FieldAiUseDisclosureType] = struct{}{}
-}
-
-// AiUseDisclosureTypeCleared returns if the "ai_use_disclosure_type" field was cleared in this mutation.
-func (m *ModMutation) AiUseDisclosureTypeCleared() bool {
-	_, ok := m.clearedFields[mod.FieldAiUseDisclosureType]
-	return ok
-}
-
-// ResetAiUseDisclosureType resets all changes to the "ai_use_disclosure_type" field.
-func (m *ModMutation) ResetAiUseDisclosureType() {
-	m.ai_use_disclosure_type = nil
-	delete(m.clearedFields, mod.FieldAiUseDisclosureType)
-}
-
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
-func (m *ModMutation) SetAiUseDisclosure(s string) {
-	m.ai_use_disclosure = &s
+func (m *ModMutation) SetAiUseDisclosure(uudi *util.AIUseDisclosureInfo) {
+	m.ai_use_disclosure = &uudi
 }
 
 // AiUseDisclosure returns the value of the "ai_use_disclosure" field in the mutation.
-func (m *ModMutation) AiUseDisclosure() (r string, exists bool) {
+func (m *ModMutation) AiUseDisclosure() (r *util.AIUseDisclosureInfo, exists bool) {
 	v := m.ai_use_disclosure
 	if v == nil {
 		return
@@ -3117,7 +3067,7 @@ func (m *ModMutation) AiUseDisclosure() (r string, exists bool) {
 // OldAiUseDisclosure returns the old "ai_use_disclosure" field's value of the Mod entity.
 // If the Mod object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ModMutation) OldAiUseDisclosure(ctx context.Context) (v string, err error) {
+func (m *ModMutation) OldAiUseDisclosure(ctx context.Context) (v *util.AIUseDisclosureInfo, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldAiUseDisclosure is only allowed on UpdateOne operations")
 	}
@@ -3435,7 +3385,7 @@ func (m *ModMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ModMutation) Fields() []string {
-	fields := make([]string, 0, 25)
+	fields := make([]string, 0, 24)
 	if m.created_at != nil {
 		fields = append(fields, mod.FieldCreatedAt)
 	}
@@ -3502,9 +3452,6 @@ func (m *ModMutation) Fields() []string {
 	if m.network_use_disclosure != nil {
 		fields = append(fields, mod.FieldNetworkUseDisclosure)
 	}
-	if m.ai_use_disclosure_type != nil {
-		fields = append(fields, mod.FieldAiUseDisclosureType)
-	}
 	if m.ai_use_disclosure != nil {
 		fields = append(fields, mod.FieldAiUseDisclosure)
 	}
@@ -3563,8 +3510,6 @@ func (m *ModMutation) Field(name string) (ent.Value, bool) {
 		return m.ToggleNetworkUse()
 	case mod.FieldNetworkUseDisclosure:
 		return m.NetworkUseDisclosure()
-	case mod.FieldAiUseDisclosureType:
-		return m.AiUseDisclosureType()
 	case mod.FieldAiUseDisclosure:
 		return m.AiUseDisclosure()
 	case mod.FieldToggleExplicitContent:
@@ -3622,8 +3567,6 @@ func (m *ModMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldToggleNetworkUse(ctx)
 	case mod.FieldNetworkUseDisclosure:
 		return m.OldNetworkUseDisclosure(ctx)
-	case mod.FieldAiUseDisclosureType:
-		return m.OldAiUseDisclosureType(ctx)
 	case mod.FieldAiUseDisclosure:
 		return m.OldAiUseDisclosure(ctx)
 	case mod.FieldToggleExplicitContent:
@@ -3791,15 +3734,8 @@ func (m *ModMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetNetworkUseDisclosure(v)
 		return nil
-	case mod.FieldAiUseDisclosureType:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetAiUseDisclosureType(v)
-		return nil
 	case mod.FieldAiUseDisclosure:
-		v, ok := value.(string)
+		v, ok := value.(*util.AIUseDisclosureInfo)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -3914,9 +3850,6 @@ func (m *ModMutation) ClearedFields() []string {
 	if m.FieldCleared(mod.FieldNetworkUseDisclosure) {
 		fields = append(fields, mod.FieldNetworkUseDisclosure)
 	}
-	if m.FieldCleared(mod.FieldAiUseDisclosureType) {
-		fields = append(fields, mod.FieldAiUseDisclosureType)
-	}
 	if m.FieldCleared(mod.FieldAiUseDisclosure) {
 		fields = append(fields, mod.FieldAiUseDisclosure)
 	}
@@ -3954,9 +3887,6 @@ func (m *ModMutation) ClearField(name string) error {
 		return nil
 	case mod.FieldNetworkUseDisclosure:
 		m.ClearNetworkUseDisclosure()
-		return nil
-	case mod.FieldAiUseDisclosureType:
-		m.ClearAiUseDisclosureType()
 		return nil
 	case mod.FieldAiUseDisclosure:
 		m.ClearAiUseDisclosure()
@@ -4034,9 +3964,6 @@ func (m *ModMutation) ResetField(name string) error {
 		return nil
 	case mod.FieldNetworkUseDisclosure:
 		m.ResetNetworkUseDisclosure()
-		return nil
-	case mod.FieldAiUseDisclosureType:
-		m.ResetAiUseDisclosureType()
 		return nil
 	case mod.FieldAiUseDisclosure:
 		m.ResetAiUseDisclosure()
