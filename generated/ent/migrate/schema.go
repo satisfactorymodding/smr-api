@@ -113,8 +113,7 @@ var (
 		{Name: "compatibility", Type: field.TypeJSON, Nullable: true},
 		{Name: "toggle_network_use", Type: field.TypeBool, Default: false},
 		{Name: "network_use_disclosure", Type: field.TypeString, Nullable: true},
-		{Name: "ai_use_disclosure_type", Type: field.TypeString, Nullable: true},
-		{Name: "ai_use_disclosure", Type: field.TypeString, Nullable: true},
+		{Name: "ai_use_disclosure", Type: field.TypeJSON, Nullable: true},
 		{Name: "toggle_explicit_content", Type: field.TypeBool, Default: false},
 	}
 	// ModsTable holds the schema information for the "mods" table.

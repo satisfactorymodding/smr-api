@@ -31,3 +31,23 @@ func GenControllerCompToDBControllerComp(gen *generated.ControllerCompatibilityI
 	SetINN(gen.Note, &r.Note)
 	return r
 }
+
+func GenAIDisclosureInfoToDBAIDisclosureInfo(gen *generated.AIUseDisclosureInput) *util.AIUseDisclosureInfo {
+	if gen == nil {
+		return nil
+	}
+
+	//DisclosureType AIUseDisclosureType
+	//DisclosureString string
+	/*
+	return &util.AIUseDisclosureInfo{
+		DisclosureType:         GenAIDTToDBAIDT(gen.DisclosureType),
+		DisclosureString:        gen.DisclosureString,
+	}
+*/
+	r := &util.AIUseDisclosureInfo{
+		DisclosureType: string(gen.DisclosureType),
+	}
+	SetINN(gen.DisclosureString, &r.DisclosureString)
+	return r
+}

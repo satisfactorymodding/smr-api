@@ -25,6 +25,13 @@ func SetCompatibilityINNF[B any](value *generated.CompatibilityInfoInput, target
 	target(GenCompInfoToDBCompInfo(value))
 }
 
+func SetAIDisclosureINNF[B any](value *generated.AIUseDisclosureInput, target func(*util.AIUseDisclosureInfo) B) {
+	if value == nil {
+		return
+	}
+	target(GenAIDisclosureInfoToDBAIDisclosureInfo(value))
+}
+
 // SetINNF - Set if not null function
 func SetINNF[T any, B any](value *T, target func(T) B) {
 	if value != nil {
