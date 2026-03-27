@@ -170,16 +170,6 @@ func NetworkUseDisclosure(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldNetworkUseDisclosure, v))
 }
 
-// AiUseDisclosureType applies equality check predicate on the "ai_use_disclosure_type" field. It's identical to AiUseDisclosureTypeEQ.
-func AiUseDisclosureType(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldEQ(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosure applies equality check predicate on the "ai_use_disclosure" field. It's identical to AiUseDisclosureEQ.
-func AiUseDisclosure(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldEQ(FieldAiUseDisclosure, v))
-}
-
 // ToggleExplicitContent applies equality check predicate on the "toggle_explicit_content" field. It's identical to ToggleExplicitContentEQ.
 func ToggleExplicitContent(v bool) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldToggleExplicitContent, v))
@@ -1200,136 +1190,6 @@ func NetworkUseDisclosureContainsFold(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldContainsFold(FieldNetworkUseDisclosure, v))
 }
 
-// AiUseDisclosureTypeEQ applies the EQ predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeEQ(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldEQ(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeNEQ applies the NEQ predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeNEQ(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldNEQ(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeIn applies the In predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeIn(vs ...string) predicate.Mod {
-	return predicate.Mod(sql.FieldIn(FieldAiUseDisclosureType, vs...))
-}
-
-// AiUseDisclosureTypeNotIn applies the NotIn predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeNotIn(vs ...string) predicate.Mod {
-	return predicate.Mod(sql.FieldNotIn(FieldAiUseDisclosureType, vs...))
-}
-
-// AiUseDisclosureTypeGT applies the GT predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeGT(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldGT(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeGTE applies the GTE predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeGTE(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldGTE(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeLT applies the LT predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeLT(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldLT(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeLTE applies the LTE predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeLTE(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldLTE(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeContains applies the Contains predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeContains(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldContains(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeHasPrefix applies the HasPrefix predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeHasPrefix(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldHasPrefix(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeHasSuffix applies the HasSuffix predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeHasSuffix(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldHasSuffix(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeIsNil applies the IsNil predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeIsNil() predicate.Mod {
-	return predicate.Mod(sql.FieldIsNull(FieldAiUseDisclosureType))
-}
-
-// AiUseDisclosureTypeNotNil applies the NotNil predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeNotNil() predicate.Mod {
-	return predicate.Mod(sql.FieldNotNull(FieldAiUseDisclosureType))
-}
-
-// AiUseDisclosureTypeEqualFold applies the EqualFold predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeEqualFold(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldEqualFold(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureTypeContainsFold applies the ContainsFold predicate on the "ai_use_disclosure_type" field.
-func AiUseDisclosureTypeContainsFold(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldContainsFold(FieldAiUseDisclosureType, v))
-}
-
-// AiUseDisclosureEQ applies the EQ predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureEQ(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldEQ(FieldAiUseDisclosure, v))
-}
-
-// AiUseDisclosureNEQ applies the NEQ predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureNEQ(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldNEQ(FieldAiUseDisclosure, v))
-}
-
-// AiUseDisclosureIn applies the In predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureIn(vs ...string) predicate.Mod {
-	return predicate.Mod(sql.FieldIn(FieldAiUseDisclosure, vs...))
-}
-
-// AiUseDisclosureNotIn applies the NotIn predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureNotIn(vs ...string) predicate.Mod {
-	return predicate.Mod(sql.FieldNotIn(FieldAiUseDisclosure, vs...))
-}
-
-// AiUseDisclosureGT applies the GT predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureGT(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldGT(FieldAiUseDisclosure, v))
-}
-
-// AiUseDisclosureGTE applies the GTE predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureGTE(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldGTE(FieldAiUseDisclosure, v))
-}
-
-// AiUseDisclosureLT applies the LT predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureLT(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldLT(FieldAiUseDisclosure, v))
-}
-
-// AiUseDisclosureLTE applies the LTE predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureLTE(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldLTE(FieldAiUseDisclosure, v))
-}
-
-// AiUseDisclosureContains applies the Contains predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureContains(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldContains(FieldAiUseDisclosure, v))
-}
-
-// AiUseDisclosureHasPrefix applies the HasPrefix predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureHasPrefix(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldHasPrefix(FieldAiUseDisclosure, v))
-}
-
-// AiUseDisclosureHasSuffix applies the HasSuffix predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureHasSuffix(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldHasSuffix(FieldAiUseDisclosure, v))
-}
-
 // AiUseDisclosureIsNil applies the IsNil predicate on the "ai_use_disclosure" field.
 func AiUseDisclosureIsNil() predicate.Mod {
 	return predicate.Mod(sql.FieldIsNull(FieldAiUseDisclosure))
@@ -1338,16 +1198,6 @@ func AiUseDisclosureIsNil() predicate.Mod {
 // AiUseDisclosureNotNil applies the NotNil predicate on the "ai_use_disclosure" field.
 func AiUseDisclosureNotNil() predicate.Mod {
 	return predicate.Mod(sql.FieldNotNull(FieldAiUseDisclosure))
-}
-
-// AiUseDisclosureEqualFold applies the EqualFold predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureEqualFold(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldEqualFold(FieldAiUseDisclosure, v))
-}
-
-// AiUseDisclosureContainsFold applies the ContainsFold predicate on the "ai_use_disclosure" field.
-func AiUseDisclosureContainsFold(v string) predicate.Mod {
-	return predicate.Mod(sql.FieldContainsFold(FieldAiUseDisclosure, v))
 }
 
 // ToggleExplicitContentEQ applies the EQ predicate on the "toggle_explicit_content" field.

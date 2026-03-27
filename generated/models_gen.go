@@ -11,6 +11,16 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+type AIUseDisclosureInfo struct {
+	DisclosureType   AIUseDisclosureType `json:"disclosure_type"`
+	DisclosureString *string             `json:"disclosure_string,omitempty"`
+}
+
+type AIUseDisclosureInput struct {
+	DisclosureType   AIUseDisclosureType `json:"disclosure_type"`
+	DisclosureString *string             `json:"disclosure_string,omitempty"`
+}
+
 type Announcement struct {
 	ID         string                 `json:"id"`
 	Message    string                 `json:"message"`
@@ -109,35 +119,34 @@ type LatestVersions struct {
 }
 
 type Mod struct {
-	ID                    string             `json:"id"`
-	Name                  string             `json:"name"`
-	ShortDescription      string             `json:"short_description"`
-	FullDescription       *string            `json:"full_description,omitempty"`
-	Logo                  *string            `json:"logo,omitempty"`
-	LogoThumbhash         *string            `json:"logo_thumbhash,omitempty"`
-	SourceURL             *string            `json:"source_url,omitempty"`
-	CreatorID             string             `json:"creator_id"`
-	Approved              bool               `json:"approved"`
-	Views                 int                `json:"views"`
-	Downloads             int                `json:"downloads"`
-	Hotness               int                `json:"hotness"`
-	Popularity            int                `json:"popularity"`
-	UpdatedAt             string             `json:"updated_at"`
-	CreatedAt             string             `json:"created_at"`
-	LastVersionDate       *string            `json:"last_version_date,omitempty"`
-	ModReference          string             `json:"mod_reference"`
-	Hidden                bool               `json:"hidden"`
-	Tags                  []*Tag             `json:"tags,omitempty"`
-	Compatibility         *CompatibilityInfo `json:"compatibility,omitempty"`
-	ToggleNetworkUse      bool               `json:"toggle_network_use"`
-	NetworkUseDisclosure  *string            `json:"network_use_disclosure,omitempty"`
-	AiUseDisclosureType   string             `json:"ai_use_disclosure_type"`
-	AiUseDisclosure       *string            `json:"ai_use_disclosure,omitempty"`
-	ToggleExplicitContent bool               `json:"toggle_explicit_content"`
-	Authors               []*UserMod         `json:"authors"`
-	Version               *Version           `json:"version,omitempty"`
-	Versions              []*Version         `json:"versions"`
-	LatestVersions        *LatestVersions    `json:"latestVersions"`
+	ID                    string               `json:"id"`
+	Name                  string               `json:"name"`
+	ShortDescription      string               `json:"short_description"`
+	FullDescription       *string              `json:"full_description,omitempty"`
+	Logo                  *string              `json:"logo,omitempty"`
+	LogoThumbhash         *string              `json:"logo_thumbhash,omitempty"`
+	SourceURL             *string              `json:"source_url,omitempty"`
+	CreatorID             string               `json:"creator_id"`
+	Approved              bool                 `json:"approved"`
+	Views                 int                  `json:"views"`
+	Downloads             int                  `json:"downloads"`
+	Hotness               int                  `json:"hotness"`
+	Popularity            int                  `json:"popularity"`
+	UpdatedAt             string               `json:"updated_at"`
+	CreatedAt             string               `json:"created_at"`
+	LastVersionDate       *string              `json:"last_version_date,omitempty"`
+	ModReference          string               `json:"mod_reference"`
+	Hidden                bool                 `json:"hidden"`
+	Tags                  []*Tag               `json:"tags,omitempty"`
+	Compatibility         *CompatibilityInfo   `json:"compatibility,omitempty"`
+	ToggleNetworkUse      bool                 `json:"toggle_network_use"`
+	NetworkUseDisclosure  *string              `json:"network_use_disclosure,omitempty"`
+	AiUseDisclosure       *AIUseDisclosureInfo `json:"ai_use_disclosure,omitempty"`
+	ToggleExplicitContent bool                 `json:"toggle_explicit_content"`
+	Authors               []*UserMod           `json:"authors"`
+	Version               *Version             `json:"version,omitempty"`
+	Versions              []*Version           `json:"versions"`
+	LatestVersions        *LatestVersions      `json:"latestVersions"`
 }
 
 type ModVersion struct {
@@ -352,6 +361,63 @@ type VirustotalResult struct {
 	VersionID string  `json:"version_id"`
 	CreatedAt string  `json:"created_at"`
 	UpdatedAt *string `json:"updated_at,omitempty"`
+}
+
+type AIUseDisclosureType string
+
+const (
+	AIUseDisclosureTypeNoAiUsage      AIUseDisclosureType = "no_ai_usage"
+	AIUseDisclosureTypeAiUsage        AIUseDisclosureType = "ai_usage"
+	AIUseDisclosureTypeRuntimeAiUsage AIUseDisclosureType = "runtime_ai_usage"
+)
+
+var AllAIUseDisclosureType = []AIUseDisclosureType{
+	AIUseDisclosureTypeNoAiUsage,
+	AIUseDisclosureTypeAiUsage,
+	AIUseDisclosureTypeRuntimeAiUsage,
+}
+
+func (e AIUseDisclosureType) IsValid() bool {
+	switch e {
+	case AIUseDisclosureTypeNoAiUsage, AIUseDisclosureTypeAiUsage, AIUseDisclosureTypeRuntimeAiUsage:
+		return true
+	}
+	return false
+}
+
+func (e AIUseDisclosureType) String() string {
+	return string(e)
+}
+
+func (e *AIUseDisclosureType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AIUseDisclosureType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AIUseDisclosureType", str)
+	}
+	return nil
+}
+
+func (e AIUseDisclosureType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AIUseDisclosureType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AIUseDisclosureType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type AnnouncementImportance string

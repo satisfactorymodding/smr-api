@@ -59,8 +59,6 @@ const (
 	FieldToggleNetworkUse = "toggle_network_use"
 	// FieldNetworkUseDisclosure holds the string denoting the network_use_disclosure field in the database.
 	FieldNetworkUseDisclosure = "network_use_disclosure"
-	// FieldAiUseDisclosureType holds the string denoting the ai_use_disclosure_type field in the database.
-	FieldAiUseDisclosureType = "ai_use_disclosure_type"
 	// FieldAiUseDisclosure holds the string denoting the ai_use_disclosure field in the database.
 	FieldAiUseDisclosure = "ai_use_disclosure"
 	// FieldToggleExplicitContent holds the string denoting the toggle_explicit_content field in the database.
@@ -151,7 +149,6 @@ var Columns = []string{
 	FieldCompatibility,
 	FieldToggleNetworkUse,
 	FieldNetworkUseDisclosure,
-	FieldAiUseDisclosureType,
 	FieldAiUseDisclosure,
 	FieldToggleExplicitContent,
 }
@@ -331,16 +328,6 @@ func ByToggleNetworkUse(opts ...sql.OrderTermOption) OrderOption {
 // ByNetworkUseDisclosure orders the results by the network_use_disclosure field.
 func ByNetworkUseDisclosure(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldNetworkUseDisclosure, opts...).ToFunc()
-}
-
-// ByAiUseDisclosureType orders the results by the ai_use_disclosure_type field.
-func ByAiUseDisclosureType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAiUseDisclosureType, opts...).ToFunc()
-}
-
-// ByAiUseDisclosure orders the results by the ai_use_disclosure field.
-func ByAiUseDisclosure(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAiUseDisclosure, opts...).ToFunc()
 }
 
 // ByToggleExplicitContent orders the results by the toggle_explicit_content field.

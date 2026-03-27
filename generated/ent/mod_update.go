@@ -381,37 +381,9 @@ func (mu *ModUpdate) ClearNetworkUseDisclosure() *ModUpdate {
 	return mu
 }
 
-// SetAiUseDisclosureType sets the "ai_use_disclosure_type" field.
-func (mu *ModUpdate) SetAiUseDisclosureType(s string) *ModUpdate {
-	mu.mutation.SetAiUseDisclosureType(s)
-	return mu
-}
-
-// SetNillableAiUseDisclosureType sets the "ai_use_disclosure_type" field if the given value is not nil.
-func (mu *ModUpdate) SetNillableAiUseDisclosureType(s *string) *ModUpdate {
-	if s != nil {
-		mu.SetAiUseDisclosureType(*s)
-	}
-	return mu
-}
-
-// ClearAiUseDisclosureType clears the value of the "ai_use_disclosure_type" field.
-func (mu *ModUpdate) ClearAiUseDisclosureType() *ModUpdate {
-	mu.mutation.ClearAiUseDisclosureType()
-	return mu
-}
-
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
-func (mu *ModUpdate) SetAiUseDisclosure(s string) *ModUpdate {
-	mu.mutation.SetAiUseDisclosure(s)
-	return mu
-}
-
-// SetNillableAiUseDisclosure sets the "ai_use_disclosure" field if the given value is not nil.
-func (mu *ModUpdate) SetNillableAiUseDisclosure(s *string) *ModUpdate {
-	if s != nil {
-		mu.SetAiUseDisclosure(*s)
-	}
+func (mu *ModUpdate) SetAiUseDisclosure(uudi *util.AIUseDisclosureInfo) *ModUpdate {
+	mu.mutation.SetAiUseDisclosure(uudi)
 	return mu
 }
 
@@ -760,17 +732,11 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if mu.mutation.NetworkUseDisclosureCleared() {
 		_spec.ClearField(mod.FieldNetworkUseDisclosure, field.TypeString)
 	}
-	if value, ok := mu.mutation.AiUseDisclosureType(); ok {
-		_spec.SetField(mod.FieldAiUseDisclosureType, field.TypeString, value)
-	}
-	if mu.mutation.AiUseDisclosureTypeCleared() {
-		_spec.ClearField(mod.FieldAiUseDisclosureType, field.TypeString)
-	}
 	if value, ok := mu.mutation.AiUseDisclosure(); ok {
-		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeString, value)
+		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeJSON, value)
 	}
 	if mu.mutation.AiUseDisclosureCleared() {
-		_spec.ClearField(mod.FieldAiUseDisclosure, field.TypeString)
+		_spec.ClearField(mod.FieldAiUseDisclosure, field.TypeJSON)
 	}
 	if value, ok := mu.mutation.ToggleExplicitContent(); ok {
 		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
@@ -1337,37 +1303,9 @@ func (muo *ModUpdateOne) ClearNetworkUseDisclosure() *ModUpdateOne {
 	return muo
 }
 
-// SetAiUseDisclosureType sets the "ai_use_disclosure_type" field.
-func (muo *ModUpdateOne) SetAiUseDisclosureType(s string) *ModUpdateOne {
-	muo.mutation.SetAiUseDisclosureType(s)
-	return muo
-}
-
-// SetNillableAiUseDisclosureType sets the "ai_use_disclosure_type" field if the given value is not nil.
-func (muo *ModUpdateOne) SetNillableAiUseDisclosureType(s *string) *ModUpdateOne {
-	if s != nil {
-		muo.SetAiUseDisclosureType(*s)
-	}
-	return muo
-}
-
-// ClearAiUseDisclosureType clears the value of the "ai_use_disclosure_type" field.
-func (muo *ModUpdateOne) ClearAiUseDisclosureType() *ModUpdateOne {
-	muo.mutation.ClearAiUseDisclosureType()
-	return muo
-}
-
 // SetAiUseDisclosure sets the "ai_use_disclosure" field.
-func (muo *ModUpdateOne) SetAiUseDisclosure(s string) *ModUpdateOne {
-	muo.mutation.SetAiUseDisclosure(s)
-	return muo
-}
-
-// SetNillableAiUseDisclosure sets the "ai_use_disclosure" field if the given value is not nil.
-func (muo *ModUpdateOne) SetNillableAiUseDisclosure(s *string) *ModUpdateOne {
-	if s != nil {
-		muo.SetAiUseDisclosure(*s)
-	}
+func (muo *ModUpdateOne) SetAiUseDisclosure(uudi *util.AIUseDisclosureInfo) *ModUpdateOne {
+	muo.mutation.SetAiUseDisclosure(uudi)
 	return muo
 }
 
@@ -1746,17 +1684,11 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	if muo.mutation.NetworkUseDisclosureCleared() {
 		_spec.ClearField(mod.FieldNetworkUseDisclosure, field.TypeString)
 	}
-	if value, ok := muo.mutation.AiUseDisclosureType(); ok {
-		_spec.SetField(mod.FieldAiUseDisclosureType, field.TypeString, value)
-	}
-	if muo.mutation.AiUseDisclosureTypeCleared() {
-		_spec.ClearField(mod.FieldAiUseDisclosureType, field.TypeString)
-	}
 	if value, ok := muo.mutation.AiUseDisclosure(); ok {
-		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeString, value)
+		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeJSON, value)
 	}
 	if muo.mutation.AiUseDisclosureCleared() {
-		_spec.ClearField(mod.FieldAiUseDisclosure, field.TypeString)
+		_spec.ClearField(mod.FieldAiUseDisclosure, field.TypeJSON)
 	}
 	if value, ok := muo.mutation.ToggleExplicitContent(); ok {
 		_spec.SetField(mod.FieldToggleExplicitContent, field.TypeBool, value)
