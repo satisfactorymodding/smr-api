@@ -58,6 +58,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
+      - name: List file tasks and their permissions
+        run: cd ./.mise/tasks/ && ls -l
+
       - name: Setup
         run: mise run setup -ci
 

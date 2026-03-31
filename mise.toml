@@ -15,8 +15,8 @@ lockfile = true
 
 [tasks.setup]
 description = "Start docker containers and setup minio access"
-run= "mise run setup_linux -ci"
-run_windows = "mise run setup_windows" # Windows will always just be used for local dev, so no need to run it with the ci flag
+run= "mise run setup_linux"
+run_windows = "mise run setup_windows"
 
 [tasks.api]
 description = "Run the API server. Make sure containers are running via `mise run setup` first."
