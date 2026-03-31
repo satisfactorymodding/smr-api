@@ -1,4 +1,4 @@
-#MISE description="Use Atlas to create a new manual SQL migration file (see https://atlasgo.io/versioned/new)"
+#MISE hide=true
 
 Write-Host -NoNewline 'Migration Name: '
 $migration_name = Read-Host
