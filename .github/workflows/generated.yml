@@ -24,8 +24,9 @@ jobs:
         run: go mod tidy
 
       - name: Ensure freshly generated hashes match committed ones
+      # Ignore mise.lock because it seems like mise can't generate checksums for platforms that you aren't on -> always diff
         run: |
-          if ! git diff --exit-code; then
+          if ! git diff --exit-code ':!mise.lock'; then
             echo "Error: Generating migration hashes again produced output that doesn't match those committed to the repo."
             echo "Run 'mise run migrate_hash' and commit the changes."
             exit 1
@@ -47,8 +48,9 @@ jobs:
         run: go mod tidy
 
       - name: Ensure freshly generated code matches committed code
+      # Ignore mise.lock because it seems like mise can't generate checksums for platforms that you aren't on -> always diff
         run: |
-          if ! git diff --exit-code; then
+          if ! git diff --exit-code ':!mise.lock'; then
             echo "Error: Regenerating the generated code produced output that doesn't match the code committed to the repo."
             echo "Run 'mise run generate' and commit the changes."
             exit 1
