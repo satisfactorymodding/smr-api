@@ -13,6 +13,11 @@ lockfile = true
 
 # File-based tasks are in the .mise/tasks/ directory
 
+[tasks.setup]
+description = "Start docker containers and setup minio access"
+run= "mise run setup_linux -ci"
+run_windows = "mise run setup_windows" # Windows will always just be used for local dev, so no need to run it with the ci flag
+
 [tasks.api]
 description = "Run the API server. Make sure containers are running via `mise run setup` first."
 run = "go run cmd/api/serve.go"
@@ -53,3 +58,13 @@ run = "golangci-lint run"
 [tasks.format]
 description = "Try to automatically fix linting issues"
 run = "golangci-lint run --fix"
+
+[tasks.migrate_diff]
+description = "Use Atlas to attempt to automatically create SQL migration files (see https://atlasgo.io/versioned/diff)"
+run= "mise run migrate_diff_linux"
+run_windows = "mise run migrate_diff_windows"
+
+[tasks.migrate_new]
+description = "Use Atlas to create a new manual SQL migration file (see https://atlasgo.io/versioned/new)"
+run= "mise run migrate_new_linux"
+run_windows = "mise run migrate_new_windows"

@@ -1,4 +1,6 @@
-#MISE description="Start docker containers and setup minio access"
+#USAGE flag "-ci" "Use plain progress output suitable for CI environments"
+#MISE hide=true
+
 param(
 	[switch]$ci
 )
