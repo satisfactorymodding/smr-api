@@ -8,6 +8,11 @@ protoc = "31.1"
 protoc-gen-go = "1.36.6"
 protoc-gen-go-grpc = "1.5.1"
 
+[settings]
+lockfile = true
+
+# File-based tasks are in the .mise/tasks/ directory
+
 [tasks.api]
 description = "Run the API server. Make sure containers are running via `mise run setup` first."
 run = "go run cmd/api/serve.go"
