@@ -104,12 +104,30 @@ It is expected for the command to output `[no test files]` for packages with no 
 
 The development docker compose also includes a pgadmin container for testing database related stuff
 exposed at <http://localhost:5433/>.
-The credentials are specified in `docker-compose-dev.yml`.
+The credentials are specified in [`docker-compose-dev.yml`](docker-compose-dev.yml).
 
 Once logged in, add a server.
-The "Host name/address" should be `postgres`, username should be `postgres`, password should be `POSTGRES_PASSWORD` from `docker-compose.yml`.
+The "Host name/address" should be `postgres`, username should be `postgres`, password should be `POSTGRES_PASSWORD` from [`docker-compose.yml`](docker-compose.yml).
 
 You can view tables via `Servers > (name) > Databases > postgres > Schemas > public > Tables`.
+
+#### Site User Roles
+
+To locally test features of the site that require a user role, you can change your role via direct database queries.
+Doing this requires manually creating a `user_groups` entry for you user.
+
+1. Create an account on your local via the [frontend running with the `development` env](https://github.com/satisfactorymodding/smr-frontend/blob/staging/CONTRIBUTING.md#decide-which-environment-you-want-to-run)
+2. Look at [`permissions.go`](/auth/permissions.go) to find the group ID for the group you want to become. Admin is `1`.
+3. Run a query in pgadmin to determine your user ID: `SELECT * FROM users;`
+4. Run a query to create a user_groups entry for yourself. Example for admin:
+
+   ```sql
+   INSERT INTO public.user_groups(
+   user_id, group_id, created_at, updated_at, deleted_at, id)
+   VALUES ('YOUR_USER_ID_HERE', '1', NOW(), NOW(), null, NOW());
+   ```
+
+5. Refresh the frontend webpage - you should be an admin now.
 
 ## Architecture
 
@@ -166,7 +184,10 @@ See `config/config.go` for full configuration structure.
 
    ```bash
    mise run setup  # Start services
-   mise run test   # Run tests
+
+   mise run localtest   # Run tests
+   # OR
+   mise run test   # Run tests (verbose)
    ```
 
 ## Contributing
