@@ -8,6 +8,7 @@ The Satisfactory Mod Repository backend API - a Go-based service providing REST 
 
 - [mise](https://mise.jdx.dev/) for tool management
 - [Docker (and Docker Compose)](https://docs.docker.com/desktop/)
+- If on Windows, the [latest PowerShell (>= 7)](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows). Check current version by running `pwsh -v` in a PowerShell window. ([reason why](https://github.com/jdx/mise/discussions/4151))
 
 ### Setup
 
@@ -171,6 +172,8 @@ See `config/config.go` for full configuration structure.
 ## Contributing
 
 **Before submitting:**
+
+Commit messages should follow the [Conventional Commits format](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ```bash
 mise run lint       # Check code quality
