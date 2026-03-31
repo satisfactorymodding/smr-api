@@ -28,6 +28,6 @@ type Compatibility struct {
 }
 
 type AIUseDisclosureInfo struct {
-	DisclosureType string `gorm:"type:string" json:"DisclosureType"`
+	DisclosureType   string `gorm:"type:string" json:"DisclosureType"`
 	DisclosureString string `gorm:"type:string" json:"DisclosureString"`
 }
