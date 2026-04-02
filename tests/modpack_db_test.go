@@ -489,6 +489,9 @@ func TestMyModpack(t *testing.T) {
 	token2, userID2, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
 
+	token3, _, err := makeUser(ctx)
+	testza.AssertNoError(t, err)
+
 	tags := seedTags(ctx, t, token, client)
 	mods := seedMods(ctx, t, token, client, tags[0])
 
@@ -714,5 +717,77 @@ func TestMyModpack(t *testing.T) {
 		testza.AssertEqual(t, 1, queryResponse.GetMyModpacks.Count)
 		testza.AssertEqual(t, 1, len(queryResponse.GetMyModpacks.Modpacks))
 		testza.AssertEqual(t, "Test Modpack 2", queryResponse.GetMyModpacks.Modpacks[0].Name)
+	})
+
+	t.Run("Query Own 3", func(t *testing.T) {
+		queryRequest := authRequest(`query {
+			getMyModpacks(filter: {order: asc, order_by: created_at}) {
+				count
+				modpacks {
+					id
+					name
+					short_description
+					full_description
+					creator_id
+					hidden
+					tags {
+						id
+						name
+					}
+				}
+			}
+		}`, token3)
+
+		var queryResponse struct {
+			GetMyModpacks generated.GetMyModpacks
+		}
+		testza.AssertNoError(t, client.Run(ctx, queryRequest, &queryResponse))
+		testza.AssertEqual(t, 0, queryResponse.GetMyModpacks.Count)
+		testza.AssertEqual(t, 0, len(queryResponse.GetMyModpacks.Modpacks))
+	})
+
+	t.Run("GetUser Modpacks", func(t *testing.T) {
+    req := authRequest(`query ($user: UserID!) {
+        getUser(userId: $user) {
+            id
+            modpacks {
+                modpack {
+                    id
+                    name
+                }
+            }
+        }
+    }`, token)
+
+    req.Var("user", userID)
+
+    var resp struct {
+        GetUser struct {
+            Modpacks []struct {
+                Modpack struct {
+                    ID   string
+                    Name string
+                }
+            }
+        }
+    }
+
+    testza.AssertNoError(t, client.Run(ctx, req, &resp))
+
+    testza.AssertEqual(t, 1, len(resp.GetUser.Modpacks))
+    testza.AssertEqual(t, "Test Modpack 1", resp.GetUser.Modpacks[0].Modpack.Name)
+	})
+
+	t.Run("GetMyModpacks Unauthorized", func(t *testing.T) {
+    req := authRequest(`query {
+        getMyModpacks {
+            count
+        }
+    }`, "") // no token
+
+    var resp struct{}
+
+    err := client.Run(ctx, req, &resp)
+	testza.AssertNotNil(t, err)
 	})
 }
