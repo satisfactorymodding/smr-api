@@ -51,6 +51,14 @@ func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (str
 		return "", errors.New("you must update your mod reference on the site to match your mod_reference in your data.json")
 	}
 
+	if mod.AiUseDisclosure == nil {
+		return "", errors.New("you must update AI use disclosure on the site before uploading a version")
+	}
+
+	if mod.AiUseDisclosure.DisclosureType != "no_ai_usage" && mod.AiUseDisclosure.DisclosureString == "" {
+		return "", errors.New("you must provide a description for AI use before uploading a version")
+	}
+
 	uploadID := util.GenerateUniqueID()
 
 	_, _ = storage.StartUploadMultipartMod(ctx, mod.ID, mod.Name, uploadID)
