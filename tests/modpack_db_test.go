@@ -747,7 +747,7 @@ func TestMyModpack(t *testing.T) {
 	})
 
 	t.Run("GetUser Modpacks", func(t *testing.T) {
-    req := authRequest(`query ($user: UserID!) {
+		req := authRequest(`query ($user: UserID!) {
         getUser(userId: $user) {
             id
             modpacks {
@@ -759,35 +759,35 @@ func TestMyModpack(t *testing.T) {
         }
     }`, token)
 
-    req.Var("user", userID)
+		req.Var("user", userID)
 
-    var resp struct {
-        GetUser struct {
-            Modpacks []struct {
-                Modpack struct {
-                    ID   string
-                    Name string
-                }
-            }
-        }
-    }
+		var resp struct {
+			GetUser struct {
+				Modpacks []struct {
+					Modpack struct {
+						ID   string
+						Name string
+					}
+				}
+			}
+		}
 
-    testza.AssertNoError(t, client.Run(ctx, req, &resp))
+		testza.AssertNoError(t, client.Run(ctx, req, &resp))
 
-    testza.AssertEqual(t, 1, len(resp.GetUser.Modpacks))
-    testza.AssertEqual(t, "Test Modpack 1", resp.GetUser.Modpacks[0].Modpack.Name)
+		testza.AssertEqual(t, 1, len(resp.GetUser.Modpacks))
+		testza.AssertEqual(t, "Test Modpack 1", resp.GetUser.Modpacks[0].Modpack.Name)
 	})
 
 	t.Run("GetMyModpacks Unauthorized", func(t *testing.T) {
-    req := authRequest(`query {
+		req := authRequest(`query {
         getMyModpacks {
             count
         }
     }`, "") // no token
 
-    var resp struct{}
+		var resp struct{}
 
-    err := client.Run(ctx, req, &resp)
-	testza.AssertNotNil(t, err)
+		err := client.Run(ctx, req, &resp)
+		testza.AssertNotNil(t, err)
 	})
 }
