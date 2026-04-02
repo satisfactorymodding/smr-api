@@ -478,3 +478,241 @@ func TestModpackRemix(t *testing.T) {
 	testza.AssertEqual(t, 1, len(queryParentResponse.GetModpack.Children))
 	testza.AssertEqual(t, "Child Modpack", queryParentResponse.GetModpack.Children[0].Name)
 }
+
+func TestMyModpack(t *testing.T) {
+	ctx, client, stop := setup()
+	defer stop()
+
+	token, userID, err := makeUser(ctx)
+	testza.AssertNoError(t, err)
+
+	token2, userID2, err := makeUser(ctx)
+	testza.AssertNoError(t, err)
+
+	tags := seedTags(ctx, t, token, client)
+	mods := seedMods(ctx, t, token, client, tags[0])
+
+	// var objID string
+
+	t.Run("Create", func(t *testing.T) {
+		createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
+			createModpack(modpack: {
+				name: $name,
+				short_description: $shortDescription,
+				full_description: $fullDescription,
+				tagIDs: $tags,
+				targets: $targets,
+				mods: $mods
+			}) {
+				id
+				name
+				short_description
+				full_description
+				creator_id
+				hidden
+				tags {
+					id
+					name
+				}
+				targets
+				mods {
+					mod_id
+					version_constraint
+				}
+			}
+		}`, token)
+		createRequest.Var("name", "Test Modpack 1")
+		createRequest.Var("shortDescription", "A test modpack 1 for testing purposes")
+		createRequest.Var("fullDescription", "This is a comprehensive test modpack 1 that includes multiple mods for testing the modpack functionality.")
+		createRequest.Var("tags", tags)
+		createRequest.Var("targets", []string{"Windows", "LinuxServer"})
+		createRequest.Var("mods", []struct {
+			ModID             string `json:"mod_id"`
+			VersionConstraint string `json:"version_constraint"`
+		}{
+			{ModID: mods[0], VersionConstraint: ">=1.0.0"},
+			{ModID: mods[1], VersionConstraint: "^2.0.0"},
+		})
+
+		var createResponse struct {
+			CreateModpack generated.Modpack
+		}
+		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
+		testza.AssertNotEqual(t, "", createResponse.CreateModpack.ID)
+		testza.AssertEqual(t, "Test Modpack 1", createResponse.CreateModpack.Name)
+		testza.AssertEqual(t, "A test modpack 1 for testing purposes", createResponse.CreateModpack.ShortDescription)
+		testza.AssertEqual(t, userID, createResponse.CreateModpack.CreatorID)
+		testza.AssertFalse(t, createResponse.CreateModpack.Hidden)
+		testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Tags))
+		testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Targets))
+		testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Mods))
+
+		// objID = createResponse.CreateModpack.ID
+
+		createRequest2 := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
+			createModpack(modpack: {
+				name: $name,
+				short_description: $shortDescription,
+				full_description: $fullDescription,
+				tagIDs: $tags,
+				targets: $targets,
+				mods: $mods
+			}) {
+				id
+				name
+				short_description
+				full_description
+				creator_id
+				hidden
+				tags {
+					id
+					name
+				}
+				targets
+				mods {
+					mod_id
+					version_constraint
+				}
+			}
+		}`, token2)
+		createRequest2.Var("name", "Test Modpack 2")
+		createRequest2.Var("shortDescription", "A test modpack 2 for testing purposes")
+		createRequest2.Var("fullDescription", "This is a comprehensive test modpack 2 that includes multiple mods for testing the modpack functionality.")
+		createRequest2.Var("tags", tags)
+		createRequest2.Var("targets", []string{"Windows", "LinuxServer"})
+		createRequest2.Var("mods", []struct {
+			ModID             string `json:"mod_id"`
+			VersionConstraint string `json:"version_constraint"`
+		}{
+			{ModID: mods[2], VersionConstraint: ">=1.0.0"},
+			{ModID: mods[3], VersionConstraint: "^2.0.0"},
+		})
+
+		var createResponse2 struct {
+			CreateModpack generated.Modpack
+		}
+		testza.AssertNoError(t, client.Run(ctx, createRequest2, &createResponse2))
+		testza.AssertNotEqual(t, "", createResponse2.CreateModpack.ID)
+		testza.AssertEqual(t, "Test Modpack 2", createResponse2.CreateModpack.Name)
+		testza.AssertEqual(t, "A test modpack 2 for testing purposes", createResponse2.CreateModpack.ShortDescription)
+		testza.AssertEqual(t, userID2, createResponse2.CreateModpack.CreatorID)
+		testza.AssertFalse(t, createResponse2.CreateModpack.Hidden)
+		testza.AssertEqual(t, 2, len(createResponse2.CreateModpack.Tags))
+		testza.AssertEqual(t, 2, len(createResponse2.CreateModpack.Targets))
+		testza.AssertEqual(t, 2, len(createResponse2.CreateModpack.Mods))
+
+		// objID2 = createResponse2.CreateModpack.ID
+	})
+
+	t.Run("Query Many", func(t *testing.T) {
+		queryRequest := authRequest(`query {
+			getModpacks(filter: {order: asc, order_by: created_at}) {
+				count
+				modpacks {
+					id
+					name
+					short_description
+					full_description
+					creator_id
+					hidden
+					tags {
+						id
+						name
+					}
+				}
+			}
+		}`, token)
+
+		var queryResponse struct {
+			GetModpacks generated.GetModpacks
+		}
+		testza.AssertNoError(t, client.Run(ctx, queryRequest, &queryResponse))
+		testza.AssertEqual(t, 2, queryResponse.GetModpacks.Count)
+		testza.AssertEqual(t, 2, len(queryResponse.GetModpacks.Modpacks))
+		testza.AssertEqual(t, "Test Modpack 1", queryResponse.GetModpacks.Modpacks[0].Name)
+	})
+
+	t.Run("Query Many", func(t *testing.T) {
+		queryRequest := authRequest(`query {
+			getModpacks(filter: {order: asc, order_by: created_at}) {
+				count
+				modpacks {
+					id
+					name
+					short_description
+					full_description
+					creator_id
+					hidden
+					tags {
+						id
+						name
+					}
+				}
+			}
+		}`, token2)
+
+		var queryResponse struct {
+			GetModpacks generated.GetModpacks
+		}
+		testza.AssertNoError(t, client.Run(ctx, queryRequest, &queryResponse))
+		testza.AssertEqual(t, 2, queryResponse.GetModpacks.Count)
+		testza.AssertEqual(t, 2, len(queryResponse.GetModpacks.Modpacks))
+		testza.AssertEqual(t, "Test Modpack 1", queryResponse.GetModpacks.Modpacks[0].Name)
+	})
+
+	t.Run("Query Own 1", func(t *testing.T) {
+		queryRequest := authRequest(`query {
+			getMyModpacks(filter: {order: asc, order_by: created_at}) {
+				count
+				modpacks {
+					id
+					name
+					short_description
+					full_description
+					creator_id
+					hidden
+					tags {
+						id
+						name
+					}
+				}
+			}
+		}`, token)
+
+		var queryResponse struct {
+			GetMyModpacks generated.GetMyModpacks
+		}
+		testza.AssertNoError(t, client.Run(ctx, queryRequest, &queryResponse))
+		testza.AssertEqual(t, 1, queryResponse.GetMyModpacks.Count)
+		testza.AssertEqual(t, 1, len(queryResponse.GetMyModpacks.Modpacks))
+		testza.AssertEqual(t, "Test Modpack 1", queryResponse.GetMyModpacks.Modpacks[0].Name)
+	})
+
+	t.Run("Query Own 2", func(t *testing.T) {
+		queryRequest := authRequest(`query {
+			getMyModpacks(filter: {order: asc, order_by: created_at}) {
+				count
+				modpacks {
+					id
+					name
+					short_description
+					full_description
+					creator_id
+					hidden
+					tags {
+						id
+						name
+					}
+				}
+			}
+		}`, token2)
+
+		var queryResponse struct {
+			GetMyModpacks generated.GetMyModpacks
+		}
+		testza.AssertNoError(t, client.Run(ctx, queryRequest, &queryResponse))
+		testza.AssertEqual(t, 1, queryResponse.GetMyModpacks.Count)
+		testza.AssertEqual(t, 1, len(queryResponse.GetMyModpacks.Modpacks))
+		testza.AssertEqual(t, "Test Modpack 2", queryResponse.GetMyModpacks.Modpacks[0].Name)
+	})
+}
