@@ -665,7 +665,7 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := mc.mutation.NetworkUseDisclosure(); ok {
 		_spec.SetField(mod.FieldNetworkUseDisclosure, field.TypeString, value)
-		_node.NetworkUseDisclosure = &value
+		_node.NetworkUseDisclosure = value
 	}
 	if value, ok := mc.mutation.AiUseDisclosure(); ok {
 		_spec.SetField(mod.FieldAiUseDisclosure, field.TypeJSON, value)
