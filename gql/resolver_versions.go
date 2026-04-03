@@ -52,11 +52,15 @@ func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (str
 	}
 
 	if mod.AiUseDisclosure == nil {
-		return "", errors.New("you must update AI use disclosure on the site before uploading a version")
+		return "", errors.New("you must update an AI use disclosure on the site before uploading a version")
 	}
 
 	if mod.AiUseDisclosure.DisclosureType != "no_ai_usage" && mod.AiUseDisclosure.DisclosureString == "" {
 		return "", errors.New("you must provide a description for AI use before uploading a version")
+	}
+
+	if mod.NetworkUseDisclosure == "" {
+		return "", errors.New("you must update a network use disclosure on the site before uploading a version")
 	}
 
 	uploadID := util.GenerateUniqueID()
