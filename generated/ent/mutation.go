@@ -3018,7 +3018,7 @@ func (m *ModMutation) NetworkUseDisclosure() (r string, exists bool) {
 // OldNetworkUseDisclosure returns the old "network_use_disclosure" field's value of the Mod entity.
 // If the Mod object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ModMutation) OldNetworkUseDisclosure(ctx context.Context) (v *string, err error) {
+func (m *ModMutation) OldNetworkUseDisclosure(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldNetworkUseDisclosure is only allowed on UpdateOne operations")
 	}

@@ -192,10 +192,10 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 
 	newNetworkDisclosure, isSet := updateMod.NetworkUseDisclosure.ValueOK()
 	if isSet {
-		if newNetworkDisclosure == nil {
-			dbUpdate.ClearNetworkUseDisclosure()
-		} else {
+		if newNetworkDisclosure != nil {
 			dbUpdate.SetNetworkUseDisclosure(*newNetworkDisclosure)
+		} else {
+			return nil, errors.New("this mod already has a network use disclosure, and thus it cannot be cleared")
 		}
 	}
 	SetINNF(updateMod.ToggleExplicitContent, dbUpdate.SetToggleExplicitContent)

@@ -62,7 +62,7 @@ type Mod struct {
 	// ToggleNetworkUse holds the value of the "toggle_network_use" field.
 	ToggleNetworkUse bool `json:"toggle_network_use,omitempty"`
 	// NetworkUseDisclosure holds the value of the "network_use_disclosure" field.
-	NetworkUseDisclosure *string `json:"network_use_disclosure,omitempty"`
+	NetworkUseDisclosure string `json:"network_use_disclosure,omitempty"`
 	// AiUseDisclosure holds the value of the "ai_use_disclosure" field.
 	AiUseDisclosure *util.AIUseDisclosureInfo `json:"ai_use_disclosure,omitempty"`
 	// ToggleExplicitContent holds the value of the "toggle_explicit_content" field.
@@ -325,8 +325,7 @@ func (m *Mod) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field network_use_disclosure", values[i])
 			} else if value.Valid {
-				m.NetworkUseDisclosure = new(string)
-				*m.NetworkUseDisclosure = value.String
+				m.NetworkUseDisclosure = value.String
 			}
 		case mod.FieldAiUseDisclosure:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -476,10 +475,8 @@ func (m *Mod) String() string {
 	builder.WriteString("toggle_network_use=")
 	builder.WriteString(fmt.Sprintf("%v", m.ToggleNetworkUse))
 	builder.WriteString(", ")
-	if v := m.NetworkUseDisclosure; v != nil {
-		builder.WriteString("network_use_disclosure=")
-		builder.WriteString(*v)
-	}
+	builder.WriteString("network_use_disclosure=")
+	builder.WriteString(m.NetworkUseDisclosure)
 	builder.WriteString(", ")
 	builder.WriteString("ai_use_disclosure=")
 	builder.WriteString(fmt.Sprintf("%v", m.AiUseDisclosure))

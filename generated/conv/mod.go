@@ -47,10 +47,8 @@ func (c *ModImpl) Convert(source *ent.Mod) *generated.Mod {
 		}
 		generatedMod.Compatibility = c.pUtilCompatibilityInfoToPGeneratedCompatibilityInfo((*source).Compatibility)
 		generatedMod.ToggleNetworkUse = (*source).ToggleNetworkUse
-		if (*source).NetworkUseDisclosure != nil {
-			xstring := *(*source).NetworkUseDisclosure
-			generatedMod.NetworkUseDisclosure = &xstring
-		}
+		pString5 := (*source).NetworkUseDisclosure
+		generatedMod.NetworkUseDisclosure = &pString5
 		generatedMod.AiUseDisclosure = c.pUtilAIUseDisclosureInfoToPGeneratedAIUseDisclosureInfo((*source).AiUseDisclosure)
 		generatedMod.ToggleExplicitContent = (*source).ToggleExplicitContent
 		pGeneratedMod = &generatedMod
