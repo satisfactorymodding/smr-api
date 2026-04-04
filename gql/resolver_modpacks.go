@@ -325,7 +325,7 @@ func (r *queryResolver) GetModCompatibilities(ctx context.Context, modpackID str
 	// build list of mods that are causing the pack to have that compatibility state
 	eaWorstList := []*generated.Mod{}
 	expWorstList := []*generated.Mod{}
-	packIsNotBothWorks := packWorstEaState !=  || packWorstExpState != generated.CompatibilityStateWorks
+	packIsNotBothWorks := packWorstEaState != generated.CompatibilityStateWorks || packWorstExpState != generated.CompatibilityStateWorks
 	if packIsNotBothWorks {
 		for _, mod := range mods {
 			if packWorstEaState != generated.CompatibilityStateWorks {
@@ -339,7 +339,8 @@ func (r *queryResolver) GetModCompatibilities(ctx context.Context, modpackID str
 				}
 			}
 		}
-			return &generated.ModCompatibilities{WorstEa: eaWorstList, WorstExp: expWorstList}, nil
+		return &generated.ModCompatibilities{WorstEa: eaWorstList, WorstExp: expWorstList}, nil
+
 	} else {
 		return &generated.ModCompatibilities{WorstEa: generated.CompatibilityStateWorks, WorstExp: generated.CompatibilityStateWorks}, nil
 	}
