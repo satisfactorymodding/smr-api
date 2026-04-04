@@ -617,8 +617,6 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string, targets []r
 type getMyModpacksResolver struct{ *Resolver }
 
 func (r *getMyModpacksResolver) Modpacks(ctx context.Context, _ *generated.GetMyModpacks) ([]*generated.Modpack, error) {
-	fmt.Println("--- DEBUG: Fetching My Modpacks ---")
-
 	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil || user == nil {
 		return nil, fmt.Errorf("unauthorized")
