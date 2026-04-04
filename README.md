@@ -156,7 +156,7 @@ See `config/config.go` for full configuration structure.
 **Before submitting:**
 
 ```bash
-mise run lint     # Check code quality
+mise run format   # Automatically fix code quality problems and report those that need manual correction
 mise run test     # Run test suite
 mise run generate # Regenerate if needed
 ```
