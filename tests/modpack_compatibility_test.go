@@ -126,25 +126,25 @@ func TestModpackCompatibility(t *testing.T) {
 						id
 						name
 						compatibility {
-                			EA {
-                    			state
-              			  }
-            			    EXP {
-            			        state
-            			    }
-          				}
+							EA {
+								state
+						}
+							EXP {
+								state
+							}
+						}
 					}
 					worstEXP {
 						id
 						name
 						compatibility {
-                			EA {
-                    			state
-              			  }
-            			    EXP {
-            			        state
-            			    }
-          				}
+							EA {
+								state
+						}
+							EXP {
+								state
+							}
+						}
 					}
 				}
 			}`, token)
@@ -218,25 +218,25 @@ func TestModpackCompatibility(t *testing.T) {
 						id
 						name
 						compatibility {
-                			EA {
-                    			state
-              			  }
-            			    EXP {
-            			        state
-            			    }
-          				}
+							EA {
+								state
+						}
+							EXP {
+								state
+							}
+						}
 					}
 					worstEXP {
 						id
 						name
 						compatibility {
-                			EA {
-                    			state
-              			  }
-            			    EXP {
-            			        state
-            			    }
-          				}
+							EA {
+								state
+						}
+							EXP {
+								state
+							}
+						}
 					}
 				}
 			}`, token)
