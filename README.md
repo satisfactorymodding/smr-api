@@ -151,6 +151,9 @@ See `config/config.go` for full configuration structure.
    mise run test   # Run tests
    ```
 
+Windows users, if you get annoyed by the constant firewall block prompts Go creates,
+you can silence them by [temporarily adjusting your notification settings](https://serverfault.com/a/1198657/982905).
+
 ## Contributing
 
 **Before submitting:**
