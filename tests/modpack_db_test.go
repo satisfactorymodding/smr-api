@@ -495,8 +495,6 @@ func TestMyModpack(t *testing.T) {
 	tags := seedTags(ctx, t, token, client)
 	mods := seedMods(ctx, t, token, client, tags[0])
 
-	// var objID string
-
 	t.Run("Create", func(t *testing.T) {
 		createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
 			createModpack(modpack: {
@@ -550,8 +548,6 @@ func TestMyModpack(t *testing.T) {
 		testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Targets))
 		testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Mods))
 
-		// objID = createResponse.CreateModpack.ID
-
 		createRequest2 := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
 			createModpack(modpack: {
 				name: $name,
@@ -603,8 +599,6 @@ func TestMyModpack(t *testing.T) {
 		testza.AssertEqual(t, 2, len(createResponse2.CreateModpack.Tags))
 		testza.AssertEqual(t, 2, len(createResponse2.CreateModpack.Targets))
 		testza.AssertEqual(t, 2, len(createResponse2.CreateModpack.Mods))
-
-		// objID2 = createResponse2.CreateModpack.ID
 	})
 
 	t.Run("Query Many", func(t *testing.T) {
