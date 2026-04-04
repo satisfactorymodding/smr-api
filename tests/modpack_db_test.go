@@ -742,16 +742,16 @@ func TestMyModpack(t *testing.T) {
 
 	t.Run("GetUser Modpacks", func(t *testing.T) {
 		req := authRequest(`query ($user: UserID!) {
-        getUser(userId: $user) {
-            id
-            modpacks {
-                modpack {
-                    id
-                    name
-                }
-            }
-        }
-    }`, token)
+		getUser(userId: $user) {
+			id
+			modpacks {
+				modpack {
+					id
+					name
+				}
+			}
+		}
+	}`, token)
 
 		req.Var("user", userID)
 
@@ -774,10 +774,10 @@ func TestMyModpack(t *testing.T) {
 
 	t.Run("GetMyModpacks Unauthorized", func(t *testing.T) {
 		req := authRequest(`query {
-        getMyModpacks {
-            count
-        }
-    }`, "") // no token
+		getMyModpacks {
+			count
+		}
+	}`, "") // no token
 
 		var resp struct{}
 
