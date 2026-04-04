@@ -66,7 +66,7 @@ func TestSameSemver(t *testing.T) {
 	defer stop()
 
 	modID, versionID := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "")
-	//NEED TO SOMEHOW DELETE THE MOD
+	// NEED TO SOMEHOW DELETE THE MOD
 
 	token, _, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
