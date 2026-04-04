@@ -783,5 +783,6 @@ func TestMyModpack(t *testing.T) {
 
 		err := client.Run(ctx, req, &resp)
 		testza.AssertNotNil(t, err)
+		testza.AssertContains(t, err.Error(), "graphql: user not logged in")
 	})
 }
