@@ -136,8 +136,9 @@ type Mod struct {
 }
 
 type ModCompatibilities struct {
-	WorstEa  []*Mod `json:"worstEA"`
-	WorstExp []*Mod `json:"worstEXP"`
+	Compatibility *CompatibilityInfo `json:"compatibility,omitempty"`
+	WorstEa       []*Mod             `json:"worstEA"`
+	WorstExp      []*Mod             `json:"worstEXP"`
 }
 
 type ModVersion struct {

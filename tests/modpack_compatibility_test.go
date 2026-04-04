@@ -158,11 +158,11 @@ func TestModpackCompatibility(t *testing.T) {
 
 		testza.AssertEqual(t, 1, len(queryResponse.GetModCompatibilities.WorstEa))
 		testza.AssertEqual(t, mods[0], queryResponse.GetModCompatibilities.WorstEa[0].ID)
-		testza.AssertEqual(t, generated.CompatibilityStateBroken, queryResponse.GetModCompatibilities.WorstEa[0].Compatibility.Ea.State)
+		testza.AssertEqual(t, generated.CompatibilityStateBroken, queryResponse.GetModCompatibilities.Compatibility.Ea.State)
 
 		testza.AssertEqual(t, 1, len(queryResponse.GetModCompatibilities.WorstExp))
 		testza.AssertEqual(t, mods[1], queryResponse.GetModCompatibilities.WorstExp[0].ID)
-		testza.AssertEqual(t, generated.CompatibilityStateDamaged, queryResponse.GetModCompatibilities.WorstExp[0].Compatibility.Exp.State)
+		testza.AssertEqual(t, generated.CompatibilityStateDamaged, queryResponse.GetModCompatibilities.Compatibility.Exp.State)
 	})
 
 	t.Run("Multi mod compatibility", func(t *testing.T) {
@@ -249,7 +249,7 @@ func TestModpackCompatibility(t *testing.T) {
 		testza.AssertNoError(t, err)
 
 		testza.AssertEqual(t, 2, len(queryResponse.GetModCompatibilities.WorstEa))
-		testza.AssertEqual(t, generated.CompatibilityStateBroken, queryResponse.GetModCompatibilities.WorstEa[0].Compatibility.Ea.State)
+		testza.AssertEqual(t, generated.CompatibilityStateBroken, queryResponse.GetModCompatibilities.Compatibility.Ea.State)
 		testza.AssertEqual(t, 0, len(queryResponse.GetModCompatibilities.WorstExp))
 	})
 }

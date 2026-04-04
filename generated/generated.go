@@ -193,8 +193,9 @@ type ComplexityRoot struct {
 	}
 
 	ModCompatibilities struct {
-		WorstEa  func(childComplexity int) int
-		WorstExp func(childComplexity int) int
+		Compatibility func(childComplexity int) int
+		WorstEa       func(childComplexity int) int
+		WorstExp      func(childComplexity int) int
 	}
 
 	ModVersion struct {
@@ -1116,6 +1117,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mod.Views(childComplexity), true
+
+	case "ModCompatibilities.compatibility":
+		if e.complexity.ModCompatibilities.Compatibility == nil {
+			break
+		}
+
+		return e.complexity.ModCompatibilities.Compatibility(childComplexity), true
 
 	case "ModCompatibilities.worstEA":
 		if e.complexity.ModCompatibilities.WorstEa == nil {
@@ -3429,6 +3437,7 @@ type GetModpacks {
 }
 
 type ModCompatibilities{
+    compatibility: CompatibilityInfo
     worstEA: [Mod!]!
     worstEXP: [Mod!]!
 }
@@ -10401,6 +10410,53 @@ func (ec *executionContext) fieldContext_Mod_latestVersions(_ context.Context, f
 				return ec.fieldContext_LatestVersions_release(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LatestVersions", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModCompatibilities_compatibility(ctx context.Context, field graphql.CollectedField, obj *ModCompatibilities) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModCompatibilities_compatibility(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Compatibility, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*CompatibilityInfo)
+	fc.Result = res
+	return ec.marshalOCompatibilityInfo2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModCompatibilities_compatibility(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModCompatibilities",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "EA":
+				return ec.fieldContext_CompatibilityInfo_EA(ctx, field)
+			case "EXP":
+				return ec.fieldContext_CompatibilityInfo_EXP(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CompatibilityInfo", field.Name)
 		},
 	}
 	return fc, nil
@@ -17574,6 +17630,8 @@ func (ec *executionContext) fieldContext_Query_getModCompatibilities(ctx context
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "compatibility":
+				return ec.fieldContext_ModCompatibilities_compatibility(ctx, field)
 			case "worstEA":
 				return ec.fieldContext_ModCompatibilities_worstEA(ctx, field)
 			case "worstEXP":
@@ -28445,6 +28503,8 @@ func (ec *executionContext) _ModCompatibilities(ctx context.Context, sel ast.Sel
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ModCompatibilities")
+		case "compatibility":
+			out.Values[i] = ec._ModCompatibilities_compatibility(ctx, field, obj)
 		case "worstEA":
 			out.Values[i] = ec._ModCompatibilities_worstEA(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
