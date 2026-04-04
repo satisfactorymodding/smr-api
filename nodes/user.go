@@ -72,9 +72,9 @@ func getLogout(_ *ent.User, c echo.Context) (interface{}, *ErrorResponse) {
 	return nil, nil
 }
 
-// @Summary Retrieve Current Users Mods
+// @Summary Retrieve Current User's Mods
 // @Tags User
-// @Description Retrieve the users mods associated with the token
+// @Description Retrieve the user's mods associated with the token
 // @Accept  json
 // @Produce  json
 // @Success 200
@@ -113,9 +113,9 @@ func getUsers(c echo.Context) (interface{}, *ErrorResponse) {
 	return (*conv.UserImpl)(nil).ConvertSlice(users), nil
 }
 
-// @Summary Retrieve a Users Mods
+// @Summary Retrieve a User's Mods
 // @Tags User
-// @Description Retrieve a users mods by user ID
+// @Description Retrieve a user's mods by user ID
 // @Accept  json
 // @Produce  json
 // @Param userId path string true "User ID"
@@ -143,9 +143,9 @@ func getUserMods(c echo.Context) (interface{}, *ErrorResponse) {
 	return (*conv.UserModImpl)(nil).ConvertSlice(mods), nil
 }
 
-// @Summary Retrieve a Users Modpacks
+// @Summary Retrieve a User's Modpacks
 // @Tags User
-// @Description Retrieve a users modpacks by user ID
+// @Description Retrieve a user's modpacks by user ID
 // @Accept  json
 // @Produce  json
 // @Param userId path string true "User ID"
