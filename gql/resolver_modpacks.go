@@ -287,45 +287,50 @@ func (r *queryResolver) GetModpackRelease(ctx context.Context, modpackID string,
 	return (*conv.ModpackReleaseImpl)(nil).Convert(dbRelease), nil
 }
 
+func getWorstState(currentPackState, modState generated.CompatibilityState) generated.CompatibilityState {
+	if currentPackState == generated.CompatibilityStateBroken || modState == generated.CompatibilityStateBroken {
+		return generated.CompatibilityStateBroken
+	} else if currentPackState == generated.CompatibilityStateDamaged || modState == generated.CompatibilityStateDamaged {
+		return generated.CompatibilityStateDamaged
+	}
+	return generated.CompatibilityStateWorks
+}
+
 func (r *queryResolver) GetModCompatibilities(ctx context.Context, modpackID string) (*generated.ModCompatibilities, error) {
 	mods, err := db.From(ctx).Modpack.Query().
 		Where(modpack.ID(modpackID)).QueryModpackMods().QueryMod().All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	EAlist := []*generated.Mod{}
-	worstEA := generated.CompatibilityStateWorks
-	EXPlist := []*generated.Mod{}
-	worstEXP := generated.CompatibilityStateWorks
 
+	// calculate overall pack compatibility from involved mods
+	// TODO this should also recursively check mods' dependency mods
+	packWorstEaState := generated.CompatibilityStateWorks
+	packWorstExpState := generated.CompatibilityStateWorks
 	for _, mod := range mods {
-		// check worst EA
-		if generated.CompatibilityState(mod.Compatibility.Ea.State) == generated.CompatibilityStateBroken {
-			worstEA = generated.CompatibilityStateBroken
-		} else if generated.CompatibilityState(mod.Compatibility.Ea.State) == generated.CompatibilityStateDamaged && worstEA != generated.CompatibilityStateBroken {
-			worstEA = generated.CompatibilityStateDamaged
-		}
-		// check worst EXP
-		if generated.CompatibilityState(mod.Compatibility.Exp.State) == generated.CompatibilityStateBroken {
-			worstEXP = generated.CompatibilityStateBroken
-		} else if generated.CompatibilityState(mod.Compatibility.Exp.State) == generated.CompatibilityStateDamaged && worstEXP != generated.CompatibilityStateBroken {
-			worstEXP = generated.CompatibilityStateDamaged
-		}
+		packWorstEaState = getWorstState(packWorstEaState, generated.CompatibilityState(mod.Compatibility.Ea.State))
+		packWorstExpState = getWorstState(packWorstExpState, generated.CompatibilityState(mod.Compatibility.Exp.State))
 	}
-	// get list of mods
-	for _, mod := range mods {
-		if worstEA != generated.CompatibilityStateWorks {
-			if generated.CompatibilityState(mod.Compatibility.Ea.State) == worstEA {
-				EAlist = append(EAlist, (*conv.ModImpl)(nil).Convert(mod))
+
+	// build list of mods that are causing the pack to have that compatibility state
+	eaWorstList := []*generated.Mod{}
+	expWorstList := []*generated.Mod{}
+	packIsNotBothWorks := packWorstEaState != generated.CompatibilityStateWorks || packWorstExpState != generated.CompatibilityStateWorks
+	if packIsNotBothWorks {
+		for _, mod := range mods {
+			if packWorstEaState != generated.CompatibilityStateWorks {
+				if generated.CompatibilityState(mod.Compatibility.Ea.State) == packWorstEaState {
+					eaWorstList = append(eaWorstList, (*conv.ModImpl)(nil).Convert(mod))
+				}
+			}
+			if packWorstExpState != generated.CompatibilityStateWorks {
+				if generated.CompatibilityState(mod.Compatibility.Exp.State) == packWorstExpState {
+					expWorstList = append(expWorstList, (*conv.ModImpl)(nil).Convert(mod))
+				}
 			}
 		}
-		if worstEXP != generated.CompatibilityStateWorks {
-			if generated.CompatibilityState(mod.Compatibility.Exp.State) == worstEXP {
-				EXPlist = append(EXPlist, (*conv.ModImpl)(nil).Convert(mod))
-			}
-		}
 	}
-	return &generated.ModCompatibilities{WorstEa: EAlist, WorstExp: EXPlist}, nil
+	return &generated.ModCompatibilities{WorstEa: eaWorstList, WorstExp: expWorstList}, nil
 }
 
 func (r *mutationResolver) CreateModpackRelease(ctx context.Context, modpackID string, release generated.NewModpackRelease) (*generated.ModpackRelease, error) {
