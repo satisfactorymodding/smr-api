@@ -51,7 +51,7 @@ func (r *mutationResolver) CreateVersion(ctx context.Context, modID string) (str
 		return "", errors.New("you must update your mod reference on the site to match your mod_reference in your data.json")
 	}
 
-	if mod.AiUseDisclosure == nil {
+	if mod.AiUseDisclosure == nil || mod.AiUseDisclosure.DisclosureType == "no_disclosure" {
 		return "", errors.New("you must update an AI use disclosure on the site before uploading a version")
 	}
 

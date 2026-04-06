@@ -188,6 +188,9 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 	SetINNF(updateMod.Hidden, dbUpdate.SetHidden)
 	SetCompatibilityINNF(updateMod.Compatibility, dbUpdate.SetCompatibility)
 	SetINNF(updateMod.ToggleNetworkUse, dbUpdate.SetToggleNetworkUse)
+	if dbMod.AiUseDisclosure != nil && updateMod.AiUseDisclosure.DisclosureType == "no_disclosure" && dbMod.AiUseDisclosure.DisclosureType != "no_disclosure" {
+		return nil, errors.New("this mod already has an AI use disclosure, and thus it cannot be cleared")
+	}
 	SetAIDisclosureINNF(updateMod.AiUseDisclosure, dbUpdate.SetAiUseDisclosure)
 
 	newNetworkDisclosure, isSet := updateMod.NetworkUseDisclosure.ValueOK()
