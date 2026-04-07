@@ -20,7 +20,6 @@ func init() {
 	db.EnableDebug()
 }
 
-// $env:NO_COLOR=1; go test -v ./tests -run TestGetModpackTargetSupport
 func TestGetModpackTargetSupport(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
@@ -194,7 +193,6 @@ func TestGetModpackTargetSupport(t *testing.T) {
 		testza.AssertEqual(t, 1, len(response.GetModpackTargetSupport))
 		testza.AssertEqual(t, "Windows", response.GetModpackTargetSupport[0].TargetName)
 	})
-
 }
 
 func createTestModpack(ctx context.Context, t *testing.T, client *graphql.Client, token string, modIDs []string) string {
