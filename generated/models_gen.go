@@ -208,6 +208,12 @@ type ModpackRelease struct {
 	Changelog string `json:"changelog"`
 }
 
+type ModpackTarget struct {
+	ID         string `json:"id"`
+	ModpackID  string `json:"modpack_id"`
+	TargetName string `json:"target_name"`
+}
+
 type Mutation struct {
 }
 

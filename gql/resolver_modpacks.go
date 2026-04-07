@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/Masterminds/semver/v3"
 	"github.com/Vilsol/slox"
 	"github.com/go-playground/validator/v10"
 	resolver "github.com/satisfactorymodding/ficsit-resolver"
@@ -26,6 +27,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
+	"github.com/satisfactorymodding/smr-api/generated/ent/versiontarget"
 	"github.com/satisfactorymodding/smr-api/models"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/storage"
@@ -345,6 +347,115 @@ func (r *queryResolver) GetModCompatibilities(ctx context.Context, modpackID str
 		}
 	}
 	return &generated.ModCompatibilities{Compatibility: &compatibilityState, WorstEa: eaWorstList, WorstExp: expWorstList}, nil
+}
+
+func (r *queryResolver) GetModpackTargetSupport(ctx context.Context, modpackID string) ([]*generated.ModpackTarget, error) {
+	versions, err := db.From(ctx).Modpack.Query().
+		Where(modpack.ID(modpackID)).QueryModpackMods().QueryMod().QueryVersions().
+		WithVersionDependencies(func(q *ent.VersionDependencyQuery) {
+			q.WithMod()
+		}).
+		WithTargets().
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	results := []*generated.ModpackTarget{}
+	supportsWindows, err := getSpecificTargetSupport(ctx, "Windows", versions, modpackID)
+	if err != nil {
+		return nil, err
+	}
+	if supportsWindows != nil {
+		results = append(results, supportsWindows)
+	}
+	supportsWindowsServer, err := getSpecificTargetSupport(ctx, "WindowsServer", versions, modpackID)
+	if err != nil {
+		return nil, err
+	}
+	if supportsWindowsServer != nil {
+		results = append(results, supportsWindowsServer)
+	}
+	supportsLinuxServer, err := getSpecificTargetSupport(ctx, "LinuxServer", versions, modpackID)
+	if err != nil {
+		return nil, err
+	}
+	if supportsLinuxServer != nil {
+		results = append(results, supportsLinuxServer)
+	}
+
+	return results, nil
+}
+
+func getSpecificTargetSupport(ctx context.Context, targetName string, versions []*ent.Version, modpackID string) (*generated.ModpackTarget, error) {
+	for _, version := range versions {
+		target, _ := db.From(ctx).VersionTarget.Query().
+			Where(versiontarget.TargetName(targetName), versiontarget.VersionID(version.ID)).First(ctx)
+
+		if version.RequiredOnRemote && target == nil {
+			return nil, nil
+		}
+		if !version.RequiredOnRemote {
+			misConfiguration, err := checkAllDependency(ctx, targetName, version)
+			if err != nil {
+				return nil, err
+			}
+			if misConfiguration {
+				return nil, nil
+			}
+		}
+	}
+	return &generated.ModpackTarget{
+		ModpackID:  modpackID,
+		TargetName: targetName,
+	}, nil
+}
+
+// checks all dependencies to see if any are required
+
+func checkAllDependency(ctx context.Context, targetName string, v *ent.Version) (bool, error) {
+	visited := make(map[string]bool)
+	target, _ := db.From(ctx).VersionTarget.Query().
+		Where(versiontarget.TargetName(targetName), versiontarget.VersionID(v.ID)).First(ctx)
+
+	if v.RequiredOnRemote && target == nil {
+		return true, nil
+	}
+
+	for _, dep := range v.Edges.VersionDependencies {
+		modID := dep.Edges.Mod.ID
+		if visited[modID] {
+			continue
+		}
+		visited[modID] = true
+		// Only check recursion if the dependency is non-optional
+		if !dep.Optional {
+
+			constraint, err := semver.NewConstraint(dep.Condition)
+			if err != nil {
+				return true, fmt.Errorf("failed to parse version constraint %s: %w", dep.Condition, err)
+			}
+
+			modVersions, _ := db.From(ctx).Version.Query().
+				WithVersionDependencies(func(q *ent.VersionDependencyQuery) {
+					q.WithMod()
+				}).
+				WithTargets().
+				Where(version.ModID(modID)).
+				All(ctx)
+
+			for _, v := range modVersions {
+				version, _ := semver.NewVersion(v.Version)
+				if constraint.Check(version) {
+					recursiveResults, err := checkAllDependency(ctx, targetName, v)
+					if recursiveResults {
+						return true, err
+					}
+				}
+			}
+		}
+	}
+	return false, nil
 }
 
 func (r *mutationResolver) CreateModpackRelease(ctx context.Context, modpackID string, release generated.NewModpackRelease) (*generated.ModpackRelease, error) {

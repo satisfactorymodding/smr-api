@@ -54,6 +54,12 @@ type ModpackRelease {
     changelog: String!
 }
 
+type ModpackTarget {
+    id: String!
+    modpack_id: ModpackID!
+    target_name: String!
+}
+
 type GetModpacks {
     modpacks: [Modpack!]!
     count: Int!
@@ -133,6 +139,7 @@ extend type Query {
 
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
     getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!
+    getModpackTargetSupport(modpackID: ModpackID!): [ModpackTarget!]!
 }
 
 ### Mutations
