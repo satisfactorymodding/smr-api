@@ -25,14 +25,14 @@ func TestGetModpackTargetSupport(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
-	token, userID, err := makeUser(ctx)
+	token, _, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
 
 	tags := seedTags(ctx, t, token, client)
 	modIDs := seedMods(ctx, t, token, client, tags[0])
 
 	t.Run("Modpack with all targets supported", func(t *testing.T) {
-		modpackID := createTestModpack(ctx, t, client, token, userID, []string{modIDs[0]})
+		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0]})
 
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
 
@@ -61,7 +61,7 @@ func TestGetModpackTargetSupport(t *testing.T) {
 	})
 
 	t.Run("Modpack with missing target in one mod", func(t *testing.T) {
-		modpackID := createTestModpack(ctx, t, client, token, userID, []string{modIDs[0], modIDs[1]})
+		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0], modIDs[1]})
 
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
 		createVersionsForTargets(ctx, t, modIDs[1], true, []string{"Windows"})
@@ -91,7 +91,7 @@ func TestGetModpackTargetSupport(t *testing.T) {
 	})
 
 	t.Run("Modpack with non-required missing targets", func(t *testing.T) {
-		modpackID := createTestModpack(ctx, t, client, token, userID, []string{modIDs[0], modIDs[2]})
+		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0], modIDs[2]})
 
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
 		createVersionsForTargets(ctx, t, modIDs[2], false, []string{"Windows"})
@@ -121,7 +121,7 @@ func TestGetModpackTargetSupport(t *testing.T) {
 	})
 
 	t.Run("Missing target in optional dependency", func(t *testing.T) {
-		modpackID := createTestModpack(ctx, t, client, token, userID, []string{modIDs[0], modIDs[3]})
+		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0], modIDs[3]})
 
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
 		version3 := createVersionsForTargets(ctx, t, modIDs[3], false, []string{"Windows", "WindowsServer", "LinuxServer"})
@@ -161,7 +161,7 @@ func TestGetModpackTargetSupport(t *testing.T) {
 	})
 
 	t.Run("Missing target in non-optional dependency", func(t *testing.T) {
-		modpackID := createTestModpack(ctx, t, client, token, userID, []string{modIDs[0], modIDs[3]})
+		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0], modIDs[3]})
 
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
 		version3 := createVersionsForTargets(ctx, t, modIDs[3], false, []string{"Windows", "WindowsServer", "LinuxServer"})
@@ -197,7 +197,7 @@ func TestGetModpackTargetSupport(t *testing.T) {
 
 }
 
-func createTestModpack(ctx context.Context, t *testing.T, client *graphql.Client, token string, userID string, modIDs []string) string {
+func createTestModpack(ctx context.Context, t *testing.T, client *graphql.Client, token string, modIDs []string) string {
 	mods := make([]struct {
 		ModID             string `json:"mod_id"`
 		VersionConstraint string `json:"version_constraint"`

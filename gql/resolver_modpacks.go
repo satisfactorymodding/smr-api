@@ -430,7 +430,6 @@ func checkAllDependency(ctx context.Context, targetName string, v *ent.Version) 
 		visited[modID] = true
 		// Only check recursion if the dependency is non-optional
 		if !dep.Optional {
-
 			constraint, err := semver.NewConstraint(dep.Condition)
 			if err != nil {
 				return true, fmt.Errorf("failed to parse version constraint %s: %w", dep.Condition, err)
