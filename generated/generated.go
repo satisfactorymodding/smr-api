@@ -68,6 +68,7 @@ type DirectiveRoot struct {
 	CanEditMod                  func(ctx context.Context, obj any, next graphql.Resolver, field string) (res any, err error)
 	CanEditModCompatibility     func(ctx context.Context, obj any, next graphql.Resolver, field *string) (res any, err error)
 	CanEditModpack              func(ctx context.Context, obj any, next graphql.Resolver, field string) (res any, err error)
+	CanEditModpackCompatibility func(ctx context.Context, obj any, next graphql.Resolver, field *string) (res any, err error)
 	CanEditSatisfactoryVersions func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	CanEditUser                 func(ctx context.Context, obj any, next graphql.Resolver, field string, object bool) (res any, err error)
 	CanEditUsers                func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
@@ -284,6 +285,7 @@ type ComplexityRoot struct {
 		UpdateMod                        func(childComplexity int, modID string, mod UpdateMod) int
 		UpdateModCompatibility           func(childComplexity int, modID string, compatibility CompatibilityInfoInput) int
 		UpdateModpack                    func(childComplexity int, modpackID string, modpack UpdateModpack) int
+		UpdateModpackCompatibility       func(childComplexity int, modpackID string, compatibility CompatibilityInfoInput) int
 		UpdateMultipleModCompatibilities func(childComplexity int, modIDs []string, compatibility CompatibilityInfoInput) int
 		UpdateSatisfactoryVersion        func(childComplexity int, id string, input UpdateSatisfactoryVersion) int
 		UpdateTag                        func(childComplexity int, tagID string, newName string, description string) int
@@ -520,6 +522,7 @@ type MutationResolver interface {
 	UpdateAnnouncement(ctx context.Context, announcementID string, announcement UpdateAnnouncement) (*Announcement, error)
 	DeleteAnnouncement(ctx context.Context, announcementID string) (bool, error)
 	UpdateModCompatibility(ctx context.Context, modID string, compatibility CompatibilityInfoInput) (bool, error)
+	UpdateModpackCompatibility(ctx context.Context, modpackID string, compatibility CompatibilityInfoInput) (bool, error)
 	UpdateMultipleModCompatibilities(ctx context.Context, modIDs []string, compatibility CompatibilityInfoInput) (bool, error)
 	CreateGuide(ctx context.Context, guide NewGuide) (*Guide, error)
 	UpdateGuide(ctx context.Context, guideID string, guide UpdateGuide) (*Guide, error)
@@ -1796,6 +1799,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateModpack(childComplexity, args["modpackID"].(string), args["modpack"].(UpdateModpack)), true
+
+	case "Mutation.updateModpackCompatibility":
+		if e.complexity.Mutation.UpdateModpackCompatibility == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateModpackCompatibility_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateModpackCompatibility(childComplexity, args["modpackId"].(string), args["compatibility"].(CompatibilityInfoInput)), true
 
 	case "Mutation.updateMultipleModCompatibilities":
 		if e.complexity.Mutation.UpdateMultipleModCompatibilities == nil {
@@ -3185,6 +3200,7 @@ input CompatibilityInfoInput {
 
 extend type Mutation {
     updateModCompatibility(modId: ModID!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModCompatibility(field: "modId") @isLoggedIn
+    updateModpackCompatibility(modpackId: ModpackID!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModpackCompatibility(field: "modpackId") @isLoggedIn
     updateMultipleModCompatibilities(modIDs: [ModID!]!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModCompatibility @isLoggedIn
 }`, BuiltIn: false},
 	{Name: "../schemas/directives.graphql", Input: `directive @isLoggedIn on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
@@ -3196,6 +3212,7 @@ directive @canEditUser(field: String!, object: Boolean!) on FIELD_DEFINITION
 directive @canEditGuide(field: String!) on FIELD_DEFINITION
 directive @canEditModCompatibility(field: String) on FIELD_DEFINITION
 directive @canEditModpack(field: String!) on FIELD_DEFINITION
+directive @canEditModpackCompatibility(field: String) on FIELD_DEFINITION
 
 directive @canApproveMods on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @canApproveVersions on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
@@ -4028,6 +4045,34 @@ func (ec *executionContext) dir_canEditMod_argsField(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) dir_canEditModpackCompatibility_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.dir_canEditModpackCompatibility_argsField(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["field"] = arg0
+	return args, nil
+}
+func (ec *executionContext) dir_canEditModpackCompatibility_argsField(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	if _, ok := rawArgs["field"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+	if tmp, ok := rawArgs["field"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -5381,6 +5426,57 @@ func (ec *executionContext) field_Mutation_updateMod_argsMod(
 	}
 
 	var zeroVal UpdateMod
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateModpackCompatibility_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateModpackCompatibility_argsModpackID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["modpackId"] = arg0
+	arg1, err := ec.field_Mutation_updateModpackCompatibility_argsCompatibility(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["compatibility"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateModpackCompatibility_argsModpackID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modpackId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modpackId"))
+	if tmp, ok := rawArgs["modpackId"]; ok {
+		return ec.unmarshalNModpackID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateModpackCompatibility_argsCompatibility(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (CompatibilityInfoInput, error) {
+	if _, ok := rawArgs["compatibility"]; !ok {
+		var zeroVal CompatibilityInfoInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("compatibility"))
+	if tmp, ok := rawArgs["compatibility"]; ok {
+		return ec.unmarshalNCompatibilityInfoInput2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐCompatibilityInfoInput(ctx, tmp)
+	}
+
+	var zeroVal CompatibilityInfoInput
 	return zeroVal, nil
 }
 
@@ -12985,6 +13081,95 @@ func (ec *executionContext) fieldContext_Mutation_updateModCompatibility(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateModCompatibility_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateModpackCompatibility(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateModpackCompatibility(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateModpackCompatibility(rctx, fc.Args["modpackId"].(string), fc.Args["compatibility"].(CompatibilityInfoInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			field, err := ec.unmarshalOString2ᚖstring(ctx, "modpackId")
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.CanEditModpackCompatibility == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive canEditModpackCompatibility is not implemented")
+			}
+			return ec.directives.CanEditModpackCompatibility(ctx, nil, directive0, field)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.IsLoggedIn == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
+			}
+			return ec.directives.IsLoggedIn(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateModpackCompatibility(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateModpackCompatibility_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -29224,6 +29409,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateModCompatibility":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateModCompatibility(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateModpackCompatibility":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateModpackCompatibility(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

@@ -26,5 +26,6 @@ input CompatibilityInfoInput {
 
 extend type Mutation {
     updateModCompatibility(modId: ModID!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModCompatibility(field: "modId") @isLoggedIn
+    updateModpackCompatibility(modpackId: ModpackID!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModpackCompatibility(field: "modpackId") @isLoggedIn
     updateMultipleModCompatibilities(modIDs: [ModID!]!, compatibility: CompatibilityInfoInput!): Boolean! @canEditModCompatibility @isLoggedIn
 }
