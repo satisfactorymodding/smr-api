@@ -26,7 +26,6 @@ run = "go run cmd/api/serve.go"
 description = "Run all tests (with verbose output, for CI)"
 run = "go test -parallel 1 -v -timeout 1h ./..."
 
-# Run the tests without the verbose flag so it is easier to parse the output for local development
 [tasks.localtest]
 description = "Run all tests (without the verbose flag, so it's easier to parse the output for local development)"
 run = "go test -parallel 1 -timeout 1h ./..."
@@ -68,3 +67,7 @@ run_windows = "mise run migrate_diff_windows"
 description = "Use Atlas to create a new manual SQL migration file (see https://atlasgo.io/versioned/new)"
 run= "mise run migrate_new_linux"
 run_windows = "mise run migrate_new_windows"
+
+[tasks.make_paseto_keys]
+description = "Generates PASETO keys for initial setup, put them in your config.json"
+run = "go run cmd/paseto/main.go"
