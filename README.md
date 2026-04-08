@@ -26,6 +26,7 @@ The Satisfactory Mod Repository backend API - a Go-based service providing REST 
 
    If you are on Windows, due to a bug in [mise and aqua](https://github.com/aquaproj/aqua-registry/pull/42498/), you will also need to do the following:
 
+   <!-- TODO make a mise task that does this for you -->
    ```ps1
    > mise where aqua:minio/mc
    <some folder path>
@@ -33,7 +34,19 @@ The Satisfactory Mod Repository backend API - a Go-based service providing REST 
    # Rename the `mc` file to give it an extension: `mc.exe`
    ```
 
-2. Start Development Services
+2. (First Time Setup Only) Set up the Configuration File
+
+   First, start the containers so you can generate some of the required configuration tokens:
+
+   ```bash
+   # If this command fails, ensure you have Docker running and configured correctly
+   mise run setup
+   ```
+
+   Next, create a copy of `config.sample.json` as `config.json` and fill in the required fields.
+   See the [Configuration](#configuration) section for details.
+
+3. Start Development Services
 
    ```bash
    # If this command fails, ensure you have Docker running and configured correctly
@@ -44,16 +57,13 @@ The Satisfactory Mod Repository backend API - a Go-based service providing REST 
    mise run api
    ```
 
+   If the first line of the output contains `config initialized using defaults and environment only!` then ensure your config file is formatted correctly and does not include `//` comments.
+
    If running `api` produces errors about the database failing to apply migrations,
    you may have switched branches without cleaning up after database changes you were working on.
    The easiest way to get back from this state
    is to delete the `postgres` Docker container
    and delete all not-in-use volumes so it creates a fresh one.
-
-3. Set up the Configuration File
-
-   Create a copy of `config.sample.json` as `config.json` and fill in the required fields.
-   See the [Configuration](#configuration) section for details.
 
 ## Development Commands
 
@@ -150,21 +160,25 @@ Doing this requires manually creating a `user_groups` entry for you user.
 - Generated code in `generated/`
 - Database schemas in `db/schema/`
 
-## Configuration
-
-Create `config.json`, or use environment variables with `REPO_` prefix.
-A sample is provided: `config.sample.json`.
-
 **Required services:**
 
 1. **PostgreSQL** - Database (dev: port 5432)
 2. **Redis** - Cache/sessions (dev: port 6379)  
 3. **MinIO** - Object storage (dev: ports 9000/9001)
-4. **OAuth providers** - GitHub, Google, Facebook. For testing purposes, [setting up just GitHub](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) is the easiest.
-5. **PASETO keys** - Generate these with `go run cmd/paseto/main.go`
-6. **VirusTotal API key** - For mod scanning. Optional for testing.
+4. **VirusTotal** - External API for mod scanning. Optional for testing and local development.
+
+## Configuration
 
 **Development services** are started automatically with `mise run setup`. MinIO configuration is included in the setup task.
+
+Create `config.json`, or use environment variables with `REPO_` prefix.
+A sample is provided: `config.sample.json`.
+
+**For local development, you should change:**
+
+1. **OAuth providers** - For testing purposes, [setting up just GitHub](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) is the easiest.
+2. **PASETO keys** - Generate these with `mise run make_paseto_keys`
+3. **VirusTotal API key** - If you want to test the mod scanning features (optional).
 
 See `config/config.go` for full configuration structure.
 
