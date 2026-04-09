@@ -334,7 +334,7 @@ func (r *userModpackResolver) User(ctx context.Context, obj *generated.UserModpa
 }
 
 func (r *userModpackResolver) Modpack(ctx context.Context, obj *generated.UserModpack) (*generated.Modpack, error) {
-	result, err := db.From(ctx).Modpack.Query().WithTags().Where(modpack.ID(obj.ModpackID)).Only(ctx)
+	result, err := db.From(ctx).Modpack.Query().WithTags().WithModpackMods().Where(modpack.ID(obj.ModpackID)).Only(ctx)
 	if err != nil {
 		return nil, err
 	}
