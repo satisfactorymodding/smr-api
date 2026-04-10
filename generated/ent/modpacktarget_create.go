@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 )
 
@@ -49,9 +49,15 @@ func (mtc *ModpackTargetCreate) SetNillableID(s *string) *ModpackTargetCreate {
 	return mtc
 }
 
-// SetModpack sets the "modpack" edge to the Modpack entity.
-func (mtc *ModpackTargetCreate) SetModpack(m *Modpack) *ModpackTargetCreate {
-	return mtc.SetModpackID(m.ID)
+// SetModpackReleaseID sets the "modpack_release" edge to the ModpackRelease entity by ID.
+func (mtc *ModpackTargetCreate) SetModpackReleaseID(id string) *ModpackTargetCreate {
+	mtc.mutation.SetModpackReleaseID(id)
+	return mtc
+}
+
+// SetModpackRelease sets the "modpack_release" edge to the ModpackRelease entity.
+func (mtc *ModpackTargetCreate) SetModpackRelease(m *ModpackRelease) *ModpackTargetCreate {
+	return mtc.SetModpackReleaseID(m.ID)
 }
 
 // Mutation returns the ModpackTargetMutation object of the builder.
@@ -103,8 +109,8 @@ func (mtc *ModpackTargetCreate) check() error {
 	if _, ok := mtc.mutation.TargetName(); !ok {
 		return &ValidationError{Name: "target_name", err: errors.New(`ent: missing required field "ModpackTarget.target_name"`)}
 	}
-	if len(mtc.mutation.ModpackIDs()) == 0 {
-		return &ValidationError{Name: "modpack", err: errors.New(`ent: missing required edge "ModpackTarget.modpack"`)}
+	if len(mtc.mutation.ModpackReleaseIDs()) == 0 {
+		return &ValidationError{Name: "modpack_release", err: errors.New(`ent: missing required edge "ModpackTarget.modpack_release"`)}
 	}
 	return nil
 }
@@ -146,15 +152,15 @@ func (mtc *ModpackTargetCreate) createSpec() (*ModpackTarget, *sqlgraph.CreateSp
 		_spec.SetField(modpacktarget.FieldTargetName, field.TypeString, value)
 		_node.TargetName = value
 	}
-	if nodes := mtc.mutation.ModpackIDs(); len(nodes) > 0 {
+	if nodes := mtc.mutation.ModpackReleaseIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   modpacktarget.ModpackTable,
-			Columns: []string{modpacktarget.ModpackColumn},
+			Table:   modpacktarget.ModpackReleaseTable,
+			Columns: []string{modpacktarget.ModpackReleaseColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(modpackrelease.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

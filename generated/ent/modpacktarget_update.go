@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 )
@@ -57,9 +57,15 @@ func (mtu *ModpackTargetUpdate) SetNillableTargetName(s *string) *ModpackTargetU
 	return mtu
 }
 
-// SetModpack sets the "modpack" edge to the Modpack entity.
-func (mtu *ModpackTargetUpdate) SetModpack(m *Modpack) *ModpackTargetUpdate {
-	return mtu.SetModpackID(m.ID)
+// SetModpackReleaseID sets the "modpack_release" edge to the ModpackRelease entity by ID.
+func (mtu *ModpackTargetUpdate) SetModpackReleaseID(id string) *ModpackTargetUpdate {
+	mtu.mutation.SetModpackReleaseID(id)
+	return mtu
+}
+
+// SetModpackRelease sets the "modpack_release" edge to the ModpackRelease entity.
+func (mtu *ModpackTargetUpdate) SetModpackRelease(m *ModpackRelease) *ModpackTargetUpdate {
+	return mtu.SetModpackReleaseID(m.ID)
 }
 
 // Mutation returns the ModpackTargetMutation object of the builder.
@@ -67,9 +73,9 @@ func (mtu *ModpackTargetUpdate) Mutation() *ModpackTargetMutation {
 	return mtu.mutation
 }
 
-// ClearModpack clears the "modpack" edge to the Modpack entity.
-func (mtu *ModpackTargetUpdate) ClearModpack() *ModpackTargetUpdate {
-	mtu.mutation.ClearModpack()
+// ClearModpackRelease clears the "modpack_release" edge to the ModpackRelease entity.
+func (mtu *ModpackTargetUpdate) ClearModpackRelease() *ModpackTargetUpdate {
+	mtu.mutation.ClearModpackRelease()
 	return mtu
 }
 
@@ -102,8 +108,8 @@ func (mtu *ModpackTargetUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mtu *ModpackTargetUpdate) check() error {
-	if mtu.mutation.ModpackCleared() && len(mtu.mutation.ModpackIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ModpackTarget.modpack"`)
+	if mtu.mutation.ModpackReleaseCleared() && len(mtu.mutation.ModpackReleaseIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ModpackTarget.modpack_release"`)
 	}
 	return nil
 }
@@ -129,28 +135,28 @@ func (mtu *ModpackTargetUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if value, ok := mtu.mutation.TargetName(); ok {
 		_spec.SetField(modpacktarget.FieldTargetName, field.TypeString, value)
 	}
-	if mtu.mutation.ModpackCleared() {
+	if mtu.mutation.ModpackReleaseCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   modpacktarget.ModpackTable,
-			Columns: []string{modpacktarget.ModpackColumn},
+			Table:   modpacktarget.ModpackReleaseTable,
+			Columns: []string{modpacktarget.ModpackReleaseColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(modpackrelease.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mtu.mutation.ModpackIDs(); len(nodes) > 0 {
+	if nodes := mtu.mutation.ModpackReleaseIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   modpacktarget.ModpackTable,
-			Columns: []string{modpacktarget.ModpackColumn},
+			Table:   modpacktarget.ModpackReleaseTable,
+			Columns: []string{modpacktarget.ModpackReleaseColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(modpackrelease.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -208,9 +214,15 @@ func (mtuo *ModpackTargetUpdateOne) SetNillableTargetName(s *string) *ModpackTar
 	return mtuo
 }
 
-// SetModpack sets the "modpack" edge to the Modpack entity.
-func (mtuo *ModpackTargetUpdateOne) SetModpack(m *Modpack) *ModpackTargetUpdateOne {
-	return mtuo.SetModpackID(m.ID)
+// SetModpackReleaseID sets the "modpack_release" edge to the ModpackRelease entity by ID.
+func (mtuo *ModpackTargetUpdateOne) SetModpackReleaseID(id string) *ModpackTargetUpdateOne {
+	mtuo.mutation.SetModpackReleaseID(id)
+	return mtuo
+}
+
+// SetModpackRelease sets the "modpack_release" edge to the ModpackRelease entity.
+func (mtuo *ModpackTargetUpdateOne) SetModpackRelease(m *ModpackRelease) *ModpackTargetUpdateOne {
+	return mtuo.SetModpackReleaseID(m.ID)
 }
 
 // Mutation returns the ModpackTargetMutation object of the builder.
@@ -218,9 +230,9 @@ func (mtuo *ModpackTargetUpdateOne) Mutation() *ModpackTargetMutation {
 	return mtuo.mutation
 }
 
-// ClearModpack clears the "modpack" edge to the Modpack entity.
-func (mtuo *ModpackTargetUpdateOne) ClearModpack() *ModpackTargetUpdateOne {
-	mtuo.mutation.ClearModpack()
+// ClearModpackRelease clears the "modpack_release" edge to the ModpackRelease entity.
+func (mtuo *ModpackTargetUpdateOne) ClearModpackRelease() *ModpackTargetUpdateOne {
+	mtuo.mutation.ClearModpackRelease()
 	return mtuo
 }
 
@@ -266,8 +278,8 @@ func (mtuo *ModpackTargetUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mtuo *ModpackTargetUpdateOne) check() error {
-	if mtuo.mutation.ModpackCleared() && len(mtuo.mutation.ModpackIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ModpackTarget.modpack"`)
+	if mtuo.mutation.ModpackReleaseCleared() && len(mtuo.mutation.ModpackReleaseIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ModpackTarget.modpack_release"`)
 	}
 	return nil
 }
@@ -310,28 +322,28 @@ func (mtuo *ModpackTargetUpdateOne) sqlSave(ctx context.Context) (_node *Modpack
 	if value, ok := mtuo.mutation.TargetName(); ok {
 		_spec.SetField(modpacktarget.FieldTargetName, field.TypeString, value)
 	}
-	if mtuo.mutation.ModpackCleared() {
+	if mtuo.mutation.ModpackReleaseCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   modpacktarget.ModpackTable,
-			Columns: []string{modpacktarget.ModpackColumn},
+			Table:   modpacktarget.ModpackReleaseTable,
+			Columns: []string{modpacktarget.ModpackReleaseColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(modpackrelease.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mtuo.mutation.ModpackIDs(); len(nodes) > 0 {
+	if nodes := mtuo.mutation.ModpackReleaseIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   modpacktarget.ModpackTable,
-			Columns: []string{modpacktarget.ModpackColumn},
+			Table:   modpacktarget.ModpackReleaseTable,
+			Columns: []string{modpacktarget.ModpackReleaseColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(modpackrelease.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

@@ -40,9 +40,11 @@ type ModpackRelease struct {
 type ModpackReleaseEdges struct {
 	// Modpack holds the value of the modpack edge.
 	Modpack *Modpack `json:"modpack,omitempty"`
+	// Targets holds the value of the targets edge.
+	Targets []*ModpackTarget `json:"targets,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // ModpackOrErr returns the Modpack value or an error if the edge
@@ -54,6 +56,15 @@ func (e ModpackReleaseEdges) ModpackOrErr() (*Modpack, error) {
 		return nil, &NotFoundError{label: modpack.Label}
 	}
 	return nil, &NotLoadedError{edge: "modpack"}
+}
+
+// TargetsOrErr returns the Targets value or an error if the edge
+// was not loaded in eager-loading.
+func (e ModpackReleaseEdges) TargetsOrErr() ([]*ModpackTarget, error) {
+	if e.loadedTypes[1] {
+		return e.Targets, nil
+	}
+	return nil, &NotLoadedError{edge: "targets"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -138,6 +149,11 @@ func (mr *ModpackRelease) Value(name string) (ent.Value, error) {
 // QueryModpack queries the "modpack" edge of the ModpackRelease entity.
 func (mr *ModpackRelease) QueryModpack() *ModpackQuery {
 	return NewModpackReleaseClient(mr.config).QueryModpack(mr)
+}
+
+// QueryTargets queries the "targets" edge of the ModpackRelease entity.
+func (mr *ModpackRelease) QueryTargets() *ModpackTargetQuery {
+	return NewModpackReleaseClient(mr.config).QueryTargets(mr)
 }
 
 // Update returns a builder for updating this ModpackRelease.

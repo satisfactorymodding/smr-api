@@ -298,9 +298,9 @@ var (
 		PrimaryKey: []*schema.Column{ModpackTargetsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "modpack_targets_modpacks_targets",
+				Symbol:     "modpack_targets_modpack_releases_targets",
 				Columns:    []*schema.Column{ModpackTargetsColumns[2]},
-				RefColumns: []*schema.Column{ModpacksColumns[0]},
+				RefColumns: []*schema.Column{ModpackReleasesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
@@ -726,7 +726,7 @@ func init() {
 	ModpackReleasesTable.ForeignKeys[0].RefTable = ModpacksTable
 	ModpackTagsTable.ForeignKeys[0].RefTable = ModpacksTable
 	ModpackTagsTable.ForeignKeys[1].RefTable = TagsTable
-	ModpackTargetsTable.ForeignKeys[0].RefTable = ModpacksTable
+	ModpackTargetsTable.ForeignKeys[0].RefTable = ModpackReleasesTable
 	UserGroupsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[0].RefTable = UsersTable
 	UserModsTable.ForeignKeys[1].RefTable = ModsTable

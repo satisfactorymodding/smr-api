@@ -49,8 +49,6 @@ func (Modpack) Edges() []ent.Edge {
 			Unique().
 			Immutable().
 			Annotations(entsql.OnDelete(entsql.Restrict)),
-		edge.To("targets", ModpackTarget.Type).
-			Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("releases", ModpackRelease.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("mods", Mod.Type).

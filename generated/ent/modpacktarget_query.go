@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 )
@@ -19,12 +19,12 @@ import (
 // ModpackTargetQuery is the builder for querying ModpackTarget entities.
 type ModpackTargetQuery struct {
 	config
-	ctx         *QueryContext
-	order       []modpacktarget.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.ModpackTarget
-	withModpack *ModpackQuery
-	modifiers   []func(*sql.Selector)
+	ctx                *QueryContext
+	order              []modpacktarget.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.ModpackTarget
+	withModpackRelease *ModpackReleaseQuery
+	modifiers          []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -61,9 +61,9 @@ func (mtq *ModpackTargetQuery) Order(o ...modpacktarget.OrderOption) *ModpackTar
 	return mtq
 }
 
-// QueryModpack chains the current query on the "modpack" edge.
-func (mtq *ModpackTargetQuery) QueryModpack() *ModpackQuery {
-	query := (&ModpackClient{config: mtq.config}).Query()
+// QueryModpackRelease chains the current query on the "modpack_release" edge.
+func (mtq *ModpackTargetQuery) QueryModpackRelease() *ModpackReleaseQuery {
+	query := (&ModpackReleaseClient{config: mtq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := mtq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -74,8 +74,8 @@ func (mtq *ModpackTargetQuery) QueryModpack() *ModpackQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(modpacktarget.Table, modpacktarget.FieldID, selector),
-			sqlgraph.To(modpack.Table, modpack.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, modpacktarget.ModpackTable, modpacktarget.ModpackColumn),
+			sqlgraph.To(modpackrelease.Table, modpackrelease.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, modpacktarget.ModpackReleaseTable, modpacktarget.ModpackReleaseColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mtq.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +270,12 @@ func (mtq *ModpackTargetQuery) Clone() *ModpackTargetQuery {
 		return nil
 	}
 	return &ModpackTargetQuery{
-		config:      mtq.config,
-		ctx:         mtq.ctx.Clone(),
-		order:       append([]modpacktarget.OrderOption{}, mtq.order...),
-		inters:      append([]Interceptor{}, mtq.inters...),
-		predicates:  append([]predicate.ModpackTarget{}, mtq.predicates...),
-		withModpack: mtq.withModpack.Clone(),
+		config:             mtq.config,
+		ctx:                mtq.ctx.Clone(),
+		order:              append([]modpacktarget.OrderOption{}, mtq.order...),
+		inters:             append([]Interceptor{}, mtq.inters...),
+		predicates:         append([]predicate.ModpackTarget{}, mtq.predicates...),
+		withModpackRelease: mtq.withModpackRelease.Clone(),
 		// clone intermediate query.
 		sql:       mtq.sql.Clone(),
 		path:      mtq.path,
@@ -283,14 +283,14 @@ func (mtq *ModpackTargetQuery) Clone() *ModpackTargetQuery {
 	}
 }
 
-// WithModpack tells the query-builder to eager-load the nodes that are connected to
-// the "modpack" edge. The optional arguments are used to configure the query builder of the edge.
-func (mtq *ModpackTargetQuery) WithModpack(opts ...func(*ModpackQuery)) *ModpackTargetQuery {
-	query := (&ModpackClient{config: mtq.config}).Query()
+// WithModpackRelease tells the query-builder to eager-load the nodes that are connected to
+// the "modpack_release" edge. The optional arguments are used to configure the query builder of the edge.
+func (mtq *ModpackTargetQuery) WithModpackRelease(opts ...func(*ModpackReleaseQuery)) *ModpackTargetQuery {
+	query := (&ModpackReleaseClient{config: mtq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	mtq.withModpack = query
+	mtq.withModpackRelease = query
 	return mtq
 }
 
@@ -373,7 +373,7 @@ func (mtq *ModpackTargetQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		nodes       = []*ModpackTarget{}
 		_spec       = mtq.querySpec()
 		loadedTypes = [1]bool{
-			mtq.withModpack != nil,
+			mtq.withModpackRelease != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -397,16 +397,16 @@ func (mtq *ModpackTargetQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := mtq.withModpack; query != nil {
-		if err := mtq.loadModpack(ctx, query, nodes, nil,
-			func(n *ModpackTarget, e *Modpack) { n.Edges.Modpack = e }); err != nil {
+	if query := mtq.withModpackRelease; query != nil {
+		if err := mtq.loadModpackRelease(ctx, query, nodes, nil,
+			func(n *ModpackTarget, e *ModpackRelease) { n.Edges.ModpackRelease = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (mtq *ModpackTargetQuery) loadModpack(ctx context.Context, query *ModpackQuery, nodes []*ModpackTarget, init func(*ModpackTarget), assign func(*ModpackTarget, *Modpack)) error {
+func (mtq *ModpackTargetQuery) loadModpackRelease(ctx context.Context, query *ModpackReleaseQuery, nodes []*ModpackTarget, init func(*ModpackTarget), assign func(*ModpackTarget, *ModpackRelease)) error {
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*ModpackTarget)
 	for i := range nodes {
@@ -419,7 +419,7 @@ func (mtq *ModpackTargetQuery) loadModpack(ctx context.Context, query *ModpackQu
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(modpack.IDIn(ids...))
+	query.Where(modpackrelease.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -464,7 +464,7 @@ func (mtq *ModpackTargetQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if mtq.withModpack != nil {
+		if mtq.withModpackRelease != nil {
 			_spec.Node.AddColumnOnce(modpacktarget.FieldModpackID)
 		}
 	}

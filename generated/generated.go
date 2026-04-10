@@ -227,7 +227,6 @@ type ComplexityRoot struct {
 		Releases         func(childComplexity int) int
 		ShortDescription func(childComplexity int) int
 		Tags             func(childComplexity int) int
-		Targets          func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
 		Views            func(childComplexity int) int
 	}
@@ -301,6 +300,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		CalculateLockfileWithTargets func(childComplexity int, modpackID string, mods []*ModpackModInput) int
 		CheckVersionUploadState      func(childComplexity int, modID string, versionID string) int
 		GetAnnouncement              func(childComplexity int, announcementID string) int
 		GetAnnouncements             func(childComplexity int) int
@@ -370,6 +370,11 @@ type ComplexityRoot struct {
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
+	}
+
+	TargetLock struct {
+		Lockfile func(childComplexity int) int
+		Targets  func(childComplexity int) int
 	}
 
 	User struct {
@@ -580,6 +585,7 @@ type QueryResolver interface {
 	GetModpackRelease(ctx context.Context, modpackID string, version string) (*ModpackRelease, error)
 	GetModCompatibilities(ctx context.Context, modpackID string) (*ModCompatibilities, error)
 	GetModpackTargetSupport(ctx context.Context, modpackID string) ([]*ModpackTarget, error)
+	CalculateLockfileWithTargets(ctx context.Context, modpackID string, mods []*ModpackModInput) (*TargetLock, error)
 	GetSatisfactoryVersions(ctx context.Context) ([]*SatisfactoryVersion, error)
 	GetSatisfactoryVersion(ctx context.Context, id string) (*SatisfactoryVersion, error)
 	GetSMLVersion(ctx context.Context, smlVersionID string) (*SMLVersion, error)
@@ -1318,13 +1324,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Modpack.Tags(childComplexity), true
 
-	case "Modpack.targets":
-		if e.complexity.Modpack.Targets == nil {
-			break
-		}
-
-		return e.complexity.Modpack.Targets(childComplexity), true
-
 	case "Modpack.updated_at":
 		if e.complexity.Modpack.UpdatedAt == nil {
 			break
@@ -1905,6 +1904,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.OAuthOptions.Google(childComplexity), true
 
+	case "Query.calculateLockfileWithTargets":
+		if e.complexity.Query.CalculateLockfileWithTargets == nil {
+			break
+		}
+
+		args, err := ec.field_Query_calculateLockfileWithTargets_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CalculateLockfileWithTargets(childComplexity, args["modpackID"].(string), args["mods"].([]*ModpackModInput)), true
+
 	case "Query.checkVersionUploadState":
 		if e.complexity.Query.CheckVersionUploadState == nil {
 			break
@@ -2468,6 +2479,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Tag.Name(childComplexity), true
+
+	case "TargetLock.lockfile":
+		if e.complexity.TargetLock.Lockfile == nil {
+			break
+		}
+
+		return e.complexity.TargetLock.Lockfile(childComplexity), true
+
+	case "TargetLock.targets":
+		if e.complexity.TargetLock.Targets == nil {
+			break
+		}
+
+		return e.complexity.TargetLock.Targets(childComplexity), true
 
 	case "User.avatar":
 		if e.complexity.User.Avatar == nil {
@@ -3471,7 +3496,6 @@ type Modpack {
     children: [Modpack!]!
     authors: [UserModpack!]!
     tags: [Tag!]!
-    targets: [String!]!
     mods: [ModpackModEntry!]!
     releases: [ModpackRelease!]!
 }
@@ -3511,6 +3535,11 @@ type GetMyModpacks {
     count: Int!
 }
 
+type TargetLock {
+    lockfile: String!
+    targets: [ModpackTarget]!
+}
+
 ### Inputs
 
 input ModpackFilter {
@@ -3531,7 +3560,6 @@ input NewModpack {
     logo: Upload
     hidden: Boolean
     tagIDs: [TagID!]
-    targets: [String!]!
     mods: [ModpackModInput!]!
     parent_id: ModpackID
 }
@@ -3549,7 +3577,6 @@ input UpdateModpack {
     hidden: Boolean
     authors: [UpdateUserModpack!]
     tagIDs: [TagID!]
-    targets: [String!]
     mods: [ModpackModInput!]
     compatibility: CompatibilityInfoInput
 }
@@ -3575,6 +3602,7 @@ extend type Query {
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
     getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!
     getModpackTargetSupport(modpackID: ModpackID!): [ModpackTarget!]!
+    calculateLockfileWithTargets(modpackID: ModpackID!, mods: [ModpackModInput!]): TargetLock!
 }
 
 ### Mutations
@@ -5934,6 +5962,57 @@ func (ec *executionContext) field_Query___type_argsName(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_calculateLockfileWithTargets_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_calculateLockfileWithTargets_argsModpackID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["modpackID"] = arg0
+	arg1, err := ec.field_Query_calculateLockfileWithTargets_argsMods(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["mods"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Query_calculateLockfileWithTargets_argsModpackID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modpackID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modpackID"))
+	if tmp, ok := rawArgs["modpackID"]; ok {
+		return ec.unmarshalNModpackID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_calculateLockfileWithTargets_argsMods(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]*ModpackModInput, error) {
+	if _, ok := rawArgs["mods"]; !ok {
+		var zeroVal []*ModpackModInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("mods"))
+	if tmp, ok := rawArgs["mods"]; ok {
+		return ec.unmarshalOModpackModInput2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackModInputᚄ(ctx, tmp)
+	}
+
+	var zeroVal []*ModpackModInput
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_checkVersionUploadState_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -7659,8 +7738,6 @@ func (ec *executionContext) fieldContext_GetModpacks_modpacks(_ context.Context,
 				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
-			case "targets":
-				return ec.fieldContext_Modpack_targets(ctx, field)
 			case "mods":
 				return ec.fieldContext_Modpack_mods(ctx, field)
 			case "releases":
@@ -7939,8 +8016,6 @@ func (ec *executionContext) fieldContext_GetMyModpacks_modpacks(_ context.Contex
 				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
-			case "targets":
-				return ec.fieldContext_Modpack_targets(ctx, field)
 			case "mods":
 				return ec.fieldContext_Modpack_mods(ctx, field)
 			case "releases":
@@ -11854,8 +11929,6 @@ func (ec *executionContext) fieldContext_Modpack_parent(_ context.Context, field
 				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
-			case "targets":
-				return ec.fieldContext_Modpack_targets(ctx, field)
 			case "mods":
 				return ec.fieldContext_Modpack_mods(ctx, field)
 			case "releases":
@@ -11948,8 +12021,6 @@ func (ec *executionContext) fieldContext_Modpack_children(_ context.Context, fie
 				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
-			case "targets":
-				return ec.fieldContext_Modpack_targets(ctx, field)
 			case "mods":
 				return ec.fieldContext_Modpack_mods(ctx, field)
 			case "releases":
@@ -12064,50 +12135,6 @@ func (ec *executionContext) fieldContext_Modpack_tags(_ context.Context, field g
 				return ec.fieldContext_Tag_description(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Modpack_targets(ctx context.Context, field graphql.CollectedField, obj *Modpack) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Modpack_targets(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Targets, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]string)
-	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Modpack_targets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Modpack",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -14184,8 +14211,6 @@ func (ec *executionContext) fieldContext_Mutation_createModpack(ctx context.Cont
 				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
-			case "targets":
-				return ec.fieldContext_Modpack_targets(ctx, field)
 			case "mods":
 				return ec.fieldContext_Modpack_mods(ctx, field)
 			case "releases":
@@ -14323,8 +14348,6 @@ func (ec *executionContext) fieldContext_Mutation_updateModpack(ctx context.Cont
 				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
-			case "targets":
-				return ec.fieldContext_Modpack_targets(ctx, field)
 			case "mods":
 				return ec.fieldContext_Modpack_mods(ctx, field)
 			case "releases":
@@ -17752,8 +17775,6 @@ func (ec *executionContext) fieldContext_Query_getModpack(ctx context.Context, f
 				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
-			case "targets":
-				return ec.fieldContext_Modpack_targets(ctx, field)
 			case "mods":
 				return ec.fieldContext_Modpack_mods(ctx, field)
 			case "releases":
@@ -18104,6 +18125,67 @@ func (ec *executionContext) fieldContext_Query_getModpackTargetSupport(ctx conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getModpackTargetSupport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_calculateLockfileWithTargets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_calculateLockfileWithTargets(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CalculateLockfileWithTargets(rctx, fc.Args["modpackID"].(string), fc.Args["mods"].([]*ModpackModInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*TargetLock)
+	fc.Result = res
+	return ec.marshalNTargetLock2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetLock(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_calculateLockfileWithTargets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "lockfile":
+				return ec.fieldContext_TargetLock_lockfile(ctx, field)
+			case "targets":
+				return ec.fieldContext_TargetLock_targets(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TargetLock", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_calculateLockfileWithTargets_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -20307,6 +20389,102 @@ func (ec *executionContext) fieldContext_Tag_description(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _TargetLock_lockfile(ctx context.Context, field graphql.CollectedField, obj *TargetLock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TargetLock_lockfile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Lockfile, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TargetLock_lockfile(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TargetLock",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TargetLock_targets(ctx context.Context, field graphql.CollectedField, obj *TargetLock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TargetLock_targets(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Targets, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*ModpackTarget)
+	fc.Result = res
+	return ec.marshalNModpackTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTarget(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TargetLock_targets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TargetLock",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ModpackTarget_id(ctx, field)
+			case "modpack_id":
+				return ec.fieldContext_ModpackTarget_modpack_id(ctx, field)
+			case "target_name":
+				return ec.fieldContext_ModpackTarget_target_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ModpackTarget", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
@@ -21800,8 +21978,6 @@ func (ec *executionContext) fieldContext_UserModpack_modpack(_ context.Context, 
 				return ec.fieldContext_Modpack_authors(ctx, field)
 			case "tags":
 				return ec.fieldContext_Modpack_tags(ctx, field)
-			case "targets":
-				return ec.fieldContext_Modpack_targets(ctx, field)
 			case "mods":
 				return ec.fieldContext_Modpack_mods(ctx, field)
 			case "releases":
@@ -26586,7 +26762,7 @@ func (ec *executionContext) unmarshalInputNewModpack(ctx context.Context, obj an
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "hidden", "tagIDs", "targets", "mods", "parent_id"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "hidden", "tagIDs", "mods", "parent_id"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -26635,13 +26811,6 @@ func (ec *executionContext) unmarshalInputNewModpack(ctx context.Context, obj an
 				return it, err
 			}
 			it.TagIDs = data
-		case "targets":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targets"))
-			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Targets = data
 		case "mods":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mods"))
 			data, err := ec.unmarshalNModpackModInput2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackModInputᚄ(ctx, v)
@@ -27108,7 +27277,7 @@ func (ec *executionContext) unmarshalInputUpdateModpack(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "hidden", "authors", "tagIDs", "targets", "mods", "compatibility"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "hidden", "authors", "tagIDs", "mods", "compatibility"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -27164,13 +27333,6 @@ func (ec *executionContext) unmarshalInputUpdateModpack(ctx context.Context, obj
 				return it, err
 			}
 			it.TagIDs = data
-		case "targets":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targets"))
-			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Targets = data
 		case "mods":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mods"))
 			data, err := ec.unmarshalOModpackModInput2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackModInputᚄ(ctx, v)
@@ -29175,11 +29337,6 @@ func (ec *executionContext) _Modpack(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "targets":
-			out.Values[i] = ec._Modpack_targets(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "mods":
 			out.Values[i] = ec._Modpack_mods(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -30166,6 +30323,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "calculateLockfileWithTargets":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_calculateLockfileWithTargets(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getSatisfactoryVersions":
 			field := field
 
@@ -30842,6 +31021,50 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 			}
 		case "description":
 			out.Values[i] = ec._Tag_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var targetLockImplementors = []string{"TargetLock"}
+
+func (ec *executionContext) _TargetLock(ctx context.Context, sel ast.SelectionSet, obj *TargetLock) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, targetLockImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TargetLock")
+		case "lockfile":
+			out.Values[i] = ec._TargetLock_lockfile(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "targets":
+			out.Values[i] = ec._TargetLock_targets(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -33212,6 +33435,44 @@ func (ec *executionContext) marshalNModpackRelease2ᚖgithubᚗcomᚋsatisfactor
 	return ec._ModpackRelease(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNModpackTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTarget(ctx context.Context, sel ast.SelectionSet, v []*ModpackTarget) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOModpackTarget2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTarget(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) marshalNModpackTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTargetᚄ(ctx context.Context, sel ast.SelectionSet, v []*ModpackTarget) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -33651,6 +33912,20 @@ func (ec *executionContext) marshalNTagName2string(ctx context.Context, sel ast.
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNTargetLock2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetLock(ctx context.Context, sel ast.SelectionSet, v TargetLock) graphql.Marshaler {
+	return ec._TargetLock(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTargetLock2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetLock(ctx context.Context, sel ast.SelectionSet, v *TargetLock) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TargetLock(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNTargetName2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetName(ctx context.Context, v any) (TargetName, error) {
@@ -34742,6 +35017,13 @@ func (ec *executionContext) marshalOModpackRelease2ᚖgithubᚗcomᚋsatisfactor
 		return graphql.Null
 	}
 	return ec._ModpackRelease(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOModpackTarget2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTarget(ctx context.Context, sel ast.SelectionSet, v *ModpackTarget) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ModpackTarget(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOOrder2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐOrder(ctx context.Context, v any) (*Order, error) {

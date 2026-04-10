@@ -1342,22 +1342,6 @@ func (c *ModpackClient) QueryParent(m *Modpack) *ModpackQuery {
 	return query
 }
 
-// QueryTargets queries the targets edge of a Modpack.
-func (c *ModpackClient) QueryTargets(m *Modpack) *ModpackTargetQuery {
-	query := (&ModpackTargetClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(modpack.Table, modpack.FieldID, id),
-			sqlgraph.To(modpacktarget.Table, modpacktarget.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, modpack.TargetsTable, modpack.TargetsColumn),
-		)
-		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryReleases queries the releases edge of a Modpack.
 func (c *ModpackClient) QueryReleases(m *Modpack) *ModpackReleaseQuery {
 	query := (&ModpackReleaseClient{config: c.config}).Query()
@@ -1737,6 +1721,22 @@ func (c *ModpackReleaseClient) QueryModpack(mr *ModpackRelease) *ModpackQuery {
 	return query
 }
 
+// QueryTargets queries the targets edge of a ModpackRelease.
+func (c *ModpackReleaseClient) QueryTargets(mr *ModpackRelease) *ModpackTargetQuery {
+	query := (&ModpackTargetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := mr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(modpackrelease.Table, modpackrelease.FieldID, id),
+			sqlgraph.To(modpacktarget.Table, modpacktarget.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, modpackrelease.TargetsTable, modpackrelease.TargetsColumn),
+		)
+		fromV = sqlgraph.Neighbors(mr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ModpackReleaseClient) Hooks() []Hook {
 	return c.hooks.ModpackRelease
@@ -1986,15 +1986,15 @@ func (c *ModpackTargetClient) GetX(ctx context.Context, id string) *ModpackTarge
 	return obj
 }
 
-// QueryModpack queries the modpack edge of a ModpackTarget.
-func (c *ModpackTargetClient) QueryModpack(mt *ModpackTarget) *ModpackQuery {
-	query := (&ModpackClient{config: c.config}).Query()
+// QueryModpackRelease queries the modpack_release edge of a ModpackTarget.
+func (c *ModpackTargetClient) QueryModpackRelease(mt *ModpackTarget) *ModpackReleaseQuery {
+	query := (&ModpackReleaseClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := mt.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(modpacktarget.Table, modpacktarget.FieldID, id),
-			sqlgraph.To(modpack.Table, modpack.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, modpacktarget.ModpackTable, modpacktarget.ModpackColumn),
+			sqlgraph.To(modpackrelease.Table, modpackrelease.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, modpacktarget.ModpackReleaseTable, modpacktarget.ModpackReleaseColumn),
 		)
 		fromV = sqlgraph.Neighbors(mt.driver.Dialect(), step)
 		return fromV, nil

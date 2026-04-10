@@ -63,8 +63,6 @@ type ModpackEdges struct {
 	Children []*Modpack `json:"children,omitempty"`
 	// Parent holds the value of the parent edge.
 	Parent *Modpack `json:"parent,omitempty"`
-	// Targets holds the value of the targets edge.
-	Targets []*ModpackTarget `json:"targets,omitempty"`
 	// Releases holds the value of the releases edge.
 	Releases []*ModpackRelease `json:"releases,omitempty"`
 	// Mods holds the value of the mods edge.
@@ -81,7 +79,7 @@ type ModpackEdges struct {
 	ModpackTags []*ModpackTag `json:"modpack_tags,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [10]bool
+	loadedTypes [9]bool
 }
 
 // ChildrenOrErr returns the Children value or an error if the edge
@@ -104,19 +102,10 @@ func (e ModpackEdges) ParentOrErr() (*Modpack, error) {
 	return nil, &NotLoadedError{edge: "parent"}
 }
 
-// TargetsOrErr returns the Targets value or an error if the edge
-// was not loaded in eager-loading.
-func (e ModpackEdges) TargetsOrErr() ([]*ModpackTarget, error) {
-	if e.loadedTypes[2] {
-		return e.Targets, nil
-	}
-	return nil, &NotLoadedError{edge: "targets"}
-}
-
 // ReleasesOrErr returns the Releases value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModpackEdges) ReleasesOrErr() ([]*ModpackRelease, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.Releases, nil
 	}
 	return nil, &NotLoadedError{edge: "releases"}
@@ -125,7 +114,7 @@ func (e ModpackEdges) ReleasesOrErr() ([]*ModpackRelease, error) {
 // ModsOrErr returns the Mods value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModpackEdges) ModsOrErr() ([]*Mod, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[3] {
 		return e.Mods, nil
 	}
 	return nil, &NotLoadedError{edge: "mods"}
@@ -134,7 +123,7 @@ func (e ModpackEdges) ModsOrErr() ([]*Mod, error) {
 // AuthorsOrErr returns the Authors value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModpackEdges) AuthorsOrErr() ([]*User, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[4] {
 		return e.Authors, nil
 	}
 	return nil, &NotLoadedError{edge: "authors"}
@@ -143,7 +132,7 @@ func (e ModpackEdges) AuthorsOrErr() ([]*User, error) {
 // TagsOrErr returns the Tags value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModpackEdges) TagsOrErr() ([]*Tag, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[5] {
 		return e.Tags, nil
 	}
 	return nil, &NotLoadedError{edge: "tags"}
@@ -152,7 +141,7 @@ func (e ModpackEdges) TagsOrErr() ([]*Tag, error) {
 // ModpackModsOrErr returns the ModpackMods value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModpackEdges) ModpackModsOrErr() ([]*ModpackMod, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[6] {
 		return e.ModpackMods, nil
 	}
 	return nil, &NotLoadedError{edge: "modpack_mods"}
@@ -161,7 +150,7 @@ func (e ModpackEdges) ModpackModsOrErr() ([]*ModpackMod, error) {
 // UserModpacksOrErr returns the UserModpacks value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModpackEdges) UserModpacksOrErr() ([]*UserModpack, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[7] {
 		return e.UserModpacks, nil
 	}
 	return nil, &NotLoadedError{edge: "user_modpacks"}
@@ -170,7 +159,7 @@ func (e ModpackEdges) UserModpacksOrErr() ([]*UserModpack, error) {
 // ModpackTagsOrErr returns the ModpackTags value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModpackEdges) ModpackTagsOrErr() ([]*ModpackTag, error) {
-	if e.loadedTypes[9] {
+	if e.loadedTypes[8] {
 		return e.ModpackTags, nil
 	}
 	return nil, &NotLoadedError{edge: "modpack_tags"}
@@ -331,11 +320,6 @@ func (m *Modpack) QueryChildren() *ModpackQuery {
 // QueryParent queries the "parent" edge of the Modpack entity.
 func (m *Modpack) QueryParent() *ModpackQuery {
 	return NewModpackClient(m.config).QueryParent(m)
-}
-
-// QueryTargets queries the "targets" edge of the Modpack entity.
-func (m *Modpack) QueryTargets() *ModpackTargetQuery {
-	return NewModpackClient(m.config).QueryTargets(m)
 }
 
 // QueryReleases queries the "releases" edge of the Modpack entity.

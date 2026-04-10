@@ -15,7 +15,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
-	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/util"
@@ -245,21 +244,6 @@ func (mc *ModpackCreate) AddChildren(m ...*Modpack) *ModpackCreate {
 // SetParent sets the "parent" edge to the Modpack entity.
 func (mc *ModpackCreate) SetParent(m *Modpack) *ModpackCreate {
 	return mc.SetParentID(m.ID)
-}
-
-// AddTargetIDs adds the "targets" edge to the ModpackTarget entity by IDs.
-func (mc *ModpackCreate) AddTargetIDs(ids ...string) *ModpackCreate {
-	mc.mutation.AddTargetIDs(ids...)
-	return mc
-}
-
-// AddTargets adds the "targets" edges to the ModpackTarget entity.
-func (mc *ModpackCreate) AddTargets(m ...*ModpackTarget) *ModpackCreate {
-	ids := make([]string, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return mc.AddTargetIDs(ids...)
 }
 
 // AddReleaseIDs adds the "releases" edge to the ModpackRelease entity by IDs.
@@ -570,22 +554,6 @@ func (mc *ModpackCreate) createSpec() (*Modpack, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.ParentID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := mc.mutation.TargetsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   modpack.TargetsTable,
-			Columns: []string{modpack.TargetsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(modpacktarget.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := mc.mutation.ReleasesIDs(); len(nodes) > 0 {

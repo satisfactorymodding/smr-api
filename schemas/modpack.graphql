@@ -36,7 +36,6 @@ type Modpack {
     children: [Modpack!]!
     authors: [UserModpack!]!
     tags: [Tag!]!
-    targets: [String!]!
     mods: [ModpackModEntry!]!
     releases: [ModpackRelease!]!
 }
@@ -76,6 +75,11 @@ type GetMyModpacks {
     count: Int!
 }
 
+type TargetLock {
+    lockfile: String!
+    targets: [ModpackTarget]!
+}
+
 ### Inputs
 
 input ModpackFilter {
@@ -96,7 +100,6 @@ input NewModpack {
     logo: Upload
     hidden: Boolean
     tagIDs: [TagID!]
-    targets: [String!]!
     mods: [ModpackModInput!]!
     parent_id: ModpackID
 }
@@ -114,7 +117,6 @@ input UpdateModpack {
     hidden: Boolean
     authors: [UpdateUserModpack!]
     tagIDs: [TagID!]
-    targets: [String!]
     mods: [ModpackModInput!]
     compatibility: CompatibilityInfoInput
 }
@@ -140,6 +142,7 @@ extend type Query {
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
     getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!
     getModpackTargetSupport(modpackID: ModpackID!): [ModpackTarget!]!
+    calculateLockfileWithTargets(modpackID: ModpackID!, mods: [ModpackModInput!]): TargetLock!
 }
 
 ### Mutations

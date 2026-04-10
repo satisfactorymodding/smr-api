@@ -16,17 +16,17 @@ const (
 	FieldModpackID = "modpack_id"
 	// FieldTargetName holds the string denoting the target_name field in the database.
 	FieldTargetName = "target_name"
-	// EdgeModpack holds the string denoting the modpack edge name in mutations.
-	EdgeModpack = "modpack"
+	// EdgeModpackRelease holds the string denoting the modpack_release edge name in mutations.
+	EdgeModpackRelease = "modpack_release"
 	// Table holds the table name of the modpacktarget in the database.
 	Table = "modpack_targets"
-	// ModpackTable is the table that holds the modpack relation/edge.
-	ModpackTable = "modpack_targets"
-	// ModpackInverseTable is the table name for the Modpack entity.
-	// It exists in this package in order to avoid circular dependency with the "modpack" package.
-	ModpackInverseTable = "modpacks"
-	// ModpackColumn is the table column denoting the modpack relation/edge.
-	ModpackColumn = "modpack_id"
+	// ModpackReleaseTable is the table that holds the modpack_release relation/edge.
+	ModpackReleaseTable = "modpack_targets"
+	// ModpackReleaseInverseTable is the table name for the ModpackRelease entity.
+	// It exists in this package in order to avoid circular dependency with the "modpackrelease" package.
+	ModpackReleaseInverseTable = "modpack_releases"
+	// ModpackReleaseColumn is the table column denoting the modpack_release relation/edge.
+	ModpackReleaseColumn = "modpack_id"
 )
 
 // Columns holds all SQL columns for modpacktarget fields.
@@ -69,16 +69,16 @@ func ByTargetName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTargetName, opts...).ToFunc()
 }
 
-// ByModpackField orders the results by modpack field.
-func ByModpackField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByModpackReleaseField orders the results by modpack_release field.
+func ByModpackReleaseField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newModpackStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newModpackReleaseStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newModpackStep() *sqlgraph.Step {
+func newModpackReleaseStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ModpackInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ModpackTable, ModpackColumn),
+		sqlgraph.To(ModpackReleaseInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ModpackReleaseTable, ModpackReleaseColumn),
 	)
 }

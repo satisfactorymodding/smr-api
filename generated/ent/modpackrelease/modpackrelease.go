@@ -28,6 +28,8 @@ const (
 	FieldLockfile = "lockfile"
 	// EdgeModpack holds the string denoting the modpack edge name in mutations.
 	EdgeModpack = "modpack"
+	// EdgeTargets holds the string denoting the targets edge name in mutations.
+	EdgeTargets = "targets"
 	// Table holds the table name of the modpackrelease in the database.
 	Table = "modpack_releases"
 	// ModpackTable is the table that holds the modpack relation/edge.
@@ -37,6 +39,13 @@ const (
 	ModpackInverseTable = "modpacks"
 	// ModpackColumn is the table column denoting the modpack relation/edge.
 	ModpackColumn = "modpack_id"
+	// TargetsTable is the table that holds the targets relation/edge.
+	TargetsTable = "modpack_targets"
+	// TargetsInverseTable is the table name for the ModpackTarget entity.
+	// It exists in this package in order to avoid circular dependency with the "modpacktarget" package.
+	TargetsInverseTable = "modpack_targets"
+	// TargetsColumn is the table column denoting the targets relation/edge.
+	TargetsColumn = "modpack_id"
 )
 
 // Columns holds all SQL columns for modpackrelease fields.
@@ -115,10 +124,31 @@ func ByModpackField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newModpackStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByTargetsCount orders the results by targets count.
+func ByTargetsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTargetsStep(), opts...)
+	}
+}
+
+// ByTargets orders the results by targets terms.
+func ByTargets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTargetsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newModpackStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ModpackInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ModpackTable, ModpackColumn),
+	)
+}
+func newTargetsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TargetsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TargetsTable, TargetsColumn),
 	)
 }

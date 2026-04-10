@@ -180,10 +180,6 @@ definitions:
         items:
           $ref: '#/definitions/generated.Tag'
         type: array
-      targets:
-        items:
-          type: string
-        type: array
       updated_at:
         type: string
       views:

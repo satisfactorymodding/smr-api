@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 )
 
@@ -97,6 +98,21 @@ func (mru *ModpackReleaseUpdate) SetModpack(m *Modpack) *ModpackReleaseUpdate {
 	return mru.SetModpackID(m.ID)
 }
 
+// AddTargetIDs adds the "targets" edge to the ModpackTarget entity by IDs.
+func (mru *ModpackReleaseUpdate) AddTargetIDs(ids ...string) *ModpackReleaseUpdate {
+	mru.mutation.AddTargetIDs(ids...)
+	return mru
+}
+
+// AddTargets adds the "targets" edges to the ModpackTarget entity.
+func (mru *ModpackReleaseUpdate) AddTargets(m ...*ModpackTarget) *ModpackReleaseUpdate {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return mru.AddTargetIDs(ids...)
+}
+
 // Mutation returns the ModpackReleaseMutation object of the builder.
 func (mru *ModpackReleaseUpdate) Mutation() *ModpackReleaseMutation {
 	return mru.mutation
@@ -106,6 +122,27 @@ func (mru *ModpackReleaseUpdate) Mutation() *ModpackReleaseMutation {
 func (mru *ModpackReleaseUpdate) ClearModpack() *ModpackReleaseUpdate {
 	mru.mutation.ClearModpack()
 	return mru
+}
+
+// ClearTargets clears all "targets" edges to the ModpackTarget entity.
+func (mru *ModpackReleaseUpdate) ClearTargets() *ModpackReleaseUpdate {
+	mru.mutation.ClearTargets()
+	return mru
+}
+
+// RemoveTargetIDs removes the "targets" edge to ModpackTarget entities by IDs.
+func (mru *ModpackReleaseUpdate) RemoveTargetIDs(ids ...string) *ModpackReleaseUpdate {
+	mru.mutation.RemoveTargetIDs(ids...)
+	return mru
+}
+
+// RemoveTargets removes "targets" edges to ModpackTarget entities.
+func (mru *ModpackReleaseUpdate) RemoveTargets(m ...*ModpackTarget) *ModpackReleaseUpdate {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return mru.RemoveTargetIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -211,6 +248,51 @@ func (mru *ModpackReleaseUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if mru.mutation.TargetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modpackrelease.TargetsTable,
+			Columns: []string{modpackrelease.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpacktarget.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mru.mutation.RemovedTargetsIDs(); len(nodes) > 0 && !mru.mutation.TargetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modpackrelease.TargetsTable,
+			Columns: []string{modpackrelease.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpacktarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mru.mutation.TargetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modpackrelease.TargetsTable,
+			Columns: []string{modpackrelease.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpacktarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(mru.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, mru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -300,6 +382,21 @@ func (mruo *ModpackReleaseUpdateOne) SetModpack(m *Modpack) *ModpackReleaseUpdat
 	return mruo.SetModpackID(m.ID)
 }
 
+// AddTargetIDs adds the "targets" edge to the ModpackTarget entity by IDs.
+func (mruo *ModpackReleaseUpdateOne) AddTargetIDs(ids ...string) *ModpackReleaseUpdateOne {
+	mruo.mutation.AddTargetIDs(ids...)
+	return mruo
+}
+
+// AddTargets adds the "targets" edges to the ModpackTarget entity.
+func (mruo *ModpackReleaseUpdateOne) AddTargets(m ...*ModpackTarget) *ModpackReleaseUpdateOne {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return mruo.AddTargetIDs(ids...)
+}
+
 // Mutation returns the ModpackReleaseMutation object of the builder.
 func (mruo *ModpackReleaseUpdateOne) Mutation() *ModpackReleaseMutation {
 	return mruo.mutation
@@ -309,6 +406,27 @@ func (mruo *ModpackReleaseUpdateOne) Mutation() *ModpackReleaseMutation {
 func (mruo *ModpackReleaseUpdateOne) ClearModpack() *ModpackReleaseUpdateOne {
 	mruo.mutation.ClearModpack()
 	return mruo
+}
+
+// ClearTargets clears all "targets" edges to the ModpackTarget entity.
+func (mruo *ModpackReleaseUpdateOne) ClearTargets() *ModpackReleaseUpdateOne {
+	mruo.mutation.ClearTargets()
+	return mruo
+}
+
+// RemoveTargetIDs removes the "targets" edge to ModpackTarget entities by IDs.
+func (mruo *ModpackReleaseUpdateOne) RemoveTargetIDs(ids ...string) *ModpackReleaseUpdateOne {
+	mruo.mutation.RemoveTargetIDs(ids...)
+	return mruo
+}
+
+// RemoveTargets removes "targets" edges to ModpackTarget entities.
+func (mruo *ModpackReleaseUpdateOne) RemoveTargets(m ...*ModpackTarget) *ModpackReleaseUpdateOne {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return mruo.RemoveTargetIDs(ids...)
 }
 
 // Where appends a list predicates to the ModpackReleaseUpdate builder.
@@ -437,6 +555,51 @@ func (mruo *ModpackReleaseUpdateOne) sqlSave(ctx context.Context) (_node *Modpac
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if mruo.mutation.TargetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modpackrelease.TargetsTable,
+			Columns: []string{modpackrelease.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpacktarget.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mruo.mutation.RemovedTargetsIDs(); len(nodes) > 0 && !mruo.mutation.TargetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modpackrelease.TargetsTable,
+			Columns: []string{modpackrelease.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpacktarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mruo.mutation.TargetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modpackrelease.TargetsTable,
+			Columns: []string{modpackrelease.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpacktarget.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

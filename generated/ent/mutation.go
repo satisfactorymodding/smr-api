@@ -4496,9 +4496,6 @@ type ModpackMutation struct {
 	clearedchildren   bool
 	parent            *string
 	clearedparent     bool
-	targets           map[string]struct{}
-	removedtargets    map[string]struct{}
-	clearedtargets    bool
 	releases          map[string]struct{}
 	removedreleases   map[string]struct{}
 	clearedreleases   bool
@@ -5422,60 +5419,6 @@ func (m *ModpackMutation) ResetParent() {
 	m.clearedparent = false
 }
 
-// AddTargetIDs adds the "targets" edge to the ModpackTarget entity by ids.
-func (m *ModpackMutation) AddTargetIDs(ids ...string) {
-	if m.targets == nil {
-		m.targets = make(map[string]struct{})
-	}
-	for i := range ids {
-		m.targets[ids[i]] = struct{}{}
-	}
-}
-
-// ClearTargets clears the "targets" edge to the ModpackTarget entity.
-func (m *ModpackMutation) ClearTargets() {
-	m.clearedtargets = true
-}
-
-// TargetsCleared reports if the "targets" edge to the ModpackTarget entity was cleared.
-func (m *ModpackMutation) TargetsCleared() bool {
-	return m.clearedtargets
-}
-
-// RemoveTargetIDs removes the "targets" edge to the ModpackTarget entity by IDs.
-func (m *ModpackMutation) RemoveTargetIDs(ids ...string) {
-	if m.removedtargets == nil {
-		m.removedtargets = make(map[string]struct{})
-	}
-	for i := range ids {
-		delete(m.targets, ids[i])
-		m.removedtargets[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedTargets returns the removed IDs of the "targets" edge to the ModpackTarget entity.
-func (m *ModpackMutation) RemovedTargetsIDs() (ids []string) {
-	for id := range m.removedtargets {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// TargetsIDs returns the "targets" edge IDs in the mutation.
-func (m *ModpackMutation) TargetsIDs() (ids []string) {
-	for id := range m.targets {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetTargets resets all changes to the "targets" edge.
-func (m *ModpackMutation) ResetTargets() {
-	m.targets = nil
-	m.clearedtargets = false
-	m.removedtargets = nil
-}
-
 // AddReleaseIDs adds the "releases" edge to the ModpackRelease entity by ids.
 func (m *ModpackMutation) AddReleaseIDs(ids ...string) {
 	if m.releases == nil {
@@ -6164,15 +6107,12 @@ func (m *ModpackMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ModpackMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 6)
 	if m.children != nil {
 		edges = append(edges, modpack.EdgeChildren)
 	}
 	if m.parent != nil {
 		edges = append(edges, modpack.EdgeParent)
-	}
-	if m.targets != nil {
-		edges = append(edges, modpack.EdgeTargets)
 	}
 	if m.releases != nil {
 		edges = append(edges, modpack.EdgeReleases)
@@ -6203,12 +6143,6 @@ func (m *ModpackMutation) AddedIDs(name string) []ent.Value {
 		if id := m.parent; id != nil {
 			return []ent.Value{*id}
 		}
-	case modpack.EdgeTargets:
-		ids := make([]ent.Value, 0, len(m.targets))
-		for id := range m.targets {
-			ids = append(ids, id)
-		}
-		return ids
 	case modpack.EdgeReleases:
 		ids := make([]ent.Value, 0, len(m.releases))
 		for id := range m.releases {
@@ -6239,12 +6173,9 @@ func (m *ModpackMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ModpackMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 6)
 	if m.removedchildren != nil {
 		edges = append(edges, modpack.EdgeChildren)
-	}
-	if m.removedtargets != nil {
-		edges = append(edges, modpack.EdgeTargets)
 	}
 	if m.removedreleases != nil {
 		edges = append(edges, modpack.EdgeReleases)
@@ -6268,12 +6199,6 @@ func (m *ModpackMutation) RemovedIDs(name string) []ent.Value {
 	case modpack.EdgeChildren:
 		ids := make([]ent.Value, 0, len(m.removedchildren))
 		for id := range m.removedchildren {
-			ids = append(ids, id)
-		}
-		return ids
-	case modpack.EdgeTargets:
-		ids := make([]ent.Value, 0, len(m.removedtargets))
-		for id := range m.removedtargets {
 			ids = append(ids, id)
 		}
 		return ids
@@ -6307,15 +6232,12 @@ func (m *ModpackMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ModpackMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 6)
 	if m.clearedchildren {
 		edges = append(edges, modpack.EdgeChildren)
 	}
 	if m.clearedparent {
 		edges = append(edges, modpack.EdgeParent)
-	}
-	if m.clearedtargets {
-		edges = append(edges, modpack.EdgeTargets)
 	}
 	if m.clearedreleases {
 		edges = append(edges, modpack.EdgeReleases)
@@ -6340,8 +6262,6 @@ func (m *ModpackMutation) EdgeCleared(name string) bool {
 		return m.clearedchildren
 	case modpack.EdgeParent:
 		return m.clearedparent
-	case modpack.EdgeTargets:
-		return m.clearedtargets
 	case modpack.EdgeReleases:
 		return m.clearedreleases
 	case modpack.EdgeMods:
@@ -6374,9 +6294,6 @@ func (m *ModpackMutation) ResetEdge(name string) error {
 		return nil
 	case modpack.EdgeParent:
 		m.ResetParent()
-		return nil
-	case modpack.EdgeTargets:
-		m.ResetTargets()
 		return nil
 	case modpack.EdgeReleases:
 		m.ResetReleases()
@@ -6822,6 +6739,9 @@ type ModpackReleaseMutation struct {
 	clearedFields  map[string]struct{}
 	modpack        *string
 	clearedmodpack bool
+	targets        map[string]struct{}
+	removedtargets map[string]struct{}
+	clearedtargets bool
 	done           bool
 	oldValue       func(context.Context) (*ModpackRelease, error)
 	predicates     []predicate.ModpackRelease
@@ -7174,6 +7094,60 @@ func (m *ModpackReleaseMutation) ResetModpack() {
 	m.clearedmodpack = false
 }
 
+// AddTargetIDs adds the "targets" edge to the ModpackTarget entity by ids.
+func (m *ModpackReleaseMutation) AddTargetIDs(ids ...string) {
+	if m.targets == nil {
+		m.targets = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.targets[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTargets clears the "targets" edge to the ModpackTarget entity.
+func (m *ModpackReleaseMutation) ClearTargets() {
+	m.clearedtargets = true
+}
+
+// TargetsCleared reports if the "targets" edge to the ModpackTarget entity was cleared.
+func (m *ModpackReleaseMutation) TargetsCleared() bool {
+	return m.clearedtargets
+}
+
+// RemoveTargetIDs removes the "targets" edge to the ModpackTarget entity by IDs.
+func (m *ModpackReleaseMutation) RemoveTargetIDs(ids ...string) {
+	if m.removedtargets == nil {
+		m.removedtargets = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.targets, ids[i])
+		m.removedtargets[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTargets returns the removed IDs of the "targets" edge to the ModpackTarget entity.
+func (m *ModpackReleaseMutation) RemovedTargetsIDs() (ids []string) {
+	for id := range m.removedtargets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TargetsIDs returns the "targets" edge IDs in the mutation.
+func (m *ModpackReleaseMutation) TargetsIDs() (ids []string) {
+	for id := range m.targets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTargets resets all changes to the "targets" edge.
+func (m *ModpackReleaseMutation) ResetTargets() {
+	m.targets = nil
+	m.clearedtargets = false
+	m.removedtargets = nil
+}
+
 // Where appends a list predicates to the ModpackReleaseMutation builder.
 func (m *ModpackReleaseMutation) Where(ps ...predicate.ModpackRelease) {
 	m.predicates = append(m.predicates, ps...)
@@ -7392,9 +7366,12 @@ func (m *ModpackReleaseMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ModpackReleaseMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.modpack != nil {
 		edges = append(edges, modpackrelease.EdgeModpack)
+	}
+	if m.targets != nil {
+		edges = append(edges, modpackrelease.EdgeTargets)
 	}
 	return edges
 }
@@ -7407,27 +7384,47 @@ func (m *ModpackReleaseMutation) AddedIDs(name string) []ent.Value {
 		if id := m.modpack; id != nil {
 			return []ent.Value{*id}
 		}
+	case modpackrelease.EdgeTargets:
+		ids := make([]ent.Value, 0, len(m.targets))
+		for id := range m.targets {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ModpackReleaseMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedtargets != nil {
+		edges = append(edges, modpackrelease.EdgeTargets)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ModpackReleaseMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case modpackrelease.EdgeTargets:
+		ids := make([]ent.Value, 0, len(m.removedtargets))
+		for id := range m.removedtargets {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ModpackReleaseMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedmodpack {
 		edges = append(edges, modpackrelease.EdgeModpack)
+	}
+	if m.clearedtargets {
+		edges = append(edges, modpackrelease.EdgeTargets)
 	}
 	return edges
 }
@@ -7438,6 +7435,8 @@ func (m *ModpackReleaseMutation) EdgeCleared(name string) bool {
 	switch name {
 	case modpackrelease.EdgeModpack:
 		return m.clearedmodpack
+	case modpackrelease.EdgeTargets:
+		return m.clearedtargets
 	}
 	return false
 }
@@ -7459,6 +7458,9 @@ func (m *ModpackReleaseMutation) ResetEdge(name string) error {
 	switch name {
 	case modpackrelease.EdgeModpack:
 		m.ResetModpack()
+		return nil
+	case modpackrelease.EdgeTargets:
+		m.ResetTargets()
 		return nil
 	}
 	return fmt.Errorf("unknown ModpackRelease edge %s", name)
@@ -7846,16 +7848,16 @@ func (m *ModpackTagMutation) ResetEdge(name string) error {
 // ModpackTargetMutation represents an operation that mutates the ModpackTarget nodes in the graph.
 type ModpackTargetMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *string
-	target_name    *string
-	clearedFields  map[string]struct{}
-	modpack        *string
-	clearedmodpack bool
-	done           bool
-	oldValue       func(context.Context) (*ModpackTarget, error)
-	predicates     []predicate.ModpackTarget
+	op                     Op
+	typ                    string
+	id                     *string
+	target_name            *string
+	clearedFields          map[string]struct{}
+	modpack_release        *string
+	clearedmodpack_release bool
+	done                   bool
+	oldValue               func(context.Context) (*ModpackTarget, error)
+	predicates             []predicate.ModpackTarget
 }
 
 var _ ent.Mutation = (*ModpackTargetMutation)(nil)
@@ -7964,12 +7966,12 @@ func (m *ModpackTargetMutation) IDs(ctx context.Context) ([]string, error) {
 
 // SetModpackID sets the "modpack_id" field.
 func (m *ModpackTargetMutation) SetModpackID(s string) {
-	m.modpack = &s
+	m.modpack_release = &s
 }
 
 // ModpackID returns the value of the "modpack_id" field in the mutation.
 func (m *ModpackTargetMutation) ModpackID() (r string, exists bool) {
-	v := m.modpack
+	v := m.modpack_release
 	if v == nil {
 		return
 	}
@@ -7995,7 +7997,7 @@ func (m *ModpackTargetMutation) OldModpackID(ctx context.Context) (v string, err
 
 // ResetModpackID resets all changes to the "modpack_id" field.
 func (m *ModpackTargetMutation) ResetModpackID() {
-	m.modpack = nil
+	m.modpack_release = nil
 }
 
 // SetTargetName sets the "target_name" field.
@@ -8034,31 +8036,44 @@ func (m *ModpackTargetMutation) ResetTargetName() {
 	m.target_name = nil
 }
 
-// ClearModpack clears the "modpack" edge to the Modpack entity.
-func (m *ModpackTargetMutation) ClearModpack() {
-	m.clearedmodpack = true
+// SetModpackReleaseID sets the "modpack_release" edge to the ModpackRelease entity by id.
+func (m *ModpackTargetMutation) SetModpackReleaseID(id string) {
+	m.modpack_release = &id
+}
+
+// ClearModpackRelease clears the "modpack_release" edge to the ModpackRelease entity.
+func (m *ModpackTargetMutation) ClearModpackRelease() {
+	m.clearedmodpack_release = true
 	m.clearedFields[modpacktarget.FieldModpackID] = struct{}{}
 }
 
-// ModpackCleared reports if the "modpack" edge to the Modpack entity was cleared.
-func (m *ModpackTargetMutation) ModpackCleared() bool {
-	return m.clearedmodpack
+// ModpackReleaseCleared reports if the "modpack_release" edge to the ModpackRelease entity was cleared.
+func (m *ModpackTargetMutation) ModpackReleaseCleared() bool {
+	return m.clearedmodpack_release
 }
 
-// ModpackIDs returns the "modpack" edge IDs in the mutation.
+// ModpackReleaseID returns the "modpack_release" edge ID in the mutation.
+func (m *ModpackTargetMutation) ModpackReleaseID() (id string, exists bool) {
+	if m.modpack_release != nil {
+		return *m.modpack_release, true
+	}
+	return
+}
+
+// ModpackReleaseIDs returns the "modpack_release" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// ModpackID instead. It exists only for internal usage by the builders.
-func (m *ModpackTargetMutation) ModpackIDs() (ids []string) {
-	if id := m.modpack; id != nil {
+// ModpackReleaseID instead. It exists only for internal usage by the builders.
+func (m *ModpackTargetMutation) ModpackReleaseIDs() (ids []string) {
+	if id := m.modpack_release; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetModpack resets all changes to the "modpack" edge.
-func (m *ModpackTargetMutation) ResetModpack() {
-	m.modpack = nil
-	m.clearedmodpack = false
+// ResetModpackRelease resets all changes to the "modpack_release" edge.
+func (m *ModpackTargetMutation) ResetModpackRelease() {
+	m.modpack_release = nil
+	m.clearedmodpack_release = false
 }
 
 // Where appends a list predicates to the ModpackTargetMutation builder.
@@ -8096,7 +8111,7 @@ func (m *ModpackTargetMutation) Type() string {
 // AddedFields().
 func (m *ModpackTargetMutation) Fields() []string {
 	fields := make([]string, 0, 2)
-	if m.modpack != nil {
+	if m.modpack_release != nil {
 		fields = append(fields, modpacktarget.FieldModpackID)
 	}
 	if m.target_name != nil {
@@ -8212,8 +8227,8 @@ func (m *ModpackTargetMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ModpackTargetMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.modpack != nil {
-		edges = append(edges, modpacktarget.EdgeModpack)
+	if m.modpack_release != nil {
+		edges = append(edges, modpacktarget.EdgeModpackRelease)
 	}
 	return edges
 }
@@ -8222,8 +8237,8 @@ func (m *ModpackTargetMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *ModpackTargetMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case modpacktarget.EdgeModpack:
-		if id := m.modpack; id != nil {
+	case modpacktarget.EdgeModpackRelease:
+		if id := m.modpack_release; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -8245,8 +8260,8 @@ func (m *ModpackTargetMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ModpackTargetMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearedmodpack {
-		edges = append(edges, modpacktarget.EdgeModpack)
+	if m.clearedmodpack_release {
+		edges = append(edges, modpacktarget.EdgeModpackRelease)
 	}
 	return edges
 }
@@ -8255,8 +8270,8 @@ func (m *ModpackTargetMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *ModpackTargetMutation) EdgeCleared(name string) bool {
 	switch name {
-	case modpacktarget.EdgeModpack:
-		return m.clearedmodpack
+	case modpacktarget.EdgeModpackRelease:
+		return m.clearedmodpack_release
 	}
 	return false
 }
@@ -8265,8 +8280,8 @@ func (m *ModpackTargetMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *ModpackTargetMutation) ClearEdge(name string) error {
 	switch name {
-	case modpacktarget.EdgeModpack:
-		m.ClearModpack()
+	case modpacktarget.EdgeModpackRelease:
+		m.ClearModpackRelease()
 		return nil
 	}
 	return fmt.Errorf("unknown ModpackTarget unique edge %s", name)
@@ -8276,8 +8291,8 @@ func (m *ModpackTargetMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ModpackTargetMutation) ResetEdge(name string) error {
 	switch name {
-	case modpacktarget.EdgeModpack:
-		m.ResetModpack()
+	case modpacktarget.EdgeModpackRelease:
+		m.ResetModpackRelease()
 		return nil
 	}
 	return fmt.Errorf("unknown ModpackTarget edge %s", name)

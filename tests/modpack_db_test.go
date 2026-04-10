@@ -71,13 +71,12 @@ func TestModpacks(t *testing.T) {
 			var releaseID string
 
 			t.Run("Create", func(t *testing.T) {
-				createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
+				createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $mods: [ModpackModInput!]!) {
 					createModpack(modpack: {
 						name: $name,
 						short_description: $shortDescription,
 						full_description: $fullDescription,
 						tagIDs: $tags,
-						targets: $targets,
 						mods: $mods
 					}) {
 						id
@@ -90,7 +89,6 @@ func TestModpacks(t *testing.T) {
 							id
 							name
 						}
-						targets
 						mods {
 							mod_id
 							version_constraint
@@ -101,7 +99,6 @@ func TestModpacks(t *testing.T) {
 				createRequest.Var("shortDescription", "A test modpack for testing purposes")
 				createRequest.Var("fullDescription", "This is a comprehensive test modpack that includes multiple mods for testing the modpack functionality.")
 				createRequest.Var("tags", tags)
-				createRequest.Var("targets", []string{"Windows", "LinuxServer"})
 				createRequest.Var("mods", []struct {
 					ModID             string `json:"mod_id"`
 					VersionConstraint string `json:"version_constraint"`
@@ -120,7 +117,6 @@ func TestModpacks(t *testing.T) {
 				testza.AssertEqual(t, userID, createResponse.CreateModpack.CreatorID)
 				testza.AssertFalse(t, createResponse.CreateModpack.Hidden)
 				testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Tags))
-				testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Targets))
 				testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Mods))
 
 				objID = createResponse.CreateModpack.ID
@@ -144,7 +140,6 @@ func TestModpacks(t *testing.T) {
 							id
 							name
 						}
-						targets
 						mods {
 							mod_id
 							version_constraint
@@ -349,13 +344,12 @@ func TestModpackRemix(t *testing.T) {
 	mods := seedMods(ctx, t, token, client, tags[0])
 
 	// Create parent modpack
-	createParentRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
+	createParentRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $mods: [ModpackModInput!]!) {
 		createModpack(modpack: {
 			name: $name,
 			short_description: $shortDescription,
 			full_description: $fullDescription,
 			tagIDs: $tags,
-			targets: $targets,
 			mods: $mods
 		}) {
 			id
@@ -366,7 +360,6 @@ func TestModpackRemix(t *testing.T) {
 	createParentRequest.Var("shortDescription", "Original modpack")
 	createParentRequest.Var("fullDescription", "This is the original modpack.")
 	createParentRequest.Var("tags", tags)
-	createParentRequest.Var("targets", []string{"Windows"})
 	createParentRequest.Var("mods", []struct {
 		ModID             string `json:"mod_id"`
 		VersionConstraint string `json:"version_constraint"`
@@ -381,14 +374,13 @@ func TestModpackRemix(t *testing.T) {
 	parentID := createParentResponse.CreateModpack.ID
 
 	// Create child modpack (remix)
-	createChildRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $parentID: ModpackID!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
+	createChildRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $parentID: ModpackID!, $tags: [TagID!], $mods: [ModpackModInput!]!) {
 		createModpack(modpack: {
 			name: $name,
 			short_description: $shortDescription,
 			full_description: $fullDescription,
 			parent_id: $parentID,
 			tagIDs: $tags,
-			targets: $targets,
 			mods: $mods
 		}) {
 			id
@@ -404,7 +396,6 @@ func TestModpackRemix(t *testing.T) {
 	createChildRequest.Var("fullDescription", "This is a remix of the original modpack.")
 	createChildRequest.Var("parentID", parentID)
 	createChildRequest.Var("tags", tags)
-	createChildRequest.Var("targets", []string{"Windows"})
 	createChildRequest.Var("mods", []struct {
 		ModID             string `json:"mod_id"`
 		VersionConstraint string `json:"version_constraint"`
@@ -424,14 +415,13 @@ func TestModpackRemix(t *testing.T) {
 	testza.AssertEqual(t, "Parent Modpack", createChildResponse.CreateModpack.Parent.Name)
 
 	// Try to create a remix of a remix (should fail)
-	createGrandchildRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $parentID: ModpackID!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
+	createGrandchildRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $parentID: ModpackID!, $tags: [TagID!], $mods: [ModpackModInput!]!) {
 		createModpack(modpack: {
 			name: $name,
 			short_description: $shortDescription,
 			full_description: $fullDescription,
 			parent_id: $parentID,
 			tagIDs: $tags,
-			targets: $targets,
 			mods: $mods
 		}) {
 			id
@@ -442,7 +432,6 @@ func TestModpackRemix(t *testing.T) {
 	createGrandchildRequest.Var("fullDescription", "This should fail.")
 	createGrandchildRequest.Var("parentID", createChildResponse.CreateModpack.ID)
 	createGrandchildRequest.Var("tags", tags)
-	createGrandchildRequest.Var("targets", []string{"Windows"})
 	createGrandchildRequest.Var("mods", []struct {
 		ModID             string `json:"mod_id"`
 		VersionConstraint string `json:"version_constraint"`
@@ -496,13 +485,12 @@ func TestMyModpack(t *testing.T) {
 	mods := seedMods(ctx, t, token, client, tags[0])
 
 	t.Run("Create", func(t *testing.T) {
-		createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
+		createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $mods: [ModpackModInput!]!) {
 			createModpack(modpack: {
 				name: $name,
 				short_description: $shortDescription,
 				full_description: $fullDescription,
 				tagIDs: $tags,
-				targets: $targets,
 				mods: $mods
 			}) {
 				id
@@ -515,7 +503,6 @@ func TestMyModpack(t *testing.T) {
 					id
 					name
 				}
-				targets
 				mods {
 					mod_id
 					version_constraint
@@ -526,7 +513,6 @@ func TestMyModpack(t *testing.T) {
 		createRequest.Var("shortDescription", "A test modpack 1 for testing purposes")
 		createRequest.Var("fullDescription", "This is a comprehensive test modpack 1 that includes multiple mods for testing the modpack functionality.")
 		createRequest.Var("tags", tags)
-		createRequest.Var("targets", []string{"Windows", "LinuxServer"})
 		createRequest.Var("mods", []struct {
 			ModID             string `json:"mod_id"`
 			VersionConstraint string `json:"version_constraint"`
@@ -545,16 +531,14 @@ func TestMyModpack(t *testing.T) {
 		testza.AssertEqual(t, userID, createResponse.CreateModpack.CreatorID)
 		testza.AssertFalse(t, createResponse.CreateModpack.Hidden)
 		testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Tags))
-		testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Targets))
 		testza.AssertEqual(t, 2, len(createResponse.CreateModpack.Mods))
 
-		createRequest2 := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
+		createRequest2 := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $mods: [ModpackModInput!]!) {
 			createModpack(modpack: {
 				name: $name,
 				short_description: $shortDescription,
 				full_description: $fullDescription,
 				tagIDs: $tags,
-				targets: $targets,
 				mods: $mods
 			}) {
 				id
@@ -567,7 +551,6 @@ func TestMyModpack(t *testing.T) {
 					id
 					name
 				}
-				targets
 				mods {
 					mod_id
 					version_constraint
@@ -578,7 +561,6 @@ func TestMyModpack(t *testing.T) {
 		createRequest2.Var("shortDescription", "A test modpack 2 for testing purposes")
 		createRequest2.Var("fullDescription", "This is a comprehensive test modpack 2 that includes multiple mods for testing the modpack functionality.")
 		createRequest2.Var("tags", tags)
-		createRequest2.Var("targets", []string{"Windows", "LinuxServer"})
 		createRequest2.Var("mods", []struct {
 			ModID             string `json:"mod_id"`
 			VersionConstraint string `json:"version_constraint"`
@@ -597,7 +579,6 @@ func TestMyModpack(t *testing.T) {
 		testza.AssertEqual(t, userID2, createResponse2.CreateModpack.CreatorID)
 		testza.AssertFalse(t, createResponse2.CreateModpack.Hidden)
 		testza.AssertEqual(t, 2, len(createResponse2.CreateModpack.Tags))
-		testza.AssertEqual(t, 2, len(createResponse2.CreateModpack.Targets))
 		testza.AssertEqual(t, 2, len(createResponse2.CreateModpack.Mods))
 	})
 
