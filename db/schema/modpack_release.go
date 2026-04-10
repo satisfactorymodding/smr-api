@@ -36,6 +36,8 @@ func (ModpackRelease) Edges() []ent.Edge {
 			Unique().
 			Required().
 			Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("targets", ModpackTarget.Type).
+			Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }
 

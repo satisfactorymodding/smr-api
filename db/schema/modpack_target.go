@@ -27,7 +27,7 @@ func (ModpackTarget) Fields() []ent.Field {
 
 func (ModpackTarget) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("modpack", Modpack.Type).
+		edge.From("modpack_release", ModpackRelease.Type).
 			Ref("targets").
 			Field("modpack_id").
 			Unique().

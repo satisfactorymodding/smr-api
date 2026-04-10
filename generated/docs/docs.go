@@ -1282,12 +1282,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/generated.Tag"
                     }
                 },
-                "targets": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "updated_at": {
                     "type": "string"
                 },

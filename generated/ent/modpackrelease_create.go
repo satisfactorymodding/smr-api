@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 )
 
 // ModpackReleaseCreate is the builder for creating a ModpackRelease entity.
@@ -93,6 +94,21 @@ func (mrc *ModpackReleaseCreate) SetNillableID(s *string) *ModpackReleaseCreate 
 // SetModpack sets the "modpack" edge to the Modpack entity.
 func (mrc *ModpackReleaseCreate) SetModpack(m *Modpack) *ModpackReleaseCreate {
 	return mrc.SetModpackID(m.ID)
+}
+
+// AddTargetIDs adds the "targets" edge to the ModpackTarget entity by IDs.
+func (mrc *ModpackReleaseCreate) AddTargetIDs(ids ...string) *ModpackReleaseCreate {
+	mrc.mutation.AddTargetIDs(ids...)
+	return mrc
+}
+
+// AddTargets adds the "targets" edges to the ModpackTarget entity.
+func (mrc *ModpackReleaseCreate) AddTargets(m ...*ModpackTarget) *ModpackReleaseCreate {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return mrc.AddTargetIDs(ids...)
 }
 
 // Mutation returns the ModpackReleaseMutation object of the builder.
@@ -238,6 +254,22 @@ func (mrc *ModpackReleaseCreate) createSpec() (*ModpackRelease, *sqlgraph.Create
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.ModpackID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := mrc.mutation.TargetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modpackrelease.TargetsTable,
+			Columns: []string{modpackrelease.TargetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpacktarget.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

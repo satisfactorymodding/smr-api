@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -13,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 )
 
@@ -24,6 +26,7 @@ type ModpackReleaseQuery struct {
 	inters      []Interceptor
 	predicates  []predicate.ModpackRelease
 	withModpack *ModpackQuery
+	withTargets *ModpackTargetQuery
 	modifiers   []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -76,6 +79,28 @@ func (mrq *ModpackReleaseQuery) QueryModpack() *ModpackQuery {
 			sqlgraph.From(modpackrelease.Table, modpackrelease.FieldID, selector),
 			sqlgraph.To(modpack.Table, modpack.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, modpackrelease.ModpackTable, modpackrelease.ModpackColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(mrq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTargets chains the current query on the "targets" edge.
+func (mrq *ModpackReleaseQuery) QueryTargets() *ModpackTargetQuery {
+	query := (&ModpackTargetClient{config: mrq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := mrq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := mrq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(modpackrelease.Table, modpackrelease.FieldID, selector),
+			sqlgraph.To(modpacktarget.Table, modpacktarget.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, modpackrelease.TargetsTable, modpackrelease.TargetsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mrq.driver.Dialect(), step)
 		return fromU, nil
@@ -276,6 +301,7 @@ func (mrq *ModpackReleaseQuery) Clone() *ModpackReleaseQuery {
 		inters:      append([]Interceptor{}, mrq.inters...),
 		predicates:  append([]predicate.ModpackRelease{}, mrq.predicates...),
 		withModpack: mrq.withModpack.Clone(),
+		withTargets: mrq.withTargets.Clone(),
 		// clone intermediate query.
 		sql:       mrq.sql.Clone(),
 		path:      mrq.path,
@@ -291,6 +317,17 @@ func (mrq *ModpackReleaseQuery) WithModpack(opts ...func(*ModpackQuery)) *Modpac
 		opt(query)
 	}
 	mrq.withModpack = query
+	return mrq
+}
+
+// WithTargets tells the query-builder to eager-load the nodes that are connected to
+// the "targets" edge. The optional arguments are used to configure the query builder of the edge.
+func (mrq *ModpackReleaseQuery) WithTargets(opts ...func(*ModpackTargetQuery)) *ModpackReleaseQuery {
+	query := (&ModpackTargetClient{config: mrq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	mrq.withTargets = query
 	return mrq
 }
 
@@ -372,8 +409,9 @@ func (mrq *ModpackReleaseQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	var (
 		nodes       = []*ModpackRelease{}
 		_spec       = mrq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			mrq.withModpack != nil,
+			mrq.withTargets != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -400,6 +438,13 @@ func (mrq *ModpackReleaseQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	if query := mrq.withModpack; query != nil {
 		if err := mrq.loadModpack(ctx, query, nodes, nil,
 			func(n *ModpackRelease, e *Modpack) { n.Edges.Modpack = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := mrq.withTargets; query != nil {
+		if err := mrq.loadTargets(ctx, query, nodes,
+			func(n *ModpackRelease) { n.Edges.Targets = []*ModpackTarget{} },
+			func(n *ModpackRelease, e *ModpackTarget) { n.Edges.Targets = append(n.Edges.Targets, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -432,6 +477,36 @@ func (mrq *ModpackReleaseQuery) loadModpack(ctx context.Context, query *ModpackQ
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (mrq *ModpackReleaseQuery) loadTargets(ctx context.Context, query *ModpackTargetQuery, nodes []*ModpackRelease, init func(*ModpackRelease), assign func(*ModpackRelease, *ModpackTarget)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*ModpackRelease)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(modpacktarget.FieldModpackID)
+	}
+	query.Where(predicate.ModpackTarget(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(modpackrelease.TargetsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ModpackID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "modpack_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

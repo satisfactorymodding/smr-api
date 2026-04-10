@@ -981,29 +981,6 @@ func HasParentWith(preds ...predicate.Modpack) predicate.Modpack {
 	})
 }
 
-// HasTargets applies the HasEdge predicate on the "targets" edge.
-func HasTargets() predicate.Modpack {
-	return predicate.Modpack(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TargetsTable, TargetsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTargetsWith applies the HasEdge predicate on the "targets" edge with a given conditions (other predicates).
-func HasTargetsWith(preds ...predicate.ModpackTarget) predicate.Modpack {
-	return predicate.Modpack(func(s *sql.Selector) {
-		step := newTargetsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasReleases applies the HasEdge predicate on the "releases" edge.
 func HasReleases() predicate.Modpack {
 	return predicate.Modpack(func(s *sql.Selector) {

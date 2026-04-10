@@ -51,8 +51,6 @@ const (
 	EdgeChildren = "children"
 	// EdgeParent holds the string denoting the parent edge name in mutations.
 	EdgeParent = "parent"
-	// EdgeTargets holds the string denoting the targets edge name in mutations.
-	EdgeTargets = "targets"
 	// EdgeReleases holds the string denoting the releases edge name in mutations.
 	EdgeReleases = "releases"
 	// EdgeMods holds the string denoting the mods edge name in mutations.
@@ -77,13 +75,6 @@ const (
 	ParentTable = "modpacks"
 	// ParentColumn is the table column denoting the parent relation/edge.
 	ParentColumn = "parent_id"
-	// TargetsTable is the table that holds the targets relation/edge.
-	TargetsTable = "modpack_targets"
-	// TargetsInverseTable is the table name for the ModpackTarget entity.
-	// It exists in this package in order to avoid circular dependency with the "modpacktarget" package.
-	TargetsInverseTable = "modpack_targets"
-	// TargetsColumn is the table column denoting the targets relation/edge.
-	TargetsColumn = "modpack_id"
 	// ReleasesTable is the table that holds the releases relation/edge.
 	ReleasesTable = "modpack_releases"
 	// ReleasesInverseTable is the table name for the ModpackRelease entity.
@@ -306,20 +297,6 @@ func ByParentField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByTargetsCount orders the results by targets count.
-func ByTargetsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newTargetsStep(), opts...)
-	}
-}
-
-// ByTargets orders the results by targets terms.
-func ByTargets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTargetsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByReleasesCount orders the results by releases count.
 func ByReleasesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -429,13 +406,6 @@ func newParentStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(Table, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ParentTable, ParentColumn),
-	)
-}
-func newTargetsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TargetsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, TargetsTable, TargetsColumn),
 	)
 }
 func newReleasesStep() *sqlgraph.Step {

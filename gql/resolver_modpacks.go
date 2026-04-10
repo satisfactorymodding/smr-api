@@ -39,7 +39,6 @@ func (r *queryResolver) GetModpack(ctx context.Context, modpackID string) (*gene
 	dbModpack, err := db.From(ctx).Modpack.Query().
 		Where(modpack.ID(modpackID)).
 		WithTags().
-		WithTargets().
 		WithReleases().
 		WithModpackMods().
 		WithParent().
@@ -109,18 +108,6 @@ func (r *mutationResolver) CreateModpack(ctx context.Context, newModpack generat
 
 		resultModpack, err = dbModpack.Save(ctx)
 
-		// Create targets
-		for _, target := range newModpack.Targets {
-			targets, err := tx.ModpackTarget.Create().
-				SetModpackID(resultModpack.ID).
-				SetTargetName(target).Save(ctx)
-			if err != nil {
-				return err
-			}
-
-			dbModpack = dbModpack.AddTargets(targets)
-		}
-
 		if err := tx.UserModpack.Create().
 			SetRole("creator").
 			SetModpackID(resultModpack.ID).
@@ -172,7 +159,6 @@ func (r *mutationResolver) CreateModpack(ctx context.Context, newModpack generat
 	// Get the modpack again with all relationships
 	resultModpack, err = db.From(ctx).Modpack.Query().
 		WithTags().
-		WithTargets().
 		WithModpackMods().
 		WithParent().
 		Where(modpack.ID(resultModpack.ID)).
@@ -245,7 +231,6 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 
 	resultModpack, err = db.From(ctx).Modpack.Query().
 		WithTags().
-		WithTargets().
 		WithModpackMods().
 		Where(modpack.ID(resultModpack.ID)).
 		First(ctx)
@@ -350,6 +335,10 @@ func (r *queryResolver) GetModCompatibilities(ctx context.Context, modpackID str
 }
 
 func (r *queryResolver) GetModpackTargetSupport(ctx context.Context, modpackID string) ([]*generated.ModpackTarget, error) {
+	return GetModpackTargetSupport(ctx, modpackID)
+}
+
+func GetModpackTargetSupport(ctx context.Context, modpackID string) ([]*generated.ModpackTarget, error) {
 	versions, err := db.From(ctx).Modpack.Query().
 		Where(modpack.ID(modpackID)).QueryModpackMods().QueryMod().QueryVersions().
 		WithVersionDependencies(func(q *ent.VersionDependencyQuery) {
@@ -469,19 +458,13 @@ func (r *mutationResolver) CreateModpackRelease(ctx context.Context, modpackID s
 	}
 
 	dbModpack, err := db.From(ctx).Modpack.Query().
-		WithTargets().
 		Where(modpack.ID(modpackID), modpack.CreatorID(user.ID)).
 		First(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	targetNames := make([]resolver.TargetName, len(dbModpack.Edges.Targets))
-	for i, target := range dbModpack.Edges.Targets {
-		targetNames[i] = resolver.TargetName(target.TargetName)
-	}
-
-	lockfile, err := resolveModpackToLockfile(ctx, modpackID, targetNames)
+	lockfile, err := resolveModpackToLockfile(ctx, modpackID)
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +519,7 @@ func (r *mutationResolver) ResolveModpack(ctx context.Context, modpackID string,
 		targetNames[i] = resolver.TargetName(target)
 	}
 
-	lockfile, err := resolveModpackToLockfile(ctx, modpackID, targetNames)
+	lockfile, err := resolveModpackToLockfile(ctx, modpackID)
 	if err != nil {
 		return nil, err
 	}
@@ -589,7 +572,6 @@ type modpackResolver struct{ *Resolver }
 func (r *modpackResolver) Children(ctx context.Context, m *generated.Modpack) ([]*generated.Modpack, error) {
 	packs, err := db.From(ctx).Modpack.Query().
 		WithTags().
-		WithTargets().
 		WithModpackMods().
 		Where(modpack.ParentID(m.ID)).
 		All(ctx)
@@ -675,7 +657,7 @@ func (r *queryResolver) GetMyModpacks(_ context.Context, _ *generated.ModpackFil
 	return &generated.GetMyModpacks{}, nil
 }
 
-func resolveModpackToLockfile(ctx context.Context, modpackID string, targets []resolver.TargetName) (string, error) {
+func resolveModpackToLockfile(ctx context.Context, modpackID string) (string, error) {
 	pack, err := db.From(ctx).Modpack.Query().
 		WithModpackMods().
 		WithParent(func(query *ent.ModpackQuery) {
@@ -711,11 +693,17 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string, targets []r
 		referenceConstraints[reference.ModReference] = constraints[reference.ID]
 	}
 
+	targets, _ := GetModpackTargetSupport(ctx, modpackID)
+	targetName := []resolver.TargetName{}
+	for _, target := range targets {
+		targetName = append(targetName, resolver.TargetName(target.TargetName))
+	}
+
 	dependencyResolver := resolver.NewDependencyResolver(lockfileResolver{
 		Context: ctx,
 	})
 
-	lockfile, err := dependencyResolver.ResolveModDependencies(referenceConstraints, nil, math.MaxInt, targets)
+	lockfile, err := dependencyResolver.ResolveModDependencies(referenceConstraints, nil, math.MaxInt, targetName)
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve dependencies: %w", err)
 	}
@@ -726,6 +714,49 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string, targets []r
 	}
 
 	return string(b), nil
+}
+
+func (r *queryResolver) CalculateLockfileWithTargets(ctx context.Context, modpackID string, mods []*generated.ModpackModInput) (*generated.TargetLock, error) {
+
+	constraints := make(map[string]string)
+	for _, m := range mods {
+		constraints[m.ModID] = m.VersionConstraint
+	}
+
+	modReferences, err := db.From(ctx).Mod.Query().
+		Where(mod.IDIn(slices.Collect(maps.Keys(constraints))...)).
+		Select(mod.FieldID, mod.FieldModReference).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	referenceConstraints := make(map[string]string, len(constraints))
+	for _, reference := range modReferences {
+		referenceConstraints[reference.ModReference] = constraints[reference.ID]
+	}
+
+	targets, _ := GetModpackTargetSupport(ctx, modpackID)
+	targetNames := []resolver.TargetName{}
+	for _, target := range targets {
+		targetNames = append(targetNames, resolver.TargetName(target.TargetName))
+	}
+
+	dependencyResolver := resolver.NewDependencyResolver(lockfileResolver{
+		Context: ctx,
+	})
+
+	lockfile, err := dependencyResolver.ResolveModDependencies(referenceConstraints, nil, math.MaxInt, targetNames)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve dependencies: %w", err)
+	}
+
+	b, err := json.Marshal(lockfile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal lockfile: %w", err)
+	}
+
+	return &generated.TargetLock{Lockfile: string(b), Targets: targets}, nil
 }
 
 type getMyModpacksResolver struct{ *Resolver }

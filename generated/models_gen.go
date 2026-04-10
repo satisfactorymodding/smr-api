@@ -174,7 +174,6 @@ type Modpack struct {
 	Children         []*Modpack         `json:"children"`
 	Authors          []*UserModpack     `json:"authors"`
 	Tags             []*Tag             `json:"tags"`
-	Targets          []string           `json:"targets"`
 	Mods             []*ModpackModEntry `json:"mods"`
 	Releases         []*ModpackRelease  `json:"releases"`
 }
@@ -236,7 +235,6 @@ type NewModpack struct {
 	Logo             *graphql.Upload    `json:"logo,omitempty"`
 	Hidden           *bool              `json:"hidden,omitempty"`
 	TagIDs           []string           `json:"tagIDs,omitempty"`
-	Targets          []string           `json:"targets"`
 	Mods             []*ModpackModInput `json:"mods"`
 	ParentID         *string            `json:"parent_id,omitempty"`
 }
@@ -311,6 +309,11 @@ type TagFilter struct {
 	Ids    []string `json:"ids,omitempty"`
 }
 
+type TargetLock struct {
+	Lockfile string           `json:"lockfile"`
+	Targets  []*ModpackTarget `json:"targets"`
+}
+
 type UpdateAnnouncement struct {
 	Message    *string                 `json:"message,omitempty"`
 	Importance *AnnouncementImportance `json:"importance,omitempty"`
@@ -331,7 +334,6 @@ type UpdateModpack struct {
 	Hidden           *bool                   `json:"hidden,omitempty"`
 	Authors          []*UpdateUserModpack    `json:"authors,omitempty"`
 	TagIDs           []string                `json:"tagIDs,omitempty"`
-	Targets          []string                `json:"targets,omitempty"`
 	Mods             []*ModpackModInput      `json:"mods,omitempty"`
 	Compatibility    *CompatibilityInfoInput `json:"compatibility,omitempty"`
 }

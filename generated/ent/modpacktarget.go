@@ -8,7 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 )
 
@@ -29,22 +29,22 @@ type ModpackTarget struct {
 
 // ModpackTargetEdges holds the relations/edges for other nodes in the graph.
 type ModpackTargetEdges struct {
-	// Modpack holds the value of the modpack edge.
-	Modpack *Modpack `json:"modpack,omitempty"`
+	// ModpackRelease holds the value of the modpack_release edge.
+	ModpackRelease *ModpackRelease `json:"modpack_release,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// ModpackOrErr returns the Modpack value or an error if the edge
+// ModpackReleaseOrErr returns the ModpackRelease value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e ModpackTargetEdges) ModpackOrErr() (*Modpack, error) {
-	if e.Modpack != nil {
-		return e.Modpack, nil
+func (e ModpackTargetEdges) ModpackReleaseOrErr() (*ModpackRelease, error) {
+	if e.ModpackRelease != nil {
+		return e.ModpackRelease, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: modpack.Label}
+		return nil, &NotFoundError{label: modpackrelease.Label}
 	}
-	return nil, &NotLoadedError{edge: "modpack"}
+	return nil, &NotLoadedError{edge: "modpack_release"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -100,9 +100,9 @@ func (mt *ModpackTarget) Value(name string) (ent.Value, error) {
 	return mt.selectValues.Get(name)
 }
 
-// QueryModpack queries the "modpack" edge of the ModpackTarget entity.
-func (mt *ModpackTarget) QueryModpack() *ModpackQuery {
-	return NewModpackTargetClient(mt.config).QueryModpack(mt)
+// QueryModpackRelease queries the "modpack_release" edge of the ModpackTarget entity.
+func (mt *ModpackTarget) QueryModpackRelease() *ModpackReleaseQuery {
+	return NewModpackTargetClient(mt.config).QueryModpackRelease(mt)
 }
 
 // Update returns a builder for updating this ModpackTarget.

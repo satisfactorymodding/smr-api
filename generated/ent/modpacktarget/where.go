@@ -203,21 +203,21 @@ func TargetNameContainsFold(v string) predicate.ModpackTarget {
 	return predicate.ModpackTarget(sql.FieldContainsFold(FieldTargetName, v))
 }
 
-// HasModpack applies the HasEdge predicate on the "modpack" edge.
-func HasModpack() predicate.ModpackTarget {
+// HasModpackRelease applies the HasEdge predicate on the "modpack_release" edge.
+func HasModpackRelease() predicate.ModpackTarget {
 	return predicate.ModpackTarget(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ModpackTable, ModpackColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, ModpackReleaseTable, ModpackReleaseColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasModpackWith applies the HasEdge predicate on the "modpack" edge with a given conditions (other predicates).
-func HasModpackWith(preds ...predicate.Modpack) predicate.ModpackTarget {
+// HasModpackReleaseWith applies the HasEdge predicate on the "modpack_release" edge with a given conditions (other predicates).
+func HasModpackReleaseWith(preds ...predicate.ModpackRelease) predicate.ModpackTarget {
 	return predicate.ModpackTarget(func(s *sql.Selector) {
-		step := newModpackStep()
+		step := newModpackReleaseStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

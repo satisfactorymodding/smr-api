@@ -142,7 +142,6 @@ type VirustotalResult interface {
 // goverter:output:package conv
 // goverter:extend TimeToString UIntToInt Int64ToInt EntModpackTargetToString
 type Modpack interface {
-	// goverter:map Edges.Targets Targets
 	// goverter:map Edges.Tags Tags
 	// goverter:map Edges.ModpackMods Mods
 	// goverter:map Edges.Parent Parent

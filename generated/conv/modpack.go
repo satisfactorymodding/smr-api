@@ -43,22 +43,16 @@ func (c *ModpackImpl) Convert(source *ent.Modpack) *generated.Modpack {
 				generatedModpack.Tags[i] = c.pEntTagToPGeneratedTag((*source).Edges.Tags[i])
 			}
 		}
-		if (*source).Edges.Targets != nil {
-			generatedModpack.Targets = make([]string, len((*source).Edges.Targets))
-			for j := 0; j < len((*source).Edges.Targets); j++ {
-				generatedModpack.Targets[j] = conversion.EntModpackTargetToString((*source).Edges.Targets[j])
-			}
-		}
 		if (*source).Edges.ModpackMods != nil {
 			generatedModpack.Mods = make([]*generated.ModpackModEntry, len((*source).Edges.ModpackMods))
-			for k := 0; k < len((*source).Edges.ModpackMods); k++ {
-				generatedModpack.Mods[k] = c.pEntModpackModToPGeneratedModpackModEntry((*source).Edges.ModpackMods[k])
+			for j := 0; j < len((*source).Edges.ModpackMods); j++ {
+				generatedModpack.Mods[j] = c.pEntModpackModToPGeneratedModpackModEntry((*source).Edges.ModpackMods[j])
 			}
 		}
 		if (*source).Edges.Releases != nil {
 			generatedModpack.Releases = make([]*generated.ModpackRelease, len((*source).Edges.Releases))
-			for l := 0; l < len((*source).Edges.Releases); l++ {
-				generatedModpack.Releases[l] = c.pEntModpackReleaseToPGeneratedModpackRelease((*source).Edges.Releases[l])
+			for k := 0; k < len((*source).Edges.Releases); k++ {
+				generatedModpack.Releases[k] = c.pEntModpackReleaseToPGeneratedModpackRelease((*source).Edges.Releases[k])
 			}
 		}
 		pGeneratedModpack = &generatedModpack
