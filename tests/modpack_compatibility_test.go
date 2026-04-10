@@ -122,6 +122,14 @@ func TestModpackCompatibility(t *testing.T) {
 
 		queryRequest := authRequest(`query ($modpackID: ModpackID!) {
 				getModCompatibilities(modpackID: $modpackID) {
+					compatibility {
+						EA {
+							state
+						}
+						EXP {
+							state
+						}
+					}
 					worstEA {
 						id
 						name
@@ -214,6 +222,14 @@ func TestModpackCompatibility(t *testing.T) {
 
 		queryRequest := authRequest(`query ($modpackID: ModpackID!) {
 				getModCompatibilities(modpackID: $modpackID) {
+					compatibility {
+						EA {
+							state
+						}
+						EXP {
+							state
+						}
+					}
 					worstEA {
 						id
 						name
