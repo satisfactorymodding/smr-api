@@ -39,7 +39,9 @@ func (r *queryResolver) GetModpack(ctx context.Context, modpackID string) (*gene
 	dbModpack, err := db.From(ctx).Modpack.Query().
 		Where(modpack.ID(modpackID)).
 		WithTags().
-		WithReleases().
+		WithReleases(func(q *ent.ModpackReleaseQuery) {
+			q.Order(ent.Desc(modpackrelease.FieldCreatedAt))
+		}).
 		WithModpackMods().
 		WithParent().
 		WithChildren().
