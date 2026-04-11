@@ -39,7 +39,9 @@ func (r *queryResolver) GetModpack(ctx context.Context, modpackID string) (*gene
 	dbModpack, err := db.From(ctx).Modpack.Query().
 		Where(modpack.ID(modpackID)).
 		WithTags().
-		WithReleases().
+		WithReleases(func(q *ent.ModpackReleaseQuery) {
+			q.Order(ent.Desc(modpackrelease.FieldCreatedAt))
+		}).
 		WithModpackMods().
 		WithParent().
 		WithChildren().
@@ -127,21 +129,15 @@ func (r *mutationResolver) CreateModpack(ctx context.Context, newModpack generat
 			}
 		}
 
-		return err
-	}, nil); err != nil {
-		return nil, err
-	}
-
-	// Handle logo upload
-	if newModpack.Logo != nil {
+			if newModpack.Logo != nil {
 		file, err := io.ReadAll(newModpack.Logo.File)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read logo file: %w", err)
+			return fmt.Errorf("failed to read logo file: %w", err)
 		}
 
 		logoData, thumbHash, err := converter.ConvertAnyImageToWebp(ctx, file)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert logo file: %w", err)
+			return fmt.Errorf("failed to convert logo file: %w", err)
 		}
 
 		logoKey, err := storage.UploadModpackLogo(ctx, resultModpack.ID, bytes.NewReader(logoData))
@@ -151,9 +147,14 @@ func (r *mutationResolver) CreateModpack(ctx context.Context, newModpack generat
 				SetLogoThumbhash(thumbHash).
 				Save(ctx)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
+	}
+
+		return err
+	}, nil); err != nil {
+		return nil, err
 	}
 
 	// Get the modpack again with all relationships
@@ -201,17 +202,25 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 	}
 
 	if updatedModpack.Logo != nil {
+		println("Updating logo for modpack", resultModpack.ID)
 		file, err := io.ReadAll(updatedModpack.Logo.File)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read logo file: %w", err)
 		}
+
+		println("Read logo file, size:", len(file))
 
 		logoData, thumbHash, err := converter.ConvertAnyImageToWebp(ctx, file)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert logo file: %w", err)
 		}
 
+		println("Converted logo to webp, size:", len(logoData))
+
 		logoKey, err := storage.UploadModpackLogo(ctx, resultModpack.ID, bytes.NewReader(logoData))
+		
+		println("Uploaded logo, key:", logoKey, "error:", err)
+		
 		if err == nil {
 			resultModpack, err = resultModpack.Update().
 				SetLogo(storage.GenerateDownloadLink(ctx, logoKey)).
