@@ -310,8 +310,8 @@ type TagFilter struct {
 }
 
 type TargetLock struct {
-	Lockfile string           `json:"lockfile"`
-	Targets  []*ModpackTarget `json:"targets"`
+	Mods    []*ModpackModEntry `json:"mods"`
+	Targets []*ModpackTarget   `json:"targets"`
 }
 
 type UpdateAnnouncement struct {

@@ -300,7 +300,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CalculateLockfileWithTargets func(childComplexity int, modpackID string, mods []*ModpackModInput) int
+		CalculateTargetWithMods      func(childComplexity int, modpackID string, mods []*ModpackModInput) int
 		CheckVersionUploadState      func(childComplexity int, modID string, versionID string) int
 		GetAnnouncement              func(childComplexity int, announcementID string) int
 		GetAnnouncements             func(childComplexity int) int
@@ -373,8 +373,8 @@ type ComplexityRoot struct {
 	}
 
 	TargetLock struct {
-		Lockfile func(childComplexity int) int
-		Targets  func(childComplexity int) int
+		Mods    func(childComplexity int) int
+		Targets func(childComplexity int) int
 	}
 
 	User struct {
@@ -585,7 +585,7 @@ type QueryResolver interface {
 	GetModpackRelease(ctx context.Context, modpackID string, version string) (*ModpackRelease, error)
 	GetModCompatibilities(ctx context.Context, modpackID string) (*ModCompatibilities, error)
 	GetModpackTargetSupport(ctx context.Context, modpackID string) ([]*ModpackTarget, error)
-	CalculateLockfileWithTargets(ctx context.Context, modpackID string, mods []*ModpackModInput) (*TargetLock, error)
+	CalculateTargetWithMods(ctx context.Context, modpackID string, mods []*ModpackModInput) (*TargetLock, error)
 	GetSatisfactoryVersions(ctx context.Context) ([]*SatisfactoryVersion, error)
 	GetSatisfactoryVersion(ctx context.Context, id string) (*SatisfactoryVersion, error)
 	GetSMLVersion(ctx context.Context, smlVersionID string) (*SMLVersion, error)
@@ -1904,17 +1904,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.OAuthOptions.Google(childComplexity), true
 
-	case "Query.calculateLockfileWithTargets":
-		if e.complexity.Query.CalculateLockfileWithTargets == nil {
+	case "Query.calculateTargetWithMods":
+		if e.complexity.Query.CalculateTargetWithMods == nil {
 			break
 		}
 
-		args, err := ec.field_Query_calculateLockfileWithTargets_args(ctx, rawArgs)
+		args, err := ec.field_Query_calculateTargetWithMods_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.CalculateLockfileWithTargets(childComplexity, args["modpackID"].(string), args["mods"].([]*ModpackModInput)), true
+		return e.complexity.Query.CalculateTargetWithMods(childComplexity, args["modpackID"].(string), args["mods"].([]*ModpackModInput)), true
 
 	case "Query.checkVersionUploadState":
 		if e.complexity.Query.CheckVersionUploadState == nil {
@@ -2480,12 +2480,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Tag.Name(childComplexity), true
 
-	case "TargetLock.lockfile":
-		if e.complexity.TargetLock.Lockfile == nil {
+	case "TargetLock.mods":
+		if e.complexity.TargetLock.Mods == nil {
 			break
 		}
 
-		return e.complexity.TargetLock.Lockfile(childComplexity), true
+		return e.complexity.TargetLock.Mods(childComplexity), true
 
 	case "TargetLock.targets":
 		if e.complexity.TargetLock.Targets == nil {
@@ -3536,7 +3536,7 @@ type GetMyModpacks {
 }
 
 type TargetLock {
-    lockfile: String!
+    mods: [ModpackModEntry!]!
     targets: [ModpackTarget]!
 }
 
@@ -3602,7 +3602,7 @@ extend type Query {
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
     getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!
     getModpackTargetSupport(modpackID: ModpackID!): [ModpackTarget!]!
-    calculateLockfileWithTargets(modpackID: ModpackID!, mods: [ModpackModInput!]): TargetLock!
+    calculateTargetWithMods(modpackID: ModpackID!, mods: [ModpackModInput!]): TargetLock!
 }
 
 ### Mutations
@@ -5962,22 +5962,22 @@ func (ec *executionContext) field_Query___type_argsName(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Query_calculateLockfileWithTargets_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_calculateTargetWithMods_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_calculateLockfileWithTargets_argsModpackID(ctx, rawArgs)
+	arg0, err := ec.field_Query_calculateTargetWithMods_argsModpackID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["modpackID"] = arg0
-	arg1, err := ec.field_Query_calculateLockfileWithTargets_argsMods(ctx, rawArgs)
+	arg1, err := ec.field_Query_calculateTargetWithMods_argsMods(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["mods"] = arg1
 	return args, nil
 }
-func (ec *executionContext) field_Query_calculateLockfileWithTargets_argsModpackID(
+func (ec *executionContext) field_Query_calculateTargetWithMods_argsModpackID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
@@ -5995,7 +5995,7 @@ func (ec *executionContext) field_Query_calculateLockfileWithTargets_argsModpack
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Query_calculateLockfileWithTargets_argsMods(
+func (ec *executionContext) field_Query_calculateTargetWithMods_argsMods(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) ([]*ModpackModInput, error) {
@@ -18131,8 +18131,8 @@ func (ec *executionContext) fieldContext_Query_getModpackTargetSupport(ctx conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_calculateLockfileWithTargets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_calculateLockfileWithTargets(ctx, field)
+func (ec *executionContext) _Query_calculateTargetWithMods(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_calculateTargetWithMods(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -18145,7 +18145,7 @@ func (ec *executionContext) _Query_calculateLockfileWithTargets(ctx context.Cont
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CalculateLockfileWithTargets(rctx, fc.Args["modpackID"].(string), fc.Args["mods"].([]*ModpackModInput))
+		return ec.resolvers.Query().CalculateTargetWithMods(rctx, fc.Args["modpackID"].(string), fc.Args["mods"].([]*ModpackModInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -18162,7 +18162,7 @@ func (ec *executionContext) _Query_calculateLockfileWithTargets(ctx context.Cont
 	return ec.marshalNTargetLock2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐTargetLock(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_calculateLockfileWithTargets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_calculateTargetWithMods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -18170,8 +18170,8 @@ func (ec *executionContext) fieldContext_Query_calculateLockfileWithTargets(ctx 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "lockfile":
-				return ec.fieldContext_TargetLock_lockfile(ctx, field)
+			case "mods":
+				return ec.fieldContext_TargetLock_mods(ctx, field)
 			case "targets":
 				return ec.fieldContext_TargetLock_targets(ctx, field)
 			}
@@ -18185,7 +18185,7 @@ func (ec *executionContext) fieldContext_Query_calculateLockfileWithTargets(ctx 
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_calculateLockfileWithTargets_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_calculateTargetWithMods_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -20389,8 +20389,8 @@ func (ec *executionContext) fieldContext_Tag_description(_ context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _TargetLock_lockfile(ctx context.Context, field graphql.CollectedField, obj *TargetLock) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TargetLock_lockfile(ctx, field)
+func (ec *executionContext) _TargetLock_mods(ctx context.Context, field graphql.CollectedField, obj *TargetLock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TargetLock_mods(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -20403,7 +20403,7 @@ func (ec *executionContext) _TargetLock_lockfile(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Lockfile, nil
+		return obj.Mods, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -20415,19 +20415,25 @@ func (ec *executionContext) _TargetLock_lockfile(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.([]*ModpackModEntry)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNModpackModEntry2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackModEntryᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_TargetLock_lockfile(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TargetLock_mods(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TargetLock",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "mod_id":
+				return ec.fieldContext_ModpackModEntry_mod_id(ctx, field)
+			case "version_constraint":
+				return ec.fieldContext_ModpackModEntry_version_constraint(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ModpackModEntry", field.Name)
 		},
 	}
 	return fc, nil
@@ -30323,7 +30329,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "calculateLockfileWithTargets":
+		case "calculateTargetWithMods":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -30332,7 +30338,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_calculateLockfileWithTargets(ctx, field)
+				res = ec._Query_calculateTargetWithMods(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -31058,8 +31064,8 @@ func (ec *executionContext) _TargetLock(ctx context.Context, sel ast.SelectionSe
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TargetLock")
-		case "lockfile":
-			out.Values[i] = ec._TargetLock_lockfile(ctx, field, obj)
+		case "mods":
+			out.Values[i] = ec._TargetLock_mods(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

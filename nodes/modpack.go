@@ -60,7 +60,6 @@ func getModpacks(c echo.Context) (interface{}, *ErrorResponse) {
 
 	query := db.From(c.Request().Context()).Modpack.Query().
 		WithTags().
-		WithTargets().
 		WithModpackMods()
 
 	query = db.ConvertModpackFilter(query, modpackFilter, false)
@@ -89,7 +88,6 @@ func getModpack(c echo.Context) (interface{}, *ErrorResponse) {
 	dbModpack, err := db.From(c.Request().Context()).Modpack.Query().
 		Where(modpack.ID(modpackID)).
 		WithTags().
-		WithTargets().
 		WithReleases().
 		WithModpackMods().
 		WithParent().
