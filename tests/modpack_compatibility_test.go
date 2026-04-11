@@ -26,13 +26,12 @@ func TestModpackCompatibility(t *testing.T) {
 	mods := seedMods(ctx, t, token, client, tags[0])
 	var objID string
 	t.Run("Create", func(t *testing.T) {
-		createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $targets: [String!]!, $mods: [ModpackModInput!]!) {
+		createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $tags: [TagID!], $mods: [ModpackModInput!]!) {
 					createModpack(modpack: {
 						name: $name,
 						short_description: $shortDescription,
 						full_description: $fullDescription,
 						tagIDs: $tags,
-						targets: $targets,
 						mods: $mods
 					}) {
 						id
@@ -45,7 +44,6 @@ func TestModpackCompatibility(t *testing.T) {
 							id
 							name
 						}
-						targets
 						mods {
 							mod_id
 							version_constraint
@@ -56,7 +54,6 @@ func TestModpackCompatibility(t *testing.T) {
 		createRequest.Var("shortDescription", "A test modpack for testing purposes")
 		createRequest.Var("fullDescription", "This is a comprehensive test modpack that includes multiple mods for testing the modpack compatibility.")
 		createRequest.Var("tags", tags)
-		createRequest.Var("targets", []string{"Windows", "LinuxServer"})
 		createRequest.Var("mods", []struct {
 			ModID             string `json:"mod_id"`
 			VersionConstraint string `json:"version_constraint"`

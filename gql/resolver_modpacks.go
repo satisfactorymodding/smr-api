@@ -716,7 +716,7 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string) (string, er
 	return string(b), nil
 }
 
-func (r *queryResolver) CalculateLockfileWithTargets(ctx context.Context, modpackID string, mods []*generated.ModpackModInput) (*generated.TargetLock, error) {
+func (r *queryResolver) CalculateTargetWithMods(ctx context.Context, modpackID string, mods []*generated.ModpackModInput) (*generated.TargetLock, error) {
 
 	constraints := make(map[string]string)
 	for _, m := range mods {
@@ -742,21 +742,15 @@ func (r *queryResolver) CalculateLockfileWithTargets(ctx context.Context, modpac
 		targetNames = append(targetNames, resolver.TargetName(target.TargetName))
 	}
 
-	dependencyResolver := resolver.NewDependencyResolver(lockfileResolver{
-		Context: ctx,
-	})
-
-	lockfile, err := dependencyResolver.ResolveModDependencies(referenceConstraints, nil, math.MaxInt, targetNames)
-	if err != nil {
-		return nil, fmt.Errorf("failed to resolve dependencies: %w", err)
+	modpackMods := []*generated.ModpackModEntry{}
+	for ref := range referenceConstraints {
+		modpackMods = append(modpackMods, &generated.ModpackModEntry{
+			ModID:             ref,
+			VersionConstraint: referenceConstraints[ref],
+		})
 	}
 
-	b, err := json.Marshal(lockfile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal lockfile: %w", err)
-	}
-
-	return &generated.TargetLock{Lockfile: string(b), Targets: targets}, nil
+	return &generated.TargetLock{Mods: modpackMods, Targets: targets}, nil
 }
 
 type getMyModpacksResolver struct{ *Resolver }
