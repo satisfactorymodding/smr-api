@@ -12,6 +12,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
 )
 
 func init() {
@@ -32,27 +33,34 @@ func TestGetModpackTargetSupport(t *testing.T) {
 
 	t.Run("Modpack with all targets supported", func(t *testing.T) {
 		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0]})
-
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
+		modpackMods, _ := db.From(ctx).Modpack.Query().Where(modpack.ID(modpackID)).QueryModpackMods().All(ctx)
 
-		queryRequest := authRequest(`query ($modpackID: ModpackID!) {
-			getModpackTargetSupport(modpackID: $modpackID) {
-				target_name
+		queryRequest := authRequest(`query ($mods: [ModpackModInput!]!) {
+			calculateTargetWithMods(mods: $mods) {
+				targets
 			}
 		}`, token)
-		queryRequest.Var("modpackID", modpackID)
-
-		var response struct {
-			GetModpackTargetSupport []*struct {
-				TargetName string `json:"target_name"`
+		mods := make([]*generated.ModpackModInput, len(modpackMods))
+		for i, m := range modpackMods {
+			mods[i] = &generated.ModpackModInput{
+				ModID:             m.ModID,
+				VersionConstraint: m.VersionConstraint,
 			}
 		}
+		queryRequest.Var("mods", mods)
+
+		var response struct {
+			CalculateTargetWithMods struct {
+				Targets []*string `json:"targets"`
+			} `json:"calculateTargetWithMods"`
+		}
 		testza.AssertNoError(t, client.Run(ctx, queryRequest, &response))
-		testza.AssertEqual(t, 3, len(response.GetModpackTargetSupport))
+		testza.AssertEqual(t, 3, len(response.CalculateTargetWithMods.Targets))
 
 		targetNames := make(map[string]bool)
-		for _, target := range response.GetModpackTargetSupport {
-			targetNames[target.TargetName] = true
+		for _, target := range response.CalculateTargetWithMods.Targets {
+			targetNames[*target] = true
 		}
 		testza.AssertTrue(t, targetNames["Windows"])
 		testza.AssertTrue(t, targetNames["WindowsServer"])
@@ -61,28 +69,36 @@ func TestGetModpackTargetSupport(t *testing.T) {
 
 	t.Run("Modpack with missing target in one mod", func(t *testing.T) {
 		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0], modIDs[1]})
-
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
 		createVersionsForTargets(ctx, t, modIDs[1], true, []string{"Windows"})
 
-		queryRequest := authRequest(`query ($modpackID: ModpackID!) {
-			getModpackTargetSupport(modpackID: $modpackID) {
-				target_name
+		modpackMods, _ := db.From(ctx).Modpack.Query().Where(modpack.ID(modpackID)).QueryModpackMods().All(ctx)
+
+		queryRequest := authRequest(`query ($mods: [ModpackModInput!]!) {
+			calculateTargetWithMods(mods: $mods) {
+				targets
 			}
 		}`, token)
-		queryRequest.Var("modpackID", modpackID)
-
-		var response struct {
-			GetModpackTargetSupport []*struct {
-				TargetName string `json:"target_name"`
+		mods := make([]*generated.ModpackModInput, len(modpackMods))
+		for i, m := range modpackMods {
+			mods[i] = &generated.ModpackModInput{
+				ModID:             m.ModID,
+				VersionConstraint: m.VersionConstraint,
 			}
 		}
+		queryRequest.Var("mods", mods)
+
+		var response struct {
+			CalculateTargetWithMods struct {
+				Targets []*string `json:"targets"`
+			} `json:"calculateTargetWithMods"`
+		}
 		testza.AssertNoError(t, client.Run(ctx, queryRequest, &response))
-		testza.AssertEqual(t, 1, len(response.GetModpackTargetSupport))
+		testza.AssertEqual(t, 1, len(response.CalculateTargetWithMods.Targets))
 
 		targetNames := make(map[string]bool)
-		for _, target := range response.GetModpackTargetSupport {
-			targetNames[target.TargetName] = true
+		for _, target := range response.CalculateTargetWithMods.Targets {
+			targetNames[*target] = true
 		}
 		testza.AssertTrue(t, targetNames["Windows"])
 		testza.AssertFalse(t, targetNames["WindowsServer"])
@@ -91,28 +107,36 @@ func TestGetModpackTargetSupport(t *testing.T) {
 
 	t.Run("Modpack with non-required missing targets", func(t *testing.T) {
 		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0], modIDs[2]})
-
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
 		createVersionsForTargets(ctx, t, modIDs[2], false, []string{"Windows"})
 
-		queryRequest := authRequest(`query ($modpackID: ModpackID!) {
-			getModpackTargetSupport(modpackID: $modpackID) {
-				target_name
+		modpackMods, _ := db.From(ctx).Modpack.Query().Where(modpack.ID(modpackID)).QueryModpackMods().All(ctx)
+
+		queryRequest := authRequest(`query ($mods: [ModpackModInput!]!) {
+			calculateTargetWithMods(mods: $mods) {
+				targets
 			}
 		}`, token)
-		queryRequest.Var("modpackID", modpackID)
-
-		var response struct {
-			GetModpackTargetSupport []*struct {
-				TargetName string `json:"target_name"`
+		mods := make([]*generated.ModpackModInput, len(modpackMods))
+		for i, m := range modpackMods {
+			mods[i] = &generated.ModpackModInput{
+				ModID:             m.ModID,
+				VersionConstraint: m.VersionConstraint,
 			}
 		}
+		queryRequest.Var("mods", mods)
+
+		var response struct {
+			CalculateTargetWithMods struct {
+				Targets []*string `json:"targets"`
+			} `json:"calculateTargetWithMods"`
+		}
 		testza.AssertNoError(t, client.Run(ctx, queryRequest, &response))
-		testza.AssertEqual(t, 3, len(response.GetModpackTargetSupport))
+		testza.AssertEqual(t, 3, len(response.CalculateTargetWithMods.Targets))
 
 		targetNames := make(map[string]bool)
-		for _, target := range response.GetModpackTargetSupport {
-			targetNames[target.TargetName] = true
+		for _, target := range response.CalculateTargetWithMods.Targets {
+			targetNames[*target] = true
 		}
 		testza.AssertTrue(t, targetNames["Windows"])
 		testza.AssertTrue(t, targetNames["WindowsServer"])
@@ -121,10 +145,11 @@ func TestGetModpackTargetSupport(t *testing.T) {
 
 	t.Run("Missing target in optional dependency", func(t *testing.T) {
 		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0], modIDs[3]})
-
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
 		version3 := createVersionsForTargets(ctx, t, modIDs[3], false, []string{"Windows", "WindowsServer", "LinuxServer"})
 		createVersionsForTargets(ctx, t, modIDs[1], true, []string{"Windows"})
+
+		modpackMods, _ := db.From(ctx).Modpack.Query().Where(modpack.ID(modpackID)).QueryModpackMods().All(ctx)
 
 		// Create optional dependency from mod3 to mod1
 		_, err := db.From(ctx).VersionDependency.Create().
@@ -135,24 +160,31 @@ func TestGetModpackTargetSupport(t *testing.T) {
 			Save(ctx)
 		testza.AssertNoError(t, err)
 
-		queryRequest := authRequest(`query ($modpackID: ModpackID!) {
-			getModpackTargetSupport(modpackID: $modpackID) {
-				target_name
+		queryRequest := authRequest(`query ($mods: [ModpackModInput!]!) {
+			calculateTargetWithMods(mods: $mods) {
+				targets
 			}
 		}`, token)
-		queryRequest.Var("modpackID", modpackID)
-
-		var response struct {
-			GetModpackTargetSupport []*struct {
-				TargetName string `json:"target_name"`
+		mods := make([]*generated.ModpackModInput, len(modpackMods))
+		for i, m := range modpackMods {
+			mods[i] = &generated.ModpackModInput{
+				ModID:             m.ModID,
+				VersionConstraint: m.VersionConstraint,
 			}
 		}
+		queryRequest.Var("mods", mods)
+
+		var response struct {
+			CalculateTargetWithMods struct {
+				Targets []*string `json:"targets"`
+			} `json:"calculateTargetWithMods"`
+		}
 		testza.AssertNoError(t, client.Run(ctx, queryRequest, &response))
-		testza.AssertEqual(t, 3, len(response.GetModpackTargetSupport))
+		testza.AssertEqual(t, 3, len(response.CalculateTargetWithMods.Targets))
 
 		targetNames := make(map[string]bool)
-		for _, target := range response.GetModpackTargetSupport {
-			targetNames[target.TargetName] = true
+		for _, target := range response.CalculateTargetWithMods.Targets {
+			targetNames[*target] = true
 		}
 		testza.AssertTrue(t, targetNames["Windows"])
 		testza.AssertTrue(t, targetNames["WindowsServer"])
@@ -161,10 +193,11 @@ func TestGetModpackTargetSupport(t *testing.T) {
 
 	t.Run("Missing target in non-optional dependency", func(t *testing.T) {
 		modpackID := createTestModpack(ctx, t, client, token, []string{modIDs[0], modIDs[3]})
-
 		createVersionsForTargets(ctx, t, modIDs[0], true, []string{"Windows", "WindowsServer", "LinuxServer"})
 		version3 := createVersionsForTargets(ctx, t, modIDs[3], false, []string{"Windows", "WindowsServer", "LinuxServer"})
 		createVersionsForTargets(ctx, t, modIDs[1], true, []string{"Windows"})
+
+		modpackMods, _ := db.From(ctx).Modpack.Query().Where(modpack.ID(modpackID)).QueryModpackMods().All(ctx)
 
 		// Create non-optional dependency from mod3 to mod1
 		_, err := db.From(ctx).VersionDependency.Create().
@@ -175,23 +208,30 @@ func TestGetModpackTargetSupport(t *testing.T) {
 			Save(ctx)
 		testza.AssertNoError(t, err)
 
-		queryRequest := authRequest(`query ($modpackID: ModpackID!) {
-			getModpackTargetSupport(modpackID: $modpackID) {
-				target_name
+		queryRequest := authRequest(`query ($mods: [ModpackModInput!]!) {
+			calculateTargetWithMods(mods: $mods) {
+				targets
 			}
 		}`, token)
-		queryRequest.Var("modpackID", modpackID)
+		mods := make([]*generated.ModpackModInput, len(modpackMods))
+		for i, m := range modpackMods {
+			mods[i] = &generated.ModpackModInput{
+				ModID:             m.ModID,
+				VersionConstraint: m.VersionConstraint,
+			}
+		}
+		queryRequest.Var("mods", mods)
 
 		var response struct {
-			GetModpackTargetSupport []*struct {
-				TargetName string `json:"target_name"`
-			}
+			CalculateTargetWithMods struct {
+				Targets []*string `json:"targets"`
+			} `json:"calculateTargetWithMods"`
 		}
 		testza.AssertNotEqual(t, version3.Edges.VersionDependencies, nil)
 
 		testza.AssertNoError(t, client.Run(ctx, queryRequest, &response))
-		testza.AssertEqual(t, 1, len(response.GetModpackTargetSupport))
-		testza.AssertEqual(t, "Windows", response.GetModpackTargetSupport[0].TargetName)
+		testza.AssertEqual(t, 1, len(response.CalculateTargetWithMods.Targets))
+		testza.AssertEqual(t, "Windows", *response.CalculateTargetWithMods.Targets[0])
 	})
 }
 
@@ -211,12 +251,11 @@ func createTestModpack(ctx context.Context, t *testing.T, client *graphql.Client
 		}
 	}
 
-	createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $targets: [String!]!, $mods: [ModpackModInput!]!) {
+	createRequest := authRequest(`mutation ($name: String!, $shortDescription: String!, $fullDescription: String!, $mods: [ModpackModInput!]!) {
 		createModpack(modpack: {
 			name: $name,
 			short_description: $shortDescription,
 			full_description: $fullDescription,
-			targets: $targets,
 			mods: $mods
 		}) {
 			id
@@ -226,7 +265,6 @@ func createTestModpack(ctx context.Context, t *testing.T, client *graphql.Client
 	createRequest.Var("name", "Test Modpack")
 	createRequest.Var("shortDescription", "A test modpack")
 	createRequest.Var("fullDescription", "A test modpack for testing target support")
-	createRequest.Var("targets", []string{"Windows", "WindowsServer", "LinuxServer"})
 	createRequest.Var("mods", mods)
 
 	var response struct {

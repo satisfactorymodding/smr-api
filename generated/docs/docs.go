@@ -780,7 +780,7 @@ const docTemplate = `{
         },
         "/user/me/mods": {
             "get": {
-                "description": "Retrieve the user's mods associated with the token",
+                "description": "Retrieve the users mods associated with the token",
                 "consumes": [
                     "application/json"
                 ],
@@ -790,7 +790,7 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "Retrieve Current User's Mods",
+                "summary": "Retrieve Current Users Mods",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -858,7 +858,7 @@ const docTemplate = `{
         },
         "/user/{userId}/mods": {
             "get": {
-                "description": "Retrieve a user's mods by user ID",
+                "description": "Retrieve a users mods by user ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -868,7 +868,7 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "Retrieve a User's Mods",
+                "summary": "Retrieve a Users Mods",
                 "parameters": [
                     {
                         "type": "string",

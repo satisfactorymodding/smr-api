@@ -301,7 +301,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CalculateTargetWithMods      func(childComplexity int, modpackID string, mods []*ModpackModInput) int
+		CalculateTargetWithMods      func(childComplexity int, mods []*ModpackModInput) int
 		CheckVersionUploadState      func(childComplexity int, modID string, versionID string) int
 		GetAnnouncement              func(childComplexity int, announcementID string) int
 		GetAnnouncements             func(childComplexity int) int
@@ -316,7 +316,6 @@ type ComplexityRoot struct {
 		GetModCompatibilities        func(childComplexity int, modpackID string) int
 		GetModpack                   func(childComplexity int, modpackID string) int
 		GetModpackRelease            func(childComplexity int, modpackID string, version string) int
-		GetModpackTargetSupport      func(childComplexity int, modpackID string) int
 		GetModpacks                  func(childComplexity int, filter *ModpackFilter) int
 		GetMods                      func(childComplexity int, filter map[string]interface{}) int
 		GetMyModpacks                func(childComplexity int, filter *ModpackFilter) int
@@ -337,6 +336,7 @@ type ComplexityRoot struct {
 		GetUsers                     func(childComplexity int, userIds []string) int
 		GetVersion                   func(childComplexity int, versionID string) int
 		GetVersions                  func(childComplexity int, filter map[string]interface{}) int
+		ModpackToLockfile            func(childComplexity int, modpackID string) int
 		ResolveModVersions           func(childComplexity int, filter []*ModVersionConstraint) int
 	}
 
@@ -585,8 +585,8 @@ type QueryResolver interface {
 	GetMyModpacks(ctx context.Context, filter *ModpackFilter) (*GetMyModpacks, error)
 	GetModpackRelease(ctx context.Context, modpackID string, version string) (*ModpackRelease, error)
 	GetModCompatibilities(ctx context.Context, modpackID string) (*ModCompatibilities, error)
-	GetModpackTargetSupport(ctx context.Context, modpackID string) ([]*ModpackTarget, error)
-	CalculateTargetWithMods(ctx context.Context, modpackID string, mods []*ModpackModInput) (*TargetLock, error)
+	CalculateTargetWithMods(ctx context.Context, mods []*ModpackModInput) (*TargetLock, error)
+	ModpackToLockfile(ctx context.Context, modpackID string) (string, error)
 	GetSatisfactoryVersions(ctx context.Context) ([]*SatisfactoryVersion, error)
 	GetSatisfactoryVersion(ctx context.Context, id string) (*SatisfactoryVersion, error)
 	GetSMLVersion(ctx context.Context, smlVersionID string) (*SMLVersion, error)
@@ -1922,7 +1922,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.CalculateTargetWithMods(childComplexity, args["modpackID"].(string), args["mods"].([]*ModpackModInput)), true
+		return e.complexity.Query.CalculateTargetWithMods(childComplexity, args["mods"].([]*ModpackModInput)), true
 
 	case "Query.checkVersionUploadState":
 		if e.complexity.Query.CheckVersionUploadState == nil {
@@ -2081,18 +2081,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.GetModpackRelease(childComplexity, args["modpackID"].(string), args["version"].(string)), true
-
-	case "Query.getModpackTargetSupport":
-		if e.complexity.Query.GetModpackTargetSupport == nil {
-			break
-		}
-
-		args, err := ec.field_Query_getModpackTargetSupport_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.GetModpackTargetSupport(childComplexity, args["modpackID"].(string)), true
 
 	case "Query.getModpacks":
 		if e.complexity.Query.GetModpacks == nil {
@@ -2328,6 +2316,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.GetVersions(childComplexity, args["filter"].(map[string]interface{})), true
+
+	case "Query.modpackToLockfile":
+		if e.complexity.Query.ModpackToLockfile == nil {
+			break
+		}
+
+		args, err := ec.field_Query_modpackToLockfile_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ModpackToLockfile(childComplexity, args["modpackID"].(string)), true
 
 	case "Query.resolveModVersions":
 		if e.complexity.Query.ResolveModVersions == nil {
@@ -3547,7 +3547,7 @@ type GetMyModpacks {
 
 type TargetLock {
     mods: [ModpackModEntry!]!
-    targets: [ModpackTarget]!
+    targets: [String]!
 }
 
 ### Inputs
@@ -3611,8 +3611,8 @@ extend type Query {
 
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
     getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!
-    getModpackTargetSupport(modpackID: ModpackID!): [ModpackTarget!]!
-    calculateTargetWithMods(modpackID: ModpackID!, mods: [ModpackModInput!]): TargetLock!
+    calculateTargetWithMods(mods: [ModpackModInput!]): TargetLock!
+    modpackToLockfile(modpackID: ModpackID!): String!
 }
 
 ### Mutations
@@ -5975,36 +5975,13 @@ func (ec *executionContext) field_Query___type_argsName(
 func (ec *executionContext) field_Query_calculateTargetWithMods_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_calculateTargetWithMods_argsModpackID(ctx, rawArgs)
+	arg0, err := ec.field_Query_calculateTargetWithMods_argsMods(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["modpackID"] = arg0
-	arg1, err := ec.field_Query_calculateTargetWithMods_argsMods(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["mods"] = arg1
+	args["mods"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query_calculateTargetWithMods_argsModpackID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["modpackID"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modpackID"))
-	if tmp, ok := rawArgs["modpackID"]; ok {
-		return ec.unmarshalNModpackID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Query_calculateTargetWithMods_argsMods(
 	ctx context.Context,
 	rawArgs map[string]any,
@@ -6371,34 +6348,6 @@ func (ec *executionContext) field_Query_getModpackRelease_argsVersion(
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
 	if tmp, ok := rawArgs["version"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_getModpackTargetSupport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_getModpackTargetSupport_argsModpackID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["modpackID"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Query_getModpackTargetSupport_argsModpackID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["modpackID"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modpackID"))
-	if tmp, ok := rawArgs["modpackID"]; ok {
-		return ec.unmarshalNModpackID2string(ctx, tmp)
 	}
 
 	var zeroVal string
@@ -6962,6 +6911,34 @@ func (ec *executionContext) field_Query_getVersions_argsFilter(
 	}
 
 	var zeroVal map[string]any
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_modpackToLockfile_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_modpackToLockfile_argsModpackID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["modpackID"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_modpackToLockfile_argsModpackID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modpackID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modpackID"))
+	if tmp, ok := rawArgs["modpackID"]; ok {
+		return ec.unmarshalNModpackID2string(ctx, tmp)
+	}
+
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -18136,69 +18113,6 @@ func (ec *executionContext) fieldContext_Query_getModCompatibilities(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getModpackTargetSupport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getModpackTargetSupport(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetModpackTargetSupport(rctx, fc.Args["modpackID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*ModpackTarget)
-	fc.Result = res
-	return ec.marshalNModpackTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTargetᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getModpackTargetSupport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ModpackTarget_id(ctx, field)
-			case "release_id":
-				return ec.fieldContext_ModpackTarget_release_id(ctx, field)
-			case "target_name":
-				return ec.fieldContext_ModpackTarget_target_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ModpackTarget", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getModpackTargetSupport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_calculateTargetWithMods(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_calculateTargetWithMods(ctx, field)
 	if err != nil {
@@ -18213,7 +18127,7 @@ func (ec *executionContext) _Query_calculateTargetWithMods(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CalculateTargetWithMods(rctx, fc.Args["modpackID"].(string), fc.Args["mods"].([]*ModpackModInput))
+		return ec.resolvers.Query().CalculateTargetWithMods(rctx, fc.Args["mods"].([]*ModpackModInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -18254,6 +18168,61 @@ func (ec *executionContext) fieldContext_Query_calculateTargetWithMods(ctx conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_calculateTargetWithMods_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_modpackToLockfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_modpackToLockfile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ModpackToLockfile(rctx, fc.Args["modpackID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_modpackToLockfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_modpackToLockfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -20533,9 +20502,9 @@ func (ec *executionContext) _TargetLock_targets(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*ModpackTarget)
+	res := resTmp.([]*string)
 	fc.Result = res
-	return ec.marshalNModpackTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTarget(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TargetLock_targets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20545,15 +20514,7 @@ func (ec *executionContext) fieldContext_TargetLock_targets(_ context.Context, f
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ModpackTarget_id(ctx, field)
-			case "release_id":
-				return ec.fieldContext_ModpackTarget_release_id(ctx, field)
-			case "target_name":
-				return ec.fieldContext_ModpackTarget_target_name(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ModpackTarget", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -30380,7 +30341,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getModpackTargetSupport":
+		case "calculateTargetWithMods":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -30389,7 +30350,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getModpackTargetSupport(ctx, field)
+				res = ec._Query_calculateTargetWithMods(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -30402,7 +30363,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "calculateTargetWithMods":
+		case "modpackToLockfile":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -30411,7 +30372,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_calculateTargetWithMods(ctx, field)
+				res = ec._Query_modpackToLockfile(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -33514,44 +33475,6 @@ func (ec *executionContext) marshalNModpackRelease2ᚖgithubᚗcomᚋsatisfactor
 	return ec._ModpackRelease(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNModpackTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTarget(ctx context.Context, sel ast.SelectionSet, v []*ModpackTarget) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOModpackTarget2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTarget(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
 func (ec *executionContext) marshalNModpackTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTargetᚄ(ctx context.Context, sel ast.SelectionSet, v []*ModpackTarget) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -33898,6 +33821,30 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 		if e == graphql.Null {
 			return graphql.Null
 		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNString2ᚕᚖstring(ctx context.Context, v any) ([]*string, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
 	}
 
 	return ret
@@ -35096,13 +35043,6 @@ func (ec *executionContext) marshalOModpackRelease2ᚖgithubᚗcomᚋsatisfactor
 		return graphql.Null
 	}
 	return ec._ModpackRelease(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOModpackTarget2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTarget(ctx context.Context, sel ast.SelectionSet, v *ModpackTarget) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._ModpackTarget(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOOrder2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐOrder(ctx context.Context, v any) (*Order, error) {

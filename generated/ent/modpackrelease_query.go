@@ -491,7 +491,7 @@ func (mrq *ModpackReleaseQuery) loadTargets(ctx context.Context, query *ModpackT
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(modpacktarget.FieldModpackID)
+		query.ctx.AppendFieldOnce(modpacktarget.FieldVersionID)
 	}
 	query.Where(predicate.ModpackTarget(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(modpackrelease.TargetsColumn), fks...))
@@ -501,10 +501,10 @@ func (mrq *ModpackReleaseQuery) loadTargets(ctx context.Context, query *ModpackT
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.ModpackID
+		fk := n.VersionID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "modpack_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "version_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

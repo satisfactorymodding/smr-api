@@ -45,7 +45,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "modpacktarget" package.
 	TargetsInverseTable = "modpack_targets"
 	// TargetsColumn is the table column denoting the targets relation/edge.
-	TargetsColumn = "modpack_id"
+	TargetsColumn = "version_id"
 )
 
 // Columns holds all SQL columns for modpackrelease fields.

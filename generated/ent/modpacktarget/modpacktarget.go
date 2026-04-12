@@ -12,8 +12,8 @@ const (
 	Label = "modpack_target"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldModpackID holds the string denoting the modpack_id field in the database.
-	FieldModpackID = "modpack_id"
+	// FieldVersionID holds the string denoting the version_id field in the database.
+	FieldVersionID = "version_id"
 	// FieldTargetName holds the string denoting the target_name field in the database.
 	FieldTargetName = "target_name"
 	// EdgeModpackRelease holds the string denoting the modpack_release edge name in mutations.
@@ -26,13 +26,13 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "modpackrelease" package.
 	ModpackReleaseInverseTable = "modpack_releases"
 	// ModpackReleaseColumn is the table column denoting the modpack_release relation/edge.
-	ModpackReleaseColumn = "modpack_id"
+	ModpackReleaseColumn = "version_id"
 )
 
 // Columns holds all SQL columns for modpacktarget fields.
 var Columns = []string{
 	FieldID,
-	FieldModpackID,
+	FieldVersionID,
 	FieldTargetName,
 }
 
@@ -59,9 +59,9 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByModpackID orders the results by the modpack_id field.
-func ByModpackID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldModpackID, opts...).ToFunc()
+// ByVersionID orders the results by the version_id field.
+func ByVersionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVersionID, opts...).ToFunc()
 }
 
 // ByTargetName orders the results by the target_name field.
