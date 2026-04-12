@@ -241,12 +241,13 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Lockfile  func(childComplexity int) int
+		Targets   func(childComplexity int) int
 		Version   func(childComplexity int) int
 	}
 
 	ModpackTarget struct {
 		ID         func(childComplexity int) int
-		ModpackID  func(childComplexity int) int
+		ReleaseID  func(childComplexity int) int
 		TargetName func(childComplexity int) int
 	}
 
@@ -1380,6 +1381,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ModpackRelease.Lockfile(childComplexity), true
 
+	case "ModpackRelease.targets":
+		if e.complexity.ModpackRelease.Targets == nil {
+			break
+		}
+
+		return e.complexity.ModpackRelease.Targets(childComplexity), true
+
 	case "ModpackRelease.version":
 		if e.complexity.ModpackRelease.Version == nil {
 			break
@@ -1394,12 +1402,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ModpackTarget.ID(childComplexity), true
 
-	case "ModpackTarget.modpack_id":
-		if e.complexity.ModpackTarget.ModpackID == nil {
+	case "ModpackTarget.release_id":
+		if e.complexity.ModpackTarget.ReleaseID == nil {
 			break
 		}
 
-		return e.complexity.ModpackTarget.ModpackID(childComplexity), true
+		return e.complexity.ModpackTarget.ReleaseID(childComplexity), true
 
 	case "ModpackTarget.target_name":
 		if e.complexity.ModpackTarget.TargetName == nil {
@@ -3511,11 +3519,13 @@ type ModpackRelease {
     created_at: Date!
     lockfile: String!
     changelog: String!
+
+    targets: [ModpackTarget!]!
 }
 
 type ModpackTarget {
     id: String!
-    modpack_id: ModpackID!
+    release_id: String!
     target_name: String!
 }
 
@@ -12239,6 +12249,8 @@ func (ec *executionContext) fieldContext_Modpack_releases(_ context.Context, fie
 				return ec.fieldContext_ModpackRelease_lockfile(ctx, field)
 			case "changelog":
 				return ec.fieldContext_ModpackRelease_changelog(ctx, field)
+			case "targets":
+				return ec.fieldContext_ModpackRelease_targets(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ModpackRelease", field.Name)
 		},
@@ -12554,6 +12566,58 @@ func (ec *executionContext) fieldContext_ModpackRelease_changelog(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ModpackRelease_targets(ctx context.Context, field graphql.CollectedField, obj *ModpackRelease) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModpackRelease_targets(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Targets, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*ModpackTarget)
+	fc.Result = res
+	return ec.marshalNModpackTarget2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackTargetᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModpackRelease_targets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModpackRelease",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ModpackTarget_id(ctx, field)
+			case "release_id":
+				return ec.fieldContext_ModpackTarget_release_id(ctx, field)
+			case "target_name":
+				return ec.fieldContext_ModpackTarget_target_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ModpackTarget", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ModpackTarget_id(ctx context.Context, field graphql.CollectedField, obj *ModpackTarget) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ModpackTarget_id(ctx, field)
 	if err != nil {
@@ -12598,8 +12662,8 @@ func (ec *executionContext) fieldContext_ModpackTarget_id(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _ModpackTarget_modpack_id(ctx context.Context, field graphql.CollectedField, obj *ModpackTarget) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ModpackTarget_modpack_id(ctx, field)
+func (ec *executionContext) _ModpackTarget_release_id(ctx context.Context, field graphql.CollectedField, obj *ModpackTarget) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModpackTarget_release_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -12612,7 +12676,7 @@ func (ec *executionContext) _ModpackTarget_modpack_id(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ModpackID, nil
+		return obj.ReleaseID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12626,17 +12690,17 @@ func (ec *executionContext) _ModpackTarget_modpack_id(ctx context.Context, field
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNModpackID2string(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ModpackTarget_modpack_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ModpackTarget_release_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ModpackTarget",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ModpackID does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -14542,6 +14606,8 @@ func (ec *executionContext) fieldContext_Mutation_createModpackRelease(ctx conte
 				return ec.fieldContext_ModpackRelease_lockfile(ctx, field)
 			case "changelog":
 				return ec.fieldContext_ModpackRelease_changelog(ctx, field)
+			case "targets":
+				return ec.fieldContext_ModpackRelease_targets(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ModpackRelease", field.Name)
 		},
@@ -17987,6 +18053,8 @@ func (ec *executionContext) fieldContext_Query_getModpackRelease(ctx context.Con
 				return ec.fieldContext_ModpackRelease_lockfile(ctx, field)
 			case "changelog":
 				return ec.fieldContext_ModpackRelease_changelog(ctx, field)
+			case "targets":
+				return ec.fieldContext_ModpackRelease_targets(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ModpackRelease", field.Name)
 		},
@@ -18109,8 +18177,8 @@ func (ec *executionContext) fieldContext_Query_getModpackTargetSupport(ctx conte
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ModpackTarget_id(ctx, field)
-			case "modpack_id":
-				return ec.fieldContext_ModpackTarget_modpack_id(ctx, field)
+			case "release_id":
+				return ec.fieldContext_ModpackTarget_release_id(ctx, field)
 			case "target_name":
 				return ec.fieldContext_ModpackTarget_target_name(ctx, field)
 			}
@@ -20480,8 +20548,8 @@ func (ec *executionContext) fieldContext_TargetLock_targets(_ context.Context, f
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ModpackTarget_id(ctx, field)
-			case "modpack_id":
-				return ec.fieldContext_ModpackTarget_modpack_id(ctx, field)
+			case "release_id":
+				return ec.fieldContext_ModpackTarget_release_id(ctx, field)
 			case "target_name":
 				return ec.fieldContext_ModpackTarget_target_name(ctx, field)
 			}
@@ -29456,6 +29524,11 @@ func (ec *executionContext) _ModpackRelease(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "targets":
+			out.Values[i] = ec._ModpackRelease_targets(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -29495,8 +29568,8 @@ func (ec *executionContext) _ModpackTarget(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "modpack_id":
-			out.Values[i] = ec._ModpackTarget_modpack_id(ctx, field, obj)
+		case "release_id":
+			out.Values[i] = ec._ModpackTarget_release_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

@@ -140,7 +140,7 @@ type VirustotalResult interface {
 // goverter:converter
 // goverter:output:file ../generated/conv/modpack.go
 // goverter:output:package conv
-// goverter:extend TimeToString UIntToInt Int64ToInt EntModpackTargetToString
+// goverter:extend TimeToString UIntToInt Int64ToInt EntModpackReleaseToGenerated
 type Modpack interface {
 	// goverter:map Edges.Tags Tags
 	// goverter:map Edges.ModpackMods Mods
@@ -152,17 +152,47 @@ type Modpack interface {
 	ConvertSlice(source []*ent.Modpack) []*generated.Modpack
 }
 
-func EntModpackTargetToString(t *ent.ModpackTarget) string {
-	return t.TargetName
+func EntModpackReleaseToGenerated(source *ent.ModpackRelease) *generated.ModpackRelease {
+	if source == nil {
+		return nil
+	}
+	targets := make([]*generated.ModpackTarget, len(source.Edges.Targets))
+	for i, t := range source.Edges.Targets {
+		targets[i] = &generated.ModpackTarget{
+			ID:         t.ID,
+			ReleaseID:  t.ModpackID,
+			TargetName: t.TargetName,
+		}
+	}
+	return &generated.ModpackRelease{
+		ID:        source.ID,
+		Version:   source.Version,
+		CreatedAt: source.CreatedAt.Format(time.RFC3339),
+		Lockfile:  source.Lockfile,
+		Changelog: source.Changelog,
+		Targets:   targets,
+	}
 }
 
 // goverter:converter
 // goverter:output:file ../generated/conv/modpack_release.go
 // goverter:output:package conv
-// goverter:extend TimeToString
+// goverter:extend TimeToString EntModpackTargetToGenerated
 type ModpackRelease interface {
+	// goverter:map Edges.Targets Targets
 	Convert(source *ent.ModpackRelease) *generated.ModpackRelease
 	ConvertSlice(source []*ent.ModpackRelease) []*generated.ModpackRelease
+}
+
+func EntModpackTargetToGenerated(source *ent.ModpackTarget) *generated.ModpackTarget {
+	if source == nil {
+		return nil
+	}
+	return &generated.ModpackTarget{
+		ID:         source.ID,
+		ReleaseID:  source.ModpackID,
+		TargetName: source.TargetName,
+	}
 }
 
 func TimeToString(i time.Time) string {

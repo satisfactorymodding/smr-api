@@ -41,6 +41,7 @@ func (r *queryResolver) GetModpack(ctx context.Context, modpackID string) (*gene
 		WithTags().
 		WithReleases(func(q *ent.ModpackReleaseQuery) {
 			q.Order(ent.Desc(modpackrelease.FieldCreatedAt))
+			q.WithTargets()
 		}).
 		WithModpackMods().
 		WithParent().
@@ -285,6 +286,7 @@ func (r *mutationResolver) DeleteModpack(ctx context.Context, modpackID string) 
 func (r *queryResolver) GetModpackRelease(ctx context.Context, modpackID string, version string) (*generated.ModpackRelease, error) {
 	dbRelease, err := db.From(ctx).ModpackRelease.Query().
 		Where(modpackrelease.HasModpackWith(modpack.ID(modpackID)), modpackrelease.Version(version)).
+		WithTargets().
 		First(ctx)
 	if err != nil {
 		return nil, err
@@ -404,7 +406,6 @@ func getSpecificTargetSupport(ctx context.Context, targetName string, versions [
 		}
 	}
 	return &generated.ModpackTarget{
-		ModpackID:  modpackID,
 		TargetName: targetName,
 	}, nil
 }
@@ -478,19 +479,44 @@ func (r *mutationResolver) CreateModpackRelease(ctx context.Context, modpackID s
 		return nil, err
 	}
 
-	dbRelease := db.From(ctx).ModpackRelease.Create().
-		SetModpackID(dbModpack.ID).
-		SetVersion(release.Version).
-		SetChangelog(release.Changelog).
-		SetLockfile(lockfile)
-
-	resultRelease, err := dbRelease.Save(ctx)
+	// Compute supported targets for this modpack
+	supportedTargets, err := GetModpackTargetSupport(ctx, modpackID)
 	if err != nil {
+		return nil, err
+	}
+
+	var resultRelease *ent.ModpackRelease
+
+	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+		dbRelease := tx.ModpackRelease.Create().
+			SetModpackID(dbModpack.ID).
+			SetVersion(release.Version).
+			SetChangelog(release.Changelog).
+			SetLockfile(lockfile)
+
+		resultRelease, err = dbRelease.Save(ctx)
+		if err != nil {
+			return err
+		}
+
+		// Persist supported targets for this release
+		for _, target := range supportedTargets {
+			if err := tx.ModpackTarget.Create().
+				SetModpackReleaseID(resultRelease.ID).
+				SetTargetName(target.TargetName).
+				Exec(ctx); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}, nil); err != nil {
 		return nil, err
 	}
 
 	resultRelease, err = db.From(ctx).ModpackRelease.Query().
 		Where(modpackrelease.ID(resultRelease.ID)).
+		WithTargets().
 		First(ctx)
 	if err != nil {
 		return nil, err

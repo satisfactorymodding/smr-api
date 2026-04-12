@@ -202,7 +202,20 @@ definitions:
         type: string
       lockfile:
         type: string
+      targets:
+        items:
+          $ref: '#/definitions/generated.ModpackTarget'
+        type: array
       version:
+        type: string
+    type: object
+  generated.ModpackTarget:
+    properties:
+      id:
+        type: string
+      release_id:
+        type: string
+      target_name:
         type: string
     type: object
   generated.Tag:

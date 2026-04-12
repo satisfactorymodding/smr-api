@@ -88,7 +88,9 @@ func getModpack(c echo.Context) (interface{}, *ErrorResponse) {
 	dbModpack, err := db.From(c.Request().Context()).Modpack.Query().
 		Where(modpack.ID(modpackID)).
 		WithTags().
-		WithReleases().
+		WithReleases(func(q *ent.ModpackReleaseQuery) {
+			q.WithTargets()
+		}).
 		WithModpackMods().
 		WithParent().
 		WithChildren().
@@ -131,6 +133,7 @@ func getModpackRelease(c echo.Context) (interface{}, *ErrorResponse) {
 
 	dbRelease, err := db.From(c.Request().Context()).ModpackRelease.Query().
 		Where(modpackrelease.HasModpackWith(modpack.ID(modpackID)), modpackrelease.Version(version)).
+		WithTargets().
 		First(c.Request().Context())
 	if err != nil {
 		if ent.IsNotFound(err) {

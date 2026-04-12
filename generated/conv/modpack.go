@@ -52,7 +52,7 @@ func (c *ModpackImpl) Convert(source *ent.Modpack) *generated.Modpack {
 		if (*source).Edges.Releases != nil {
 			generatedModpack.Releases = make([]*generated.ModpackRelease, len((*source).Edges.Releases))
 			for k := 0; k < len((*source).Edges.Releases); k++ {
-				generatedModpack.Releases[k] = c.pEntModpackReleaseToPGeneratedModpackRelease((*source).Edges.Releases[k])
+				generatedModpack.Releases[k] = conversion.EntModpackReleaseToGenerated((*source).Edges.Releases[k])
 			}
 		}
 		pGeneratedModpack = &generatedModpack
@@ -78,19 +78,6 @@ func (c *ModpackImpl) pEntModpackModToPGeneratedModpackModEntry(source *ent.Modp
 		pGeneratedModpackModEntry = &generatedModpackModEntry
 	}
 	return pGeneratedModpackModEntry
-}
-func (c *ModpackImpl) pEntModpackReleaseToPGeneratedModpackRelease(source *ent.ModpackRelease) *generated.ModpackRelease {
-	var pGeneratedModpackRelease *generated.ModpackRelease
-	if source != nil {
-		var generatedModpackRelease generated.ModpackRelease
-		generatedModpackRelease.ID = (*source).ID
-		generatedModpackRelease.Version = (*source).Version
-		generatedModpackRelease.CreatedAt = conversion.TimeToString((*source).CreatedAt)
-		generatedModpackRelease.Lockfile = (*source).Lockfile
-		generatedModpackRelease.Changelog = (*source).Changelog
-		pGeneratedModpackRelease = &generatedModpackRelease
-	}
-	return pGeneratedModpackRelease
 }
 func (c *ModpackImpl) pEntTagToPGeneratedTag(source *ent.Tag) *generated.Tag {
 	var pGeneratedTag *generated.Tag

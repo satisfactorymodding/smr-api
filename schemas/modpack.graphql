@@ -51,11 +51,13 @@ type ModpackRelease {
     created_at: Date!
     lockfile: String!
     changelog: String!
+
+    targets: [ModpackTarget!]!
 }
 
 type ModpackTarget {
     id: String!
-    modpack_id: ModpackID!
+    release_id: String!
     target_name: String!
 }
 
