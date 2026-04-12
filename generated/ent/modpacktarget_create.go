@@ -23,9 +23,9 @@ type ModpackTargetCreate struct {
 	conflict []sql.ConflictOption
 }
 
-// SetModpackID sets the "modpack_id" field.
-func (mtc *ModpackTargetCreate) SetModpackID(s string) *ModpackTargetCreate {
-	mtc.mutation.SetModpackID(s)
+// SetVersionID sets the "version_id" field.
+func (mtc *ModpackTargetCreate) SetVersionID(s string) *ModpackTargetCreate {
+	mtc.mutation.SetVersionID(s)
 	return mtc
 }
 
@@ -103,8 +103,8 @@ func (mtc *ModpackTargetCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (mtc *ModpackTargetCreate) check() error {
-	if _, ok := mtc.mutation.ModpackID(); !ok {
-		return &ValidationError{Name: "modpack_id", err: errors.New(`ent: missing required field "ModpackTarget.modpack_id"`)}
+	if _, ok := mtc.mutation.VersionID(); !ok {
+		return &ValidationError{Name: "version_id", err: errors.New(`ent: missing required field "ModpackTarget.version_id"`)}
 	}
 	if _, ok := mtc.mutation.TargetName(); !ok {
 		return &ValidationError{Name: "target_name", err: errors.New(`ent: missing required field "ModpackTarget.target_name"`)}
@@ -166,7 +166,7 @@ func (mtc *ModpackTargetCreate) createSpec() (*ModpackTarget, *sqlgraph.CreateSp
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.ModpackID = nodes[0]
+		_node.VersionID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -176,7 +176,7 @@ func (mtc *ModpackTargetCreate) createSpec() (*ModpackTarget, *sqlgraph.CreateSp
 // of the `INSERT` statement. For example:
 //
 //	client.ModpackTarget.Create().
-//		SetModpackID(v).
+//		SetVersionID(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -185,7 +185,7 @@ func (mtc *ModpackTargetCreate) createSpec() (*ModpackTarget, *sqlgraph.CreateSp
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.ModpackTargetUpsert) {
-//			SetModpackID(v+v).
+//			SetVersionID(v+v).
 //		}).
 //		Exec(ctx)
 func (mtc *ModpackTargetCreate) OnConflict(opts ...sql.ConflictOption) *ModpackTargetUpsertOne {
@@ -221,15 +221,15 @@ type (
 	}
 )
 
-// SetModpackID sets the "modpack_id" field.
-func (u *ModpackTargetUpsert) SetModpackID(v string) *ModpackTargetUpsert {
-	u.Set(modpacktarget.FieldModpackID, v)
+// SetVersionID sets the "version_id" field.
+func (u *ModpackTargetUpsert) SetVersionID(v string) *ModpackTargetUpsert {
+	u.Set(modpacktarget.FieldVersionID, v)
 	return u
 }
 
-// UpdateModpackID sets the "modpack_id" field to the value that was provided on create.
-func (u *ModpackTargetUpsert) UpdateModpackID() *ModpackTargetUpsert {
-	u.SetExcluded(modpacktarget.FieldModpackID)
+// UpdateVersionID sets the "version_id" field to the value that was provided on create.
+func (u *ModpackTargetUpsert) UpdateVersionID() *ModpackTargetUpsert {
+	u.SetExcluded(modpacktarget.FieldVersionID)
 	return u
 }
 
@@ -293,17 +293,17 @@ func (u *ModpackTargetUpsertOne) Update(set func(*ModpackTargetUpsert)) *Modpack
 	return u
 }
 
-// SetModpackID sets the "modpack_id" field.
-func (u *ModpackTargetUpsertOne) SetModpackID(v string) *ModpackTargetUpsertOne {
+// SetVersionID sets the "version_id" field.
+func (u *ModpackTargetUpsertOne) SetVersionID(v string) *ModpackTargetUpsertOne {
 	return u.Update(func(s *ModpackTargetUpsert) {
-		s.SetModpackID(v)
+		s.SetVersionID(v)
 	})
 }
 
-// UpdateModpackID sets the "modpack_id" field to the value that was provided on create.
-func (u *ModpackTargetUpsertOne) UpdateModpackID() *ModpackTargetUpsertOne {
+// UpdateVersionID sets the "version_id" field to the value that was provided on create.
+func (u *ModpackTargetUpsertOne) UpdateVersionID() *ModpackTargetUpsertOne {
 	return u.Update(func(s *ModpackTargetUpsert) {
-		s.UpdateModpackID()
+		s.UpdateVersionID()
 	})
 }
 
@@ -457,7 +457,7 @@ func (mtcb *ModpackTargetCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.ModpackTargetUpsert) {
-//			SetModpackID(v+v).
+//			SetVersionID(v+v).
 //		}).
 //		Exec(ctx)
 func (mtcb *ModpackTargetCreateBulk) OnConflict(opts ...sql.ConflictOption) *ModpackTargetUpsertBulk {
@@ -536,17 +536,17 @@ func (u *ModpackTargetUpsertBulk) Update(set func(*ModpackTargetUpsert)) *Modpac
 	return u
 }
 
-// SetModpackID sets the "modpack_id" field.
-func (u *ModpackTargetUpsertBulk) SetModpackID(v string) *ModpackTargetUpsertBulk {
+// SetVersionID sets the "version_id" field.
+func (u *ModpackTargetUpsertBulk) SetVersionID(v string) *ModpackTargetUpsertBulk {
 	return u.Update(func(s *ModpackTargetUpsert) {
-		s.SetModpackID(v)
+		s.SetVersionID(v)
 	})
 }
 
-// UpdateModpackID sets the "modpack_id" field to the value that was provided on create.
-func (u *ModpackTargetUpsertBulk) UpdateModpackID() *ModpackTargetUpsertBulk {
+// UpdateVersionID sets the "version_id" field to the value that was provided on create.
+func (u *ModpackTargetUpsertBulk) UpdateVersionID() *ModpackTargetUpsertBulk {
 	return u.Update(func(s *ModpackTargetUpsert) {
-		s.UpdateModpackID()
+		s.UpdateVersionID()
 	})
 }
 

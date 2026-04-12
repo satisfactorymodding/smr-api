@@ -130,28 +130,28 @@ func (r *mutationResolver) CreateModpack(ctx context.Context, newModpack generat
 			}
 		}
 
-			if newModpack.Logo != nil {
-		file, err := io.ReadAll(newModpack.Logo.File)
-		if err != nil {
-			return fmt.Errorf("failed to read logo file: %w", err)
-		}
-
-		logoData, thumbHash, err := converter.ConvertAnyImageToWebp(ctx, file)
-		if err != nil {
-			return fmt.Errorf("failed to convert logo file: %w", err)
-		}
-
-		logoKey, err := storage.UploadModpackLogo(ctx, resultModpack.ID, bytes.NewReader(logoData))
-		if err == nil {
-			resultModpack, err = resultModpack.Update().
-				SetLogo(storage.GenerateDownloadLink(ctx, logoKey)).
-				SetLogoThumbhash(thumbHash).
-				Save(ctx)
+		if newModpack.Logo != nil {
+			file, err := io.ReadAll(newModpack.Logo.File)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to read logo file: %w", err)
+			}
+
+			logoData, thumbHash, err := converter.ConvertAnyImageToWebp(ctx, file)
+			if err != nil {
+				return fmt.Errorf("failed to convert logo file: %w", err)
+			}
+
+			logoKey, err := storage.UploadModpackLogo(ctx, resultModpack.ID, bytes.NewReader(logoData))
+			if err == nil {
+				resultModpack, err = resultModpack.Update().
+					SetLogo(storage.GenerateDownloadLink(ctx, logoKey)).
+					SetLogoThumbhash(thumbHash).
+					Save(ctx)
+				if err != nil {
+					return err
+				}
 			}
 		}
-	}
 
 		return err
 	}, nil); err != nil {
@@ -219,9 +219,9 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 		println("Converted logo to webp, size:", len(logoData))
 
 		logoKey, err := storage.UploadModpackLogo(ctx, resultModpack.ID, bytes.NewReader(logoData))
-		
+
 		println("Uploaded logo, key:", logoKey, "error:", err)
-		
+
 		if err == nil {
 			resultModpack, err = resultModpack.Update().
 				SetLogo(storage.GenerateDownloadLink(ctx, logoKey)).
@@ -345,69 +345,67 @@ func (r *queryResolver) GetModCompatibilities(ctx context.Context, modpackID str
 	return &generated.ModCompatibilities{Compatibility: &compatibilityState, WorstEa: eaWorstList, WorstExp: expWorstList}, nil
 }
 
-func (r *queryResolver) GetModpackTargetSupport(ctx context.Context, modpackID string) ([]*generated.ModpackTarget, error) {
-	return GetModpackTargetSupport(ctx, modpackID)
-}
-
-func GetModpackTargetSupport(ctx context.Context, modpackID string) ([]*generated.ModpackTarget, error) {
-	versions, err := db.From(ctx).Modpack.Query().
-		Where(modpack.ID(modpackID)).QueryModpackMods().QueryMod().QueryVersions().
-		WithVersionDependencies(func(q *ent.VersionDependencyQuery) {
-			q.WithMod()
-		}).
-		WithTargets().
-		All(ctx)
+func GetModpackTargetSupport(ctx context.Context, mods []*ent.ModpackMod) ([]resolver.TargetName, error) {
+	results := []resolver.TargetName{}
+	supportsWindows, err := getSpecificTargetSupport(ctx, "Windows", mods)
 	if err != nil {
 		return nil, err
 	}
-
-	results := []*generated.ModpackTarget{}
-	supportsWindows, err := getSpecificTargetSupport(ctx, "Windows", versions, modpackID)
+	if supportsWindows != "" {
+		results = append(results, resolver.TargetName(supportsWindows))
+	}
+	supportsWindowsServer, err := getSpecificTargetSupport(ctx, "WindowsServer", mods)
 	if err != nil {
 		return nil, err
 	}
-	if supportsWindows != nil {
-		results = append(results, supportsWindows)
+	if supportsWindowsServer != "" {
+		results = append(results, resolver.TargetName(supportsWindowsServer))
 	}
-	supportsWindowsServer, err := getSpecificTargetSupport(ctx, "WindowsServer", versions, modpackID)
+	supportsLinuxServer, err := getSpecificTargetSupport(ctx, "LinuxServer", mods)
 	if err != nil {
 		return nil, err
 	}
-	if supportsWindowsServer != nil {
-		results = append(results, supportsWindowsServer)
-	}
-	supportsLinuxServer, err := getSpecificTargetSupport(ctx, "LinuxServer", versions, modpackID)
-	if err != nil {
-		return nil, err
-	}
-	if supportsLinuxServer != nil {
-		results = append(results, supportsLinuxServer)
+	if supportsLinuxServer != "" {
+		results = append(results, resolver.TargetName(supportsLinuxServer))
 	}
 
 	return results, nil
 }
 
-func getSpecificTargetSupport(ctx context.Context, targetName string, versions []*ent.Version, modpackID string) (*generated.ModpackTarget, error) {
+func getSpecificTargetSupport(ctx context.Context, targetName string, mods []*ent.ModpackMod) (string, error) {
+	versions := []*ent.Version{}
+	for _, m := range mods {
+		version, err := db.From(ctx).Mod.Query().
+			Where(mod.ID(m.ModID)).QueryVersions().
+			WithVersionDependencies(func(q *ent.VersionDependencyQuery) {
+				q.WithMod()
+			}).
+			WithTargets().
+			All(ctx)
+		if err != nil {
+			return "", err
+		}
+		versions = append(versions, version...)
+	}
+
 	for _, version := range versions {
 		target, _ := db.From(ctx).VersionTarget.Query().
 			Where(versiontarget.TargetName(targetName), versiontarget.VersionID(version.ID)).First(ctx)
 
 		if version.RequiredOnRemote && target == nil {
-			return nil, nil
+			return "", nil
 		}
 		if !version.RequiredOnRemote {
 			misConfiguration, err := checkAllDependency(ctx, targetName, version)
 			if err != nil {
-				return nil, err
+				return "", err
 			}
 			if misConfiguration {
-				return nil, nil
+				return "", nil
 			}
 		}
 	}
-	return &generated.ModpackTarget{
-		TargetName: targetName,
-	}, nil
+	return targetName, nil
 }
 
 // checks all dependencies to see if any are required
@@ -474,13 +472,7 @@ func (r *mutationResolver) CreateModpackRelease(ctx context.Context, modpackID s
 		return nil, err
 	}
 
-	lockfile, err := resolveModpackToLockfile(ctx, modpackID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Compute supported targets for this modpack
-	supportedTargets, err := GetModpackTargetSupport(ctx, modpackID)
+	lockfile, targets, err := resolveModpackToLockfile(ctx, modpackID)
 	if err != nil {
 		return nil, err
 	}
@@ -499,16 +491,6 @@ func (r *mutationResolver) CreateModpackRelease(ctx context.Context, modpackID s
 			return err
 		}
 
-		// Persist supported targets for this release
-		for _, target := range supportedTargets {
-			if err := tx.ModpackTarget.Create().
-				SetModpackReleaseID(resultRelease.ID).
-				SetTargetName(target.TargetName).
-				Exec(ctx); err != nil {
-				return err
-			}
-		}
-
 		return nil
 	}, nil); err != nil {
 		return nil, err
@@ -520,6 +502,14 @@ func (r *mutationResolver) CreateModpackRelease(ctx context.Context, modpackID s
 		First(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	// Create targets
+	for _, t := range targets {
+		db.From(ctx).ModpackTarget.Create().
+			SetVersionID(resultRelease.ID).
+			SetTargetName(string(t)).
+			SaveX(ctx)
 	}
 
 	return (*conv.ModpackReleaseImpl)(nil).Convert(resultRelease), nil
@@ -554,7 +544,7 @@ func (r *mutationResolver) ResolveModpack(ctx context.Context, modpackID string,
 		targetNames[i] = resolver.TargetName(target)
 	}
 
-	lockfile, err := resolveModpackToLockfile(ctx, modpackID)
+	lockfile, _, err := resolveModpackToLockfile(ctx, modpackID)
 	if err != nil {
 		return nil, err
 	}
@@ -692,7 +682,15 @@ func (r *queryResolver) GetMyModpacks(_ context.Context, _ *generated.ModpackFil
 	return &generated.GetMyModpacks{}, nil
 }
 
-func resolveModpackToLockfile(ctx context.Context, modpackID string) (string, error) {
+func (r *queryResolver) ModpackToLockfile(ctx context.Context, modpackID string) (string, error) {
+	lock, _, err := resolveModpackToLockfile(ctx, modpackID)
+	if err != nil {
+		return "", err
+	}
+	return lock, nil
+}
+
+func resolveModpackToLockfile(ctx context.Context, modpackID string) (string, []resolver.TargetName, error) {
 	pack, err := db.From(ctx).Modpack.Query().
 		WithModpackMods().
 		WithParent(func(query *ent.ModpackQuery) {
@@ -701,7 +699,7 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string) (string, er
 		Where(modpack.ID(modpackID)).
 		Only(ctx)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	constraints := make(map[string]string)
@@ -720,7 +718,7 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string) (string, er
 		Select(mod.FieldID, mod.FieldModReference).
 		All(ctx)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	referenceConstraints := make(map[string]string, len(constraints))
@@ -728,30 +726,26 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string) (string, er
 		referenceConstraints[reference.ModReference] = constraints[reference.ID]
 	}
 
-	targets, _ := GetModpackTargetSupport(ctx, modpackID)
-	targetName := []resolver.TargetName{}
-	for _, target := range targets {
-		targetName = append(targetName, resolver.TargetName(target.TargetName))
-	}
+	targets, _ := GetModpackTargetSupport(ctx, pack.Edges.ModpackMods)
 
 	dependencyResolver := resolver.NewDependencyResolver(lockfileResolver{
 		Context: ctx,
 	})
 
-	lockfile, err := dependencyResolver.ResolveModDependencies(referenceConstraints, nil, math.MaxInt, targetName)
+	lockfile, err := dependencyResolver.ResolveModDependencies(referenceConstraints, nil, math.MaxInt, targets)
 	if err != nil {
-		return "", fmt.Errorf("failed to resolve dependencies: %w", err)
+		return "", nil, fmt.Errorf("failed to resolve dependencies: %w", err)
 	}
 
 	b, err := json.Marshal(lockfile)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal lockfile: %w", err)
+		return "", nil, fmt.Errorf("failed to marshal lockfile: %w", err)
 	}
 
-	return string(b), nil
+	return string(b), targets, nil
 }
 
-func (r *queryResolver) CalculateTargetWithMods(ctx context.Context, modpackID string, mods []*generated.ModpackModInput) (*generated.TargetLock, error) {
+func (r *queryResolver) CalculateTargetWithMods(ctx context.Context, mods []*generated.ModpackModInput) (*generated.TargetLock, error) {
 
 	constraints := make(map[string]string)
 	for _, m := range mods {
@@ -770,12 +764,14 @@ func (r *queryResolver) CalculateTargetWithMods(ctx context.Context, modpackID s
 	for _, reference := range modReferences {
 		referenceConstraints[reference.ModReference] = constraints[reference.ID]
 	}
-
-	targets, _ := GetModpackTargetSupport(ctx, modpackID)
-	targetNames := []resolver.TargetName{}
-	for _, target := range targets {
-		targetNames = append(targetNames, resolver.TargetName(target.TargetName))
+	modpackmods := []*ent.ModpackMod{}
+	for _, m := range mods {
+		modpackmods = append(modpackmods, &ent.ModpackMod{
+			ModID:             m.ModID,
+			VersionConstraint: m.VersionConstraint,
+		})
 	}
+	targets, _ := GetModpackTargetSupport(ctx, modpackmods)
 
 	modpackMods := []*generated.ModpackModEntry{}
 	for ref := range referenceConstraints {
@@ -784,8 +780,12 @@ func (r *queryResolver) CalculateTargetWithMods(ctx context.Context, modpackID s
 			VersionConstraint: referenceConstraints[ref],
 		})
 	}
-
-	return &generated.TargetLock{Mods: modpackMods, Targets: targets}, nil
+	resultTargets := []*string{}
+	for _, t := range targets {
+		str := string(t)
+		resultTargets = append(resultTargets, &str)
+	}
+	return &generated.TargetLock{Mods: modpackMods, Targets: resultTargets}, nil
 }
 
 type getMyModpacksResolver struct{ *Resolver }

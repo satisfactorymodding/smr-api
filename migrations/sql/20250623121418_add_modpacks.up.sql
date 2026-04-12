@@ -60,9 +60,9 @@ CREATE TABLE "modpack_targets"
 (
     "id"          character varying NOT NULL,
     "target_name" character varying NOT NULL,
-    "modpack_id"  character varying NOT NULL,
+    "version_id"  character varying NOT NULL,
     PRIMARY KEY ("id"),
-    CONSTRAINT "modpack_targets_modpacks_targets" FOREIGN KEY ("modpack_id") REFERENCES "modpacks" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
+    CONSTRAINT "modpack_targets_modpacks_targets" FOREIGN KEY ("version_id") REFERENCES "modpack_releases" ("id") ON UPDATE NO ACTION ON DELETE CASCADE
 );
--- create index "modpacktarget_modpack_id_target_name" to table: "modpack_targets"
-CREATE UNIQUE INDEX "modpacktarget_modpack_id_target_name" ON "modpack_targets" ("modpack_id", "target_name");
+-- create index "modpacktarget_version_id_target_name" to table: "modpack_targets"
+CREATE UNIQUE INDEX "modpacktarget_version_id_target_name" ON "modpack_targets" ("version_id", "target_name");

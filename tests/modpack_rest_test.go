@@ -170,10 +170,6 @@ func TestModpacksRESTEndpoints(t *testing.T) {
 		testza.AssertTrue(t, ok)
 		testza.AssertTrue(t, len(tags) > 0)
 
-		targets, ok := modpackData["targets"].([]interface{})
-		testza.AssertTrue(t, ok)
-		testza.AssertEqual(t, 3, len(targets))
-
 		mods, ok := modpackData["mods"].([]interface{})
 		testza.AssertTrue(t, ok)
 		testza.AssertEqual(t, 3, len(mods))

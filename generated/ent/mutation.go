@@ -7964,13 +7964,13 @@ func (m *ModpackTargetMutation) IDs(ctx context.Context) ([]string, error) {
 	}
 }
 
-// SetModpackID sets the "modpack_id" field.
-func (m *ModpackTargetMutation) SetModpackID(s string) {
+// SetVersionID sets the "version_id" field.
+func (m *ModpackTargetMutation) SetVersionID(s string) {
 	m.modpack_release = &s
 }
 
-// ModpackID returns the value of the "modpack_id" field in the mutation.
-func (m *ModpackTargetMutation) ModpackID() (r string, exists bool) {
+// VersionID returns the value of the "version_id" field in the mutation.
+func (m *ModpackTargetMutation) VersionID() (r string, exists bool) {
 	v := m.modpack_release
 	if v == nil {
 		return
@@ -7978,25 +7978,25 @@ func (m *ModpackTargetMutation) ModpackID() (r string, exists bool) {
 	return *v, true
 }
 
-// OldModpackID returns the old "modpack_id" field's value of the ModpackTarget entity.
+// OldVersionID returns the old "version_id" field's value of the ModpackTarget entity.
 // If the ModpackTarget object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ModpackTargetMutation) OldModpackID(ctx context.Context) (v string, err error) {
+func (m *ModpackTargetMutation) OldVersionID(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldModpackID is only allowed on UpdateOne operations")
+		return v, errors.New("OldVersionID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldModpackID requires an ID field in the mutation")
+		return v, errors.New("OldVersionID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldModpackID: %w", err)
+		return v, fmt.Errorf("querying old value for OldVersionID: %w", err)
 	}
-	return oldValue.ModpackID, nil
+	return oldValue.VersionID, nil
 }
 
-// ResetModpackID resets all changes to the "modpack_id" field.
-func (m *ModpackTargetMutation) ResetModpackID() {
+// ResetVersionID resets all changes to the "version_id" field.
+func (m *ModpackTargetMutation) ResetVersionID() {
 	m.modpack_release = nil
 }
 
@@ -8044,7 +8044,7 @@ func (m *ModpackTargetMutation) SetModpackReleaseID(id string) {
 // ClearModpackRelease clears the "modpack_release" edge to the ModpackRelease entity.
 func (m *ModpackTargetMutation) ClearModpackRelease() {
 	m.clearedmodpack_release = true
-	m.clearedFields[modpacktarget.FieldModpackID] = struct{}{}
+	m.clearedFields[modpacktarget.FieldVersionID] = struct{}{}
 }
 
 // ModpackReleaseCleared reports if the "modpack_release" edge to the ModpackRelease entity was cleared.
@@ -8112,7 +8112,7 @@ func (m *ModpackTargetMutation) Type() string {
 func (m *ModpackTargetMutation) Fields() []string {
 	fields := make([]string, 0, 2)
 	if m.modpack_release != nil {
-		fields = append(fields, modpacktarget.FieldModpackID)
+		fields = append(fields, modpacktarget.FieldVersionID)
 	}
 	if m.target_name != nil {
 		fields = append(fields, modpacktarget.FieldTargetName)
@@ -8125,8 +8125,8 @@ func (m *ModpackTargetMutation) Fields() []string {
 // schema.
 func (m *ModpackTargetMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case modpacktarget.FieldModpackID:
-		return m.ModpackID()
+	case modpacktarget.FieldVersionID:
+		return m.VersionID()
 	case modpacktarget.FieldTargetName:
 		return m.TargetName()
 	}
@@ -8138,8 +8138,8 @@ func (m *ModpackTargetMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *ModpackTargetMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case modpacktarget.FieldModpackID:
-		return m.OldModpackID(ctx)
+	case modpacktarget.FieldVersionID:
+		return m.OldVersionID(ctx)
 	case modpacktarget.FieldTargetName:
 		return m.OldTargetName(ctx)
 	}
@@ -8151,12 +8151,12 @@ func (m *ModpackTargetMutation) OldField(ctx context.Context, name string) (ent.
 // type.
 func (m *ModpackTargetMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case modpacktarget.FieldModpackID:
+	case modpacktarget.FieldVersionID:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetModpackID(v)
+		m.SetVersionID(v)
 		return nil
 	case modpacktarget.FieldTargetName:
 		v, ok := value.(string)
@@ -8214,8 +8214,8 @@ func (m *ModpackTargetMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *ModpackTargetMutation) ResetField(name string) error {
 	switch name {
-	case modpacktarget.FieldModpackID:
-		m.ResetModpackID()
+	case modpacktarget.FieldVersionID:
+		m.ResetVersionID()
 		return nil
 	case modpacktarget.FieldTargetName:
 		m.ResetTargetName()

@@ -79,7 +79,7 @@ type GetMyModpacks {
 
 type TargetLock {
     mods: [ModpackModEntry!]!
-    targets: [ModpackTarget]!
+    targets: [String]!
 }
 
 ### Inputs
@@ -143,8 +143,8 @@ extend type Query {
 
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
     getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!
-    getModpackTargetSupport(modpackID: ModpackID!): [ModpackTarget!]!
-    calculateTargetWithMods(modpackID: ModpackID!, mods: [ModpackModInput!]): TargetLock!
+    calculateTargetWithMods(mods: [ModpackModInput!]): TargetLock!
+    modpackToLockfile(modpackID: ModpackID!): String!
 }
 
 ### Mutations

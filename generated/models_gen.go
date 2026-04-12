@@ -312,7 +312,7 @@ type TagFilter struct {
 
 type TargetLock struct {
 	Mods    []*ModpackModEntry `json:"mods"`
-	Targets []*ModpackTarget   `json:"targets"`
+	Targets []*string          `json:"targets"`
 }
 
 type UpdateAnnouncement struct {

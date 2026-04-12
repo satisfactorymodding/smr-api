@@ -289,7 +289,7 @@ var (
 	ModpackTargetsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
 		{Name: "target_name", Type: field.TypeString},
-		{Name: "modpack_id", Type: field.TypeString},
+		{Name: "version_id", Type: field.TypeString},
 	}
 	// ModpackTargetsTable holds the schema information for the "modpack_targets" table.
 	ModpackTargetsTable = &schema.Table{
@@ -306,7 +306,7 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "modpacktarget_modpack_id_target_name",
+				Name:    "modpacktarget_version_id_target_name",
 				Unique:  true,
 				Columns: []*schema.Column{ModpackTargetsColumns[2], ModpackTargetsColumns[1]},
 			},

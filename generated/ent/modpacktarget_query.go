@@ -300,12 +300,12 @@ func (mtq *ModpackTargetQuery) WithModpackRelease(opts ...func(*ModpackReleaseQu
 // Example:
 //
 //	var v []struct {
-//		ModpackID string `json:"modpack_id,omitempty"`
+//		VersionID string `json:"version_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.ModpackTarget.Query().
-//		GroupBy(modpacktarget.FieldModpackID).
+//		GroupBy(modpacktarget.FieldVersionID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (mtq *ModpackTargetQuery) GroupBy(field string, fields ...string) *ModpackTargetGroupBy {
@@ -323,11 +323,11 @@ func (mtq *ModpackTargetQuery) GroupBy(field string, fields ...string) *ModpackT
 // Example:
 //
 //	var v []struct {
-//		ModpackID string `json:"modpack_id,omitempty"`
+//		VersionID string `json:"version_id,omitempty"`
 //	}
 //
 //	client.ModpackTarget.Query().
-//		Select(modpacktarget.FieldModpackID).
+//		Select(modpacktarget.FieldVersionID).
 //		Scan(ctx, &v)
 func (mtq *ModpackTargetQuery) Select(fields ...string) *ModpackTargetSelect {
 	mtq.ctx.Fields = append(mtq.ctx.Fields, fields...)
@@ -410,7 +410,7 @@ func (mtq *ModpackTargetQuery) loadModpackRelease(ctx context.Context, query *Mo
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*ModpackTarget)
 	for i := range nodes {
-		fk := nodes[i].ModpackID
+		fk := nodes[i].VersionID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -427,7 +427,7 @@ func (mtq *ModpackTargetQuery) loadModpackRelease(ctx context.Context, query *Mo
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "modpack_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "version_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -465,7 +465,7 @@ func (mtq *ModpackTargetQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 		if mtq.withModpackRelease != nil {
-			_spec.Node.AddColumnOnce(modpacktarget.FieldModpackID)
+			_spec.Node.AddColumnOnce(modpacktarget.FieldVersionID)
 		}
 	}
 	if ps := mtq.predicates; len(ps) > 0 {

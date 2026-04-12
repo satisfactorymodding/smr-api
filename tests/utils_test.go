@@ -48,7 +48,6 @@ type testModpack struct {
 	ShortDescription string   `json:"short_description"`
 	FullDescription  string   `json:"full_description"`
 	TagIDs           []string `json:"tagIDs"`
-	Targets          []string `json:"targets"`
 	Mods             []struct {
 		ModID             string `json:"mod_id"`
 		VersionConstraint string `json:"version_constraint"`
@@ -64,7 +63,6 @@ func seedModpacks(ctx context.Context, t *testing.T, token string, client *graph
 			ShortDescription: "The ultimate collection of factory enhancement mods",
 			FullDescription:  "This modpack includes the best mods for optimizing and enhancing your factory operations, from automation to resource management.",
 			TagIDs:           tagIDs,
-			Targets:          []string{"Windows", "WindowsServer", "LinuxServer"},
 			Mods: []struct {
 				ModID             string `json:"mod_id"`
 				VersionConstraint string `json:"version_constraint"`
@@ -79,7 +77,6 @@ func seedModpacks(ctx context.Context, t *testing.T, token string, client *graph
 			ShortDescription: "Perfect for new players getting started",
 			FullDescription:  "A carefully curated selection of beginner-friendly mods that enhance the game experience without overwhelming new players.",
 			TagIDs:           []string{tagIDs[0]},
-			Targets:          []string{"Windows"},
 			Mods: []struct {
 				ModID             string `json:"mod_id"`
 				VersionConstraint string `json:"version_constraint"`
@@ -93,7 +90,6 @@ func seedModpacks(ctx context.Context, t *testing.T, token string, client *graph
 			ShortDescription: "For experienced players seeking complex challenges",
 			FullDescription:  "Advanced mods that add complexity and new engineering challenges for experienced players.",
 			TagIDs:           []string{tagIDs[1]},
-			Targets:          []string{"Windows", "WindowsServer", "LinuxServer"},
 			Mods: []struct {
 				ModID             string `json:"mod_id"`
 				VersionConstraint string `json:"version_constraint"`

@@ -17,8 +17,8 @@ type ModpackTarget struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
-	// ModpackID holds the value of the "modpack_id" field.
-	ModpackID string `json:"modpack_id,omitempty"`
+	// VersionID holds the value of the "version_id" field.
+	VersionID string `json:"version_id,omitempty"`
 	// TargetName holds the value of the "target_name" field.
 	TargetName string `json:"target_name,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -52,7 +52,7 @@ func (*ModpackTarget) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case modpacktarget.FieldID, modpacktarget.FieldModpackID, modpacktarget.FieldTargetName:
+		case modpacktarget.FieldID, modpacktarget.FieldVersionID, modpacktarget.FieldTargetName:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -75,11 +75,11 @@ func (mt *ModpackTarget) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				mt.ID = value.String
 			}
-		case modpacktarget.FieldModpackID:
+		case modpacktarget.FieldVersionID:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field modpack_id", values[i])
+				return fmt.Errorf("unexpected type %T for field version_id", values[i])
 			} else if value.Valid {
-				mt.ModpackID = value.String
+				mt.VersionID = value.String
 			}
 		case modpacktarget.FieldTargetName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -128,8 +128,8 @@ func (mt *ModpackTarget) String() string {
 	var builder strings.Builder
 	builder.WriteString("ModpackTarget(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", mt.ID))
-	builder.WriteString("modpack_id=")
-	builder.WriteString(mt.ModpackID)
+	builder.WriteString("version_id=")
+	builder.WriteString(mt.VersionID)
 	builder.WriteString(", ")
 	builder.WriteString("target_name=")
 	builder.WriteString(mt.TargetName)

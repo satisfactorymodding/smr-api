@@ -63,9 +63,9 @@ func IDContainsFold(id string) predicate.ModpackTarget {
 	return predicate.ModpackTarget(sql.FieldContainsFold(FieldID, id))
 }
 
-// ModpackID applies equality check predicate on the "modpack_id" field. It's identical to ModpackIDEQ.
-func ModpackID(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldEQ(FieldModpackID, v))
+// VersionID applies equality check predicate on the "version_id" field. It's identical to VersionIDEQ.
+func VersionID(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldEQ(FieldVersionID, v))
 }
 
 // TargetName applies equality check predicate on the "target_name" field. It's identical to TargetNameEQ.
@@ -73,69 +73,69 @@ func TargetName(v string) predicate.ModpackTarget {
 	return predicate.ModpackTarget(sql.FieldEQ(FieldTargetName, v))
 }
 
-// ModpackIDEQ applies the EQ predicate on the "modpack_id" field.
-func ModpackIDEQ(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldEQ(FieldModpackID, v))
+// VersionIDEQ applies the EQ predicate on the "version_id" field.
+func VersionIDEQ(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldEQ(FieldVersionID, v))
 }
 
-// ModpackIDNEQ applies the NEQ predicate on the "modpack_id" field.
-func ModpackIDNEQ(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldNEQ(FieldModpackID, v))
+// VersionIDNEQ applies the NEQ predicate on the "version_id" field.
+func VersionIDNEQ(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldNEQ(FieldVersionID, v))
 }
 
-// ModpackIDIn applies the In predicate on the "modpack_id" field.
-func ModpackIDIn(vs ...string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldIn(FieldModpackID, vs...))
+// VersionIDIn applies the In predicate on the "version_id" field.
+func VersionIDIn(vs ...string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldIn(FieldVersionID, vs...))
 }
 
-// ModpackIDNotIn applies the NotIn predicate on the "modpack_id" field.
-func ModpackIDNotIn(vs ...string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldNotIn(FieldModpackID, vs...))
+// VersionIDNotIn applies the NotIn predicate on the "version_id" field.
+func VersionIDNotIn(vs ...string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldNotIn(FieldVersionID, vs...))
 }
 
-// ModpackIDGT applies the GT predicate on the "modpack_id" field.
-func ModpackIDGT(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldGT(FieldModpackID, v))
+// VersionIDGT applies the GT predicate on the "version_id" field.
+func VersionIDGT(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldGT(FieldVersionID, v))
 }
 
-// ModpackIDGTE applies the GTE predicate on the "modpack_id" field.
-func ModpackIDGTE(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldGTE(FieldModpackID, v))
+// VersionIDGTE applies the GTE predicate on the "version_id" field.
+func VersionIDGTE(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldGTE(FieldVersionID, v))
 }
 
-// ModpackIDLT applies the LT predicate on the "modpack_id" field.
-func ModpackIDLT(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldLT(FieldModpackID, v))
+// VersionIDLT applies the LT predicate on the "version_id" field.
+func VersionIDLT(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldLT(FieldVersionID, v))
 }
 
-// ModpackIDLTE applies the LTE predicate on the "modpack_id" field.
-func ModpackIDLTE(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldLTE(FieldModpackID, v))
+// VersionIDLTE applies the LTE predicate on the "version_id" field.
+func VersionIDLTE(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldLTE(FieldVersionID, v))
 }
 
-// ModpackIDContains applies the Contains predicate on the "modpack_id" field.
-func ModpackIDContains(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldContains(FieldModpackID, v))
+// VersionIDContains applies the Contains predicate on the "version_id" field.
+func VersionIDContains(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldContains(FieldVersionID, v))
 }
 
-// ModpackIDHasPrefix applies the HasPrefix predicate on the "modpack_id" field.
-func ModpackIDHasPrefix(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldHasPrefix(FieldModpackID, v))
+// VersionIDHasPrefix applies the HasPrefix predicate on the "version_id" field.
+func VersionIDHasPrefix(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldHasPrefix(FieldVersionID, v))
 }
 
-// ModpackIDHasSuffix applies the HasSuffix predicate on the "modpack_id" field.
-func ModpackIDHasSuffix(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldHasSuffix(FieldModpackID, v))
+// VersionIDHasSuffix applies the HasSuffix predicate on the "version_id" field.
+func VersionIDHasSuffix(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldHasSuffix(FieldVersionID, v))
 }
 
-// ModpackIDEqualFold applies the EqualFold predicate on the "modpack_id" field.
-func ModpackIDEqualFold(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldEqualFold(FieldModpackID, v))
+// VersionIDEqualFold applies the EqualFold predicate on the "version_id" field.
+func VersionIDEqualFold(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldEqualFold(FieldVersionID, v))
 }
 
-// ModpackIDContainsFold applies the ContainsFold predicate on the "modpack_id" field.
-func ModpackIDContainsFold(v string) predicate.ModpackTarget {
-	return predicate.ModpackTarget(sql.FieldContainsFold(FieldModpackID, v))
+// VersionIDContainsFold applies the ContainsFold predicate on the "version_id" field.
+func VersionIDContainsFold(v string) predicate.ModpackTarget {
+	return predicate.ModpackTarget(sql.FieldContainsFold(FieldVersionID, v))
 }
 
 // TargetNameEQ applies the EQ predicate on the "target_name" field.

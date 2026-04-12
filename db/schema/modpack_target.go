@@ -20,7 +20,7 @@ func (ModpackTarget) Mixin() []ent.Mixin {
 
 func (ModpackTarget) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("modpack_id"),
+		field.String("version_id"),
 		field.String("target_name"),
 	}
 }
@@ -29,7 +29,7 @@ func (ModpackTarget) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("modpack_release", ModpackRelease.Type).
 			Ref("targets").
-			Field("modpack_id").
+			Field("version_id").
 			Unique().
 			Required().
 			Annotations(entsql.OnDelete(entsql.Cascade)),
@@ -38,6 +38,6 @@ func (ModpackTarget) Edges() []ent.Edge {
 
 func (ModpackTarget) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("modpack_id", "target_name").Unique(),
+		index.Fields("version_id", "target_name").Unique(),
 	}
 }

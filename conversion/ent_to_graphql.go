@@ -160,7 +160,7 @@ func EntModpackReleaseToGenerated(source *ent.ModpackRelease) *generated.Modpack
 	for i, t := range source.Edges.Targets {
 		targets[i] = &generated.ModpackTarget{
 			ID:         t.ID,
-			ReleaseID:  t.ModpackID,
+			ReleaseID:  source.ID,
 			TargetName: t.TargetName,
 		}
 	}
@@ -190,7 +190,7 @@ func EntModpackTargetToGenerated(source *ent.ModpackTarget) *generated.ModpackTa
 	}
 	return &generated.ModpackTarget{
 		ID:         source.ID,
-		ReleaseID:  source.ModpackID,
+		ReleaseID:  source.VersionID,
 		TargetName: source.TargetName,
 	}
 }

@@ -958,7 +958,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve a user's mods by user ID
+      description: Retrieve a users mods by user ID
       parameters:
       - description: User ID
         in: path
@@ -970,7 +970,7 @@ paths:
       responses:
         "200":
           description: OK
-      summary: Retrieve a User's Mods
+      summary: Retrieve a Users Mods
       tags:
       - User
   /user/me:
@@ -1003,13 +1003,13 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve the user's mods associated with the token
+      description: Retrieve the users mods associated with the token
       produces:
       - application/json
       responses:
         "200":
           description: OK
-      summary: Retrieve Current User's Mods
+      summary: Retrieve Current Users Mods
       tags:
       - User
   /users/{userIds}:

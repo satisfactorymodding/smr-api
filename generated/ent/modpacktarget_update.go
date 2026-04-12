@@ -29,16 +29,16 @@ func (mtu *ModpackTargetUpdate) Where(ps ...predicate.ModpackTarget) *ModpackTar
 	return mtu
 }
 
-// SetModpackID sets the "modpack_id" field.
-func (mtu *ModpackTargetUpdate) SetModpackID(s string) *ModpackTargetUpdate {
-	mtu.mutation.SetModpackID(s)
+// SetVersionID sets the "version_id" field.
+func (mtu *ModpackTargetUpdate) SetVersionID(s string) *ModpackTargetUpdate {
+	mtu.mutation.SetVersionID(s)
 	return mtu
 }
 
-// SetNillableModpackID sets the "modpack_id" field if the given value is not nil.
-func (mtu *ModpackTargetUpdate) SetNillableModpackID(s *string) *ModpackTargetUpdate {
+// SetNillableVersionID sets the "version_id" field if the given value is not nil.
+func (mtu *ModpackTargetUpdate) SetNillableVersionID(s *string) *ModpackTargetUpdate {
 	if s != nil {
-		mtu.SetModpackID(*s)
+		mtu.SetVersionID(*s)
 	}
 	return mtu
 }
@@ -186,16 +186,16 @@ type ModpackTargetUpdateOne struct {
 	modifiers []func(*sql.UpdateBuilder)
 }
 
-// SetModpackID sets the "modpack_id" field.
-func (mtuo *ModpackTargetUpdateOne) SetModpackID(s string) *ModpackTargetUpdateOne {
-	mtuo.mutation.SetModpackID(s)
+// SetVersionID sets the "version_id" field.
+func (mtuo *ModpackTargetUpdateOne) SetVersionID(s string) *ModpackTargetUpdateOne {
+	mtuo.mutation.SetVersionID(s)
 	return mtuo
 }
 
-// SetNillableModpackID sets the "modpack_id" field if the given value is not nil.
-func (mtuo *ModpackTargetUpdateOne) SetNillableModpackID(s *string) *ModpackTargetUpdateOne {
+// SetNillableVersionID sets the "version_id" field if the given value is not nil.
+func (mtuo *ModpackTargetUpdateOne) SetNillableVersionID(s *string) *ModpackTargetUpdateOne {
 	if s != nil {
-		mtuo.SetModpackID(*s)
+		mtuo.SetVersionID(*s)
 	}
 	return mtuo
 }
