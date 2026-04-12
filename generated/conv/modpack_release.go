@@ -20,6 +20,12 @@ func (c *ModpackReleaseImpl) Convert(source *ent.ModpackRelease) *generated.Modp
 		generatedModpackRelease.CreatedAt = conversion.TimeToString((*source).CreatedAt)
 		generatedModpackRelease.Lockfile = (*source).Lockfile
 		generatedModpackRelease.Changelog = (*source).Changelog
+		if (*source).Edges.Targets != nil {
+			generatedModpackRelease.Targets = make([]*generated.ModpackTarget, len((*source).Edges.Targets))
+			for i := 0; i < len((*source).Edges.Targets); i++ {
+				generatedModpackRelease.Targets[i] = conversion.EntModpackTargetToGenerated((*source).Edges.Targets[i])
+			}
+		}
 		pGeneratedModpackRelease = &generatedModpackRelease
 	}
 	return pGeneratedModpackRelease

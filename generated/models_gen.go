@@ -200,16 +200,17 @@ type ModpackModInput struct {
 }
 
 type ModpackRelease struct {
-	ID        string `json:"id"`
-	Version   string `json:"version"`
-	CreatedAt string `json:"created_at"`
-	Lockfile  string `json:"lockfile"`
-	Changelog string `json:"changelog"`
+	ID        string           `json:"id"`
+	Version   string           `json:"version"`
+	CreatedAt string           `json:"created_at"`
+	Lockfile  string           `json:"lockfile"`
+	Changelog string           `json:"changelog"`
+	Targets   []*ModpackTarget `json:"targets"`
 }
 
 type ModpackTarget struct {
 	ID         string `json:"id"`
-	ModpackID  string `json:"modpack_id"`
+	ReleaseID  string `json:"release_id"`
 	TargetName string `json:"target_name"`
 }
 

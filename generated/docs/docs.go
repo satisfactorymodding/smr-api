@@ -1316,7 +1316,27 @@ const docTemplate = `{
                 "lockfile": {
                     "type": "string"
                 },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.ModpackTarget"
+                    }
+                },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.ModpackTarget": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "release_id": {
+                    "type": "string"
+                },
+                "target_name": {
                     "type": "string"
                 }
             }
