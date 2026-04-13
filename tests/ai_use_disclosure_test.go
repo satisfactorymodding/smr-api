@@ -53,11 +53,12 @@ func TestAiDisclosure(t *testing.T) {
 			}
 		}
 	}`, token)
-	var disclosureString string = "This mod uses AI for testing purposes"
+	disclosureString := "This mod uses AI for testing purposes"
 	disclosureRequest.Var("mod_reference", "newMod")
 	disclosureRequest.Var("ai_use_disclosure", generated.AIUseDisclosureInput{
 		DisclosureType:   "ai_usage",
-		DisclosureString: &disclosureString})
+		DisclosureString: &disclosureString,
+	})
 
 	var createResponse struct {
 		CreateMod generated.Mod
