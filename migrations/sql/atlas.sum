@@ -1,4 +1,4 @@
-h1:WMrk/J60hQhxK1kEeaLDhX9ODsD77cG2FiMzHDKZ+4k=
+h1:gTe2WukWgUxHAMbJUMqOgg4xEPtorGbPKIbODY0OtBM=
 000001_create_initial_tables.down.sql h1:QcXXwE8ir3PM3vZjQfBihY55WiuLYjN8pbbk/L6U+bs=
 000001_create_initial_tables.up.sql h1:EfAqETefs7TW9BDVS4ukiB7wUFs+HQzVdc3qHhdAFd4=
 000002_create_user_group_table.down.sql h1:uJjRbQ3H7yvPGNXLD5iSPmderEoWhCNGdsqN8yqBIRY=
@@ -85,3 +85,5 @@ h1:WMrk/J60hQhxK1kEeaLDhX9ODsD77cG2FiMzHDKZ+4k=
 20260318162543_create_user_modpacks_table.up.sql h1:6ZrIqJ36NhWlUHxeVgWKQAYZT9Ujsiyh4MICEj5S6Co=
 20260321003544.down.sql h1:Y3eOGTG+fRJHfo2WtORe/Rp1ggEcjUermS6tr8as3KA=
 20260321003544.up.sql h1:mxcnphe1Qe9INkre0nn2xmTelQjx3Vl8ohb1KhMJjyA=
+20260413062730_ci_migration.down.sql h1:8ny5WUOpYwCAk3PR/l8KjBV8naNAiVVi7buh8kbuvgw=
+20260413062730_ci_migration.up.sql h1:OE0oFR5IpYgTcGzcNsH2vVX3mFr1xOTKVCxCDeI1FfA=
