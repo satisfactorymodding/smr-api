@@ -286,6 +286,7 @@ type ComplexityRoot struct {
 		UpdateModCompatibility           func(childComplexity int, modID string, compatibility CompatibilityInfoInput) int
 		UpdateModpack                    func(childComplexity int, modpackID string, modpack UpdateModpack) int
 		UpdateModpackCompatibility       func(childComplexity int, modpackID string, compatibility CompatibilityInfoInput) int
+		UpdateModpackRelease             func(childComplexity int, modpackID string, version string, release UpdateModpackRelease) int
 		UpdateMultipleModCompatibilities func(childComplexity int, modIDs []string, compatibility CompatibilityInfoInput) int
 		UpdateSatisfactoryVersion        func(childComplexity int, id string, input UpdateSatisfactoryVersion) int
 		UpdateTag                        func(childComplexity int, tagID string, newName string, description string) int
@@ -301,43 +302,44 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CalculateTargetWithMods      func(childComplexity int, mods []*ModpackModInput) int
-		CheckVersionUploadState      func(childComplexity int, modID string, versionID string) int
-		GetAnnouncement              func(childComplexity int, announcementID string) int
-		GetAnnouncements             func(childComplexity int) int
-		GetAnnouncementsByImportance func(childComplexity int, importance AnnouncementImportance) int
-		GetGuide                     func(childComplexity int, guideID string) int
-		GetGuides                    func(childComplexity int, filter map[string]interface{}) int
-		GetMe                        func(childComplexity int) int
-		GetMod                       func(childComplexity int, modID string) int
-		GetModAssetList              func(childComplexity int, modReference string) int
-		GetModByIDOrReference        func(childComplexity int, modIDOrReference string) int
-		GetModByReference            func(childComplexity int, modReference string) int
-		GetModCompatibilities        func(childComplexity int, modpackID string) int
-		GetModpack                   func(childComplexity int, modpackID string) int
-		GetModpackRelease            func(childComplexity int, modpackID string, version string) int
-		GetModpacks                  func(childComplexity int, filter *ModpackFilter) int
-		GetMods                      func(childComplexity int, filter map[string]interface{}) int
-		GetMyModpacks                func(childComplexity int, filter *ModpackFilter) int
-		GetMyMods                    func(childComplexity int, filter map[string]interface{}) int
-		GetMyUnapprovedMods          func(childComplexity int, filter map[string]interface{}) int
-		GetMyUnapprovedVersions      func(childComplexity int, filter map[string]interface{}) int
-		GetMyVersions                func(childComplexity int, filter map[string]interface{}) int
-		GetOAuthOptions              func(childComplexity int, callbackURL string) int
-		GetSMLVersion                func(childComplexity int, smlVersionID string) int
-		GetSMLVersions               func(childComplexity int, filter map[string]interface{}) int
-		GetSatisfactoryVersion       func(childComplexity int, id string) int
-		GetSatisfactoryVersions      func(childComplexity int) int
-		GetTag                       func(childComplexity int, tagID string) int
-		GetTags                      func(childComplexity int, filter *TagFilter) int
-		GetUnapprovedMods            func(childComplexity int, filter map[string]interface{}) int
-		GetUnapprovedVersions        func(childComplexity int, filter map[string]interface{}) int
-		GetUser                      func(childComplexity int, userID string) int
-		GetUsers                     func(childComplexity int, userIds []string) int
-		GetVersion                   func(childComplexity int, versionID string) int
-		GetVersions                  func(childComplexity int, filter map[string]interface{}) int
-		ModpackToLockfile            func(childComplexity int, modpackID string) int
-		ResolveModVersions           func(childComplexity int, filter []*ModVersionConstraint) int
+		CalculateTargetWithMods        func(childComplexity int, mods []*ModpackModInput) int
+		CheckVersionUploadState        func(childComplexity int, modID string, versionID string) int
+		GetAnnouncement                func(childComplexity int, announcementID string) int
+		GetAnnouncements               func(childComplexity int) int
+		GetAnnouncementsByImportance   func(childComplexity int, importance AnnouncementImportance) int
+		GetGuide                       func(childComplexity int, guideID string) int
+		GetGuides                      func(childComplexity int, filter map[string]interface{}) int
+		GetMe                          func(childComplexity int) int
+		GetMod                         func(childComplexity int, modID string) int
+		GetModAssetList                func(childComplexity int, modReference string) int
+		GetModByIDOrReference          func(childComplexity int, modIDOrReference string) int
+		GetModByReference              func(childComplexity int, modReference string) int
+		GetModCompatibilities          func(childComplexity int, modpackID string) int
+		GetModpack                     func(childComplexity int, modpackID string) int
+		GetModpackRelease              func(childComplexity int, modpackID string, version string) int
+		GetModpacks                    func(childComplexity int, filter *ModpackFilter) int
+		GetMods                        func(childComplexity int, filter map[string]interface{}) int
+		GetMyModpacks                  func(childComplexity int, filter *ModpackFilter) int
+		GetMyMods                      func(childComplexity int, filter map[string]interface{}) int
+		GetMyUnapprovedMods            func(childComplexity int, filter map[string]interface{}) int
+		GetMyUnapprovedVersions        func(childComplexity int, filter map[string]interface{}) int
+		GetMyVersions                  func(childComplexity int, filter map[string]interface{}) int
+		GetOAuthOptions                func(childComplexity int, callbackURL string) int
+		GetSMLVersion                  func(childComplexity int, smlVersionID string) int
+		GetSMLVersions                 func(childComplexity int, filter map[string]interface{}) int
+		GetSatisfactoryVersion         func(childComplexity int, id string) int
+		GetSatisfactoryVersions        func(childComplexity int) int
+		GetTag                         func(childComplexity int, tagID string) int
+		GetTags                        func(childComplexity int, filter *TagFilter) int
+		GetUnapprovedMods              func(childComplexity int, filter map[string]interface{}) int
+		GetUnapprovedVersions          func(childComplexity int, filter map[string]interface{}) int
+		GetUser                        func(childComplexity int, userID string) int
+		GetUsers                       func(childComplexity int, userIds []string) int
+		GetVersion                     func(childComplexity int, versionID string) int
+		GetVersions                    func(childComplexity int, filter map[string]interface{}) int
+		ModpackToLockfile              func(childComplexity int, modpackID string) int
+		ResolveModVersions             func(childComplexity int, filter []*ModVersionConstraint) int
+		ResolveModpackSpecificVersions func(childComplexity int, modpackID string) int
 	}
 
 	SMLVersion struct {
@@ -542,6 +544,7 @@ type MutationResolver interface {
 	UpdateModpack(ctx context.Context, modpackID string, modpack UpdateModpack) (*Modpack, error)
 	DeleteModpack(ctx context.Context, modpackID string) (bool, error)
 	CreateModpackRelease(ctx context.Context, modpackID string, release NewModpackRelease) (*ModpackRelease, error)
+	UpdateModpackRelease(ctx context.Context, modpackID string, version string, release UpdateModpackRelease) (*ModpackRelease, error)
 	DeleteModpackRelease(ctx context.Context, modpackID string, version string) (bool, error)
 	ResolveModpack(ctx context.Context, modpackID string, targets []string) (*string, error)
 	CreateSatisfactoryVersion(ctx context.Context, input NewSatisfactoryVersion) (*SatisfactoryVersion, error)
@@ -586,6 +589,7 @@ type QueryResolver interface {
 	GetModpackRelease(ctx context.Context, modpackID string, version string) (*ModpackRelease, error)
 	GetModCompatibilities(ctx context.Context, modpackID string) (*ModCompatibilities, error)
 	CalculateTargetWithMods(ctx context.Context, mods []*ModpackModInput) (*TargetLock, error)
+	ResolveModpackSpecificVersions(ctx context.Context, modpackID string) ([]*ModpackModEntry, error)
 	ModpackToLockfile(ctx context.Context, modpackID string) (string, error)
 	GetSatisfactoryVersions(ctx context.Context) ([]*SatisfactoryVersion, error)
 	GetSatisfactoryVersion(ctx context.Context, id string) (*SatisfactoryVersion, error)
@@ -1819,6 +1823,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.UpdateModpackCompatibility(childComplexity, args["modpackId"].(string), args["compatibility"].(CompatibilityInfoInput)), true
 
+	case "Mutation.updateModpackRelease":
+		if e.complexity.Mutation.UpdateModpackRelease == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateModpackRelease_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateModpackRelease(childComplexity, args["modpackID"].(string), args["version"].(string), args["release"].(UpdateModpackRelease)), true
+
 	case "Mutation.updateMultipleModCompatibilities":
 		if e.complexity.Mutation.UpdateMultipleModCompatibilities == nil {
 			break
@@ -2340,6 +2356,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.ResolveModVersions(childComplexity, args["filter"].([]*ModVersionConstraint)), true
+
+	case "Query.resolveModpackSpecificVersions":
+		if e.complexity.Query.ResolveModpackSpecificVersions == nil {
+			break
+		}
+
+		args, err := ec.field_Query_resolveModpackSpecificVersions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ResolveModpackSpecificVersions(childComplexity, args["modpackID"].(string)), true
 
 	case "SMLVersion.bootstrap_version":
 		if e.complexity.SMLVersion.BootstrapVersion == nil {
@@ -3035,6 +3063,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateGuide,
 		ec.unmarshalInputUpdateMod,
 		ec.unmarshalInputUpdateModpack,
+		ec.unmarshalInputUpdateModpackRelease,
 		ec.unmarshalInputUpdateSatisfactoryVersion,
 		ec.unmarshalInputUpdateUser,
 		ec.unmarshalInputUpdateUserMod,
@@ -3601,6 +3630,11 @@ input NewModpackRelease {
     changelog: String!
 }
 
+input UpdateModpackRelease {
+    version: String
+    changelog: String
+}
+
 ### Queries
 
 extend type Query {
@@ -3612,6 +3646,7 @@ extend type Query {
     getModpackRelease(modpackID: ModpackID!, version: String!): ModpackRelease
     getModCompatibilities(modpackID: ModpackID!): ModCompatibilities!
     calculateTargetWithMods(mods: [ModpackModInput!]): TargetLock!
+    resolveModpackSpecificVersions(modpackID: ModpackID!): [ModpackModEntry!]!
     modpackToLockfile(modpackID: ModpackID!): String!
 }
 
@@ -3623,6 +3658,7 @@ extend type Mutation {
     deleteModpack(modpackID: ModpackID!): Boolean! @canEditModpack(field: "modpackID") @isLoggedIn
 
     createModpackRelease(modpackID: ModpackID!, release: NewModpackRelease!): ModpackRelease! @canEditModpack(field: "modpackID") @isLoggedIn
+    updateModpackRelease(modpackID: ModpackID!, version: String!, release: UpdateModpackRelease!): ModpackRelease! @canEditModpack(field: "modpackID") @isLoggedIn
     deleteModpackRelease(modpackID: ModpackID!, version: String!): Boolean! @canEditModpack(field: "modpackID") @isLoggedIn
     resolveModpack(modpackID: ModpackID!, targets: [String!]!): String @canEditModpack(field: "modpackID") @isLoggedIn
 }
@@ -5518,6 +5554,80 @@ func (ec *executionContext) field_Mutation_updateModpackCompatibility_argsCompat
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_updateModpackRelease_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateModpackRelease_argsModpackID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["modpackID"] = arg0
+	arg1, err := ec.field_Mutation_updateModpackRelease_argsVersion(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["version"] = arg1
+	arg2, err := ec.field_Mutation_updateModpackRelease_argsRelease(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["release"] = arg2
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateModpackRelease_argsModpackID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modpackID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modpackID"))
+	if tmp, ok := rawArgs["modpackID"]; ok {
+		return ec.unmarshalNModpackID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateModpackRelease_argsVersion(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["version"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+	if tmp, ok := rawArgs["version"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateModpackRelease_argsRelease(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (UpdateModpackRelease, error) {
+	if _, ok := rawArgs["release"]; !ok {
+		var zeroVal UpdateModpackRelease
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("release"))
+	if tmp, ok := rawArgs["release"]; ok {
+		return ec.unmarshalNUpdateModpackRelease2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateModpackRelease(ctx, tmp)
+	}
+
+	var zeroVal UpdateModpackRelease
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_updateModpack_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -6967,6 +7077,34 @@ func (ec *executionContext) field_Query_resolveModVersions_argsFilter(
 	}
 
 	var zeroVal []*ModVersionConstraint
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_resolveModpackSpecificVersions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_resolveModpackSpecificVersions_argsModpackID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["modpackID"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_resolveModpackSpecificVersions_argsModpackID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["modpackID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("modpackID"))
+	if tmp, ok := rawArgs["modpackID"]; ok {
+		return ec.unmarshalNModpackID2string(ctx, tmp)
+	}
+
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -14603,6 +14741,109 @@ func (ec *executionContext) fieldContext_Mutation_createModpackRelease(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_updateModpackRelease(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateModpackRelease(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateModpackRelease(rctx, fc.Args["modpackID"].(string), fc.Args["version"].(string), fc.Args["release"].(UpdateModpackRelease))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			field, err := ec.unmarshalNString2string(ctx, "modpackID")
+			if err != nil {
+				var zeroVal *ModpackRelease
+				return zeroVal, err
+			}
+			if ec.directives.CanEditModpack == nil {
+				var zeroVal *ModpackRelease
+				return zeroVal, errors.New("directive canEditModpack is not implemented")
+			}
+			return ec.directives.CanEditModpack(ctx, nil, directive0, field)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.IsLoggedIn == nil {
+				var zeroVal *ModpackRelease
+				return zeroVal, errors.New("directive isLoggedIn is not implemented")
+			}
+			return ec.directives.IsLoggedIn(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*ModpackRelease); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/satisfactorymodding/smr-api/generated.ModpackRelease`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ModpackRelease)
+	fc.Result = res
+	return ec.marshalNModpackRelease2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackRelease(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateModpackRelease(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ModpackRelease_id(ctx, field)
+			case "version":
+				return ec.fieldContext_ModpackRelease_version(ctx, field)
+			case "created_at":
+				return ec.fieldContext_ModpackRelease_created_at(ctx, field)
+			case "lockfile":
+				return ec.fieldContext_ModpackRelease_lockfile(ctx, field)
+			case "changelog":
+				return ec.fieldContext_ModpackRelease_changelog(ctx, field)
+			case "targets":
+				return ec.fieldContext_ModpackRelease_targets(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ModpackRelease", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateModpackRelease_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_deleteModpackRelease(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_deleteModpackRelease(ctx, field)
 	if err != nil {
@@ -18168,6 +18409,67 @@ func (ec *executionContext) fieldContext_Query_calculateTargetWithMods(ctx conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_calculateTargetWithMods_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_resolveModpackSpecificVersions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_resolveModpackSpecificVersions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ResolveModpackSpecificVersions(rctx, fc.Args["modpackID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*ModpackModEntry)
+	fc.Result = res
+	return ec.marshalNModpackModEntry2ᚕᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐModpackModEntryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_resolveModpackSpecificVersions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "mod_id":
+				return ec.fieldContext_ModpackModEntry_mod_id(ctx, field)
+			case "version_constraint":
+				return ec.fieldContext_ModpackModEntry_version_constraint(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ModpackModEntry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_resolveModpackSpecificVersions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -27388,6 +27690,40 @@ func (ec *executionContext) unmarshalInputUpdateModpack(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateModpackRelease(ctx context.Context, obj any) (UpdateModpackRelease, error) {
+	var it UpdateModpackRelease
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"version", "changelog"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "version":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Version = data
+		case "changelog":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("changelog"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Changelog = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateSatisfactoryVersion(ctx context.Context, obj any) (UpdateSatisfactoryVersion, error) {
 	var it UpdateSatisfactoryVersion
 	asMap := map[string]any{}
@@ -29699,6 +30035,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "updateModpackRelease":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateModpackRelease(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "deleteModpackRelease":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteModpackRelease(ctx, field)
@@ -30351,6 +30694,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_calculateTargetWithMods(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "resolveModpackSpecificVersions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_resolveModpackSpecificVersions(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -33981,6 +34346,11 @@ func (ec *executionContext) unmarshalNUpdateMod2githubᚗcomᚋsatisfactorymoddi
 
 func (ec *executionContext) unmarshalNUpdateModpack2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateModpack(ctx context.Context, v any) (UpdateModpack, error) {
 	res, err := ec.unmarshalInputUpdateModpack(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateModpackRelease2githubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐUpdateModpackRelease(ctx context.Context, v any) (UpdateModpackRelease, error) {
+	res, err := ec.unmarshalInputUpdateModpackRelease(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

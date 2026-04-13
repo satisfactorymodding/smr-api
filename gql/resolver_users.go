@@ -25,6 +25,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
@@ -334,7 +335,10 @@ func (r *userModpackResolver) User(ctx context.Context, obj *generated.UserModpa
 }
 
 func (r *userModpackResolver) Modpack(ctx context.Context, obj *generated.UserModpack) (*generated.Modpack, error) {
-	result, err := db.From(ctx).Modpack.Query().WithTags().WithModpackMods().Where(modpack.ID(obj.ModpackID)).Only(ctx)
+	result, err := db.From(ctx).Modpack.Query().WithTags().WithModpackMods().WithReleases(func(q *ent.ModpackReleaseQuery) {
+		q.Order(ent.Desc(modpackrelease.FieldCreatedAt))
+		q.WithTargets()
+	}).Where(modpack.ID(obj.ModpackID)).Only(ctx)
 	if err != nil {
 		return nil, err
 	}
