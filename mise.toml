@@ -54,3 +54,6 @@ run = "golangci-lint run"
 
 [tasks.format]
 run = "golangci-lint run --fix"
+
+[tasks.populate]
+run = "go test -count=1 -run TestModpacks ./tests"
