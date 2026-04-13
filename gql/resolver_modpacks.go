@@ -515,6 +515,42 @@ func (r *mutationResolver) CreateModpackRelease(ctx context.Context, modpackID s
 	return (*conv.ModpackReleaseImpl)(nil).Convert(resultRelease), nil
 }
 
+func (r *mutationResolver) UpdateModpackRelease(ctx context.Context, modpackID string, version string, release generated.UpdateModpackRelease) (*generated.ModpackRelease, error) {
+	user, _, err := db.UserFromGQLContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	dbRelease, err := db.From(ctx).ModpackRelease.Query().
+		Where(
+			modpackrelease.HasModpackWith(modpack.ID(modpackID), modpack.CreatorID(user.ID)),
+			modpackrelease.Version(version),
+		).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	update := dbRelease.Update()
+	SetINNF(release.Version, update.SetVersion)
+	SetINNF(release.Changelog, update.SetChangelog)
+
+	resultRelease, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	resultRelease, err = db.From(ctx).ModpackRelease.Query().
+		Where(modpackrelease.ID(resultRelease.ID)).
+		WithTargets().
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*conv.ModpackReleaseImpl)(nil).Convert(resultRelease), nil
+}
+
 func (r *mutationResolver) DeleteModpackRelease(ctx context.Context, modpackID string, version string) (bool, error) {
 	user, _, err := db.UserFromGQLContext(ctx)
 	if err != nil {
@@ -745,8 +781,69 @@ func resolveModpackToLockfile(ctx context.Context, modpackID string) (string, []
 	return string(b), targets, nil
 }
 
-func (r *queryResolver) CalculateTargetWithMods(ctx context.Context, mods []*generated.ModpackModInput) (*generated.TargetLock, error) {
+func (r *queryResolver) ResolveModpackSpecificVersions(ctx context.Context, modpackID string) ([]*generated.ModpackModEntry, error) {
+	pack, err := db.From(ctx).Modpack.Query().
+		WithModpackMods().
+		WithParent(func(query *ent.ModpackQuery) {
+			query.WithModpackMods()
+		}).
+		Where(modpack.ID(modpackID)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
 
+	constraints := make(map[string]string)
+	if pack.ParentID != "" {
+		for _, m := range pack.Edges.Parent.Edges.ModpackMods {
+			constraints[m.ModID] = m.VersionConstraint
+		}
+	}
+
+	for _, m := range pack.Edges.ModpackMods {
+		constraints[m.ModID] = m.VersionConstraint
+	}
+
+	modReferences, err := db.From(ctx).Mod.Query().
+		Where(mod.IDIn(slices.Collect(maps.Keys(constraints))...)).
+		Select(mod.FieldID, mod.FieldModReference).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	referenceConstraints := make(map[string]string, len(constraints))
+	referenceToID := make(map[string]string, len(modReferences))
+	for _, reference := range modReferences {
+		referenceConstraints[reference.ModReference] = constraints[reference.ID]
+		referenceToID[reference.ModReference] = reference.ID
+	}
+
+	dependencyResolver := resolver.NewDependencyResolver(lockfileResolver{
+		Context: ctx,
+	})
+
+	lockfile, err := dependencyResolver.ResolveModDependencies(referenceConstraints, nil, math.MaxInt, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve dependencies: %w", err)
+	}
+
+	modpackMods := make([]*generated.ModpackModEntry, 0, len(lockfile.Mods))
+	for ref, lockedMod := range lockfile.Mods {
+		modID := ref
+		if id, ok := referenceToID[ref]; ok {
+			modID = id
+		}
+		modpackMods = append(modpackMods, &generated.ModpackModEntry{
+			ModID:             modID,
+			VersionConstraint: lockedMod.Version,
+		})
+	}
+
+	return modpackMods, nil
+}
+
+func (r *queryResolver) CalculateTargetWithMods(ctx context.Context, mods []*generated.ModpackModInput) (*generated.TargetLock, error) {
 	constraints := make(map[string]string)
 	for _, m := range mods {
 		constraints[m.ModID] = m.VersionConstraint

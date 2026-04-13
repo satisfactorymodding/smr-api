@@ -339,6 +339,11 @@ type UpdateModpack struct {
 	Compatibility    *CompatibilityInfoInput `json:"compatibility,omitempty"`
 }
 
+type UpdateModpackRelease struct {
+	Version   *string `json:"version,omitempty"`
+	Changelog *string `json:"changelog,omitempty"`
+}
+
 type UpdateSatisfactoryVersion struct {
 	Version       *int    `json:"version,omitempty"`
 	EngineVersion *string `json:"engine_version,omitempty"`
