@@ -43,9 +43,63 @@ func TestAiDisclosure(t *testing.T) {
 	testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
 	testza.AssertNotNil(t, createResponse.CreateMod)
 	testza.AssertNil(t, createResponse.CreateMod.AiUseDisclosure)
-	modId := createResponse.CreateMod.ID
+	modID := createResponse.CreateMod.ID
 
-	// Assigning an AI disclosure succeeds and updates the mod's disclosure information
+	// Passing nil disclosure is not allowed
+	failedUpdateNil := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
+		updateMod(
+			modId: $id
+			mod: {
+				ai_use_disclosure: $ai_use_disclosure,
+			}
+		) {
+			id
+			ai_use_disclosure {
+				disclosure_type
+				disclosure_string
+			}
+		}
+	}`, token)
+	failedUpdateNil.Var("id", modID)
+	failedUpdateNil.Var("ai_use_disclosure", nil)
+
+	var failedNilResponse struct {
+		UpdateMod generated.Mod
+	}
+	err = client.Run(ctx, failedUpdateNil, &failedNilResponse)
+	testza.AssertNotNil(t, err)
+	testza.AssertContains(t, err.Error(), "cannot be null")
+
+	// Empty string disclosure message is not allowed
+	failedUpdateEmptyString := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
+		updateMod(
+			modId: $id
+			mod: {
+				ai_use_disclosure: $ai_use_disclosure,
+			}
+		) {
+			id
+			ai_use_disclosure {
+				disclosure_type
+				disclosure_string
+			}
+		}
+	}`, token)
+	failedUpdateEmptyString.Var("id", modID)
+	emptyString := ""
+	failedUpdateEmptyString.Var("ai_use_disclosure", generated.AIUseDisclosureInput{
+		DisclosureType:   generated.AIUseDisclosureTypeAiUsage,
+		DisclosureString: &emptyString,
+	})
+
+	var failedEmptyStringResponse struct {
+		UpdateMod generated.Mod
+	}
+	err = client.Run(ctx, failedUpdateEmptyString, &failedEmptyStringResponse)
+	testza.AssertNotNil(t, err)
+	testza.AssertContains(t, err.Error(), "you need to input a disclosure message when disclosing AI usage")
+
+	// Assigning a valid AI disclosure succeeds and updates the mod's disclosure information
 	disclosureRequest := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
 		updateMod(
 			modId: $id
@@ -61,9 +115,9 @@ func TestAiDisclosure(t *testing.T) {
 		}
 	}`, token)
 	disclosureString := "This mod uses AI for testing purposes"
-	disclosureRequest.Var("id", modId)
+	disclosureRequest.Var("id", modID)
 	disclosureRequest.Var("ai_use_disclosure", generated.AIUseDisclosureInput{
-		DisclosureType:   "ai_usage",
+		DisclosureType:   generated.AIUseDisclosureTypeAiUsage,
 		DisclosureString: &disclosureString,
 	})
 
@@ -75,8 +129,8 @@ func TestAiDisclosure(t *testing.T) {
 	testza.AssertEqual(t, generated.AIUseDisclosureTypeAiUsage, updateResponse.UpdateMod.AiUseDisclosure.DisclosureType)
 	testza.AssertEqual(t, &disclosureString, updateResponse.UpdateMod.AiUseDisclosure.DisclosureString)
 
-	// Trying to set to nil is not allowed
-	failedUpdateNil := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
+	// Trying to unassign the disclosure is not allowed
+	failedUpdateUndisclosed := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
 		updateMod(
 			modId: $id
 			mod: {
@@ -90,13 +144,17 @@ func TestAiDisclosure(t *testing.T) {
 			}
 		}
 	}`, token)
-	failedUpdateNil.Var("id", modId)
-	failedUpdateNil.Var("ai_use_disclosure", nil)
+	failedUpdateUndisclosed.Var("id", modID)
+	messageDoesNotMatter := "grumbus"
+	failedUpdateUndisclosed.Var("ai_use_disclosure", generated.AIUseDisclosureInput{
+		DisclosureType:   generated.AIUseDisclosureTypeNoDisclosure,
+		DisclosureString: &messageDoesNotMatter,
+	})
 
-	var failedNilResponse struct {
+	var failedUpdateUndisclosedResponse struct {
 		UpdateMod generated.Mod
 	}
-	err = client.Run(ctx, failedUpdateNil, &failedNilResponse)
+	err = client.Run(ctx, failedUpdateUndisclosed, &failedUpdateUndisclosedResponse)
 	testza.AssertNotNil(t, err)
-	testza.AssertContains(t, err.Error(), "cannot be null")
+	testza.AssertContains(t, err.Error(), "this mod already has an AI use disclosure, and thus it cannot be cleared")
 }
