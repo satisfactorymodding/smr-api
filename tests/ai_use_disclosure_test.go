@@ -24,8 +24,8 @@ func TestAiDisclosure(t *testing.T) {
 
 	createRequest := authRequest(`mutation ($mod_reference: ModReference!) {
 			createMod(mod: {
-				name: "Rate Limit Test Mod",
-				short_description: "Testing rate limiting functionality",
+				name: "AI Disclosure Mod",
+				short_description: "Testing AI disclosure functionality",
 				full_description: "Lorem ipsum dolor sit amet",
 				mod_reference: $mod_reference
 			}) {
