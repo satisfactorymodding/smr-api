@@ -22,6 +22,7 @@ func TestAiDisclosure(t *testing.T) {
 	token, _, err := makeUser(ctx)
 	testza.AssertNoError(t, err)
 
+	// Creating a mod without an AI disclosure succeeds and there is no disclosure information
 	createRequest := authRequest(`mutation ($mod_reference: ModReference!) {
 			createMod(mod: {
 				name: "AI Disclosure Mod",
@@ -34,19 +35,25 @@ func TestAiDisclosure(t *testing.T) {
 				mod_reference
 			}
 		}`, token)
-	createRequest.Var("mod_reference", "newMod")
+	createRequest.Var("mod_reference", "aiDisclosureMod")
 
-	var response struct {
+	var createResponse struct {
 		CreateMod generated.Mod
 	}
-	testza.AssertNoError(t, err)
-	testza.AssertNotNil(t, response.CreateMod)
+	testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
+	testza.AssertNotNil(t, createResponse.CreateMod)
+	testza.AssertNil(t, createResponse.CreateMod.AiUseDisclosure)
+	modId := createResponse.CreateMod.ID
 
-	disclosureRequest := authRequest(`mutation ($mod_reference: ModReference!, $ai_use_disclosure: AIUseDisclosureInput!) {
-		updateMod(mod: {
-			name: "disclosure test",
-			ai_use_disclosure: $ai_use_disclosure,
-		}) {
+	// Assigning an AI disclosure succeeds and updates the mod's disclosure information
+	disclosureRequest := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
+		updateMod(
+			modId: $id
+			mod: {
+				ai_use_disclosure: $ai_use_disclosure,
+			}
+		) {
+			id
 			ai_use_disclosure {
 				disclosure_type
 				disclosure_string
@@ -54,37 +61,42 @@ func TestAiDisclosure(t *testing.T) {
 		}
 	}`, token)
 	disclosureString := "This mod uses AI for testing purposes"
-	disclosureRequest.Var("mod_reference", "newMod")
+	disclosureRequest.Var("id", modId)
 	disclosureRequest.Var("ai_use_disclosure", generated.AIUseDisclosureInput{
 		DisclosureType:   "ai_usage",
 		DisclosureString: &disclosureString,
 	})
 
-	var createResponse struct {
-		CreateMod generated.Mod
+	var updateResponse struct {
+		UpdateMod generated.Mod
 	}
-	err = client.Run(ctx, disclosureRequest, &createResponse)
-	testza.AssertNotNil(t, err)
+	testza.AssertNoError(t, client.Run(ctx, disclosureRequest, &updateResponse))
+	testza.AssertNotNil(t, updateResponse.UpdateMod.AiUseDisclosure.DisclosureType)
+	testza.AssertEqual(t, generated.AIUseDisclosureTypeAiUsage, updateResponse.UpdateMod.AiUseDisclosure.DisclosureType)
+	testza.AssertEqual(t, &disclosureString, updateResponse.UpdateMod.AiUseDisclosure.DisclosureString)
 
-	failedUpdate := authRequest(`mutation ($mod_reference: ModReference!, $ai_use_disclosure: AIUseDisclosureInput!) {
-		updateMod(mod: {
-			name: "disclosure test",
-			ai_use_disclosure: $ai_use_disclosure,
-		}) {
+	// Trying to set to nil is not allowed
+	failedUpdateNil := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
+		updateMod(
+			modId: $id
+			mod: {
+				ai_use_disclosure: $ai_use_disclosure,
+			}
+		) {
+			id
 			ai_use_disclosure {
 				disclosure_type
 				disclosure_string
 			}
 		}
 	}`, token)
-	disclosureRequest.Var("mod_reference", "newMod")
-	disclosureRequest.Var("ai_use_disclosure", nil)
-	// Should not update since input is nil
-	var failedResponse struct {
-		CreateMod generated.Mod
+	failedUpdateNil.Var("id", modId)
+	failedUpdateNil.Var("ai_use_disclosure", nil)
+
+	var failedNilResponse struct {
+		UpdateMod generated.Mod
 	}
-	err = client.Run(ctx, failedUpdate, &failedResponse)
+	err = client.Run(ctx, failedUpdateNil, &failedNilResponse)
 	testza.AssertNotNil(t, err)
-	testza.AssertEqual(t, failedResponse.CreateMod.AiUseDisclosure.DisclosureType, "ai_usage")
-	testza.AssertEqual(t, failedResponse.CreateMod.AiUseDisclosure.DisclosureString, disclosureString)
+	testza.AssertContains(t, err.Error(), "cannot be null")
 }
