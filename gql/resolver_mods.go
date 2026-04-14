@@ -160,6 +160,10 @@ func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMo
 	return (*conv.ModImpl)(nil).Convert(resultMod), nil
 }
 
+func requiresMessage(disclosureType generated.AIUseDisclosureType) bool {
+	return disclosureType == generated.AIUseDisclosureTypeAiUsage || disclosureType == generated.AIUseDisclosureTypeRuntimeAiUsage
+}
+
 func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMod generated.UpdateMod) (*generated.Mod, error) {
 	val := ctx.Value(util.ContextValidator{}).(*validator.Validate)
 	if err := val.Struct(&updateMod); err != nil {
@@ -190,10 +194,10 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 	SetINNF(updateMod.ToggleNetworkUse, dbUpdate.SetToggleNetworkUse)
 	SetINNF(updateMod.ToggleExplicitContent, dbUpdate.SetToggleExplicitContent)
 
-	if dbMod.AiUseDisclosure != nil && updateMod.AiUseDisclosure.DisclosureType == "no_disclosure" && dbMod.AiUseDisclosure.DisclosureType != "no_disclosure" {
+	if dbMod.AiUseDisclosure != nil && dbMod.AiUseDisclosure.DisclosureType != generated.AIUseDisclosureTypeNoDisclosure.String() && updateMod.AiUseDisclosure.DisclosureType == generated.AIUseDisclosureTypeNoDisclosure {
 		return nil, errors.New("this mod already has an AI use disclosure, and thus it cannot be cleared")
 	}
-	if updateMod.AiUseDisclosure.DisclosureType != "no_disclosure" && updateMod.AiUseDisclosure.DisclosureType != "no_ai_usage" && *updateMod.AiUseDisclosure.DisclosureString == "" {
+	if requiresMessage(updateMod.AiUseDisclosure.DisclosureType) && *updateMod.AiUseDisclosure.DisclosureString == "" {
 		return nil, errors.New("you need to input a disclosure message when disclosing AI usage")
 	}
 	SetAIDisclosureINNF(updateMod.AiUseDisclosure, dbUpdate.SetAiUseDisclosure)
