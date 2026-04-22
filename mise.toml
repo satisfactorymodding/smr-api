@@ -57,3 +57,6 @@ run = "golangci-lint run --fix"
 
 [tasks.populate]
 run = "go test -count=1 -run TestModpacks ./tests"
+
+[tasks.load_staging_dump]
+run = "bash ./.mise/tasks/import_staging_dump.sh"

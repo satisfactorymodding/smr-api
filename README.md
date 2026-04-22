@@ -61,6 +61,8 @@ mise run api
 # Testing
 mise run localtest
 mise run coverage
+mise run populate  # Runs test to create mods and modpacks
+mise run load_staging_dump
 
 # Linting
 mise run lint
@@ -150,6 +152,15 @@ See `config/config.go` for full configuration structure.
    mise run setup  # Start services
    mise run test   # Run tests
    ```
+
+### Using Staging Dumps
+
+   `mise run load_staging_dump`
+   This command runs abefore adding the most
+   recent locally saved dump of the staging database. You can modify the SQL used to load
+   changes in `.mise/tasks/staging-dump.sql`. Once the file runs, local migrations will run
+   when executing `mise run api`. This is useful to check if your changes will break the
+   data currently in the database.
 
 Windows users, if you get annoyed by the constant firewall block prompts Go creates,
 you can silence them by [temporarily adjusting your notification settings](https://serverfault.com/a/1198657/982905).
