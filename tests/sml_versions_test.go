@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/MarvinJWendt/testza"
 	"github.com/spf13/viper"
 
@@ -75,6 +76,26 @@ func TestSMLVersions(t *testing.T) {
 
 	var versionID string
 	var versionDate time.Time
+
+	updateDisclosure := authRequest(`mutation UpdateMod($mod_id: ModID!, $mod: UpdateMod!) {
+				updateMod(modId: $mod_id, mod: $mod) {
+					id
+				}
+			}`, token)
+	updateDisclosure.Var("mod_id", smlModID)
+	b := false
+	s := "no network use"
+	updateDisclosure.Var("mod", generated.UpdateMod{
+		AiUseDisclosure: &generated.AIUseDisclosureInput{
+			DisclosureType: generated.AIUseDisclosureTypeNoAiUsage,
+		},
+		ToggleNetworkUse:     &b,
+		NetworkUseDisclosure: graphql.OmittableOf(&s),
+	})
+	var updateResponse struct {
+		UpdateMod *generated.Mod
+	}
+	testza.AssertNoError(t, client.Run(ctx, updateDisclosure, &updateResponse))
 
 	t.Run("Create", func(t *testing.T) {
 		t.Run("Create Version", func(t *testing.T) {
