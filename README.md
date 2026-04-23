@@ -156,9 +156,8 @@ See `config/config.go` for full configuration structure.
 ### Using Staging Dumps
 
    `mise run load_staging_dump`
-   This command runs abefore adding the most
-   recent locally saved dump of the staging database. You can modify the SQL used to load
-   changes in `.mise/tasks/staging-dump.sql`. Once the file runs, local migrations will run
+   This command runs before adding the most
+   recently saved dump of the staging database on the network. Once the file runs, local migrations will run
    when executing `mise run api`. This is useful to check if your changes will break the
    data currently in the database.
 
