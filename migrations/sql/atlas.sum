@@ -1,4 +1,4 @@
-h1:Df+fyeJlopmBz0REtcG4jhcB2/JkFpb3O3fTH9B4KdY=
+h1:F8w0+0F7TbP37g7d/NdLN+1DbyiTt9GFu1T1zLOaOc4=
 000001_create_initial_tables.up.sql h1:eALkiKdKPk4+PRs015wQKce0l5buzaQIwU8o2Ee9MH4=
 000002_create_user_group_table.up.sql h1:lbhpvkwy073swwmvFfCmRN9Xbib3MAhfNx/A1czmiho=
 000003_add_last_version_date_mod_table.up.sql h1:be83iHBYpXLRUm+wlET6GJSgTmTEpSSW9aWQesroOhE=
@@ -40,4 +40,4 @@ h1:Df+fyeJlopmBz0REtcG4jhcB2/JkFpb3O3fTH9B4KdY=
 20241003161005_create_virustotal_results_table.up.sql h1:8cqfx2/sIMFcvTbhvz2BS8xcz6bVDnYmKZ8RGDYIdms=
 20241008092121_nullable_mod_logo.up.sql h1:pOV345UdHiAwZUgK9yzxRHK8ye7umoCoUG02qbsgAlY=
 20250411023207_AddNetworkUsageDisclosure.up.sql h1:e3HqWusKNEh8WROCPTyN5vP64qNkvBKbVuEkCPUxXjk=
-20260427195353_add_ai_disclosure.up.sql h1:pwQggZN7y+GwN6kT0ifhKKntZ4xPpamW8UPIDYftB0c=
+20260427195353_add_ai_disclosure.up.sql h1:gK6CfoH4J1NZ5tpocY+OQs6wH9+z5kYE3OGnPWIW/A8=
