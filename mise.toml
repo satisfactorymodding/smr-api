@@ -14,20 +14,9 @@ lockfile = true
 # File-based tasks are in the .mise/tasks/ directory
 
 [tasks.setup]
-run = [
-        "docker compose --file docker-compose-dev.yml up --detach --wait && sleep 5",
-    "mc alias set local http://localhost:9000 minio minio123",
-    "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || echo It is okay for this REMOVE command to fail if the account does not exist",
-    "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
-    "mc anonymous set public local/smr"
-]
-run_windows = [
-    "docker compose --file docker-compose-dev.yml up --detach --wait",
-    "mc alias set local http://localhost:9000 minio minio123",
-    "mc admin user svcacct remove local/ REPLACE_ME_KEY --dp || echo It is okay for this REMOVE command to fail if the account does not exist",
-    "mc admin user svcacct add local minio --access-key REPLACE_ME_KEY --secret-key REPLACE_ME_SECRET",
-    "mc anonymous set public local/smr"
-]
+description = "Start docker containers and setup minio access. -ci flag uses plain output for ease of reading CI logs"
+run= "mise run setup_linux"
+run_windows = "mise run setup_windows"
 
 [tasks.api]
 description = "Run the API server. Make sure containers are running via `mise run setup` first."
