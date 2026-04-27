@@ -16,6 +16,7 @@ enum ModFields {
 }
 
 enum AIUseDisclosureType {
+    no_disclosure
     no_ai_usage
     ai_usage
     runtime_ai_usage
