@@ -45,31 +45,6 @@ func TestAiDisclosure(t *testing.T) {
 	testza.AssertNil(t, createResponse.CreateMod.AiUseDisclosure)
 	modID := createResponse.CreateMod.ID
 
-	// Passing nil disclosure is not allowed
-	failedUpdateNil := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
-		updateMod(
-			modId: $id
-			mod: {
-				ai_use_disclosure: $ai_use_disclosure,
-			}
-		) {
-			id
-			ai_use_disclosure {
-				disclosure_type
-				disclosure_string
-			}
-		}
-	}`, token)
-	failedUpdateNil.Var("id", modID)
-	failedUpdateNil.Var("ai_use_disclosure", nil)
-
-	var failedNilResponse struct {
-		UpdateMod generated.Mod
-	}
-	err = client.Run(ctx, failedUpdateNil, &failedNilResponse)
-	testza.AssertNotNil(t, err)
-	testza.AssertContains(t, err.Error(), "cannot be null")
-
 	// Empty string disclosure message is not allowed
 	failedUpdateEmptyString := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
 		updateMod(
@@ -145,16 +120,12 @@ func TestAiDisclosure(t *testing.T) {
 		}
 	}`, token)
 	failedUpdateUndisclosed.Var("id", modID)
-	messageDoesNotMatter := "grumbus"
-	failedUpdateUndisclosed.Var("ai_use_disclosure", generated.AIUseDisclosureInput{
-		DisclosureType:   generated.AIUseDisclosureTypeNoDisclosure,
-		DisclosureString: &messageDoesNotMatter,
-	})
+	failedUpdateUndisclosed.Var("ai_use_disclosure", nil)
 
 	var failedUpdateUndisclosedResponse struct {
 		UpdateMod generated.Mod
 	}
 	err = client.Run(ctx, failedUpdateUndisclosed, &failedUpdateUndisclosedResponse)
 	testza.AssertNotNil(t, err)
-	testza.AssertContains(t, err.Error(), "this mod already has an AI use disclosure, and thus it cannot be cleared")
+	testza.AssertContains(t, err.Error(), "graphql: cannot be null")
 }

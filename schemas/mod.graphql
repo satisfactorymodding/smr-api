@@ -16,7 +16,6 @@ enum ModFields {
 }
 
 enum AIUseDisclosureType {
-    no_disclosure
     no_ai_usage
     ai_usage
     runtime_ai_usage
@@ -100,7 +99,6 @@ input NewMod {
     tagIDs: [TagID!]
     toggle_network_use: Boolean
     toggle_explicit_content: Boolean
-    ai_use_disclosure: AIUseDisclosureInput
 }
 
 input UpdateMod {

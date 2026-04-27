@@ -366,14 +366,12 @@ type VirustotalResult struct {
 type AIUseDisclosureType string
 
 const (
-	AIUseDisclosureTypeNoDisclosure   AIUseDisclosureType = "no_disclosure"
 	AIUseDisclosureTypeNoAiUsage      AIUseDisclosureType = "no_ai_usage"
 	AIUseDisclosureTypeAiUsage        AIUseDisclosureType = "ai_usage"
 	AIUseDisclosureTypeRuntimeAiUsage AIUseDisclosureType = "runtime_ai_usage"
 )
 
 var AllAIUseDisclosureType = []AIUseDisclosureType{
-	AIUseDisclosureTypeNoDisclosure,
 	AIUseDisclosureTypeNoAiUsage,
 	AIUseDisclosureTypeAiUsage,
 	AIUseDisclosureTypeRuntimeAiUsage,
@@ -381,7 +379,7 @@ var AllAIUseDisclosureType = []AIUseDisclosureType{
 
 func (e AIUseDisclosureType) IsValid() bool {
 	switch e {
-	case AIUseDisclosureTypeNoDisclosure, AIUseDisclosureTypeNoAiUsage, AIUseDisclosureTypeAiUsage, AIUseDisclosureTypeRuntimeAiUsage:
+	case AIUseDisclosureTypeNoAiUsage, AIUseDisclosureTypeAiUsage, AIUseDisclosureTypeRuntimeAiUsage:
 		return true
 	}
 	return false
