@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	gqlgen "github.com/99designs/gqlgen/graphql"
 	"github.com/MarvinJWendt/testza"
 	"github.com/machinebox/graphql"
 	"github.com/spf13/viper"
@@ -150,6 +151,27 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 			testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
 
 			modID = createResponse.CreateMod.ID
+		})
+
+		// Apply network and AI use disclosure (required for version uploads)
+		t.Run("Set Disclosures", func(t *testing.T) {
+			updateDisclosure := authRequest(`mutation UpdateMod($mod_id: ModID!, $mod: UpdateMod!) {
+				updateMod(modId: $mod_id, mod: $mod) {
+					id
+				}
+			}`, token)
+			updateDisclosure.Var("mod_id", modID)
+			valueOfNoNetworkUse := ""
+			updateDisclosure.Var("mod", generated.UpdateMod{
+				AiUseDisclosure: &generated.AIUseDisclosureInput{
+					DisclosureType: generated.AIUseDisclosureTypeNoAiUsage,
+				},
+				NetworkUseDisclosure: gqlgen.OmittableOf(&valueOfNoNetworkUse),
+			})
+			var updateResponse struct {
+				UpdateMod *generated.Mod
+			}
+			testza.AssertNoError(t, client.Run(ctx, updateDisclosure, &updateResponse))
 		})
 	}
 

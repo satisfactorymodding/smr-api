@@ -32,6 +32,7 @@
         "ristretto",
         "slox",
         "svcacct",
+        "testza",
         "Webp"
     ],
     // cSpell:disable (don't complain about the words we listed here)
