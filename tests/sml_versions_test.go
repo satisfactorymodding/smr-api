@@ -74,29 +74,29 @@ func TestSMLVersions(t *testing.T) {
 		smlModID = getResponse.GetModByReference.ID
 	})
 
-	var versionID string
-	var versionDate time.Time
-
-	updateDisclosure := authRequest(`mutation UpdateMod($mod_id: ModID!, $mod: UpdateMod!) {
+	// Apply network and AI use disclosure (required for version uploads)
+	t.Run("Set Disclosures", func(t *testing.T) {
+		updateDisclosure := authRequest(`mutation UpdateMod($mod_id: ModID!, $mod: UpdateMod!) {
 				updateMod(modId: $mod_id, mod: $mod) {
 					id
 				}
 			}`, token)
-	updateDisclosure.Var("mod_id", smlModID)
-	b := false
-	s := "no network use"
-	updateDisclosure.Var("mod", generated.UpdateMod{
-		AiUseDisclosure: &generated.AIUseDisclosureInput{
-			DisclosureType: generated.AIUseDisclosureTypeNoAiUsage,
-		},
-		ToggleNetworkUse:     &b,
-		NetworkUseDisclosure: graphql.OmittableOf(&s),
+		updateDisclosure.Var("mod_id", smlModID)
+		valueOfNoNetworkUse := ""
+		updateDisclosure.Var("mod", generated.UpdateMod{
+			AiUseDisclosure: &generated.AIUseDisclosureInput{
+				DisclosureType: generated.AIUseDisclosureTypeNoAiUsage,
+			},
+			NetworkUseDisclosure: graphql.OmittableOf(&valueOfNoNetworkUse),
+		})
+		var updateResponse struct {
+			UpdateMod *generated.Mod
+		}
+		testza.AssertNoError(t, client.Run(ctx, updateDisclosure, &updateResponse))
 	})
-	var updateResponse struct {
-		UpdateMod *generated.Mod
-	}
-	testza.AssertNoError(t, client.Run(ctx, updateDisclosure, &updateResponse))
 
+	var versionID string
+	var versionDate time.Time
 	t.Run("Create", func(t *testing.T) {
 		t.Run("Create Version", func(t *testing.T) {
 			createRequest := authRequest(`mutation CreateVersion($mod_id: ModID!) {
