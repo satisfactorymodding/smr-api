@@ -204,7 +204,6 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 	}
 
 	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
-
 		// Delete old ModpackMod relations
 		if _, err := tx.ModpackMod.Delete().Where(modpackmod.ModpackID(resultModpack.ID)).Exec(ctx); err != nil {
 			return err
