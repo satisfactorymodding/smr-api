@@ -24,6 +24,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackmod"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
@@ -199,6 +200,27 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 
 	resultModpack, err := update.Save(ctx)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Tx(ctx, func(ctx context.Context, tx *ent.Tx) error {
+
+		// Delete old ModpackMod relations
+		if _, err := tx.ModpackMod.Delete().Where(modpackmod.ModpackID(resultModpack.ID)).Exec(ctx); err != nil {
+			return err
+		}
+
+		for _, modInput := range updatedModpack.Mods {
+			if err := tx.ModpackMod.Create().
+				SetModpackID(resultModpack.ID).
+				SetModID(modInput.ModID).
+				SetVersionConstraint(modInput.VersionConstraint).
+				Exec(ctx); err != nil {
+				return err
+			}
+		}
+		return err
+	}, nil); err != nil {
 		return nil, err
 	}
 
