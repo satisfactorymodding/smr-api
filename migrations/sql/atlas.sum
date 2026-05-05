@@ -1,4 +1,4 @@
-h1:8vxWK4nXGb6iWkg7BMqY8edPZVNIUaEZl9Hui28R7Oo=
+h1:b/bdKEx9qDBSh0200yiZlYOj2e6exg5OBv3yoXERRow=
 000001_create_initial_tables.up.sql h1:D0NgABAZGONTBH9/T9MFCYkbw/LSee86lP4XsQYMx98=
 000002_create_user_group_table.up.sql h1:+fOxjCFeU5GoVTO5cXzxWsMZtz2Qz3tal9vT5kdYuFI=
 000003_add_last_version_date_mod_table.up.sql h1:t73i5gC2YrwlIcDn/MZmznGnArF0aA8dLYuA9NnVtbE=
@@ -41,4 +41,4 @@ h1:8vxWK4nXGb6iWkg7BMqY8edPZVNIUaEZl9Hui28R7Oo=
 20241008092121_nullable_mod_logo.up.sql h1:ZLscID5T67EWW7NVp95cXNyOadb2G5qTH0itfgoCUO4=
 20250411023207_AddNetworkUsageDisclosure.up.sql h1:XgIdy3eJQ+VJSlx4Nr8ltcXFk6AwbSnzfnhC4RI9c9k=
 20260427195353_add_ai_disclosure.up.sql h1:5w7oyF5109FT6XYvLDP866K0G0/H7SHS2cJDTHnjlS0=
-20260501041455_add_default_controller_compatibility.up.sql h1:hLoh2dUoCKCecsuGmVlBFRetCvEZRuoD/lW26lmvurY=
+20260501041455_add_default_controller_compatibility.up.sql h1:yBqEbilNGlwO1Q7+B8VCkt5TOzS8KXpzy0K320A9jpk=
