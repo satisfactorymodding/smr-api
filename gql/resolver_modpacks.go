@@ -277,12 +277,12 @@ func (r *mutationResolver) UpdateModpackCompatibility(ctx context.Context, modpa
 	mods, _ := db.From(ctx).Modpack.Query().
 		Where(modpack.ID(modpackID)).QueryModpackMods().All(ctx)
 	updateModpack := generated.UpdateModpack{
-		Mods: []*generated.ModpackModInput{},
+		Mods:          []*generated.ModpackModInput{},
 		Compatibility: &compatibility,
 	}
 	for _, mod := range mods {
 		modInput := generated.ModpackModInput{
-			ModID: mod.ModID,
+			ModID:             mod.ModID,
 			VersionConstraint: mod.VersionConstraint,
 		}
 		updateModpack.Mods = append(updateModpack.Mods, &modInput)
