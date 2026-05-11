@@ -47,6 +47,7 @@ require (
 	github.com/ravilushqa/otelgqlgen v0.18.0
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/samber/slog-multi v1.4.0
+	github.com/satisfactorymodding/ficsit-resolver v0.0.6
 	github.com/spf13/viper v1.20.1
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.4
@@ -159,12 +160,14 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/mircearoata/pubgrub-go v0.3.3 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
 	github.com/mitchellh/hashstructure v1.1.0 // indirect
 	github.com/nexus-rpc/sdk-go v0.4.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/pterm/pterm v0.12.81 // indirect
+	github.com/puzpuzpuz/xsync/v3 v3.0.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/sagikazarmark/locafero v0.9.0 // indirect

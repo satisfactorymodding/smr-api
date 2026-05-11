@@ -67,12 +67,16 @@ const (
 	EdgeTags = "tags"
 	// EdgeDependents holds the string denoting the dependents edge name in mutations.
 	EdgeDependents = "dependents"
+	// EdgeModpacks holds the string denoting the modpacks edge name in mutations.
+	EdgeModpacks = "modpacks"
 	// EdgeUserMods holds the string denoting the user_mods edge name in mutations.
 	EdgeUserMods = "user_mods"
 	// EdgeModTags holds the string denoting the mod_tags edge name in mutations.
 	EdgeModTags = "mod_tags"
 	// EdgeVersionDependencies holds the string denoting the version_dependencies edge name in mutations.
 	EdgeVersionDependencies = "version_dependencies"
+	// EdgeModpackMods holds the string denoting the modpack_mods edge name in mutations.
+	EdgeModpackMods = "modpack_mods"
 	// Table holds the table name of the mod in the database.
 	Table = "mods"
 	// VersionsTable is the table that holds the versions relation/edge.
@@ -97,6 +101,11 @@ const (
 	// DependentsInverseTable is the table name for the Version entity.
 	// It exists in this package in order to avoid circular dependency with the "version" package.
 	DependentsInverseTable = "versions"
+	// ModpacksTable is the table that holds the modpacks relation/edge. The primary key declared below.
+	ModpacksTable = "modpack_mods"
+	// ModpacksInverseTable is the table name for the Modpack entity.
+	// It exists in this package in order to avoid circular dependency with the "modpack" package.
+	ModpacksInverseTable = "modpacks"
 	// UserModsTable is the table that holds the user_mods relation/edge.
 	UserModsTable = "user_mods"
 	// UserModsInverseTable is the table name for the UserMod entity.
@@ -118,6 +127,13 @@ const (
 	VersionDependenciesInverseTable = "version_dependencies"
 	// VersionDependenciesColumn is the table column denoting the version_dependencies relation/edge.
 	VersionDependenciesColumn = "mod_id"
+	// ModpackModsTable is the table that holds the modpack_mods relation/edge.
+	ModpackModsTable = "modpack_mods"
+	// ModpackModsInverseTable is the table name for the ModpackMod entity.
+	// It exists in this package in order to avoid circular dependency with the "modpackmod" package.
+	ModpackModsInverseTable = "modpack_mods"
+	// ModpackModsColumn is the table column denoting the modpack_mods relation/edge.
+	ModpackModsColumn = "mod_id"
 )
 
 // Columns holds all SQL columns for mod fields.
@@ -157,6 +173,9 @@ var (
 	// DependentsPrimaryKey and DependentsColumn2 are the table columns denoting the
 	// primary key for the dependents relation (M2M).
 	DependentsPrimaryKey = []string{"version_id", "mod_id"}
+	// ModpacksPrimaryKey and ModpacksColumn2 are the table columns denoting the
+	// primary key for the modpacks relation (M2M).
+	ModpacksPrimaryKey = []string{"modpack_id", "mod_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -380,6 +399,20 @@ func ByDependents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByModpacksCount orders the results by modpacks count.
+func ByModpacksCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newModpacksStep(), opts...)
+	}
+}
+
+// ByModpacks orders the results by modpacks terms.
+func ByModpacks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newModpacksStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserModsCount orders the results by user_mods count.
 func ByUserModsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -421,6 +454,20 @@ func ByVersionDependencies(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpti
 		sqlgraph.OrderByNeighborTerms(s, newVersionDependenciesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByModpackModsCount orders the results by modpack_mods count.
+func ByModpackModsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newModpackModsStep(), opts...)
+	}
+}
+
+// ByModpackMods orders the results by modpack_mods terms.
+func ByModpackMods(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newModpackModsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newVersionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -449,6 +496,13 @@ func newDependentsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, true, DependentsTable, DependentsPrimaryKey...),
 	)
 }
+func newModpacksStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ModpacksInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ModpacksTable, ModpacksPrimaryKey...),
+	)
+}
 func newUserModsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -468,5 +522,12 @@ func newVersionDependenciesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(VersionDependenciesInverseTable, VersionDependenciesColumn),
 		sqlgraph.Edge(sqlgraph.O2M, true, VersionDependenciesTable, VersionDependenciesColumn),
+	)
+}
+func newModpackModsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ModpackModsInverseTable, ModpackModsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, ModpackModsTable, ModpackModsColumn),
 	)
 }

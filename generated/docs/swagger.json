@@ -305,6 +305,227 @@
                 }
             }
         },
+        "/modpacks": {
+            "get": {
+                "description": "Retrieve a list of modpacks",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Modpacks"
+                ],
+                "summary": "Retrieve a list of Modpacks",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "How many modpacks to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for list of modpacks to return",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "created_at",
+                            "updated_at",
+                            "name",
+                            "views",
+                            "installs",
+                            "hotness",
+                            "popularity",
+                            "search"
+                        ],
+                        "type": "string",
+                        "description": "Order by field",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Order of results",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search string",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include hidden modpacks",
+                        "name": "hidden",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/nodes.GenericResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/generated.Modpack"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/modpacks/{modpackId}": {
+            "get": {
+                "description": "Retrieve a single modpack by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Modpacks"
+                ],
+                "summary": "Retrieve a single Modpack",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modpack ID",
+                        "name": "modpackId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/nodes.GenericResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/generated.Modpack"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/nodes.GenericResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/nodes.ErrorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/modpacks/{modpackId}/releases/{version}": {
+            "get": {
+                "description": "Retrieve a specific release of a modpack",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Modpacks"
+                ],
+                "summary": "Retrieve a Modpack Release",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modpack ID",
+                        "name": "modpackId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Release Version",
+                        "name": "version",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/nodes.GenericResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/generated.ModpackRelease"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/nodes.GenericResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/nodes.ErrorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/mods": {
             "get": {
                 "description": "Retrieve a list of mods",
@@ -553,7 +774,7 @@
         },
         "/user/me/mods": {
             "get": {
-                "description": "Retrieve the users mods associated with the token",
+                "description": "Retrieve the user's mods associated with the token",
                 "consumes": [
                     "application/json"
                 ],
@@ -563,7 +784,7 @@
                 "tags": [
                     "User"
                 ],
-                "summary": "Retrieve Current Users Mods",
+                "summary": "Retrieve Current User's Mods",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -600,9 +821,9 @@
                 }
             }
         },
-        "/user/{userId}/mods": {
+        "/user/{userId}/modpacks": {
             "get": {
-                "description": "Retrieve a users mods by user ID",
+                "description": "Retrieve a user's modpacks by user ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -612,7 +833,36 @@
                 "tags": [
                     "User"
                 ],
-                "summary": "Retrieve a Users Mods",
+                "summary": "Retrieve a User's Modpacks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/user/{userId}/mods": {
+            "get": {
+                "description": "Retrieve a user's mods by user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Retrieve a User's Mods",
                 "parameters": [
                     {
                         "type": "string",
@@ -750,6 +1000,673 @@
                     "200": {
                         "description": "OK"
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "generated.Compatibility": {
+            "type": "object",
+            "properties": {
+                "note": {
+                    "type": "string"
+                },
+                "state": {
+                    "$ref": "#/definitions/generated.CompatibilityState"
+                }
+            }
+        },
+        "generated.CompatibilityInfo": {
+            "type": "object",
+            "properties": {
+                "EA": {
+                    "$ref": "#/definitions/generated.Compatibility"
+                },
+                "EXP": {
+                    "$ref": "#/definitions/generated.Compatibility"
+                }
+            }
+        },
+        "generated.CompatibilityState": {
+            "type": "string",
+            "enum": [
+                "Works",
+                "Damaged",
+                "Broken"
+            ],
+            "x-enum-varnames": [
+                "CompatibilityStateWorks",
+                "CompatibilityStateDamaged",
+                "CompatibilityStateBroken"
+            ]
+        },
+        "generated.Group": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.Guide": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "guide": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "short_description": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.Tag"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/generated.User"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "views": {
+                    "type": "integer"
+                }
+            }
+        },
+        "generated.LatestVersions": {
+            "type": "object",
+            "properties": {
+                "alpha": {
+                    "$ref": "#/definitions/generated.Version"
+                },
+                "beta": {
+                    "$ref": "#/definitions/generated.Version"
+                },
+                "release": {
+                    "$ref": "#/definitions/generated.Version"
+                }
+            }
+        },
+        "generated.Mod": {
+            "type": "object",
+            "properties": {
+                "approved": {
+                    "type": "boolean"
+                },
+                "authors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.UserMod"
+                    }
+                },
+                "compatibility": {
+                    "$ref": "#/definitions/generated.CompatibilityInfo"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "creator_id": {
+                    "type": "string"
+                },
+                "downloads": {
+                    "type": "integer"
+                },
+                "full_description": {
+                    "type": "string"
+                },
+                "hidden": {
+                    "type": "boolean"
+                },
+                "hotness": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_version_date": {
+                    "type": "string"
+                },
+                "latestVersions": {
+                    "$ref": "#/definitions/generated.LatestVersions"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "logo_thumbhash": {
+                    "type": "string"
+                },
+                "mod_reference": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "popularity": {
+                    "type": "integer"
+                },
+                "short_description": {
+                    "type": "string"
+                },
+                "source_url": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.Tag"
+                    }
+                },
+                "toggle_explicit_content": {
+                    "type": "boolean"
+                },
+                "toggle_network_use": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version": {
+                    "$ref": "#/definitions/generated.Version"
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.Version"
+                    }
+                },
+                "views": {
+                    "type": "integer"
+                }
+            }
+        },
+        "generated.Modpack": {
+            "type": "object",
+            "properties": {
+                "authors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.UserModpack"
+                    }
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.Modpack"
+                    }
+                },
+                "compatibility": {
+                    "$ref": "#/definitions/generated.CompatibilityInfo"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "creator": {
+                    "$ref": "#/definitions/generated.User"
+                },
+                "creator_id": {
+                    "type": "string"
+                },
+                "full_description": {
+                    "type": "string"
+                },
+                "hidden": {
+                    "type": "boolean"
+                },
+                "hotness": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "installs": {
+                    "type": "integer"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "logo_thumbhash": {
+                    "type": "string"
+                },
+                "mods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.ModpackModEntry"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent": {
+                    "$ref": "#/definitions/generated.Modpack"
+                },
+                "parent_id": {
+                    "type": "string"
+                },
+                "popularity": {
+                    "type": "integer"
+                },
+                "releases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.ModpackRelease"
+                    }
+                },
+                "short_description": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.Tag"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "views": {
+                    "type": "integer"
+                }
+            }
+        },
+        "generated.ModpackModEntry": {
+            "type": "object",
+            "properties": {
+                "mod_id": {
+                    "type": "string"
+                },
+                "version_constraint": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.ModpackRelease": {
+            "type": "object",
+            "properties": {
+                "changelog": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lockfile": {
+                    "type": "string"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.ModpackTarget"
+                    }
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.ModpackTarget": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "release_id": {
+                    "type": "string"
+                },
+                "target_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.Tag": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.TargetName": {
+            "type": "string",
+            "enum": [
+                "Windows",
+                "WindowsServer",
+                "LinuxServer"
+            ],
+            "x-enum-varnames": [
+                "TargetNameWindows",
+                "TargetNameWindowsServer",
+                "TargetNameLinuxServer"
+            ]
+        },
+        "generated.User": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "avatar_thumbhash": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "facebook_id": {
+                    "type": "string"
+                },
+                "github_id": {
+                    "type": "string"
+                },
+                "google_id": {
+                    "type": "string"
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.Group"
+                    }
+                },
+                "guides": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.Guide"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "modpacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.UserModpack"
+                    }
+                },
+                "mods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.UserMod"
+                    }
+                },
+                "roles": {
+                    "$ref": "#/definitions/generated.UserRoles"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.UserMod": {
+            "type": "object",
+            "properties": {
+                "mod": {
+                    "$ref": "#/definitions/generated.Mod"
+                },
+                "mod_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/generated.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.UserModpack": {
+            "type": "object",
+            "properties": {
+                "modpack": {
+                    "$ref": "#/definitions/generated.Modpack"
+                },
+                "modpack_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/generated.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.UserRoles": {
+            "type": "object",
+            "properties": {
+                "approveMods": {
+                    "type": "boolean"
+                },
+                "approveVersions": {
+                    "type": "boolean"
+                },
+                "deleteContent": {
+                    "type": "boolean"
+                },
+                "editAnyModCompatibility": {
+                    "type": "boolean"
+                },
+                "editBootstrapVersions": {
+                    "type": "boolean"
+                },
+                "editContent": {
+                    "type": "boolean"
+                },
+                "editSatisfactoryVersions": {
+                    "type": "boolean"
+                },
+                "editUsers": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "generated.Version": {
+            "type": "object",
+            "properties": {
+                "approved": {
+                    "type": "boolean"
+                },
+                "changelog": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "dependencies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.VersionDependency"
+                    }
+                },
+                "downloads": {
+                    "type": "integer"
+                },
+                "game_version": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "string"
+                },
+                "mod": {
+                    "$ref": "#/definitions/generated.Mod"
+                },
+                "mod_id": {
+                    "type": "string"
+                },
+                "required_on_remote": {
+                    "type": "boolean"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "sml_version": {
+                    "type": "string"
+                },
+                "stability": {
+                    "$ref": "#/definitions/generated.VersionStabilities"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.VersionTarget"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "virustotal_results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/generated.VirustotalResult"
+                    }
+                }
+            }
+        },
+        "generated.VersionDependency": {
+            "type": "object",
+            "properties": {
+                "condition": {
+                    "type": "string"
+                },
+                "mod": {
+                    "$ref": "#/definitions/generated.Mod"
+                },
+                "mod_id": {
+                    "type": "string"
+                },
+                "mod_reference": {
+                    "type": "string"
+                },
+                "optional": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "$ref": "#/definitions/generated.Version"
+                },
+                "version_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "generated.VersionStabilities": {
+            "type": "string",
+            "enum": [
+                "alpha",
+                "beta",
+                "release"
+            ],
+            "x-enum-varnames": [
+                "VersionStabilitiesAlpha",
+                "VersionStabilitiesBeta",
+                "VersionStabilitiesRelease"
+            ]
+        },
+        "generated.VersionTarget": {
+            "type": "object",
+            "properties": {
+                "VersionID": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "targetName": {
+                    "$ref": "#/definitions/generated.TargetName"
+                }
+            }
+        },
+        "generated.VirustotalResult": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "safe": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "nodes.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "nodes.GenericResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error": {},
+                "success": {
+                    "type": "boolean"
                 }
             }
         }

@@ -16,12 +16,18 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guidetag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackmod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpackrelease"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktag"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktarget"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modtag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/satisfactoryversion"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
@@ -92,11 +98,17 @@ func checkColumn(table, column string) error {
 			guidetag.Table:            guidetag.ValidColumn,
 			mod.Table:                 mod.ValidColumn,
 			modtag.Table:              modtag.ValidColumn,
+			modpack.Table:             modpack.ValidColumn,
+			modpackmod.Table:          modpackmod.ValidColumn,
+			modpackrelease.Table:      modpackrelease.ValidColumn,
+			modpacktag.Table:          modpacktag.ValidColumn,
+			modpacktarget.Table:       modpacktarget.ValidColumn,
 			satisfactoryversion.Table: satisfactoryversion.ValidColumn,
 			tag.Table:                 tag.ValidColumn,
 			user.Table:                user.ValidColumn,
 			usergroup.Table:           usergroup.ValidColumn,
 			usermod.Table:             usermod.ValidColumn,
+			usermodpack.Table:         usermodpack.ValidColumn,
 			usersession.Table:         usersession.ValidColumn,
 			version.Table:             version.ValidColumn,
 			versiondependency.Table:   versiondependency.ValidColumn,

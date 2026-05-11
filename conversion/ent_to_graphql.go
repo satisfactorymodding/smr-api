@@ -47,7 +47,7 @@ type SatisfactoryVersion interface {
 // goverter:output:package conv
 // goverter:extend TimeToString
 type User interface {
-	// goverter:ignore Roles Groups Mods Guides
+	// goverter:ignore Roles Groups Mods Guides Modpacks
 	Convert(source *ent.User) *generated.User
 	ConvertSlice(source []*ent.User) []*generated.User
 }
@@ -80,6 +80,16 @@ type UserMod interface {
 	// goverter:ignore User Mod
 	Convert(source *ent.UserMod) *generated.UserMod
 	ConvertSlice(source []*ent.UserMod) []*generated.UserMod
+}
+
+// goverter:converter
+// goverter:output:file ../generated/conv/user_modpack.go
+// goverter:output:package conv
+// goverter:extend TimeToString
+type UserModpack interface {
+	// goverter:ignore User Modpack
+	Convert(source *ent.UserModpack) *generated.UserModpack
+	ConvertSlice(source []*ent.UserModpack) []*generated.UserModpack
 }
 
 // goverter:converter
@@ -125,6 +135,64 @@ type VersionDependency interface {
 type VirustotalResult interface {
 	Convert(source *ent.VirustotalResult) *generated.VirustotalResult
 	ConvertSlice(source []*ent.VirustotalResult) []*generated.VirustotalResult
+}
+
+// goverter:converter
+// goverter:output:file ../generated/conv/modpack.go
+// goverter:output:package conv
+// goverter:extend TimeToString UIntToInt Int64ToInt EntModpackReleaseToGenerated
+type Modpack interface {
+	// goverter:map Edges.Tags Tags
+	// goverter:map Edges.ModpackMods Mods
+	// goverter:map Edges.Parent Parent
+	// goverter:map Edges.Releases Releases
+	// goverter:map Edges.Children Children
+	// goverter:ignore Creator Authors
+	Convert(source *ent.Modpack) *generated.Modpack
+	ConvertSlice(source []*ent.Modpack) []*generated.Modpack
+}
+
+func EntModpackReleaseToGenerated(source *ent.ModpackRelease) *generated.ModpackRelease {
+	if source == nil {
+		return nil
+	}
+	targets := make([]*generated.ModpackTarget, len(source.Edges.Targets))
+	for i, t := range source.Edges.Targets {
+		targets[i] = &generated.ModpackTarget{
+			ID:         t.ID,
+			ReleaseID:  source.ID,
+			TargetName: t.TargetName,
+		}
+	}
+	return &generated.ModpackRelease{
+		ID:        source.ID,
+		Version:   source.Version,
+		CreatedAt: source.CreatedAt.Format(time.RFC3339),
+		Lockfile:  source.Lockfile,
+		Changelog: source.Changelog,
+		Targets:   targets,
+	}
+}
+
+// goverter:converter
+// goverter:output:file ../generated/conv/modpack_release.go
+// goverter:output:package conv
+// goverter:extend TimeToString EntModpackTargetToGenerated
+type ModpackRelease interface {
+	// goverter:map Edges.Targets Targets
+	Convert(source *ent.ModpackRelease) *generated.ModpackRelease
+	ConvertSlice(source []*ent.ModpackRelease) []*generated.ModpackRelease
+}
+
+func EntModpackTargetToGenerated(source *ent.ModpackTarget) *generated.ModpackTarget {
+	if source == nil {
+		return nil
+	}
+	return &generated.ModpackTarget{
+		ID:         source.ID,
+		ReleaseID:  source.VersionID,
+		TargetName: source.TargetName,
+	}
 }
 
 func TimeToString(i time.Time) string {

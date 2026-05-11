@@ -12,6 +12,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 	"github.com/satisfactorymodding/smr-api/util"
 )
@@ -63,6 +64,23 @@ func UserCanUploadModVersions(ctx context.Context, user *ent.User, modID string)
 	).Exist(ctx)
 	if err != nil {
 		slox.Error(ctx, "failed retrieving user mods", slog.Any("err", err))
+		return false
+	}
+
+	return exists
+}
+
+func UserCanEditModpack(ctx context.Context, user *ent.User, modpackID string) bool {
+	if user.Banned {
+		return false
+	}
+
+	exists, err := user.QueryUserModpacks().Where(
+		usermodpack.ModpackID(modpackID),
+		usermodpack.RoleIn("creator"),
+	).Exist(ctx)
+	if err != nil {
+		slox.Error(ctx, "failed retrieving user modpacks", slog.Any("err", err))
 		return false
 	}
 

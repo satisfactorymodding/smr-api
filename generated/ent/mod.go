@@ -79,15 +79,19 @@ type ModEdges struct {
 	Tags []*Tag `json:"tags,omitempty"`
 	// Dependents holds the value of the dependents edge.
 	Dependents []*Version `json:"dependents,omitempty"`
+	// Modpacks holds the value of the modpacks edge.
+	Modpacks []*Modpack `json:"modpacks,omitempty"`
 	// UserMods holds the value of the user_mods edge.
 	UserMods []*UserMod `json:"user_mods,omitempty"`
 	// ModTags holds the value of the mod_tags edge.
 	ModTags []*ModTag `json:"mod_tags,omitempty"`
 	// VersionDependencies holds the value of the version_dependencies edge.
 	VersionDependencies []*VersionDependency `json:"version_dependencies,omitempty"`
+	// ModpackMods holds the value of the modpack_mods edge.
+	ModpackMods []*ModpackMod `json:"modpack_mods,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [9]bool
 }
 
 // VersionsOrErr returns the Versions value or an error if the edge
@@ -126,10 +130,19 @@ func (e ModEdges) DependentsOrErr() ([]*Version, error) {
 	return nil, &NotLoadedError{edge: "dependents"}
 }
 
+// ModpacksOrErr returns the Modpacks value or an error if the edge
+// was not loaded in eager-loading.
+func (e ModEdges) ModpacksOrErr() ([]*Modpack, error) {
+	if e.loadedTypes[4] {
+		return e.Modpacks, nil
+	}
+	return nil, &NotLoadedError{edge: "modpacks"}
+}
+
 // UserModsOrErr returns the UserMods value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModEdges) UserModsOrErr() ([]*UserMod, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.UserMods, nil
 	}
 	return nil, &NotLoadedError{edge: "user_mods"}
@@ -138,7 +151,7 @@ func (e ModEdges) UserModsOrErr() ([]*UserMod, error) {
 // ModTagsOrErr returns the ModTags value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModEdges) ModTagsOrErr() ([]*ModTag, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.ModTags, nil
 	}
 	return nil, &NotLoadedError{edge: "mod_tags"}
@@ -147,10 +160,19 @@ func (e ModEdges) ModTagsOrErr() ([]*ModTag, error) {
 // VersionDependenciesOrErr returns the VersionDependencies value or an error if the edge
 // was not loaded in eager-loading.
 func (e ModEdges) VersionDependenciesOrErr() ([]*VersionDependency, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[7] {
 		return e.VersionDependencies, nil
 	}
 	return nil, &NotLoadedError{edge: "version_dependencies"}
+}
+
+// ModpackModsOrErr returns the ModpackMods value or an error if the edge
+// was not loaded in eager-loading.
+func (e ModEdges) ModpackModsOrErr() ([]*ModpackMod, error) {
+	if e.loadedTypes[8] {
+		return e.ModpackMods, nil
+	}
+	return nil, &NotLoadedError{edge: "modpack_mods"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -356,6 +378,11 @@ func (m *Mod) QueryDependents() *VersionQuery {
 	return NewModClient(m.config).QueryDependents(m)
 }
 
+// QueryModpacks queries the "modpacks" edge of the Mod entity.
+func (m *Mod) QueryModpacks() *ModpackQuery {
+	return NewModClient(m.config).QueryModpacks(m)
+}
+
 // QueryUserMods queries the "user_mods" edge of the Mod entity.
 func (m *Mod) QueryUserMods() *UserModQuery {
 	return NewModClient(m.config).QueryUserMods(m)
@@ -369,6 +396,11 @@ func (m *Mod) QueryModTags() *ModTagQuery {
 // QueryVersionDependencies queries the "version_dependencies" edge of the Mod entity.
 func (m *Mod) QueryVersionDependencies() *VersionDependencyQuery {
 	return NewModClient(m.config).QueryVersionDependencies(m)
+}
+
+// QueryModpackMods queries the "modpack_mods" edge of the Mod entity.
+func (m *Mod) QueryModpackMods() *ModpackModQuery {
+	return NewModClient(m.config).QueryModpackMods(m)
 }
 
 // Update returns a builder for updating this Mod.

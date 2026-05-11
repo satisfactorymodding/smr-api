@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
@@ -287,6 +288,21 @@ func (uu *UserUpdate) AddMods(m ...*Mod) *UserUpdate {
 	return uu.AddModIDs(ids...)
 }
 
+// AddModpackIDs adds the "modpacks" edge to the Modpack entity by IDs.
+func (uu *UserUpdate) AddModpackIDs(ids ...string) *UserUpdate {
+	uu.mutation.AddModpackIDs(ids...)
+	return uu
+}
+
+// AddModpacks adds the "modpacks" edges to the Modpack entity.
+func (uu *UserUpdate) AddModpacks(m ...*Modpack) *UserUpdate {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.AddModpackIDs(ids...)
+}
+
 // AddGroupIDs adds the "groups" edge to the UserGroup entity by IDs.
 func (uu *UserUpdate) AddGroupIDs(ids ...string) *UserUpdate {
 	uu.mutation.AddGroupIDs(ids...)
@@ -368,6 +384,27 @@ func (uu *UserUpdate) RemoveMods(m ...*Mod) *UserUpdate {
 		ids[i] = m[i].ID
 	}
 	return uu.RemoveModIDs(ids...)
+}
+
+// ClearModpacks clears all "modpacks" edges to the Modpack entity.
+func (uu *UserUpdate) ClearModpacks() *UserUpdate {
+	uu.mutation.ClearModpacks()
+	return uu
+}
+
+// RemoveModpackIDs removes the "modpacks" edge to Modpack entities by IDs.
+func (uu *UserUpdate) RemoveModpackIDs(ids ...string) *UserUpdate {
+	uu.mutation.RemoveModpackIDs(ids...)
+	return uu
+}
+
+// RemoveModpacks removes "modpacks" edges to Modpack entities.
+func (uu *UserUpdate) RemoveModpacks(m ...*Modpack) *UserUpdate {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.RemoveModpackIDs(ids...)
 }
 
 // ClearGroups clears all "groups" edges to the UserGroup entity.
@@ -669,6 +706,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mod.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.ModpacksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ModpacksTable,
+			Columns: user.ModpacksPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedModpacksIDs(); len(nodes) > 0 && !uu.mutation.ModpacksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ModpacksTable,
+			Columns: user.ModpacksPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ModpacksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ModpacksTable,
+			Columns: user.ModpacksPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -997,6 +1079,21 @@ func (uuo *UserUpdateOne) AddMods(m ...*Mod) *UserUpdateOne {
 	return uuo.AddModIDs(ids...)
 }
 
+// AddModpackIDs adds the "modpacks" edge to the Modpack entity by IDs.
+func (uuo *UserUpdateOne) AddModpackIDs(ids ...string) *UserUpdateOne {
+	uuo.mutation.AddModpackIDs(ids...)
+	return uuo
+}
+
+// AddModpacks adds the "modpacks" edges to the Modpack entity.
+func (uuo *UserUpdateOne) AddModpacks(m ...*Modpack) *UserUpdateOne {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.AddModpackIDs(ids...)
+}
+
 // AddGroupIDs adds the "groups" edge to the UserGroup entity by IDs.
 func (uuo *UserUpdateOne) AddGroupIDs(ids ...string) *UserUpdateOne {
 	uuo.mutation.AddGroupIDs(ids...)
@@ -1078,6 +1175,27 @@ func (uuo *UserUpdateOne) RemoveMods(m ...*Mod) *UserUpdateOne {
 		ids[i] = m[i].ID
 	}
 	return uuo.RemoveModIDs(ids...)
+}
+
+// ClearModpacks clears all "modpacks" edges to the Modpack entity.
+func (uuo *UserUpdateOne) ClearModpacks() *UserUpdateOne {
+	uuo.mutation.ClearModpacks()
+	return uuo
+}
+
+// RemoveModpackIDs removes the "modpacks" edge to Modpack entities by IDs.
+func (uuo *UserUpdateOne) RemoveModpackIDs(ids ...string) *UserUpdateOne {
+	uuo.mutation.RemoveModpackIDs(ids...)
+	return uuo
+}
+
+// RemoveModpacks removes "modpacks" edges to Modpack entities.
+func (uuo *UserUpdateOne) RemoveModpacks(m ...*Modpack) *UserUpdateOne {
+	ids := make([]string, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.RemoveModpackIDs(ids...)
 }
 
 // ClearGroups clears all "groups" edges to the UserGroup entity.
@@ -1409,6 +1527,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mod.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ModpacksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ModpacksTable,
+			Columns: user.ModpacksPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedModpacksIDs(); len(nodes) > 0 && !uuo.mutation.ModpacksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ModpacksTable,
+			Columns: user.ModpacksPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ModpacksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ModpacksTable,
+			Columns: user.ModpacksPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modpack.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

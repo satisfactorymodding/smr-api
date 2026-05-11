@@ -26,6 +26,10 @@ func (r *Resolver) UserMod() generated.UserModResolver {
 	return &userModResolver{r}
 }
 
+func (r *Resolver) UserModpack() generated.UserModpackResolver {
+	return &userModpackResolver{r}
+}
+
 func (r *Resolver) VersionTarget() generated.VersionTargetResolver {
 	return &versionTargetResolver{r}
 }
@@ -50,6 +54,10 @@ func (r *Resolver) GetMyMods() generated.GetMyModsResolver {
 	return &getMyModsResolver{r}
 }
 
+func (r *Resolver) GetMyModpacks() generated.GetMyModpacksResolver {
+	return &getMyModpacksResolver{r}
+}
+
 func (r *Resolver) GetVersions() generated.GetVersionsResolver {
 	return &getVersionsResolver{r}
 }
@@ -72,6 +80,14 @@ func (r *Resolver) GetSMLVersions() generated.GetSMLVersionsResolver {
 
 func (r *Resolver) VersionDependency() generated.VersionDependencyResolver {
 	return &versionDependencyResolver{r}
+}
+
+func (r *Resolver) GetModpacks() generated.GetModpacksResolver {
+	return &getModpacksResolver{r}
+}
+
+func (r *Resolver) Modpack() generated.ModpackResolver {
+	return &modpackResolver{r}
 }
 
 type mutationResolver struct{ *Resolver }

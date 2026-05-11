@@ -12,6 +12,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/generated/ent/versiondependency"
 )
@@ -22,6 +23,7 @@ type Loaders struct {
 	UserByID                       *dataloader.Loader[string, *ent.User]
 	VersionDependenciesByVersionID *dataloader.Loader[string, []*ent.VersionDependency]
 	UserModsByModID                *dataloader.Loader[string, []*ent.UserMod]
+	UserModpacksByModpackID        *dataloader.Loader[string, []*ent.UserModpack]
 	VersionsByModID                *dataloader.Loader[string, []*ent.Version]
 	VersionsByModIDNoMeta          *dataloader.Loader[string, []*ent.Version]
 }
@@ -76,6 +78,29 @@ func Middleware() func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 					return results
 				}, dataloader.WithCache[string, []*ent.UserMod](&dataloader.NoCache[string, []*ent.UserMod]{})),
+				UserModpacksByModpackID: dataloader.NewBatchedLoader(func(ctx context.Context, ids []string) []*dataloader.Result[[]*ent.UserModpack] {
+					// TODO Query only selected fields from context
+					entities, err := db.From(ctx).UserModpack.Query().Where(usermodpack.ModpackIDIn(ids...)).All(ctx)
+					if err != nil {
+						return nil
+					}
+
+					byID := map[string][]*ent.UserModpack{}
+					for _, entity := range entities {
+						byID[entity.ModpackID] = append(byID[entity.ModpackID], entity)
+					}
+
+					results := make([]*dataloader.Result[[]*ent.UserModpack], len(ids))
+					for i, id := range ids {
+						if u, ok := byID[id]; ok {
+							results[i] = &dataloader.Result[[]*ent.UserModpack]{Data: u}
+						} else {
+							results[i] = &dataloader.Result[[]*ent.UserModpack]{Error: errors.New("modpack not found")}
+						}
+					}
+
+					return results
+				}, dataloader.WithCache[string, []*ent.UserModpack](&dataloader.NoCache[string, []*ent.UserModpack]{})),
 				VersionsByModID: dataloader.NewBatchedLoader(func(ctx context.Context, ids []string) []*dataloader.Result[[]*ent.Version] {
 					// TODO Query only selected fields from context
 					entities, err := db.From(ctx).Version.Query().WithTargets().Where(

@@ -61,6 +61,8 @@ mise run api
 # Testing
 mise run localtest
 mise run coverage
+mise run populate  # Runs test to create mods and modpacks
+mise run load_staging_dump
 
 # Linting
 mise run lint
@@ -151,12 +153,23 @@ See `config/config.go` for full configuration structure.
    mise run test   # Run tests
    ```
 
+### Using Staging Dumps
+
+   `mise run load_staging_dump`
+   This command runs before adding the most
+   recently saved dump of the staging database on the network. Once the file runs, local migrations will run
+   when executing `mise run api`. This is useful to check if your changes will break the
+   data currently in the database.
+
+Windows users, if you get annoyed by the constant firewall block prompts Go creates,
+you can silence them by [temporarily adjusting your notification settings](https://serverfault.com/a/1198657/982905).
+
 ## Contributing
 
 **Before submitting:**
 
 ```bash
-mise run lint     # Check code quality
+mise run format   # Automatically fix code quality problems and report those that need manual correction
 mise run test     # Run test suite
 mise run generate # Regenerate if needed
 ```

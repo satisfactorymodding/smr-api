@@ -406,6 +406,29 @@ func HasGuidesWith(preds ...predicate.Guide) predicate.Tag {
 	})
 }
 
+// HasModpacks applies the HasEdge predicate on the "modpacks" edge.
+func HasModpacks() predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ModpacksTable, ModpacksPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasModpacksWith applies the HasEdge predicate on the "modpacks" edge with a given conditions (other predicates).
+func HasModpacksWith(preds ...predicate.Modpack) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		step := newModpacksStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasModTags applies the HasEdge predicate on the "mod_tags" edge.
 func HasModTags() predicate.Tag {
 	return predicate.Tag(func(s *sql.Selector) {
@@ -444,6 +467,29 @@ func HasGuideTags() predicate.Tag {
 func HasGuideTagsWith(preds ...predicate.GuideTag) predicate.Tag {
 	return predicate.Tag(func(s *sql.Selector) {
 		step := newGuideTagsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasModpackTags applies the HasEdge predicate on the "modpack_tags" edge.
+func HasModpackTags() predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, ModpackTagsTable, ModpackTagsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasModpackTagsWith applies the HasEdge predicate on the "modpack_tags" edge with a given conditions (other predicates).
+func HasModpackTagsWith(preds ...predicate.ModpackTag) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		step := newModpackTagsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

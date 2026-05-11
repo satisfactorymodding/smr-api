@@ -43,6 +43,7 @@ func RegisterUserRoutes(router *echo.Group) {
 
 	router.GET("/:userId", dataWrapper(getUser))
 	router.GET("/:userId/mods", dataWrapper(getUserMods))
+	router.GET("/:userId/modpacks", dataWrapper(getUserModpacks))
 }
 
 func RegisterUsersRoutes(router *echo.Group) {
@@ -55,4 +56,13 @@ func RegisterVersionRoutes(router *echo.Group) {
 	router.HEAD("/:versionId/download", downloadVersion)
 	router.GET("/:versionId/:target/download", downloadModTarget)
 	router.HEAD("/:versionId/:target/download", downloadModTarget)
+}
+
+func RegisterModpackRoutes(router *echo.Group) {
+	router.GET("/:modpackId", dataWrapper(getModpack))
+	router.GET("/:modpackId/releases/:version", dataWrapper(getModpackRelease))
+}
+
+func RegisterModpacksRoutes(router *echo.Group) {
+	router.GET("", dataWrapper(getModpacks))
 }

@@ -15,6 +15,8 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guidetag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpacktag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/modtag"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/tag"
@@ -23,15 +25,17 @@ import (
 // TagQuery is the builder for querying Tag entities.
 type TagQuery struct {
 	config
-	ctx           *QueryContext
-	order         []tag.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.Tag
-	withMods      *ModQuery
-	withGuides    *GuideQuery
-	withModTags   *ModTagQuery
-	withGuideTags *GuideTagQuery
-	modifiers     []func(*sql.Selector)
+	ctx             *QueryContext
+	order           []tag.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.Tag
+	withMods        *ModQuery
+	withGuides      *GuideQuery
+	withModpacks    *ModpackQuery
+	withModTags     *ModTagQuery
+	withGuideTags   *GuideTagQuery
+	withModpackTags *ModpackTagQuery
+	modifiers       []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -112,6 +116,28 @@ func (tq *TagQuery) QueryGuides() *GuideQuery {
 	return query
 }
 
+// QueryModpacks chains the current query on the "modpacks" edge.
+func (tq *TagQuery) QueryModpacks() *ModpackQuery {
+	query := (&ModpackClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, selector),
+			sqlgraph.To(modpack.Table, modpack.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, tag.ModpacksTable, tag.ModpacksPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryModTags chains the current query on the "mod_tags" edge.
 func (tq *TagQuery) QueryModTags() *ModTagQuery {
 	query := (&ModTagClient{config: tq.config}).Query()
@@ -149,6 +175,28 @@ func (tq *TagQuery) QueryGuideTags() *GuideTagQuery {
 			sqlgraph.From(tag.Table, tag.FieldID, selector),
 			sqlgraph.To(guidetag.Table, guidetag.TagColumn),
 			sqlgraph.Edge(sqlgraph.O2M, true, tag.GuideTagsTable, tag.GuideTagsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryModpackTags chains the current query on the "modpack_tags" edge.
+func (tq *TagQuery) QueryModpackTags() *ModpackTagQuery {
+	query := (&ModpackTagClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, selector),
+			sqlgraph.To(modpacktag.Table, modpacktag.TagColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, tag.ModpackTagsTable, tag.ModpackTagsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -343,15 +391,17 @@ func (tq *TagQuery) Clone() *TagQuery {
 		return nil
 	}
 	return &TagQuery{
-		config:        tq.config,
-		ctx:           tq.ctx.Clone(),
-		order:         append([]tag.OrderOption{}, tq.order...),
-		inters:        append([]Interceptor{}, tq.inters...),
-		predicates:    append([]predicate.Tag{}, tq.predicates...),
-		withMods:      tq.withMods.Clone(),
-		withGuides:    tq.withGuides.Clone(),
-		withModTags:   tq.withModTags.Clone(),
-		withGuideTags: tq.withGuideTags.Clone(),
+		config:          tq.config,
+		ctx:             tq.ctx.Clone(),
+		order:           append([]tag.OrderOption{}, tq.order...),
+		inters:          append([]Interceptor{}, tq.inters...),
+		predicates:      append([]predicate.Tag{}, tq.predicates...),
+		withMods:        tq.withMods.Clone(),
+		withGuides:      tq.withGuides.Clone(),
+		withModpacks:    tq.withModpacks.Clone(),
+		withModTags:     tq.withModTags.Clone(),
+		withGuideTags:   tq.withGuideTags.Clone(),
+		withModpackTags: tq.withModpackTags.Clone(),
 		// clone intermediate query.
 		sql:       tq.sql.Clone(),
 		path:      tq.path,
@@ -381,6 +431,17 @@ func (tq *TagQuery) WithGuides(opts ...func(*GuideQuery)) *TagQuery {
 	return tq
 }
 
+// WithModpacks tells the query-builder to eager-load the nodes that are connected to
+// the "modpacks" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TagQuery) WithModpacks(opts ...func(*ModpackQuery)) *TagQuery {
+	query := (&ModpackClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withModpacks = query
+	return tq
+}
+
 // WithModTags tells the query-builder to eager-load the nodes that are connected to
 // the "mod_tags" edge. The optional arguments are used to configure the query builder of the edge.
 func (tq *TagQuery) WithModTags(opts ...func(*ModTagQuery)) *TagQuery {
@@ -400,6 +461,17 @@ func (tq *TagQuery) WithGuideTags(opts ...func(*GuideTagQuery)) *TagQuery {
 		opt(query)
 	}
 	tq.withGuideTags = query
+	return tq
+}
+
+// WithModpackTags tells the query-builder to eager-load the nodes that are connected to
+// the "modpack_tags" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TagQuery) WithModpackTags(opts ...func(*ModpackTagQuery)) *TagQuery {
+	query := (&ModpackTagClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withModpackTags = query
 	return tq
 }
 
@@ -481,11 +553,13 @@ func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, err
 	var (
 		nodes       = []*Tag{}
 		_spec       = tq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [6]bool{
 			tq.withMods != nil,
 			tq.withGuides != nil,
+			tq.withModpacks != nil,
 			tq.withModTags != nil,
 			tq.withGuideTags != nil,
+			tq.withModpackTags != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -523,6 +597,13 @@ func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, err
 			return nil, err
 		}
 	}
+	if query := tq.withModpacks; query != nil {
+		if err := tq.loadModpacks(ctx, query, nodes,
+			func(n *Tag) { n.Edges.Modpacks = []*Modpack{} },
+			func(n *Tag, e *Modpack) { n.Edges.Modpacks = append(n.Edges.Modpacks, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := tq.withModTags; query != nil {
 		if err := tq.loadModTags(ctx, query, nodes,
 			func(n *Tag) { n.Edges.ModTags = []*ModTag{} },
@@ -534,6 +615,13 @@ func (tq *TagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tag, err
 		if err := tq.loadGuideTags(ctx, query, nodes,
 			func(n *Tag) { n.Edges.GuideTags = []*GuideTag{} },
 			func(n *Tag, e *GuideTag) { n.Edges.GuideTags = append(n.Edges.GuideTags, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withModpackTags; query != nil {
+		if err := tq.loadModpackTags(ctx, query, nodes,
+			func(n *Tag) { n.Edges.ModpackTags = []*ModpackTag{} },
+			func(n *Tag, e *ModpackTag) { n.Edges.ModpackTags = append(n.Edges.ModpackTags, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -662,6 +750,67 @@ func (tq *TagQuery) loadGuides(ctx context.Context, query *GuideQuery, nodes []*
 	}
 	return nil
 }
+func (tq *TagQuery) loadModpacks(ctx context.Context, query *ModpackQuery, nodes []*Tag, init func(*Tag), assign func(*Tag, *Modpack)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*Tag)
+	nids := make(map[string]map[*Tag]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(tag.ModpacksTable)
+		s.Join(joinT).On(s.C(modpack.FieldID), joinT.C(tag.ModpacksPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(tag.ModpacksPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(tag.ModpacksPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Tag]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Modpack](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "modpacks" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
 func (tq *TagQuery) loadModTags(ctx context.Context, query *ModTagQuery, nodes []*Tag, init func(*Tag), assign func(*Tag, *ModTag)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[string]*Tag)
@@ -707,6 +856,36 @@ func (tq *TagQuery) loadGuideTags(ctx context.Context, query *GuideTagQuery, nod
 	}
 	query.Where(predicate.GuideTag(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(tag.GuideTagsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TagID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tag_id" returned %v for node %v`, fk, n)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TagQuery) loadModpackTags(ctx context.Context, query *ModpackTagQuery, nodes []*Tag, init func(*Tag), assign func(*Tag, *ModpackTag)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*Tag)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(modpacktag.FieldTagID)
+	}
+	query.Where(predicate.ModpackTag(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tag.ModpackTagsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

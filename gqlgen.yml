@@ -42,6 +42,8 @@ models:
         resolver: true
       groups:
         resolver: true
+      modpacks:
+        resolver: true
 
   Mod:
     fields:
@@ -59,6 +61,13 @@ models:
       user:
         resolver: true
       mod:
+        resolver: true
+
+  UserModpack:
+    fields:
+      user:
+        resolver: true
+      modpack:
         resolver: true
 
   Version:
@@ -107,6 +116,13 @@ models:
   GetMyMods:
     fields:
       mods:
+        resolver: true
+      count:
+        resolver: true
+
+  GetMyModpacks:
+    fields:
+      modpacks:
         resolver: true
       count:
         resolver: true
@@ -175,4 +191,16 @@ models:
   VersionDependency:
     fields:
       mod:
+        resolver: true
+
+  GetModpacks:
+    fields:
+      modpacks:
+        resolver: true
+      count:
+        resolver: true
+
+  Modpack:
+    fields:
+      children:
         resolver: true

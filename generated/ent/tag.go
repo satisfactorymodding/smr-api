@@ -39,13 +39,17 @@ type TagEdges struct {
 	Mods []*Mod `json:"mods,omitempty"`
 	// Guides holds the value of the guides edge.
 	Guides []*Guide `json:"guides,omitempty"`
+	// Modpacks holds the value of the modpacks edge.
+	Modpacks []*Modpack `json:"modpacks,omitempty"`
 	// ModTags holds the value of the mod_tags edge.
 	ModTags []*ModTag `json:"mod_tags,omitempty"`
 	// GuideTags holds the value of the guide_tags edge.
 	GuideTags []*GuideTag `json:"guide_tags,omitempty"`
+	// ModpackTags holds the value of the modpack_tags edge.
+	ModpackTags []*ModpackTag `json:"modpack_tags,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [6]bool
 }
 
 // ModsOrErr returns the Mods value or an error if the edge
@@ -66,10 +70,19 @@ func (e TagEdges) GuidesOrErr() ([]*Guide, error) {
 	return nil, &NotLoadedError{edge: "guides"}
 }
 
+// ModpacksOrErr returns the Modpacks value or an error if the edge
+// was not loaded in eager-loading.
+func (e TagEdges) ModpacksOrErr() ([]*Modpack, error) {
+	if e.loadedTypes[2] {
+		return e.Modpacks, nil
+	}
+	return nil, &NotLoadedError{edge: "modpacks"}
+}
+
 // ModTagsOrErr returns the ModTags value or an error if the edge
 // was not loaded in eager-loading.
 func (e TagEdges) ModTagsOrErr() ([]*ModTag, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.ModTags, nil
 	}
 	return nil, &NotLoadedError{edge: "mod_tags"}
@@ -78,10 +91,19 @@ func (e TagEdges) ModTagsOrErr() ([]*ModTag, error) {
 // GuideTagsOrErr returns the GuideTags value or an error if the edge
 // was not loaded in eager-loading.
 func (e TagEdges) GuideTagsOrErr() ([]*GuideTag, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.GuideTags, nil
 	}
 	return nil, &NotLoadedError{edge: "guide_tags"}
+}
+
+// ModpackTagsOrErr returns the ModpackTags value or an error if the edge
+// was not loaded in eager-loading.
+func (e TagEdges) ModpackTagsOrErr() ([]*ModpackTag, error) {
+	if e.loadedTypes[5] {
+		return e.ModpackTags, nil
+	}
+	return nil, &NotLoadedError{edge: "modpack_tags"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -167,6 +189,11 @@ func (t *Tag) QueryGuides() *GuideQuery {
 	return NewTagClient(t.config).QueryGuides(t)
 }
 
+// QueryModpacks queries the "modpacks" edge of the Tag entity.
+func (t *Tag) QueryModpacks() *ModpackQuery {
+	return NewTagClient(t.config).QueryModpacks(t)
+}
+
 // QueryModTags queries the "mod_tags" edge of the Tag entity.
 func (t *Tag) QueryModTags() *ModTagQuery {
 	return NewTagClient(t.config).QueryModTags(t)
@@ -175,6 +202,11 @@ func (t *Tag) QueryModTags() *ModTagQuery {
 // QueryGuideTags queries the "guide_tags" edge of the Tag entity.
 func (t *Tag) QueryGuideTags() *GuideTagQuery {
 	return NewTagClient(t.config).QueryGuideTags(t)
+}
+
+// QueryModpackTags queries the "modpack_tags" edge of the Tag entity.
+func (t *Tag) QueryModpackTags() *ModpackTagQuery {
+	return NewTagClient(t.config).QueryModpackTags(t)
 }
 
 // Update returns a builder for updating this Tag.

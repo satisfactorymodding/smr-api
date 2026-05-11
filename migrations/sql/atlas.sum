@@ -1,4 +1,4 @@
-h1:NVXwUmNMPEOBFBSqgQGuw/OMarJOpSsxkE/8o1qQH3k=
+h1:u9qfe+7n61v84ix9M//lyG8Gfc85iR8ZeVdczrAKeXA=
 000001_create_initial_tables.down.sql h1:QcXXwE8ir3PM3vZjQfBihY55WiuLYjN8pbbk/L6U+bs=
 000001_create_initial_tables.up.sql h1:EfAqETefs7TW9BDVS4ukiB7wUFs+HQzVdc3qHhdAFd4=
 000002_create_user_group_table.down.sql h1:uJjRbQ3H7yvPGNXLD5iSPmderEoWhCNGdsqN8yqBIRY=
@@ -79,3 +79,11 @@ h1:NVXwUmNMPEOBFBSqgQGuw/OMarJOpSsxkE/8o1qQH3k=
 20241003161005_create_virustotal_results_table.up.sql h1:mXMWj998hZ59bbkZYIbbyxU9foptzWuXHnlS2UuY4bY=
 20241008092121_nullable_mod_logo.down.sql h1:vKZrz/FqaaQctvzrTR0EvQcyQ6ENWgTbcud7q2/NvnY=
 20241008092121_nullable_mod_logo.up.sql h1:7ePponYitScS4NnMP+hRoEAKnvPPpbCHXMxilYzfmD8=
+20250623121418_add_modpacks.down.sql h1:EUdimebyyFm7gvT7+6OxRmiYEGygvWB7ZYRTRATVp0A=
+20250623121418_add_modpacks.up.sql h1:yqmmAlWvk6xYtKFs/EogKfIDL4nhR/QazMiepV/QRp0=
+20260318162543_create_user_modpacks_table.down.sql h1:lhYmv028KEToyqnRXRCEUdKUKqpsMt0vLV+MHWuTN1g=
+20260318162543_create_user_modpacks_table.up.sql h1:6ZrIqJ36NhWlUHxeVgWKQAYZT9Ujsiyh4MICEj5S6Co=
+20260321003544_modpack_deletion.down.sql h1:80aemDzt639qZWHwAoVqC4FcqOVSUlO4TVgJTdkUjRw=
+20260321003544_modpack_deletion.up.sql h1:BKpBhk4oPzJUla+j9fmvF4VMR1xQ4cY08/nxF8HKxFQ=
+20260413062730_ci_migration.down.sql h1:4+B1YDtl749UR8HCd0aeW2+25i/oXlwA3q1rfpwdmWE=
+20260413062730_ci_migration.up.sql h1:65FTmLuwipr5pHJ6rOzNpc61J2XV94R3bchJ0e87h5c=

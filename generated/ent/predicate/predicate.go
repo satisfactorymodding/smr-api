@@ -21,6 +21,21 @@ type Mod func(*sql.Selector)
 // ModTag is the predicate function for modtag builders.
 type ModTag func(*sql.Selector)
 
+// Modpack is the predicate function for modpack builders.
+type Modpack func(*sql.Selector)
+
+// ModpackMod is the predicate function for modpackmod builders.
+type ModpackMod func(*sql.Selector)
+
+// ModpackRelease is the predicate function for modpackrelease builders.
+type ModpackRelease func(*sql.Selector)
+
+// ModpackTag is the predicate function for modpacktag builders.
+type ModpackTag func(*sql.Selector)
+
+// ModpackTarget is the predicate function for modpacktarget builders.
+type ModpackTarget func(*sql.Selector)
+
 // SatisfactoryVersion is the predicate function for satisfactoryversion builders.
 type SatisfactoryVersion func(*sql.Selector)
 
@@ -35,6 +50,9 @@ type UserGroup func(*sql.Selector)
 
 // UserMod is the predicate function for usermod builders.
 type UserMod func(*sql.Selector)
+
+// UserModpack is the predicate function for usermodpack builders.
+type UserModpack func(*sql.Selector)
 
 // UserSession is the predicate function for usersession builders.
 type UserSession func(*sql.Selector)

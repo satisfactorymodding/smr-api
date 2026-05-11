@@ -25,7 +25,7 @@ run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -
 run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -p 1 -timeout 1h ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out junit.xml"
 
 [tasks.migrate_hash]
-run = "atlas migrate hash --dir \"file://migrations/sql?format=golang-migrate\""
+run = 'atlas migrate hash --dir file://migrations/sql?format=golang-migrate'
 
 [tasks.generate]
 run = "go generate -tags tools -x ./..."
@@ -54,3 +54,9 @@ run = "golangci-lint run"
 
 [tasks.format]
 run = "golangci-lint run --fix"
+
+[tasks.populate]
+run = "go test -count=1 -run TestModpacks ./tests"
+
+[tasks.load_staging_dump]
+run = "bash ./.mise/tasks/import_staging_dump.sh"

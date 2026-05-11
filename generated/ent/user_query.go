@@ -14,26 +14,30 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/satisfactorymodding/smr-api/generated/ent/guide"
 	"github.com/satisfactorymodding/smr-api/generated/ent/mod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/modpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/predicate"
 	"github.com/satisfactorymodding/smr-api/generated/ent/user"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usergroup"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usermod"
+	"github.com/satisfactorymodding/smr-api/generated/ent/usermodpack"
 	"github.com/satisfactorymodding/smr-api/generated/ent/usersession"
 )
 
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx          *QueryContext
-	order        []user.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.User
-	withGuides   *GuideQuery
-	withSessions *UserSessionQuery
-	withMods     *ModQuery
-	withGroups   *UserGroupQuery
-	withUserMods *UserModQuery
-	modifiers    []func(*sql.Selector)
+	ctx              *QueryContext
+	order            []user.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.User
+	withGuides       *GuideQuery
+	withSessions     *UserSessionQuery
+	withMods         *ModQuery
+	withModpacks     *ModpackQuery
+	withGroups       *UserGroupQuery
+	withUserMods     *UserModQuery
+	withUserModpacks *UserModpackQuery
+	modifiers        []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -136,6 +140,28 @@ func (uq *UserQuery) QueryMods() *ModQuery {
 	return query
 }
 
+// QueryModpacks chains the current query on the "modpacks" edge.
+func (uq *UserQuery) QueryModpacks() *ModpackQuery {
+	query := (&ModpackClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(modpack.Table, modpack.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.ModpacksTable, user.ModpacksPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryGroups chains the current query on the "groups" edge.
 func (uq *UserQuery) QueryGroups() *UserGroupQuery {
 	query := (&UserGroupClient{config: uq.config}).Query()
@@ -173,6 +199,28 @@ func (uq *UserQuery) QueryUserMods() *UserModQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(usermod.Table, usermod.UserColumn),
 			sqlgraph.Edge(sqlgraph.O2M, true, user.UserModsTable, user.UserModsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserModpacks chains the current query on the "user_modpacks" edge.
+func (uq *UserQuery) QueryUserModpacks() *UserModpackQuery {
+	query := (&UserModpackClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(usermodpack.Table, usermodpack.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.UserModpacksTable, user.UserModpacksColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -367,16 +415,18 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:       uq.config,
-		ctx:          uq.ctx.Clone(),
-		order:        append([]user.OrderOption{}, uq.order...),
-		inters:       append([]Interceptor{}, uq.inters...),
-		predicates:   append([]predicate.User{}, uq.predicates...),
-		withGuides:   uq.withGuides.Clone(),
-		withSessions: uq.withSessions.Clone(),
-		withMods:     uq.withMods.Clone(),
-		withGroups:   uq.withGroups.Clone(),
-		withUserMods: uq.withUserMods.Clone(),
+		config:           uq.config,
+		ctx:              uq.ctx.Clone(),
+		order:            append([]user.OrderOption{}, uq.order...),
+		inters:           append([]Interceptor{}, uq.inters...),
+		predicates:       append([]predicate.User{}, uq.predicates...),
+		withGuides:       uq.withGuides.Clone(),
+		withSessions:     uq.withSessions.Clone(),
+		withMods:         uq.withMods.Clone(),
+		withModpacks:     uq.withModpacks.Clone(),
+		withGroups:       uq.withGroups.Clone(),
+		withUserMods:     uq.withUserMods.Clone(),
+		withUserModpacks: uq.withUserModpacks.Clone(),
 		// clone intermediate query.
 		sql:       uq.sql.Clone(),
 		path:      uq.path,
@@ -417,6 +467,17 @@ func (uq *UserQuery) WithMods(opts ...func(*ModQuery)) *UserQuery {
 	return uq
 }
 
+// WithModpacks tells the query-builder to eager-load the nodes that are connected to
+// the "modpacks" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithModpacks(opts ...func(*ModpackQuery)) *UserQuery {
+	query := (&ModpackClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withModpacks = query
+	return uq
+}
+
 // WithGroups tells the query-builder to eager-load the nodes that are connected to
 // the "groups" edge. The optional arguments are used to configure the query builder of the edge.
 func (uq *UserQuery) WithGroups(opts ...func(*UserGroupQuery)) *UserQuery {
@@ -436,6 +497,17 @@ func (uq *UserQuery) WithUserMods(opts ...func(*UserModQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withUserMods = query
+	return uq
+}
+
+// WithUserModpacks tells the query-builder to eager-load the nodes that are connected to
+// the "user_modpacks" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithUserModpacks(opts ...func(*UserModpackQuery)) *UserQuery {
+	query := (&UserModpackClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withUserModpacks = query
 	return uq
 }
 
@@ -517,12 +589,14 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [7]bool{
 			uq.withGuides != nil,
 			uq.withSessions != nil,
 			uq.withMods != nil,
+			uq.withModpacks != nil,
 			uq.withGroups != nil,
 			uq.withUserMods != nil,
+			uq.withUserModpacks != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -567,6 +641,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := uq.withModpacks; query != nil {
+		if err := uq.loadModpacks(ctx, query, nodes,
+			func(n *User) { n.Edges.Modpacks = []*Modpack{} },
+			func(n *User, e *Modpack) { n.Edges.Modpacks = append(n.Edges.Modpacks, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := uq.withGroups; query != nil {
 		if err := uq.loadGroups(ctx, query, nodes,
 			func(n *User) { n.Edges.Groups = []*UserGroup{} },
@@ -578,6 +659,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadUserMods(ctx, query, nodes,
 			func(n *User) { n.Edges.UserMods = []*UserMod{} },
 			func(n *User, e *UserMod) { n.Edges.UserMods = append(n.Edges.UserMods, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withUserModpacks; query != nil {
+		if err := uq.loadUserModpacks(ctx, query, nodes,
+			func(n *User) { n.Edges.UserModpacks = []*UserModpack{} },
+			func(n *User, e *UserModpack) { n.Edges.UserModpacks = append(n.Edges.UserModpacks, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -706,6 +794,67 @@ func (uq *UserQuery) loadMods(ctx context.Context, query *ModQuery, nodes []*Use
 	}
 	return nil
 }
+func (uq *UserQuery) loadModpacks(ctx context.Context, query *ModpackQuery, nodes []*User, init func(*User), assign func(*User, *Modpack)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*User)
+	nids := make(map[string]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.ModpacksTable)
+		s.Join(joinT).On(s.C(modpack.FieldID), joinT.C(user.ModpacksPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(user.ModpacksPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.ModpacksPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Modpack](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "modpacks" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
 func (uq *UserQuery) loadGroups(ctx context.Context, query *UserGroupQuery, nodes []*User, init func(*User), assign func(*User, *UserGroup)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[string]*User)
@@ -751,6 +900,36 @@ func (uq *UserQuery) loadUserMods(ctx context.Context, query *UserModQuery, node
 	}
 	query.Where(predicate.UserMod(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.UserModsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadUserModpacks(ctx context.Context, query *UserModpackQuery, nodes []*User, init func(*User), assign func(*User, *UserModpack)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usermodpack.FieldUserID)
+	}
+	query.Where(predicate.UserModpack(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UserModpacksColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
