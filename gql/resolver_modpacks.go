@@ -273,7 +273,6 @@ func (r *mutationResolver) UpdateModpack(ctx context.Context, modpackID string, 
 }
 
 func (r *mutationResolver) UpdateModpackCompatibility(ctx context.Context, modpackID string, compatibility generated.CompatibilityInfoInput) (bool, error) {
-	// TODO copied from resolver_mods.go. Probably unnecessary since everything should be done during creation?
 	mods, _ := db.From(ctx).Modpack.Query().
 		Where(modpack.ID(modpackID)).QueryModpackMods().All(ctx)
 	updateModpack := generated.UpdateModpack{
