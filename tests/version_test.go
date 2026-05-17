@@ -62,39 +62,38 @@ func TestSameVersion(t *testing.T) {
 }
 
 func TestSameSemver(t *testing.T) {
-    ctx, client, stop := setup()
-    defer stop()
+	ctx, client, stop := setup()
+	defer stop()
 
-    modID, versionID, token := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "")
+	modID, versionID, token := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "")
 
 	time.Sleep(500 * time.Millisecond)
 
-    deleteRequest := authRequest(`mutation DeleteVersion($versionId: VersionID!) {
+	deleteRequest := authRequest(`mutation DeleteVersion($versionId: VersionID!) {
         deleteVersion(versionId: $versionId)
     }`, token)
-    deleteRequest.Var("versionId", versionID)
+	deleteRequest.Var("versionId", versionID)
 
-    var deleteResponse struct {
-        DeleteVersion bool
-    }
-    testza.AssertNoError(t, client.Run(ctx, deleteRequest, &deleteResponse))
-    testza.AssertTrue(t, deleteResponse.DeleteVersion)
+	var deleteResponse struct {
+		DeleteVersion bool
+	}
+	testza.AssertNoError(t, client.Run(ctx, deleteRequest, &deleteResponse))
+	testza.AssertTrue(t, deleteResponse.DeleteVersion)
 
 	getModRequest := authRequest(`query GetMod($modId: ModID!) {
         getMod(modId: $modId) {
             name
         }
     }`, token)
-    getModRequest.Var("modId", modID)
+	getModRequest.Var("modId", modID)
 
-    var getModResponse struct {
-        GetMod generated.Mod
-    }
-    testza.AssertNoError(t, client.Run(ctx, getModRequest, &getModResponse))
+	var getModResponse struct {
+		GetMod generated.Mod
+	}
+	testza.AssertNoError(t, client.Run(ctx, getModRequest, &getModResponse))
 	testza.AssertNotEqual(t, 0, len(getModResponse.GetMod.Name))
-    
 
-    RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this semver", token)
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this semver", token)
 }
 
 func TestModWithMissingDependency(t *testing.T) {
