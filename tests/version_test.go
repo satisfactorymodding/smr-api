@@ -67,6 +67,8 @@ func TestSameSemver(t *testing.T) {
 
     modID, versionID, token := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "")
 
+	time.Sleep(500 * time.Millisecond)
+
     deleteRequest := authRequest(`mutation DeleteVersion($versionId: VersionID!) {
         deleteVersion(versionId: $versionId)
     }`, token)
@@ -78,8 +80,10 @@ func TestSameSemver(t *testing.T) {
     testza.AssertNoError(t, client.Run(ctx, deleteRequest, &deleteResponse))
     testza.AssertTrue(t, deleteResponse.DeleteVersion)
 
-	getModRequest := authRequest(`mutation GetMod($modId: modId!) {
-        getMod(modId: $modId)
+	getModRequest := authRequest(`query GetMod($modId: ModID!) {
+        getMod(modId: $modId) {
+            name
+        }
     }`, token)
     getModRequest.Var("modId", modID)
 

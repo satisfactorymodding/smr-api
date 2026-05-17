@@ -68,7 +68,7 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 		minor := int(modInfo.Semver.Minor())
 		patch := int(modInfo.Semver.Patch())
 
-		semverCount, err := db.From(schema.SkipSoftDelete(ctx)).Version.Query().
+		semverCount, err := db.From(ctx).Version.Query().
 			Where(
 				version2.ModID(mod.ID),
 				version2.VersionMajor(major),
@@ -76,7 +76,7 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 				version2.VersionPatch(patch),
 				version2.DeletedAtNotNil(),
 			).
-			Count(ctx)
+			Count(schema.SkipSoftDelete(ctx))
 		if err != nil {
 			return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
 		}
