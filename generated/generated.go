@@ -2865,7 +2865,6 @@ input NewMod {
     tagIDs: [TagID!]
     toggle_network_use: Boolean
     toggle_explicit_content: Boolean
-    ai_use_disclosure: AIUseDisclosureInput
 }
 
 input UpdateMod {
@@ -21885,7 +21884,7 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj any) (
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "hidden", "tagIDs", "toggle_network_use", "toggle_explicit_content", "ai_use_disclosure"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "hidden", "tagIDs", "toggle_network_use", "toggle_explicit_content"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21962,13 +21961,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj any) (
 				return it, err
 			}
 			it.ToggleExplicitContent = data
-		case "ai_use_disclosure":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ai_use_disclosure"))
-			data, err := ec.unmarshalOAIUseDisclosureInput2ᚖgithubᚗcomᚋsatisfactorymoddingᚋsmrᚑapiᚋgeneratedᚐAIUseDisclosureInput(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.AiUseDisclosure = data
 		}
 	}
 
