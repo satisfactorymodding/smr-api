@@ -139,9 +139,9 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 			updateDisclosure.Var("mod_id", modID)
 			valueOfNoNetworkUse := ""
 			updateDisclosure.Var("mod", generated.UpdateMod{
-				AiUseDisclosure: &generated.AIUseDisclosureInput{
+				AiUseDisclosure: gqlgen.OmittableOf(&generated.AIUseDisclosureInput{
 					DisclosureType: generated.AIUseDisclosureTypeNoAiUsage,
-				},
+				}),
 				NetworkUseDisclosure: gqlgen.OmittableOf(&valueOfNoNetworkUse),
 			})
 			var updateResponse struct {

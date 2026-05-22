@@ -105,7 +105,7 @@ func TestAiDisclosure(t *testing.T) {
 	testza.AssertEqual(t, &disclosureString, updateResponse.UpdateMod.AiUseDisclosure.DisclosureString)
 
 	// Trying to unassign the disclosure is not allowed
-	failedUpdateUndisclosed := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
+	failedUpdateUndisclosed := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput) {
 		updateMod(
 			modId: $id
 			mod: {
@@ -127,5 +127,5 @@ func TestAiDisclosure(t *testing.T) {
 	}
 	err = client.Run(ctx, failedUpdateUndisclosed, &failedUpdateUndisclosedResponse)
 	testza.AssertNotNil(t, err)
-	testza.AssertContains(t, err.Error(), "graphql: cannot be null")
+	testza.AssertContains(t, err.Error(), "this mod already has an AI use disclosure, and thus it cannot be cleared")
 }
