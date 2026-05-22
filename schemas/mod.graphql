@@ -100,7 +100,6 @@ input NewMod {
     tagIDs: [TagID!]
     toggle_network_use: Boolean
     toggle_explicit_content: Boolean
-    ai_use_disclosure: AIUseDisclosureInput
 }
 
 input UpdateMod {
