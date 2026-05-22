@@ -194,12 +194,12 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 	SetINNF(updateMod.ToggleNetworkUse, dbUpdate.SetToggleNetworkUse)
 	SetINNF(updateMod.ToggleExplicitContent, dbUpdate.SetToggleExplicitContent)
 
-	aiDisclosureUpdate, isSet := graphql.OmittableOf(updateMod.AiUseDisclosure).ValueOK()
+	aiDisclosureUpdate, isSet := updateMod.AiUseDisclosure.ValueOK()
 	if isSet && aiDisclosureUpdate != nil && aiDisclosureUpdate.DisclosureType != generated.AIUseDisclosureTypeNoDisclosure {
-		if requiresMessage(updateMod.AiUseDisclosure.DisclosureType) && *updateMod.AiUseDisclosure.DisclosureString == "" {
+		if requiresMessage(aiDisclosureUpdate.DisclosureType) && *aiDisclosureUpdate.DisclosureString == "" {
 			return nil, errors.New("you need to input a disclosure message when disclosing AI usage")
 		}
-		SetAIDisclosureINNF(updateMod.AiUseDisclosure, dbUpdate.SetAiUseDisclosure)
+		SetAIDisclosureINNF(aiDisclosureUpdate, dbUpdate.SetAiUseDisclosure)
 	} else if (aiDisclosureUpdate == nil || aiDisclosureUpdate.DisclosureType == generated.AIUseDisclosureTypeNoDisclosure) && dbMod.AiUseDisclosure != nil && dbMod.AiUseDisclosure.DisclosureType != generated.AIUseDisclosureTypeNoDisclosure.String() {
 		return nil, errors.New("this mod already has an AI use disclosure, and thus it cannot be cleared")
 	}

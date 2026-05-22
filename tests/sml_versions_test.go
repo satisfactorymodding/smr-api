@@ -84,9 +84,9 @@ func TestSMLVersions(t *testing.T) {
 		updateDisclosure.Var("mod_id", smlModID)
 		valueOfNoNetworkUse := ""
 		updateDisclosure.Var("mod", generated.UpdateMod{
-			AiUseDisclosure: &generated.AIUseDisclosureInput{
+			AiUseDisclosure: graphql.OmittableOf(&generated.AIUseDisclosureInput{
 				DisclosureType: generated.AIUseDisclosureTypeNoAiUsage,
-			},
+			}),
 			NetworkUseDisclosure: graphql.OmittableOf(&valueOfNoNetworkUse),
 		})
 		var updateResponse struct {
