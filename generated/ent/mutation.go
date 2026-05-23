@@ -1961,7 +1961,6 @@ type ModMutation struct {
 	mod_reference           *string
 	hidden                  *bool
 	compatibility           **util.CompatibilityInfo
-	toggle_network_use      *bool
 	network_use_disclosure  *string
 	ai_use_disclosure       **util.AIUseDisclosureInfo
 	toggle_explicit_content *bool
@@ -2965,42 +2964,6 @@ func (m *ModMutation) ResetCompatibility() {
 	delete(m.clearedFields, mod.FieldCompatibility)
 }
 
-// SetToggleNetworkUse sets the "toggle_network_use" field.
-func (m *ModMutation) SetToggleNetworkUse(b bool) {
-	m.toggle_network_use = &b
-}
-
-// ToggleNetworkUse returns the value of the "toggle_network_use" field in the mutation.
-func (m *ModMutation) ToggleNetworkUse() (r bool, exists bool) {
-	v := m.toggle_network_use
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldToggleNetworkUse returns the old "toggle_network_use" field's value of the Mod entity.
-// If the Mod object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ModMutation) OldToggleNetworkUse(ctx context.Context) (v bool, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldToggleNetworkUse is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldToggleNetworkUse requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldToggleNetworkUse: %w", err)
-	}
-	return oldValue.ToggleNetworkUse, nil
-}
-
-// ResetToggleNetworkUse resets all changes to the "toggle_network_use" field.
-func (m *ModMutation) ResetToggleNetworkUse() {
-	m.toggle_network_use = nil
-}
-
 // SetNetworkUseDisclosure sets the "network_use_disclosure" field.
 func (m *ModMutation) SetNetworkUseDisclosure(s string) {
 	m.network_use_disclosure = &s
@@ -3385,7 +3348,7 @@ func (m *ModMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ModMutation) Fields() []string {
-	fields := make([]string, 0, 24)
+	fields := make([]string, 0, 23)
 	if m.created_at != nil {
 		fields = append(fields, mod.FieldCreatedAt)
 	}
@@ -3446,9 +3409,6 @@ func (m *ModMutation) Fields() []string {
 	if m.compatibility != nil {
 		fields = append(fields, mod.FieldCompatibility)
 	}
-	if m.toggle_network_use != nil {
-		fields = append(fields, mod.FieldToggleNetworkUse)
-	}
 	if m.network_use_disclosure != nil {
 		fields = append(fields, mod.FieldNetworkUseDisclosure)
 	}
@@ -3506,8 +3466,6 @@ func (m *ModMutation) Field(name string) (ent.Value, bool) {
 		return m.Hidden()
 	case mod.FieldCompatibility:
 		return m.Compatibility()
-	case mod.FieldToggleNetworkUse:
-		return m.ToggleNetworkUse()
 	case mod.FieldNetworkUseDisclosure:
 		return m.NetworkUseDisclosure()
 	case mod.FieldAiUseDisclosure:
@@ -3563,8 +3521,6 @@ func (m *ModMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldHidden(ctx)
 	case mod.FieldCompatibility:
 		return m.OldCompatibility(ctx)
-	case mod.FieldToggleNetworkUse:
-		return m.OldToggleNetworkUse(ctx)
 	case mod.FieldNetworkUseDisclosure:
 		return m.OldNetworkUseDisclosure(ctx)
 	case mod.FieldAiUseDisclosure:
@@ -3719,13 +3675,6 @@ func (m *ModMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCompatibility(v)
-		return nil
-	case mod.FieldToggleNetworkUse:
-		v, ok := value.(bool)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetToggleNetworkUse(v)
 		return nil
 	case mod.FieldNetworkUseDisclosure:
 		v, ok := value.(string)
@@ -3958,9 +3907,6 @@ func (m *ModMutation) ResetField(name string) error {
 		return nil
 	case mod.FieldCompatibility:
 		m.ResetCompatibility()
-		return nil
-	case mod.FieldToggleNetworkUse:
-		m.ResetToggleNetworkUse()
 		return nil
 	case mod.FieldNetworkUseDisclosure:
 		m.ResetNetworkUseDisclosure()

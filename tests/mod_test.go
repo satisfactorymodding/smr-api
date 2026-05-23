@@ -109,7 +109,6 @@ func TestMods(t *testing.T) {
 						full_description: "Lorem ipsum dolor sit amet",
 						mod_reference: $mod_reference,
 						tagIDs: $tags,
-						toggle_network_use: true,
 						toggle_explicit_content: true
 					}) {
 						id
@@ -147,7 +146,6 @@ func TestMods(t *testing.T) {
 						last_version_date
 						mod_reference
 						hidden
-						toggle_network_use
 						toggle_explicit_content
 						tags {
 						  id
@@ -194,7 +192,6 @@ func TestMods(t *testing.T) {
 				testza.AssertEqual(t, &fullDescription, queryResponse.GetMod.FullDescription)
 				testza.AssertEqual(t, modReference, queryResponse.GetMod.ModReference)
 				testza.AssertEqual(t, userID, queryResponse.GetMod.CreatorID)
-				testza.AssertTrue(t, queryResponse.GetMod.ToggleNetworkUse)
 				testza.AssertTrue(t, queryResponse.GetMod.ToggleExplicitContent)
 			})
 
@@ -260,7 +257,6 @@ func TestMods(t *testing.T) {
 							name: "Foo Bar",
 							tagIDs: $tags,
 							authors: $authors,
-							toggle_network_use: false,
 							toggle_explicit_content: false,
 							compatibility: {
 								EA: {
@@ -331,7 +327,6 @@ func TestMods(t *testing.T) {
 				testza.AssertEqual(t, &fullDescription, queryResponse.GetMods.Mods[1].FullDescription)
 				testza.AssertEqual(t, modReference, queryResponse.GetMods.Mods[1].ModReference)
 				testza.AssertEqual(t, userID, queryResponse.GetMods.Mods[1].CreatorID)
-				testza.AssertFalse(t, queryResponse.GetMods.Mods[1].ToggleNetworkUse)
 				testza.AssertFalse(t, queryResponse.GetMods.Mods[1].ToggleExplicitContent)
 			})
 

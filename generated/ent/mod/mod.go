@@ -55,8 +55,6 @@ const (
 	FieldHidden = "hidden"
 	// FieldCompatibility holds the string denoting the compatibility field in the database.
 	FieldCompatibility = "compatibility"
-	// FieldToggleNetworkUse holds the string denoting the toggle_network_use field in the database.
-	FieldToggleNetworkUse = "toggle_network_use"
 	// FieldNetworkUseDisclosure holds the string denoting the network_use_disclosure field in the database.
 	FieldNetworkUseDisclosure = "network_use_disclosure"
 	// FieldAiUseDisclosure holds the string denoting the ai_use_disclosure field in the database.
@@ -147,7 +145,6 @@ var Columns = []string{
 	FieldModReference,
 	FieldHidden,
 	FieldCompatibility,
-	FieldToggleNetworkUse,
 	FieldNetworkUseDisclosure,
 	FieldAiUseDisclosure,
 	FieldToggleExplicitContent,
@@ -209,8 +206,6 @@ var (
 	ModReferenceValidator func(string) error
 	// DefaultHidden holds the default value on creation for the "hidden" field.
 	DefaultHidden bool
-	// DefaultToggleNetworkUse holds the default value on creation for the "toggle_network_use" field.
-	DefaultToggleNetworkUse bool
 	// DefaultToggleExplicitContent holds the default value on creation for the "toggle_explicit_content" field.
 	DefaultToggleExplicitContent bool
 	// DefaultID holds the default value on creation for the "id" field.
@@ -318,11 +313,6 @@ func ByModReference(opts ...sql.OrderTermOption) OrderOption {
 // ByHidden orders the results by the hidden field.
 func ByHidden(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldHidden, opts...).ToFunc()
-}
-
-// ByToggleNetworkUse orders the results by the toggle_network_use field.
-func ByToggleNetworkUse(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldToggleNetworkUse, opts...).ToFunc()
 }
 
 // ByNetworkUseDisclosure orders the results by the network_use_disclosure field.

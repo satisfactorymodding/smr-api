@@ -139,7 +139,6 @@ type Mod struct {
 	Hidden                bool                 `json:"hidden"`
 	Tags                  []*Tag               `json:"tags,omitempty"`
 	Compatibility         *CompatibilityInfo   `json:"compatibility,omitempty"`
-	ToggleNetworkUse      bool                 `json:"toggle_network_use"`
 	NetworkUseDisclosure  *string              `json:"network_use_disclosure,omitempty"`
 	AiUseDisclosure       *AIUseDisclosureInfo `json:"ai_use_disclosure,omitempty"`
 	ToggleExplicitContent bool                 `json:"toggle_explicit_content"`
