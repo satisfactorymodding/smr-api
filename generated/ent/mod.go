@@ -59,8 +59,6 @@ type Mod struct {
 	Hidden bool `json:"hidden,omitempty"`
 	// Compatibility holds the value of the "compatibility" field.
 	Compatibility *util.CompatibilityInfo `json:"compatibility,omitempty"`
-	// ToggleNetworkUse holds the value of the "toggle_network_use" field.
-	ToggleNetworkUse bool `json:"toggle_network_use,omitempty"`
 	// NetworkUseDisclosure holds the value of the "network_use_disclosure" field.
 	NetworkUseDisclosure *string `json:"network_use_disclosure,omitempty"`
 	// AiUseDisclosure holds the value of the "ai_use_disclosure" field.
@@ -164,7 +162,7 @@ func (*Mod) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case mod.FieldCompatibility, mod.FieldAiUseDisclosure:
 			values[i] = new([]byte)
-		case mod.FieldApproved, mod.FieldDenied, mod.FieldHidden, mod.FieldToggleNetworkUse, mod.FieldToggleExplicitContent:
+		case mod.FieldApproved, mod.FieldDenied, mod.FieldHidden, mod.FieldToggleExplicitContent:
 			values[i] = new(sql.NullBool)
 		case mod.FieldViews, mod.FieldHotness, mod.FieldPopularity, mod.FieldDownloads:
 			values[i] = new(sql.NullInt64)
@@ -314,12 +312,6 @@ func (m *Mod) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &m.Compatibility); err != nil {
 					return fmt.Errorf("unmarshal field compatibility: %w", err)
 				}
-			}
-		case mod.FieldToggleNetworkUse:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field toggle_network_use", values[i])
-			} else if value.Valid {
-				m.ToggleNetworkUse = value.Bool
 			}
 		case mod.FieldNetworkUseDisclosure:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -472,9 +464,6 @@ func (m *Mod) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("compatibility=")
 	builder.WriteString(fmt.Sprintf("%v", m.Compatibility))
-	builder.WriteString(", ")
-	builder.WriteString("toggle_network_use=")
-	builder.WriteString(fmt.Sprintf("%v", m.ToggleNetworkUse))
 	builder.WriteString(", ")
 	if v := m.NetworkUseDisclosure; v != nil {
 		builder.WriteString("network_use_disclosure=")

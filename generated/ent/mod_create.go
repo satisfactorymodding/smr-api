@@ -259,20 +259,6 @@ func (mc *ModCreate) SetCompatibility(ui *util.CompatibilityInfo) *ModCreate {
 	return mc
 }
 
-// SetToggleNetworkUse sets the "toggle_network_use" field.
-func (mc *ModCreate) SetToggleNetworkUse(b bool) *ModCreate {
-	mc.mutation.SetToggleNetworkUse(b)
-	return mc
-}
-
-// SetNillableToggleNetworkUse sets the "toggle_network_use" field if the given value is not nil.
-func (mc *ModCreate) SetNillableToggleNetworkUse(b *bool) *ModCreate {
-	if b != nil {
-		mc.SetToggleNetworkUse(*b)
-	}
-	return mc
-}
-
 // SetNetworkUseDisclosure sets the "network_use_disclosure" field.
 func (mc *ModCreate) SetNetworkUseDisclosure(s string) *ModCreate {
 	mc.mutation.SetNetworkUseDisclosure(s)
@@ -460,10 +446,6 @@ func (mc *ModCreate) defaults() error {
 		v := mod.DefaultHidden
 		mc.mutation.SetHidden(v)
 	}
-	if _, ok := mc.mutation.ToggleNetworkUse(); !ok {
-		v := mod.DefaultToggleNetworkUse
-		mc.mutation.SetToggleNetworkUse(v)
-	}
 	if _, ok := mc.mutation.ToggleExplicitContent(); !ok {
 		v := mod.DefaultToggleExplicitContent
 		mc.mutation.SetToggleExplicitContent(v)
@@ -536,9 +518,6 @@ func (mc *ModCreate) check() error {
 	}
 	if _, ok := mc.mutation.Hidden(); !ok {
 		return &ValidationError{Name: "hidden", err: errors.New(`ent: missing required field "Mod.hidden"`)}
-	}
-	if _, ok := mc.mutation.ToggleNetworkUse(); !ok {
-		return &ValidationError{Name: "toggle_network_use", err: errors.New(`ent: missing required field "Mod.toggle_network_use"`)}
 	}
 	if _, ok := mc.mutation.ToggleExplicitContent(); !ok {
 		return &ValidationError{Name: "toggle_explicit_content", err: errors.New(`ent: missing required field "Mod.toggle_explicit_content"`)}
@@ -658,10 +637,6 @@ func (mc *ModCreate) createSpec() (*Mod, *sqlgraph.CreateSpec) {
 	if value, ok := mc.mutation.Compatibility(); ok {
 		_spec.SetField(mod.FieldCompatibility, field.TypeJSON, value)
 		_node.Compatibility = value
-	}
-	if value, ok := mc.mutation.ToggleNetworkUse(); ok {
-		_spec.SetField(mod.FieldToggleNetworkUse, field.TypeBool, value)
-		_node.ToggleNetworkUse = value
 	}
 	if value, ok := mc.mutation.NetworkUseDisclosure(); ok {
 		_spec.SetField(mod.FieldNetworkUseDisclosure, field.TypeString, value)
@@ -1080,18 +1055,6 @@ func (u *ModUpsert) UpdateCompatibility() *ModUpsert {
 // ClearCompatibility clears the value of the "compatibility" field.
 func (u *ModUpsert) ClearCompatibility() *ModUpsert {
 	u.SetNull(mod.FieldCompatibility)
-	return u
-}
-
-// SetToggleNetworkUse sets the "toggle_network_use" field.
-func (u *ModUpsert) SetToggleNetworkUse(v bool) *ModUpsert {
-	u.Set(mod.FieldToggleNetworkUse, v)
-	return u
-}
-
-// UpdateToggleNetworkUse sets the "toggle_network_use" field to the value that was provided on create.
-func (u *ModUpsert) UpdateToggleNetworkUse() *ModUpsert {
-	u.SetExcluded(mod.FieldToggleNetworkUse)
 	return u
 }
 
@@ -1527,20 +1490,6 @@ func (u *ModUpsertOne) UpdateCompatibility() *ModUpsertOne {
 func (u *ModUpsertOne) ClearCompatibility() *ModUpsertOne {
 	return u.Update(func(s *ModUpsert) {
 		s.ClearCompatibility()
-	})
-}
-
-// SetToggleNetworkUse sets the "toggle_network_use" field.
-func (u *ModUpsertOne) SetToggleNetworkUse(v bool) *ModUpsertOne {
-	return u.Update(func(s *ModUpsert) {
-		s.SetToggleNetworkUse(v)
-	})
-}
-
-// UpdateToggleNetworkUse sets the "toggle_network_use" field to the value that was provided on create.
-func (u *ModUpsertOne) UpdateToggleNetworkUse() *ModUpsertOne {
-	return u.Update(func(s *ModUpsert) {
-		s.UpdateToggleNetworkUse()
 	})
 }
 
@@ -2151,20 +2100,6 @@ func (u *ModUpsertBulk) UpdateCompatibility() *ModUpsertBulk {
 func (u *ModUpsertBulk) ClearCompatibility() *ModUpsertBulk {
 	return u.Update(func(s *ModUpsert) {
 		s.ClearCompatibility()
-	})
-}
-
-// SetToggleNetworkUse sets the "toggle_network_use" field.
-func (u *ModUpsertBulk) SetToggleNetworkUse(v bool) *ModUpsertBulk {
-	return u.Update(func(s *ModUpsert) {
-		s.SetToggleNetworkUse(v)
-	})
-}
-
-// UpdateToggleNetworkUse sets the "toggle_network_use" field to the value that was provided on create.
-func (u *ModUpsertBulk) UpdateToggleNetworkUse() *ModUpsertBulk {
-	return u.Update(func(s *ModUpsert) {
-		s.UpdateToggleNetworkUse()
 	})
 }
 

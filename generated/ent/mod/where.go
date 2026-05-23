@@ -160,11 +160,6 @@ func Hidden(v bool) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldHidden, v))
 }
 
-// ToggleNetworkUse applies equality check predicate on the "toggle_network_use" field. It's identical to ToggleNetworkUseEQ.
-func ToggleNetworkUse(v bool) predicate.Mod {
-	return predicate.Mod(sql.FieldEQ(FieldToggleNetworkUse, v))
-}
-
 // NetworkUseDisclosure applies equality check predicate on the "network_use_disclosure" field. It's identical to NetworkUseDisclosureEQ.
 func NetworkUseDisclosure(v string) predicate.Mod {
 	return predicate.Mod(sql.FieldEQ(FieldNetworkUseDisclosure, v))
@@ -1103,16 +1098,6 @@ func CompatibilityIsNil() predicate.Mod {
 // CompatibilityNotNil applies the NotNil predicate on the "compatibility" field.
 func CompatibilityNotNil() predicate.Mod {
 	return predicate.Mod(sql.FieldNotNull(FieldCompatibility))
-}
-
-// ToggleNetworkUseEQ applies the EQ predicate on the "toggle_network_use" field.
-func ToggleNetworkUseEQ(v bool) predicate.Mod {
-	return predicate.Mod(sql.FieldEQ(FieldToggleNetworkUse, v))
-}
-
-// ToggleNetworkUseNEQ applies the NEQ predicate on the "toggle_network_use" field.
-func ToggleNetworkUseNEQ(v bool) predicate.Mod {
-	return predicate.Mod(sql.FieldNEQ(FieldToggleNetworkUse, v))
 }
 
 // NetworkUseDisclosureEQ applies the EQ predicate on the "network_use_disclosure" field.
