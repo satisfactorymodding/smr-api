@@ -43,7 +43,6 @@ type Mod {
     hidden: Boolean!
     tags: [Tag!]
     compatibility: CompatibilityInfo
-    toggle_network_use: Boolean!
     network_use_disclosure: String
     ai_use_disclosure: AIUseDisclosureInfo
     toggle_explicit_content: Boolean!
@@ -98,7 +97,6 @@ input NewMod {
     mod_reference: ModReference!
     hidden: Boolean
     tagIDs: [TagID!]
-    toggle_network_use: Boolean
     toggle_explicit_content: Boolean
 }
 
@@ -113,7 +111,6 @@ input UpdateMod {
     hidden: Boolean
     tagIDs: [TagID!]
     compatibility: CompatibilityInfoInput
-    toggle_network_use: Boolean
     network_use_disclosure: String
     ai_use_disclosure: AIUseDisclosureInput
     toggle_explicit_content: Boolean

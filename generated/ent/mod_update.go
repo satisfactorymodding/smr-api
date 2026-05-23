@@ -347,20 +347,6 @@ func (mu *ModUpdate) ClearCompatibility() *ModUpdate {
 	return mu
 }
 
-// SetToggleNetworkUse sets the "toggle_network_use" field.
-func (mu *ModUpdate) SetToggleNetworkUse(b bool) *ModUpdate {
-	mu.mutation.SetToggleNetworkUse(b)
-	return mu
-}
-
-// SetNillableToggleNetworkUse sets the "toggle_network_use" field if the given value is not nil.
-func (mu *ModUpdate) SetNillableToggleNetworkUse(b *bool) *ModUpdate {
-	if b != nil {
-		mu.SetToggleNetworkUse(*b)
-	}
-	return mu
-}
-
 // SetNetworkUseDisclosure sets the "network_use_disclosure" field.
 func (mu *ModUpdate) SetNetworkUseDisclosure(s string) *ModUpdate {
 	mu.mutation.SetNetworkUseDisclosure(s)
@@ -722,9 +708,6 @@ func (mu *ModUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if mu.mutation.CompatibilityCleared() {
 		_spec.ClearField(mod.FieldCompatibility, field.TypeJSON)
-	}
-	if value, ok := mu.mutation.ToggleNetworkUse(); ok {
-		_spec.SetField(mod.FieldToggleNetworkUse, field.TypeBool, value)
 	}
 	if value, ok := mu.mutation.NetworkUseDisclosure(); ok {
 		_spec.SetField(mod.FieldNetworkUseDisclosure, field.TypeString, value)
@@ -1269,20 +1252,6 @@ func (muo *ModUpdateOne) ClearCompatibility() *ModUpdateOne {
 	return muo
 }
 
-// SetToggleNetworkUse sets the "toggle_network_use" field.
-func (muo *ModUpdateOne) SetToggleNetworkUse(b bool) *ModUpdateOne {
-	muo.mutation.SetToggleNetworkUse(b)
-	return muo
-}
-
-// SetNillableToggleNetworkUse sets the "toggle_network_use" field if the given value is not nil.
-func (muo *ModUpdateOne) SetNillableToggleNetworkUse(b *bool) *ModUpdateOne {
-	if b != nil {
-		muo.SetToggleNetworkUse(*b)
-	}
-	return muo
-}
-
 // SetNetworkUseDisclosure sets the "network_use_disclosure" field.
 func (muo *ModUpdateOne) SetNetworkUseDisclosure(s string) *ModUpdateOne {
 	muo.mutation.SetNetworkUseDisclosure(s)
@@ -1674,9 +1643,6 @@ func (muo *ModUpdateOne) sqlSave(ctx context.Context) (_node *Mod, err error) {
 	}
 	if muo.mutation.CompatibilityCleared() {
 		_spec.ClearField(mod.FieldCompatibility, field.TypeJSON)
-	}
-	if value, ok := muo.mutation.ToggleNetworkUse(); ok {
-		_spec.SetField(mod.FieldToggleNetworkUse, field.TypeBool, value)
 	}
 	if value, ok := muo.mutation.NetworkUseDisclosure(); ok {
 		_spec.SetField(mod.FieldNetworkUseDisclosure, field.TypeString, value)

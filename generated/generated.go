@@ -183,7 +183,6 @@ type ComplexityRoot struct {
 		SourceURL             func(childComplexity int) int
 		Tags                  func(childComplexity int) int
 		ToggleExplicitContent func(childComplexity int) int
-		ToggleNetworkUse      func(childComplexity int) int
 		UpdatedAt             func(childComplexity int) int
 		Version               func(childComplexity int, version string) int
 		Versions              func(childComplexity int, filter map[string]interface{}) int
@@ -998,13 +997,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mod.ToggleExplicitContent(childComplexity), true
-
-	case "Mod.toggle_network_use":
-		if e.complexity.Mod.ToggleNetworkUse == nil {
-			break
-		}
-
-		return e.complexity.Mod.ToggleNetworkUse(childComplexity), true
 
 	case "Mod.updated_at":
 		if e.complexity.Mod.UpdatedAt == nil {
@@ -2808,7 +2800,6 @@ type Mod {
     hidden: Boolean!
     tags: [Tag!]
     compatibility: CompatibilityInfo
-    toggle_network_use: Boolean!
     network_use_disclosure: String
     ai_use_disclosure: AIUseDisclosureInfo
     toggle_explicit_content: Boolean!
@@ -2863,7 +2854,6 @@ input NewMod {
     mod_reference: ModReference!
     hidden: Boolean
     tagIDs: [TagID!]
-    toggle_network_use: Boolean
     toggle_explicit_content: Boolean
 }
 
@@ -2878,7 +2868,6 @@ input UpdateMod {
     hidden: Boolean
     tagIDs: [TagID!]
     compatibility: CompatibilityInfoInput
-    toggle_network_use: Boolean
     network_use_disclosure: String
     ai_use_disclosure: AIUseDisclosureInput
     toggle_explicit_content: Boolean
@@ -6645,8 +6634,6 @@ func (ec *executionContext) fieldContext_GetMods_mods(_ context.Context, field g
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -6791,8 +6778,6 @@ func (ec *executionContext) fieldContext_GetMyMods_mods(_ context.Context, field
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -8920,50 +8905,6 @@ func (ec *executionContext) fieldContext_Mod_compatibility(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Mod_toggle_network_use(ctx context.Context, field graphql.CollectedField, obj *Mod) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mod_toggle_network_use(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ToggleNetworkUse, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mod_toggle_network_use(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mod",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mod_network_use_disclosure(ctx context.Context, field graphql.CollectedField, obj *Mod) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 	if err != nil {
@@ -10475,8 +10416,6 @@ func (ec *executionContext) fieldContext_Mutation_createMod(ctx context.Context,
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -10622,8 +10561,6 @@ func (ec *executionContext) fieldContext_Mutation_updateMod(ctx context.Context,
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -13196,8 +13133,6 @@ func (ec *executionContext) fieldContext_Query_getMod(ctx context.Context, field
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -13306,8 +13241,6 @@ func (ec *executionContext) fieldContext_Query_getModByReference(ctx context.Con
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -13416,8 +13349,6 @@ func (ec *executionContext) fieldContext_Query_getModByIdOrReference(ctx context
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -17205,8 +17136,6 @@ func (ec *executionContext) fieldContext_UserMod_mod(_ context.Context, field gr
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -18454,8 +18383,6 @@ func (ec *executionContext) fieldContext_Version_mod(_ context.Context, field gr
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -18893,8 +18820,6 @@ func (ec *executionContext) fieldContext_VersionDependency_mod(_ context.Context
 				return ec.fieldContext_Mod_tags(ctx, field)
 			case "compatibility":
 				return ec.fieldContext_Mod_compatibility(ctx, field)
-			case "toggle_network_use":
-				return ec.fieldContext_Mod_toggle_network_use(ctx, field)
 			case "network_use_disclosure":
 				return ec.fieldContext_Mod_network_use_disclosure(ctx, field)
 			case "ai_use_disclosure":
@@ -21884,7 +21809,7 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj any) (
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "hidden", "tagIDs", "toggle_network_use", "toggle_explicit_content"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "hidden", "tagIDs", "toggle_explicit_content"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21947,13 +21872,6 @@ func (ec *executionContext) unmarshalInputNewMod(ctx context.Context, obj any) (
 				return it, err
 			}
 			it.TagIDs = data
-		case "toggle_network_use":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toggle_network_use"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ToggleNetworkUse = data
 		case "toggle_explicit_content":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toggle_explicit_content"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -22275,7 +22193,7 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj any
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "authors", "hidden", "tagIDs", "compatibility", "toggle_network_use", "network_use_disclosure", "ai_use_disclosure", "toggle_explicit_content"}
+	fieldsInOrder := [...]string{"name", "short_description", "full_description", "logo", "source_url", "mod_reference", "authors", "hidden", "tagIDs", "compatibility", "network_use_disclosure", "ai_use_disclosure", "toggle_explicit_content"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -22352,13 +22270,6 @@ func (ec *executionContext) unmarshalInputUpdateMod(ctx context.Context, obj any
 				return it, err
 			}
 			it.Compatibility = data
-		case "toggle_network_use":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toggle_network_use"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ToggleNetworkUse = data
 		case "network_use_disclosure":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("network_use_disclosure"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -23810,11 +23721,6 @@ func (ec *executionContext) _Mod(ctx context.Context, sel ast.SelectionSet, obj 
 			out.Values[i] = ec._Mod_tags(ctx, field, obj)
 		case "compatibility":
 			out.Values[i] = ec._Mod_compatibility(ctx, field, obj)
-		case "toggle_network_use":
-			out.Values[i] = ec._Mod_toggle_network_use(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "network_use_disclosure":
 			out.Values[i] = ec._Mod_network_use_disclosure(ctx, field, obj)
 		case "ai_use_disclosure":
