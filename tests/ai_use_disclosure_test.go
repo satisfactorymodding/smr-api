@@ -46,7 +46,7 @@ func TestAiDisclosure(t *testing.T) {
 	modID := createResponse.CreateMod.ID
 
 	// Empty string disclosure message is not allowed
-	failedUpdateEmptyString := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
+	failedUpdateEmptyString := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput) {
 		updateMod(
 			modId: $id
 			mod: {
@@ -75,7 +75,7 @@ func TestAiDisclosure(t *testing.T) {
 	testza.AssertContains(t, err.Error(), "you need to input a disclosure message when disclosing AI usage")
 
 	// Assigning a valid AI disclosure succeeds and updates the mod's disclosure information
-	disclosureRequest := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput!) {
+	disclosureRequest := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput) {
 		updateMod(
 			modId: $id
 			mod: {

@@ -26,7 +26,6 @@ type UpdateMod struct {
 	Compatibility         *CompatibilityInfoInput                  `json:"compatibility"`
 	Authors               []UpdateUserMod                          `json:"authors"`
 	TagIDs                []string                                 `json:"tagIDs" validate:"dive,min=3,max=24"`
-	ToggleNetworkUse      *bool                                    `json:"toggle_network_use"`
 	NetworkUseDisclosure  graphql.Omittable[*string]               `json:"network_use_disclosure"`
 	ToggleExplicitContent *bool                                    `json:"toggle_explicit_content"`
 	AiUseDisclosure       graphql.Omittable[*AIUseDisclosureInput] `json:"ai_use_disclosure"`
