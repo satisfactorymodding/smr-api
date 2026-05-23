@@ -24,6 +24,8 @@ models:
     fields:
       network_use_disclosure:
         omittable: true
+      ai_use_disclosure:
+        omittable: true
 
   VersionFilter:
     model: "map[string]interface{}"
