@@ -57,8 +57,28 @@ func TestSameVersion(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
-	modID := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "")
-	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this name")
+	modID, _, _ := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "")
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a published version with this name", "")
+}
+
+func TestDeletedVersionSemverReuse(t *testing.T) {
+	ctx, client, stop := setup()
+	defer stop()
+
+	modID, versionID, token := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "")
+
+	deleteRequest := authRequest(`mutation DeleteVersion($versionId: VersionID!) {
+		deleteVersion(versionId: $versionId)
+	}`, token)
+	deleteRequest.Var("versionId", versionID)
+
+	var deleteResponse struct {
+		DeleteVersion bool
+	}
+	testza.AssertNoError(t, client.Run(ctx, deleteRequest, &deleteResponse))
+	testza.AssertTrue(t, deleteResponse.DeleteVersion)
+
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "reusing the version name of a deleted mod version is not allowed", token)
 }
 
 func TestModWithMissingDependency(t *testing.T) {
@@ -72,20 +92,24 @@ func TestModMalformedJSON(t *testing.T) {
 func RunVersionTestWrapper(t *testing.T, modFilePath string, executeVirusCheck bool, modReference string, expectError string) {
 	ctx, client, stop := setup()
 	defer stop()
-	RunVersionTest(ctx, t, client, modFilePath, executeVirusCheck, modReference, "", expectError)
+	RunVersionTest(ctx, t, client, modFilePath, executeVirusCheck, modReference, "", expectError, "")
 }
 
-func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, modFilePath string, executeVirusCheck bool, modReference string, reuseModID string, expectError string) string {
+func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, modFilePath string, executeVirusCheck bool, modReference string, reuseModID string, expectError string, providedToken string) (string, string, string) {
 	if executeVirusCheck && (!viper.IsSet("virustotal.key") || viper.GetString("virustotal.key") == "") {
 		println("missing virustotal key from config, skipping")
 		t.SkipNow()
-		return ""
+		return "", "", ""
 	}
 
 	viper.Set("skip-virus-check", !executeVirusCheck)
 
-	token, _, err := makeUser(ctx)
-	testza.AssertNoError(t, err)
+	token := providedToken
+	if providedToken == "" {
+		var err error
+		token, _, err = makeUser(ctx)
+		testza.AssertNoError(t, err, token)
+	}
 
 	modID := reuseModID
 	if modID == "" {
@@ -394,5 +418,5 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 		})
 	}
 
-	return modID
+	return modID, versionID, token
 }
