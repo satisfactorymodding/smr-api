@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"testing"
 
+	gqlgen "github.com/99designs/gqlgen/graphql"
+	"github.com/MarvinJWendt/testza"
 	"github.com/Vilsol/slox"
 	"github.com/google/uuid"
 	"github.com/machinebox/graphql"
@@ -15,6 +18,7 @@ import (
 	smr "github.com/satisfactorymodding/smr-api/api"
 	"github.com/satisfactorymodding/smr-api/auth"
 	"github.com/satisfactorymodding/smr-api/db"
+	"github.com/satisfactorymodding/smr-api/generated"
 	"github.com/satisfactorymodding/smr-api/redis"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
@@ -122,6 +126,26 @@ func makeUser(ctx context.Context) (string, string, error) {
 	slox.Info(ctx, "created fake user session", slog.String("token", session.Token))
 
 	return session.Token, user.ID, nil
+}
+
+func setModDisclosures(ctx context.Context, t *testing.T, client *graphql.Client, modID string, token string) {
+	updateDisclosure := authRequest(`mutation UpdateMod($mod_id: ModID!, $mod: UpdateMod!) {
+				updateMod(modId: $mod_id, mod: $mod) {
+					id
+				}
+			}`, token)
+	updateDisclosure.Var("mod_id", modID)
+	valueOfNoNetworkUse := ""
+	updateDisclosure.Var("mod", generated.UpdateMod{
+		AiUseDisclosure: gqlgen.OmittableOf(&generated.AIUseDisclosureInput{
+			DisclosureType: generated.AIUseDisclosureTypeNoAiUsage,
+		}),
+		NetworkUseDisclosure: gqlgen.OmittableOf(&valueOfNoNetworkUse),
+	})
+	var updateResponse struct {
+		UpdateMod *generated.Mod
+	}
+	testza.AssertNoError(t, client.Run(ctx, updateDisclosure, &updateResponse))
 }
 
 func authRequest(q string, token string) *graphql.Request {
