@@ -60,30 +60,22 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 	}
 
 	if count > 0 {
-		return nil, temporal.NewNonRetryableApplicationError("this mod already has a version with this name", "fatal", nil)
+		return nil, temporal.NewNonRetryableApplicationError("this mod already has a published version with this name", "fatal", nil)
 	}
 
-	if modInfo.Semver != nil {
-		major := int(modInfo.Semver.Major())
-		minor := int(modInfo.Semver.Minor())
-		patch := int(modInfo.Semver.Patch())
+	countIncludingDeleted, err := db.From(ctx).Version.Query().
+		Where(
+			version2.ModID(mod.ID),
+			version2.Version(modInfo.Version),
+			version2.DeletedAtNotNil(),
+		).
+		Count(schema.SkipSoftDelete(ctx))
+	if err != nil {
+		return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
+	}
 
-		semverCount, err := db.From(ctx).Version.Query().
-			Where(
-				version2.ModID(mod.ID),
-				version2.VersionMajor(major),
-				version2.VersionMinor(minor),
-				version2.VersionPatch(patch),
-				version2.DeletedAtNotNil(),
-			).
-			Count(schema.SkipSoftDelete(ctx))
-		if err != nil {
-			return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
-		}
-
-		if semverCount > 0 {
-			return nil, temporal.NewNonRetryableApplicationError("this mod already has a version with this semver", "fatal", nil)
-		}
+	if countIncludingDeleted > 0 {
+		return nil, temporal.NewNonRetryableApplicationError("reusing the version name of a deleted mod version is not allowed", "fatal", nil)
 	}
 
 	// Allow only new 5 versions per 24h

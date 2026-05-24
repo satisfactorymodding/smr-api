@@ -61,17 +61,15 @@ func TestSameVersion(t *testing.T) {
 	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this name", "")
 }
 
-func TestSameSemver(t *testing.T) {
+func TestDeletedVersionSemverReuse(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
 	modID, versionID, token := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "")
 
-	time.Sleep(500 * time.Millisecond)
-
 	deleteRequest := authRequest(`mutation DeleteVersion($versionId: VersionID!) {
-        deleteVersion(versionId: $versionId)
-    }`, token)
+		deleteVersion(versionId: $versionId)
+	}`, token)
 	deleteRequest.Var("versionId", versionID)
 
 	var deleteResponse struct {
@@ -80,20 +78,7 @@ func TestSameSemver(t *testing.T) {
 	testza.AssertNoError(t, client.Run(ctx, deleteRequest, &deleteResponse))
 	testza.AssertTrue(t, deleteResponse.DeleteVersion)
 
-	getModRequest := authRequest(`query GetMod($modId: ModID!) {
-        getMod(modId: $modId) {
-            name
-        }
-    }`, token)
-	getModRequest.Var("modId", modID)
-
-	var getModResponse struct {
-		GetMod generated.Mod
-	}
-	testza.AssertNoError(t, client.Run(ctx, getModRequest, &getModResponse))
-	testza.AssertNotEqual(t, 0, len(getModResponse.GetMod.Name))
-
-	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this semver", token)
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "reusing the version name of a deleted mod version is not allowed", token)
 }
 
 func TestModWithMissingDependency(t *testing.T) {
