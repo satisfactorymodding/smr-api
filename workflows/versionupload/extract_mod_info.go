@@ -12,6 +12,7 @@ import (
 
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/db/schema"
+	"github.com/satisfactorymodding/smr-api/generated/ent"
 	version2 "github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
@@ -52,29 +53,20 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 		return nil, temporal.NewNonRetryableApplicationError("multi-target mods are not allowed", "fatal", nil)
 	}
 
-	count, err := db.From(ctx).Version.Query().
-		Where(version2.ModID(mod.ID), version2.Version(modInfo.Version)).
-		Count(ctx)
-	if err != nil {
-		return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
-	}
-
-	if count > 0 {
-		return nil, temporal.NewNonRetryableApplicationError("this mod already has a published version with this name", "fatal", nil)
-	}
-
-	countIncludingDeleted, err := db.From(ctx).Version.Query().
+	existingPotentiallySoftDeletedVersion, err := db.From(ctx).Version.Query().
 		Where(
 			version2.ModID(mod.ID),
 			version2.Version(modInfo.Version),
-			version2.DeletedAtNotNil(),
-		).
-		Count(schema.SkipSoftDelete(ctx))
+		).Only(schema.SkipSoftDelete(ctx))
 	if err != nil {
-		return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
-	}
-
-	if countIncludingDeleted > 0 {
+		if !ent.IsNotFound(err) {
+			return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
+		}
+		// 'Not Found' is an okay case (no version with the same version number)
+	} else {
+		if existingPotentiallySoftDeletedVersion.DeletedAt.IsZero() {
+			return nil, temporal.NewNonRetryableApplicationError("this mod already has a published version with this name", "fatal", nil)
+		}
 		return nil, temporal.NewNonRetryableApplicationError("reusing the version name of a deleted mod version is not allowed", "fatal", nil)
 	}
 
