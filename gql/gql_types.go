@@ -16,20 +16,20 @@ func GenCompInfoToDBCompInfo(gen *generated.CompatibilityInfoInput) *util.Compat
 	}
 }
 
-func GenCompToDBComp(gen *generated.CompatibilityInput) util.Compatibility {
+func setStateINN(state string, note *string) util.Compatibility {
 	r := util.Compatibility{
-		State: string(gen.State),
+		State: state,
 	}
-	SetINN(gen.Note, &r.Note)
+	SetINN(note, &r.Note)
 	return r
 }
 
+func GenCompToDBComp(gen *generated.CompatibilityInput) util.Compatibility {
+	return setStateINN(string(gen.State), gen.Note)
+}
+
 func GenControllerCompToDBControllerComp(gen *generated.ControllerCompatibilityInput) util.Compatibility {
-	r := util.Compatibility{
-		State: string(gen.State),
-	}
-	SetINN(gen.Note, &r.Note)
-	return r
+	return setStateINN(string(gen.State), gen.Note)
 }
 
 func GenAIDisclosureInfoToDBAIDisclosureInfo(gen *generated.AIUseDisclosureInput) *util.AIUseDisclosureInfo {
