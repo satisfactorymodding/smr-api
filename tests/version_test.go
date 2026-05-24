@@ -58,7 +58,7 @@ func TestSameVersion(t *testing.T) {
 	defer stop()
 
 	modID, _, _ := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "")
-	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a version with this name", "")
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a published version with this name", "")
 }
 
 func TestDeletedVersionSemverReuse(t *testing.T) {
