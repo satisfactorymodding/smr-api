@@ -18,6 +18,7 @@ func SetINN[T any](v *T, target *T) {
 	}
 }
 
+// SetCompatibilityINNF calls function 'target' to set value if not nil
 func SetCompatibilityINNF[B any](value *generated.CompatibilityInfoInput, target func(*util.CompatibilityInfo) B) {
 	if value == nil {
 		return
@@ -25,6 +26,7 @@ func SetCompatibilityINNF[B any](value *generated.CompatibilityInfoInput, target
 	target(GenCompInfoToDBCompInfo(value))
 }
 
+// SetAIDisclosureINNF calls function 'target' to set value if not nil
 func SetAIDisclosureINNF[B any](value *generated.AIUseDisclosureInput, target func(*util.AIUseDisclosureInfo) B) {
 	if value == nil {
 		return
@@ -32,26 +34,28 @@ func SetAIDisclosureINNF[B any](value *generated.AIUseDisclosureInput, target fu
 	target(GenAIDisclosureInfoToDBAIDisclosureInfo(value))
 }
 
-// SetINNF - Set if not null function
+// SetINNF calls function 'target' to set value if not nil
 func SetINNF[T any, B any](value *T, target func(T) B) {
 	if value != nil {
 		target(*value)
 	}
 }
 
-// SetINNOEF - Set if not null or empty function
+// SetINNOEF calls function 'target' to set value if not nil or empty
 func SetINNOEF[T comparable, B any](value *T, target func(T) B) {
 	if value != nil && *value != *(new(T)) {
 		target(*value)
 	}
 }
 
+// SetStabilityINNF calls function 'target' to set value if not nil
 func SetStabilityINNF[B any](value *generated.VersionStabilities, target func(util.Stability) B) {
 	if value != nil {
 		target(util.Stability(*value))
 	}
 }
 
+// SetDateINNF calls function 'target' to set value if not nil
 func SetDateINNF[B any](value *string, target func(time.Time) B) {
 	if value != nil {
 		t, _ := time.Parse(time.RFC3339Nano, *value)
