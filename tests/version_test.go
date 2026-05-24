@@ -109,7 +109,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 	if providedToken == "" {
 		var err error
 		token, _, err = makeUser(ctx)
-		testza.AssertNoError(t, err, token)
+		testza.AssertNoError(t, err)
 	}
 
 	modID := reuseModID
