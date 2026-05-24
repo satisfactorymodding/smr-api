@@ -190,9 +190,12 @@ See `config/config.go` for full configuration structure.
    - Swagger annotations
 
 2. **Database Changes**: Use Atlas migrations (entgo has integration with it via golang-migrate)
-   - Use mise tasks to create migration files (`mise tasks` for more details)
    - SQL migrations in `migrations/sql/`
+     - Use mise tasks to create migration files (`mise tasks` for more details)
+     - Migration names should be in `snake_case`
    - Code migrations in `migrations/code/`
+     - Created manually
+     - Get applied after all SQL migrations (see [migrations.go](migrations/migrations.go) for details)
 
 3. **Testing**: Tests require development services running
 
