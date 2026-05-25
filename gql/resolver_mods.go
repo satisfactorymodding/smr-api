@@ -193,12 +193,12 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 	SetINNF(updateMod.ToggleExplicitContent, dbUpdate.SetToggleExplicitContent)
 
 	aiDisclosureUpdate, isSet := updateMod.AiUseDisclosure.ValueOK()
-	if isSet && aiDisclosureUpdate != nil && aiDisclosureUpdate.DisclosureType != generated.AIUseDisclosureTypeNoDisclosure {
+	if isSet && aiDisclosureUpdate != nil {
 		if requiresMessage(aiDisclosureUpdate.DisclosureType) && (aiDisclosureUpdate.DisclosureString == nil || *aiDisclosureUpdate.DisclosureString == "") {
 			return nil, errors.New("you need to input a disclosure message when disclosing AI usage")
 		}
 		SetAIDisclosureINNF(aiDisclosureUpdate, dbUpdate.SetAiUseDisclosure)
-	} else if (aiDisclosureUpdate == nil || aiDisclosureUpdate.DisclosureType == generated.AIUseDisclosureTypeNoDisclosure) && dbMod.AiUseDisclosure != nil && dbMod.AiUseDisclosure.DisclosureType != generated.AIUseDisclosureTypeNoDisclosure.String() {
+	} else if isSet && aiDisclosureUpdate == nil && dbMod.AiUseDisclosure != nil {
 		return nil, errors.New("this mod already has an AI use disclosure, and thus it cannot be cleared")
 	}
 
