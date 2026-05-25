@@ -40,7 +40,7 @@ func (Mod) Fields() []ent.Field {
 		field.String("mod_reference").MaxLen(32),
 		field.Bool("hidden").Default(false),
 		field.JSON("compatibility", &util.CompatibilityInfo{}).Optional(),
-		field.String("network_use_disclosure").Optional().Nillable(),
+		field.String("network_use_disclosure").Optional().Nillable(), // Optional + Nillable allows distinguishing between: unset, nil, "", "disclosure description"
 		field.JSON("ai_use_disclosure", &util.AIUseDisclosureInfo{}).Optional(),
 		field.Bool("toggle_explicit_content").Default(false),
 	}
