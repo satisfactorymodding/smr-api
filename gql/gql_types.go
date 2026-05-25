@@ -39,6 +39,6 @@ func GenAIDisclosureInfoToDBAIDisclosureInfo(gen *generated.AIUseDisclosureInput
 	r := &util.AIUseDisclosureInfo{
 		DisclosureType: string(gen.DisclosureType),
 	}
-	SetINN(gen.DisclosureString, &r.DisclosureString)
+	SetINN(gen.Message, &r.Message)
 	return r
 }

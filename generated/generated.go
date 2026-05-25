@@ -74,8 +74,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	AIUseDisclosureInfo struct {
-		DisclosureString func(childComplexity int) int
-		DisclosureType   func(childComplexity int) int
+		DisclosureType func(childComplexity int) int
+		Message        func(childComplexity int) int
 	}
 
 	Announcement struct {
@@ -550,19 +550,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
-	case "AIUseDisclosureInfo.disclosure_string":
-		if e.complexity.AIUseDisclosureInfo.DisclosureString == nil {
-			break
-		}
-
-		return e.complexity.AIUseDisclosureInfo.DisclosureString(childComplexity), true
-
 	case "AIUseDisclosureInfo.disclosure_type":
 		if e.complexity.AIUseDisclosureInfo.DisclosureType == nil {
 			break
 		}
 
 		return e.complexity.AIUseDisclosureInfo.DisclosureType(childComplexity), true
+
+	case "AIUseDisclosureInfo.message":
+		if e.complexity.AIUseDisclosureInfo.Message == nil {
+			break
+		}
+
+		return e.complexity.AIUseDisclosureInfo.Message(childComplexity), true
 
 	case "Announcement.id":
 		if e.complexity.Announcement.ID == nil {
@@ -2827,7 +2827,7 @@ type ModVersion {
 
 type AIUseDisclosureInfo {
     disclosure_type: AIUseDisclosureType!
-    disclosure_string: String
+    message: String
 }
 
 ### Inputs
@@ -2884,7 +2884,7 @@ input ModVersionConstraint {
 
 input AIUseDisclosureInput {
     disclosure_type: AIUseDisclosureType!
-    disclosure_string: String
+    message: String
 }
 
 ### Queries
@@ -5824,8 +5824,8 @@ func (ec *executionContext) fieldContext_AIUseDisclosureInfo_disclosure_type(_ c
 	return fc, nil
 }
 
-func (ec *executionContext) _AIUseDisclosureInfo_disclosure_string(ctx context.Context, field graphql.CollectedField, obj *AIUseDisclosureInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AIUseDisclosureInfo_disclosure_string(ctx, field)
+func (ec *executionContext) _AIUseDisclosureInfo_message(ctx context.Context, field graphql.CollectedField, obj *AIUseDisclosureInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AIUseDisclosureInfo_message(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5838,7 +5838,7 @@ func (ec *executionContext) _AIUseDisclosureInfo_disclosure_string(ctx context.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DisclosureString, nil
+		return obj.Message, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5852,7 +5852,7 @@ func (ec *executionContext) _AIUseDisclosureInfo_disclosure_string(ctx context.C
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AIUseDisclosureInfo_disclosure_string(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AIUseDisclosureInfo_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AIUseDisclosureInfo",
 		Field:      field,
@@ -8983,8 +8983,8 @@ func (ec *executionContext) fieldContext_Mod_ai_use_disclosure(_ context.Context
 			switch field.Name {
 			case "disclosure_type":
 				return ec.fieldContext_AIUseDisclosureInfo_disclosure_type(ctx, field)
-			case "disclosure_string":
-				return ec.fieldContext_AIUseDisclosureInfo_disclosure_string(ctx, field)
+			case "message":
+				return ec.fieldContext_AIUseDisclosureInfo_message(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AIUseDisclosureInfo", field.Name)
 		},
@@ -21397,7 +21397,7 @@ func (ec *executionContext) unmarshalInputAIUseDisclosureInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"disclosure_type", "disclosure_string"}
+	fieldsInOrder := [...]string{"disclosure_type", "message"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21411,13 +21411,13 @@ func (ec *executionContext) unmarshalInputAIUseDisclosureInput(ctx context.Conte
 				return it, err
 			}
 			it.DisclosureType = data
-		case "disclosure_string":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disclosure_string"))
+		case "message":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("message"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.DisclosureString = data
+			it.Message = data
 		}
 	}
 
@@ -22549,8 +22549,8 @@ func (ec *executionContext) _AIUseDisclosureInfo(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "disclosure_string":
-			out.Values[i] = ec._AIUseDisclosureInfo_disclosure_string(ctx, field, obj)
+		case "message":
+			out.Values[i] = ec._AIUseDisclosureInfo_message(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
