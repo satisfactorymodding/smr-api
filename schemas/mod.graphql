@@ -70,7 +70,7 @@ type ModVersion {
 
 type AIUseDisclosureInfo {
     disclosure_type: AIUseDisclosureType!
-    disclosure_string: String
+    message: String
 }
 
 ### Inputs
@@ -127,7 +127,7 @@ input ModVersionConstraint {
 
 input AIUseDisclosureInput {
     disclosure_type: AIUseDisclosureType!
-    disclosure_string: String
+    message: String
 }
 
 ### Queries

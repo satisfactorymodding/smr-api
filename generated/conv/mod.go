@@ -82,8 +82,8 @@ func (c *ModImpl) pUtilAIUseDisclosureInfoToPGeneratedAIUseDisclosureInfo(source
 	if source != nil {
 		var generatedAIUseDisclosureInfo generated.AIUseDisclosureInfo
 		generatedAIUseDisclosureInfo.DisclosureType = generated.AIUseDisclosureType((*source).DisclosureType)
-		pString := (*source).DisclosureString
-		generatedAIUseDisclosureInfo.DisclosureString = &pString
+		pString := (*source).Message
+		generatedAIUseDisclosureInfo.Message = &pString
 		pGeneratedAIUseDisclosureInfo = &generatedAIUseDisclosureInfo
 	}
 	return pGeneratedAIUseDisclosureInfo

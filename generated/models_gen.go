@@ -12,13 +12,13 @@ import (
 )
 
 type AIUseDisclosureInfo struct {
-	DisclosureType   AIUseDisclosureType `json:"disclosure_type"`
-	DisclosureString *string             `json:"disclosure_string,omitempty"`
+	DisclosureType AIUseDisclosureType `json:"disclosure_type"`
+	Message        *string             `json:"message,omitempty"`
 }
 
 type AIUseDisclosureInput struct {
-	DisclosureType   AIUseDisclosureType `json:"disclosure_type"`
-	DisclosureString *string             `json:"disclosure_string,omitempty"`
+	DisclosureType AIUseDisclosureType `json:"disclosure_type"`
+	Message        *string             `json:"message,omitempty"`
 }
 
 type Announcement struct {

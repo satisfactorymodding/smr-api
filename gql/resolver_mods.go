@@ -194,7 +194,7 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 
 	aiDisclosureUpdate, isSet := updateMod.AiUseDisclosure.ValueOK()
 	if isSet && aiDisclosureUpdate != nil {
-		if requiresMessage(aiDisclosureUpdate.DisclosureType) && (aiDisclosureUpdate.DisclosureString == nil || *aiDisclosureUpdate.DisclosureString == "") {
+		if requiresMessage(aiDisclosureUpdate.DisclosureType) && (aiDisclosureUpdate.Message == nil || *aiDisclosureUpdate.Message == "") {
 			return nil, errors.New("you need to input a disclosure message when disclosing AI usage")
 		}
 		SetAIDisclosureINNF(aiDisclosureUpdate, dbUpdate.SetAiUseDisclosure)

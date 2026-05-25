@@ -56,15 +56,15 @@ func TestAiDisclosure(t *testing.T) {
 			id
 			ai_use_disclosure {
 				disclosure_type
-				disclosure_string
+				message
 			}
 		}
 	}`, token)
 	failedUpdateEmptyString.Var("id", modID)
 	emptyString := ""
 	failedUpdateEmptyString.Var("ai_use_disclosure", generated.AIUseDisclosureInput{
-		DisclosureType:   generated.AIUseDisclosureTypeAiUsage,
-		DisclosureString: &emptyString,
+		DisclosureType: generated.AIUseDisclosureTypeAiUsage,
+		Message:        &emptyString,
 	})
 
 	var failedEmptyStringResponse struct {
@@ -85,15 +85,15 @@ func TestAiDisclosure(t *testing.T) {
 			id
 			ai_use_disclosure {
 				disclosure_type
-				disclosure_string
+				message
 			}
 		}
 	}`, token)
-	disclosureString := "This mod uses AI for testing purposes"
+	disclosureMessage := "This mod uses AI for testing purposes"
 	disclosureRequest.Var("id", modID)
 	disclosureRequest.Var("ai_use_disclosure", generated.AIUseDisclosureInput{
-		DisclosureType:   generated.AIUseDisclosureTypeAiUsage,
-		DisclosureString: &disclosureString,
+		DisclosureType: generated.AIUseDisclosureTypeAiUsage,
+		Message:        &disclosureMessage,
 	})
 
 	var updateResponse struct {
@@ -102,7 +102,7 @@ func TestAiDisclosure(t *testing.T) {
 	testza.AssertNoError(t, client.Run(ctx, disclosureRequest, &updateResponse))
 	testza.AssertNotNil(t, updateResponse.UpdateMod.AiUseDisclosure.DisclosureType)
 	testza.AssertEqual(t, generated.AIUseDisclosureTypeAiUsage, updateResponse.UpdateMod.AiUseDisclosure.DisclosureType)
-	testza.AssertEqual(t, &disclosureString, updateResponse.UpdateMod.AiUseDisclosure.DisclosureString)
+	testza.AssertEqual(t, &disclosureMessage, updateResponse.UpdateMod.AiUseDisclosure.Message)
 
 	// Trying to unassign the disclosure is not allowed
 	failedUpdateUndisclosed := authRequest(`mutation ($id: ModID!, $ai_use_disclosure: AIUseDisclosureInput) {
@@ -115,7 +115,7 @@ func TestAiDisclosure(t *testing.T) {
 			id
 			ai_use_disclosure {
 				disclosure_type
-				disclosure_string
+				message
 			}
 		}
 	}`, token)
