@@ -193,13 +193,15 @@ func (r *mutationResolver) UpdateMod(ctx context.Context, modID string, updateMo
 	SetINNF(updateMod.ToggleExplicitContent, dbUpdate.SetToggleExplicitContent)
 
 	aiDisclosureUpdate, isSet := updateMod.AiUseDisclosure.ValueOK()
-	if isSet && aiDisclosureUpdate != nil {
-		if requiresMessage(aiDisclosureUpdate.DisclosureType) && (aiDisclosureUpdate.Message == nil || *aiDisclosureUpdate.Message == "") {
-			return nil, errors.New("you need to input a disclosure message when disclosing AI usage")
+	if isSet {
+		if aiDisclosureUpdate != nil {
+			if requiresMessage(aiDisclosureUpdate.DisclosureType) && (aiDisclosureUpdate.Message == nil || *aiDisclosureUpdate.Message == "") {
+				return nil, errors.New("you need to input a disclosure message when disclosing AI usage")
+			}
+			SetAIDisclosureINNF(aiDisclosureUpdate, dbUpdate.SetAiUseDisclosure)
+		} else if dbMod.AiUseDisclosure != nil {
+			return nil, errors.New("this mod already has an AI use disclosure, and thus it cannot be cleared")
 		}
-		SetAIDisclosureINNF(aiDisclosureUpdate, dbUpdate.SetAiUseDisclosure)
-	} else if isSet && aiDisclosureUpdate == nil && dbMod.AiUseDisclosure != nil {
-		return nil, errors.New("this mod already has an AI use disclosure, and thus it cannot be cleared")
 	}
 
 	newNetworkDisclosure, isSet := updateMod.NetworkUseDisclosure.ValueOK()
