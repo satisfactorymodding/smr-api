@@ -1,6 +1,6 @@
 [tools]
 "aqua:minio/mc" = "RELEASE.2025-04-08T15-39-49Z"
-atlas = "latest"
+atlas = "1.2.0"
 go = "1.24.4"
 go-junit-report = "2.1.0"
 golangci-lint = "2.1.6"
