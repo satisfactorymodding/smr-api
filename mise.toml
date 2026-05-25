@@ -31,11 +31,11 @@ description = "Run all tests (without the verbose flag, so it's easier to parse 
 run = "go test -parallel 1 -timeout 1h ./..."
 
 [tasks.coverage]
-description = "TODO @Vilsol description? Run all tests and output coverage details"
+description = "Run all tests and output coverage details"
 run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -p 1 -timeout 1h ./..."
 
 [tasks.test_coverage_junit]
-description = "TODO @Vilsol description? Run all tests and produce a JUnit coverage report in an XML"
+description = "Run all tests and produce a JUnit coverage report in an XML"
 run = "go test -v -coverprofile=coverage.txt -covermode=atomic -coverpkg=./... -p 1 -timeout 1h ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out junit.xml"
 
 [tasks.migrate_hash]
