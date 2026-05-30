@@ -39,6 +39,7 @@ var DisallowedModReferences = map[string]bool{
 	"satisfactorymodloader": true,
 	"examplemod":            true,
 	"docmod":                true,
+	"gamefeatures":          true,
 }
 
 func (r *mutationResolver) CreateMod(ctx context.Context, newMod generated.NewMod) (*generated.Mod, error) {
