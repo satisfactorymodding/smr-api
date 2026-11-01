@@ -26,6 +26,7 @@ require (
 	github.com/exaring/otelpgx v0.9.3
 	github.com/felixge/fgprof v0.9.5
 	github.com/finnbear/moderation v0.11.4
+	github.com/gabriel-vasile/mimetype v1.4.8
 	github.com/galdor/go-thumbhash v1.0.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/go-redis/redis v6.15.9+incompatible
@@ -115,7 +116,6 @@ require (
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
