@@ -70,16 +70,15 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 		return nil, temporal.NewNonRetryableApplicationError("reusing the version name of a deleted mod version is not allowed", "fatal", nil)
 	}
 
-	// Allow only new 5 versions per 24h
 	versions, err := db.From(ctx).Version.Query().
 		Order(version2.ByCreatedAt(sql.OrderAsc())).
-		Where(version2.ModID(mod.ID), version2.CreatedAt(time.Now().Add(time.Hour*24*-1))).
+		Where(version2.ModID(mod.ID), version2.CreatedAtGTE(time.Now().Add(time.Hour*24*-1))).
 		All(ctx)
 	if err != nil {
 		return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
 	}
 
-	if len(versions) >= 5 {
+	if len(versions) >= util.VersionsPerModPer24h {
 		timeToWait := time.Until(versions[0].CreatedAt.Add(time.Hour * 24)).Minutes()
 		return nil, temporal.NewNonRetryableApplicationError(fmt.Sprintf("please wait %.0f minutes to post another version", timeToWait), "fatal", nil)
 	}
