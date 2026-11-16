@@ -1,10 +1,12 @@
 package tests
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"mime/multipart"
@@ -12,6 +14,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,6 +25,7 @@ import (
 	"github.com/satisfactorymodding/smr-api/config"
 	"github.com/satisfactorymodding/smr-api/db"
 	"github.com/satisfactorymodding/smr-api/generated"
+	"github.com/satisfactorymodding/smr-api/util"
 )
 
 func init() {
@@ -30,8 +34,6 @@ func init() {
 }
 
 const testModPath = "testdata/FicsitRemoteMonitoring-0.10.3.smod"
-
-// TODO Add rate limit test
 
 func TestVersionSuccess(t *testing.T) {
 	RunVersionTestWrapper(t, testModPath, false, "FicsitRemoteMonitoring", "")
@@ -57,15 +59,34 @@ func TestSameVersion(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
-	modID, _, _ := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "")
-	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "this mod already has a published version with this name", "")
+	modID, _, _ := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "", "")
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", modID, "this mod already has a published version with this name", "")
+}
+
+func TestSameVersionConcurrent(t *testing.T) {
+	ctx, client, stop := setup()
+	defer stop()
+
+	token, _, err := makeUser(ctx)
+	testza.AssertNoError(t, err)
+
+	modID := createMod(ctx, t, client, "DuplicateMod", token)
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _, _ = RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", modID, "", token)
+	}()
+	time.Sleep(time.Millisecond * 50) // Wait a bit to ensure the first upload has started
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", modID, "another upload for DuplicateMod v0.10.3 is already in progress", token)
+	<-done
 }
 
 func TestDeletedVersionSemverReuse(t *testing.T) {
 	ctx, client, stop := setup()
 	defer stop()
 
-	modID, versionID, token := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "")
+	modID, versionID, token := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "", "")
 
 	deleteRequest := authRequest(`mutation DeleteVersion($versionId: VersionID!) {
 		deleteVersion(versionId: $versionId)
@@ -78,7 +99,92 @@ func TestDeletedVersionSemverReuse(t *testing.T) {
 	testza.AssertNoError(t, client.Run(ctx, deleteRequest, &deleteResponse))
 	testza.AssertTrue(t, deleteResponse.DeleteVersion)
 
-	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "reusing the version name of a deleted mod version is not allowed", token)
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", modID, "reusing the version name of a deleted mod version is not allowed", token)
+}
+
+func TestVersionRateLimit(t *testing.T) {
+	ctx, client, stop := setup()
+	defer stop()
+
+	tempDir := t.TempDir()
+
+	originalFile := "testdata/DuplicateMod.smod"
+
+	fileInfo, err := os.Stat(originalFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	file, err := os.Open(originalFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	zipFile, err := zip.NewReader(file, fileInfo.Size())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var modID string
+	var token string
+
+	for i := range util.VersionsPerModPer24h {
+		t.Run(fmt.Sprintf("Create Version %d", i), func(t *testing.T) {
+			tempFilePath := path.Join(tempDir, fmt.Sprintf("DuplicateMod_%d.smod", i))
+			tempFile, err := os.Create(tempFilePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer tempFile.Close()
+
+			tempZipFile := zip.NewWriter(tempFile)
+
+			for _, f := range zipFile.File {
+				srcFile, err := f.Open()
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer srcFile.Close()
+
+				dstFile, err := tempZipFile.Create(f.Name)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if strings.HasSuffix(f.Name, ".uplugin") {
+					var buf bytes.Buffer
+					_, err = io.Copy(&buf, srcFile)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					content := buf.String()
+					content = strings.ReplaceAll(content, `"VersionName": "0.10.3"`, fmt.Sprintf(`"VersionName": "0.0.%d"`, i))
+					content = strings.ReplaceAll(content, `"SemVersion": "0.10.3"`, fmt.Sprintf(`"SemVersion": "0.0.%d"`, i))
+					_, err = dstFile.Write([]byte(content))
+					if err != nil {
+						t.Fatal(err)
+					}
+				} else {
+					_, err = io.Copy(dstFile, srcFile)
+					if err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
+
+			err = tempZipFile.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			modID, _, token = RunVersionTest(ctx, t, client, tempFilePath, false, "DuplicateMod", fmt.Sprintf("0.0.%d", i), modID, "", token)
+			t.Logf("Created version %d for mod ID: %s", i+1, modID)
+		})
+	}
+
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", modID, "please wait", token)
 }
 
 func TestModWithMissingDependency(t *testing.T) {
@@ -92,10 +198,59 @@ func TestModMalformedJSON(t *testing.T) {
 func RunVersionTestWrapper(t *testing.T, modFilePath string, executeVirusCheck bool, modReference string, expectError string) {
 	ctx, client, stop := setup()
 	defer stop()
-	RunVersionTest(ctx, t, client, modFilePath, executeVirusCheck, modReference, "", expectError, "")
+	RunVersionTest(ctx, t, client, modFilePath, executeVirusCheck, modReference, "", "", expectError, "")
 }
 
-func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, modFilePath string, executeVirusCheck bool, modReference string, reuseModID string, expectError string, providedToken string) (string, string, string) {
+func createMod(ctx context.Context, t *testing.T, client *graphql.Client, modReference string, token string) string {
+	var modID string
+
+	t.Run("Create Satisfactory Version", func(t *testing.T) {
+		createRequest := authRequest(`mutation {
+			createSatisfactoryVersion(input: {
+			version: 123456,
+			engine_version: "5.2"
+			}) {
+			id
+			}
+		}`, token)
+
+		var createResponse struct {
+			CreateSatisfactoryVersion generated.SatisfactoryVersion
+		}
+		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
+		testza.AssertNotEqual(t, "", createResponse.CreateSatisfactoryVersion.ID)
+	})
+
+	t.Run("Create Mod", func(t *testing.T) {
+		createRequest := authRequest(`mutation CreateMod($mod_reference: ModReference!) {
+			createMod(mod: {
+				name: "Hello World",
+				short_description: "Foo Bar 123 Foo Bar 123",
+				full_description: "Lorem ipsum dolor sit amet",
+				mod_reference: $mod_reference
+			}) {
+				id
+			}
+		}`, token)
+		createRequest.Var("mod_reference", modReference)
+
+		var createResponse struct {
+			CreateMod generated.Mod
+		}
+		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
+		testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
+
+		modID = createResponse.CreateMod.ID
+	})
+
+	t.Run("Set Disclosures", func(t *testing.T) {
+		setModDisclosures(ctx, t, client, modID, token)
+	})
+
+	return modID
+}
+
+func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, modFilePath string, executeVirusCheck bool, modReference string, version string, reuseModID string, expectError string, providedToken string) (string, string, string) {
 	if executeVirusCheck && (!viper.IsSet("virustotal.key") || viper.GetString("virustotal.key") == "") {
 		println("missing virustotal key from config, skipping")
 		t.SkipNow()
@@ -111,50 +266,13 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 		testza.AssertNoError(t, err)
 	}
 
+	if version == "" {
+		version = "0.10.3"
+	}
+
 	modID := reuseModID
 	if modID == "" {
-		t.Run("Create Satisfactory Version", func(t *testing.T) {
-			createRequest := authRequest(`mutation {
-			  createSatisfactoryVersion(input: {
-				version: 123456,
-				engine_version: "5.2"
-			  }) {
-				id
-			  }
-			}`, token)
-
-			var createResponse struct {
-				CreateSatisfactoryVersion generated.SatisfactoryVersion
-			}
-			testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-			testza.AssertNotEqual(t, "", createResponse.CreateSatisfactoryVersion.ID)
-		})
-
-		t.Run("Create Mod", func(t *testing.T) {
-			createRequest := authRequest(`mutation CreateMod($mod_reference: ModReference!) {
-				createMod(mod: {
-					name: "Hello World",
-					short_description: "Foo Bar 123 Foo Bar 123",
-					full_description: "Lorem ipsum dolor sit amet",
-					mod_reference: $mod_reference
-				}) {
-					id
-				}
-			}`, token)
-			createRequest.Var("mod_reference", modReference)
-
-			var createResponse struct {
-				CreateMod generated.Mod
-			}
-			testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-			testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
-
-			modID = createResponse.CreateMod.ID
-		})
-
-		t.Run("Set Disclosures", func(t *testing.T) {
-			setModDisclosures(ctx, t, client, modID, token)
-		})
+		modID = createMod(ctx, t, client, modReference, token)
 	}
 
 	var uploadID string
@@ -322,6 +440,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 		}
 
 		if expectError != "" && !t.Failed() {
+			t.Error("expected error but upload succeeded")
 			t.Fail()
 			return
 		}
@@ -380,7 +499,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 			}
 			testza.AssertNoError(t, client.Run(ctx, getModVersion, &getModVersionResponse))
 			testza.AssertEqual(t, versionID, getModVersionResponse.GetVersion.ID)
-			testza.AssertEqual(t, "0.10.3", getModVersionResponse.GetVersion.Version)
+			testza.AssertEqual(t, version, getModVersionResponse.GetVersion.Version)
 			testza.AssertEqual(t, "^3.6.0", getModVersionResponse.GetVersion.SmlVersion)
 			testza.AssertEqual(t, 1, len(getModVersionResponse.GetVersion.Dependencies))
 			testza.AssertEqual(t, "SML", getModVersionResponse.GetVersion.Dependencies[0].ModID)

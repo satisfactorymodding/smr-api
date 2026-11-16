@@ -1,6 +1,7 @@
 package util
 
 var (
-	ModsPer24h   = 4
-	GuidesPer24h = 8
+	ModsPer24h           = 4
+	GuidesPer24h         = 8
+	VersionsPerModPer24h = 5
 )

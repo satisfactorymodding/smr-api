@@ -2,18 +2,12 @@ package versionupload
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
-	"time"
 
-	"entgo.io/ent/dialect/sql"
 	"github.com/Vilsol/slox"
 	"go.temporal.io/sdk/temporal"
 
 	"github.com/satisfactorymodding/smr-api/db"
-	"github.com/satisfactorymodding/smr-api/db/schema"
-	"github.com/satisfactorymodding/smr-api/generated/ent"
-	version2 "github.com/satisfactorymodding/smr-api/generated/ent/version"
 	"github.com/satisfactorymodding/smr-api/util"
 	"github.com/satisfactorymodding/smr-api/validation"
 )
@@ -51,37 +45,6 @@ func (*A) ExtractModInfoActivity(ctx context.Context, args ExtractModInfoArgs) (
 
 	if modInfo.Type == validation.MultiTargetUEPlugin && !util.FlagEnabled(util.FeatureFlagAllowMultiTargetUpload) {
 		return nil, temporal.NewNonRetryableApplicationError("multi-target mods are not allowed", "fatal", nil)
-	}
-
-	existingPotentiallySoftDeletedVersion, err := db.From(ctx).Version.Query().
-		Where(
-			version2.ModID(mod.ID),
-			version2.Version(modInfo.Version),
-		).Only(schema.SkipSoftDelete(ctx))
-	if err != nil {
-		if !ent.IsNotFound(err) {
-			return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
-		}
-		// 'Not Found' is an okay case (no version with the same version number)
-	} else {
-		if existingPotentiallySoftDeletedVersion.DeletedAt.IsZero() {
-			return nil, temporal.NewNonRetryableApplicationError("this mod already has a published version with this name", "fatal", nil)
-		}
-		return nil, temporal.NewNonRetryableApplicationError("reusing the version name of a deleted mod version is not allowed", "fatal", nil)
-	}
-
-	// Allow only new 5 versions per 24h
-	versions, err := db.From(ctx).Version.Query().
-		Order(version2.ByCreatedAt(sql.OrderAsc())).
-		Where(version2.ModID(mod.ID), version2.CreatedAt(time.Now().Add(time.Hour*24*-1))).
-		All(ctx)
-	if err != nil {
-		return nil, temporal.NewNonRetryableApplicationError("database error", "fatal", err)
-	}
-
-	if len(versions) >= 5 {
-		timeToWait := time.Until(versions[0].CreatedAt.Add(time.Hour * 24)).Minutes()
-		return nil, temporal.NewNonRetryableApplicationError(fmt.Sprintf("please wait %.0f minutes to post another version", timeToWait), "fatal", nil)
 	}
 
 	return modInfo, nil

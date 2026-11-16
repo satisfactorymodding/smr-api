@@ -1,6 +1,7 @@
 package versionupload
 
 import (
+	"fmt"
 	"time"
 
 	"go.temporal.io/api/enums/v1"
@@ -11,7 +12,6 @@ import (
 	"github.com/satisfactorymodding/smr-api/generated/conv"
 	"github.com/satisfactorymodding/smr-api/generated/ent"
 	"github.com/satisfactorymodding/smr-api/validation"
-	"github.com/satisfactorymodding/smr-api/workflows/removemod"
 )
 
 type A struct{}
@@ -33,21 +33,19 @@ func (*A) FinalizeVersionUploadWorkflow(ctx workflow.Context, args FinalizeVersi
 		},
 	})
 
-	fatalError := func(ctx workflow.Context, err error, modInfo *validation.ModInfo) error {
+	fatalError := func(ctx workflow.Context, err error) error {
 		if err != nil {
-			workflow.ExecuteChildWorkflow(workflow.WithChildOptions(ctx, workflow.ChildWorkflowOptions{
-				WorkflowID:        workflow.GetInfo(ctx).WorkflowExecution.ID + "-cleanup",
-				ParentClosePolicy: enums.PARENT_CLOSE_POLICY_ABANDON,
-			}), removemod.RemoveMod.RemoveModWorkflow, removemod.WorkflowArgs{
-				ModID:    args.ModID,
-				ModInfo:  modInfo,
-				UploadID: args.UploadID,
-			}).GetChildWorkflowExecution()
+			cleanCtx, _ := workflow.NewDisconnectedContext(ctx)
 
-			return workflow.ExecuteActivity(ctx, VersionUpload.StoreRedisStateActivity, StoreRedisStateArgs{
+			_ = workflow.ExecuteActivity(cleanCtx, VersionUpload.StoreRedisStateActivity, StoreRedisStateArgs{
 				UploadID: args.UploadID,
 				Err:      err.Error(),
-			}).Get(ctx, nil)
+			}).Get(cleanCtx, nil)
+
+			_ = workflow.ExecuteActivity(cleanCtx, VersionUpload.RemoveUploadActivity, RemoveUploadArgs{
+				ModID:    args.ModID,
+				UploadID: args.UploadID,
+			}).Get(cleanCtx, nil)
 		}
 		return err
 	}
@@ -57,7 +55,7 @@ func (*A) FinalizeVersionUploadWorkflow(ctx workflow.Context, args FinalizeVersi
 		UploadID: args.UploadID,
 	}).Get(ctx, nil)
 	if err != nil {
-		return fatalError(ctx, err, nil)
+		return fatalError(ctx, err)
 	}
 
 	var modInfo validation.ModInfo
@@ -66,47 +64,27 @@ func (*A) FinalizeVersionUploadWorkflow(ctx workflow.Context, args FinalizeVersi
 		UploadID: args.UploadID,
 	}).Get(ctx, &modInfo)
 	if err != nil {
-		return fatalError(ctx, err, nil)
-	}
-
-	var metadata *string
-	_ = workflow.ExecuteActivity(ctx, VersionUpload.ExtractMetadataActivity, ExtractMetadataArgs{
-		ModID:    args.ModID,
-		UploadID: args.UploadID,
-		ModInfo:  modInfo,
-	}).Get(ctx, &metadata)
-
-	var fileKey string
-	err = workflow.ExecuteActivity(ctx, VersionUpload.RenameVersionActivity, RenameVersionArgs{
-		ModID:    args.ModID,
-		UploadID: args.UploadID,
-		Version:  modInfo.Version,
-	}).Get(ctx, &fileKey)
-	if err != nil {
-		return fatalError(ctx, err, &modInfo)
-	}
-
-	var targetsData []ModTargetData
-	err = workflow.ExecuteActivity(ctx, VersionUpload.SeparateModTargetsActivity, SeparateModTargetsArgs{
-		ModID:   args.ModID,
-		ModInfo: modInfo,
-		FileKey: fileKey,
-	}).Get(ctx, &targetsData)
-	if err != nil {
-		return fatalError(ctx, err, &modInfo)
+		return fatalError(ctx, err)
 	}
 
 	var dbVersion *ent.Version
-	err = workflow.ExecuteActivity(ctx, VersionUpload.CreateVersionInDatabaseActivity, CreateVersionInDatabaseArgs{
-		ModID:    args.ModID,
-		ModInfo:  modInfo,
-		FileKey:  fileKey,
-		Targets:  targetsData,
-		Version:  args.Version,
-		Metadata: metadata,
-	}).Get(ctx, &dbVersion)
+	createVersionCtx := workflow.WithChildOptions(ctx, workflow.ChildWorkflowOptions{
+		WorkflowID:            fmt.Sprintf("create-version-%s-%s", modInfo.ModReference, modInfo.Version),
+		WorkflowIDReusePolicy: enums.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE,
+	})
+	err = workflow.ExecuteChildWorkflow(createVersionCtx, VersionUpload.CreateVersionWorkflow, CreateVersionArgs{
+		ModID:          args.ModID,
+		UploadID:       args.UploadID,
+		Version:        args.Version,
+		ModInfo:        modInfo,
+		SkipVirusCheck: args.SkipVirusCheck,
+	},
+	).Get(createVersionCtx, &dbVersion)
 	if err != nil {
-		return fatalError(ctx, err, &modInfo)
+		if temporal.IsWorkflowExecutionAlreadyStartedError(err) {
+			return fatalError(ctx, fmt.Errorf("another upload for %s v%s is already in progress", modInfo.ModReference, modInfo.Version))
+		}
+		return fatalError(ctx, err)
 	}
 
 	data := &generated.CreateVersionResponse{
@@ -120,7 +98,7 @@ func (*A) FinalizeVersionUploadWorkflow(ctx workflow.Context, args FinalizeVersi
 			VersionID: data.Version.ID,
 		}).Get(ctx, nil)
 		if err != nil {
-			return fatalError(ctx, err, &modInfo)
+			return err
 		}
 	}
 
@@ -156,6 +134,85 @@ func (*A) FinalizeVersionUploadWorkflow(ctx workflow.Context, args FinalizeVersi
 	}
 
 	return nil
+}
+
+type CreateVersionArgs struct {
+	ModID          string               `json:"mod_id"`
+	UploadID       string               `json:"upload_id"`
+	Version        generated.NewVersion `json:"version"`
+	SkipVirusCheck bool                 `json:"skip_virus_check"`
+	ModInfo        validation.ModInfo   `json:"mod_info"`
+}
+
+func (*A) CreateVersionWorkflow(ctx workflow.Context, args CreateVersionArgs) (*ent.Version, error) {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout: time.Minute * 30,
+		RetryPolicy: &temporal.RetryPolicy{
+			MaximumAttempts: 10,
+		},
+	})
+
+	err := workflow.ExecuteActivity(ctx, VersionUpload.ValidateVersionActivity, ValidateVersionArgs{
+		ModID:   args.ModID,
+		ModInfo: args.ModInfo,
+	}).Get(ctx, nil)
+	if err != nil {
+		// Does not need cleanup, because no changes have been made so far
+		return nil, err
+	}
+
+	fatalError := func(ctx workflow.Context, err error) error {
+		if err != nil {
+			cleanCtx, _ := workflow.NewDisconnectedContext(ctx)
+			_ = workflow.ExecuteActivity(cleanCtx, VersionUpload.RemoveModActivity, RemoveModArgs{
+				ModID:   args.ModID,
+				ModInfo: args.ModInfo,
+			}).Get(cleanCtx, nil)
+		}
+		return err
+	}
+
+	var metadata *string
+	_ = workflow.ExecuteActivity(ctx, VersionUpload.ExtractMetadataActivity, ExtractMetadataArgs{
+		ModID:    args.ModID,
+		UploadID: args.UploadID,
+		ModInfo:  args.ModInfo,
+	}).Get(ctx, &metadata)
+
+	var fileKey string
+	err = workflow.ExecuteActivity(ctx, VersionUpload.RenameVersionActivity, RenameVersionArgs{
+		ModID:    args.ModID,
+		UploadID: args.UploadID,
+		Version:  args.ModInfo.Version,
+	}).Get(ctx, &fileKey)
+	if err != nil {
+		return nil, fatalError(ctx, err)
+	}
+
+	var targetsData []ModTargetData
+	err = workflow.ExecuteActivity(ctx, VersionUpload.SeparateModTargetsActivity, SeparateModTargetsArgs{
+		ModID:   args.ModID,
+		ModInfo: args.ModInfo,
+		FileKey: fileKey,
+	}).Get(ctx, &targetsData)
+	if err != nil {
+		return nil, fatalError(ctx, err)
+	}
+
+	var dbVersion *ent.Version
+	err = workflow.ExecuteActivity(ctx, VersionUpload.CreateVersionInDatabaseActivity, CreateVersionInDatabaseArgs{
+		ModID:    args.ModID,
+		ModInfo:  args.ModInfo,
+		FileKey:  fileKey,
+		Targets:  targetsData,
+		Version:  args.Version,
+		Metadata: metadata,
+	}).Get(ctx, &dbVersion)
+	if err != nil {
+		return nil, fatalError(ctx, err)
+	}
+
+	return dbVersion, nil
 }
 
 func shouldAutoApprove(modInfo validation.ModInfo, skipVirusCheck bool) bool {
