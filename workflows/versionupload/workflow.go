@@ -135,8 +135,9 @@ func (*A) FinalizeVersionUploadWorkflow(ctx workflow.Context, args FinalizeVersi
 	if !data.AutoApproved {
 		var scanSuccess bool
 		err = workflow.ExecuteActivity(ctx, VersionUpload.ScanModOnVirusTotalActivity, ScanModOnVirusTotalArgs{
-			ModID:     args.ModID,
-			VersionID: data.Version.ID,
+			ModID:       args.ModID,
+			VersionID:   data.Version.ID,
+			FilesToScan: modInfo.FilesToScan,
 		}).Get(ctx, &scanSuccess)
 		if err != nil {
 			return err
@@ -163,11 +164,5 @@ func shouldAutoApprove(modInfo validation.ModInfo, skipVirusCheck bool) bool {
 		return true
 	}
 
-	for _, obj := range modInfo.Objects {
-		if obj.Type != "pak" {
-			return false
-		}
-	}
-
-	return true
+	return len(modInfo.FilesToScan) == 0
 }

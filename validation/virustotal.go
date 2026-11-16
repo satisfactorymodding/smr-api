@@ -49,13 +49,18 @@ type AnalysisStats struct {
 	Malicious  *int `json:"malicious,omitempty"`
 }
 
+type ScanInput struct {
+	File io.Reader
+	Name string
+}
+
 type ScanResult struct {
 	Safe     bool
 	Hash     string
 	FileName string
 }
 
-func ScanFiles(ctx context.Context, files []io.Reader, names []string) ([]ScanResult, error) {
+func ScanFiles(ctx context.Context, files []ScanInput) ([]ScanResult, error) {
 	errs, gctx := errgroup.WithContext(ctx)
 	fileCount := len(files)
 
@@ -64,9 +69,9 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) ([]ScanRe
 	for i := range files {
 		count := i
 		errs.Go(func() error {
-			scanResult, err := scanFile(gctx, files[count], names[count])
+			scanResult, err := scanFile(gctx, files[count])
 			if err != nil {
-				return fmt.Errorf("failed to scan %s: %w", names[count], err)
+				return fmt.Errorf("failed to scan %s: %w", files[count].Name, err)
 			}
 			c <- *scanResult
 			return nil
@@ -90,9 +95,9 @@ func ScanFiles(ctx context.Context, files []io.Reader, names []string) ([]ScanRe
 	return results, nil
 }
 
-func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, error) {
+func scanFile(ctx context.Context, file ScanInput) (*ScanResult, error) {
 	hash := sha256.New()
-	fileBytes, err := io.ReadAll(file)
+	fileBytes, err := io.ReadAll(file.File)
 	if err != nil {
 		return nil, fmt.Errorf("failed read file: %w", err)
 	}
@@ -122,7 +127,7 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 	}
 
 	if hasPreviousAnalysis {
-		slox.Info(ctx, "file already scanned", slog.String("file", name), slog.String("hash", hashStr))
+		slox.Info(ctx, "file already scanned", slog.String("file", file.Name), slog.String("hash", hashStr))
 		if previousAnalysisResults.Attributes.Stats == nil {
 			return nil, fmt.Errorf("no stats available on previous analysis")
 		}
@@ -133,16 +138,16 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 		return &ScanResult{
 			Safe:     safe,
 			Hash:     hashStr,
-			FileName: name,
+			FileName: file.Name,
 		}, nil
 	}
 
-	scan, err := client.NewFileScanner().Scan(bytes.NewReader(fileBytes), name, nil)
+	scan, err := client.NewFileScanner().Scan(bytes.NewReader(fileBytes), file.Name, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan file: %w", err)
 	}
 	analysisID := scan.ID()
-	slox.Info(ctx, "uploaded virus scan", slog.String("file", name), slog.String("analysis_id", analysisID))
+	slox.Info(ctx, "uploaded virus scan", slog.String("file", file.Name), slog.String("analysis_id", analysisID))
 
 	var analysisResults AnalysisResults
 	for analysisResults.Attributes.Status != "completed" {
@@ -165,7 +170,7 @@ func scanFile(ctx context.Context, file io.Reader, name string) (*ScanResult, er
 	return &ScanResult{
 		Safe:     safe,
 		Hash:     hashStr,
-		FileName: name,
+		FileName: file.Name,
 	}, nil
 }
 

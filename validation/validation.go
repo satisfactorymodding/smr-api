@@ -20,6 +20,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/Vilsol/slox"
 	"github.com/avast/retry-go"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
@@ -36,11 +37,6 @@ import (
 )
 
 var AllowedTargets = []string{"Windows", "WindowsServer", "LinuxServer"}
-
-type ModObject struct {
-	Path string `json:"path"`
-	Type string `json:"type"`
-}
 
 type ModType int
 
@@ -59,11 +55,10 @@ type ModInfo struct {
 	ModReference         string            `json:"mod_reference"`
 	Version              string            `json:"version"`
 	Hash                 string            `json:"hash"`
-	SMLVersion           *string           `json:"sml_version"`
 	GameVersion          string            `json:"game_version"`
 	RequiredOnRemote     bool              `json:"required_on_remote"`
-	Objects              []ModObject       `json:"objects"`
 	Targets              []string          `json:"targets"`
+	FilesToScan          []string          `json:"files_to_scan"`
 	Size                 int64             `json:"size"`
 	Type                 ModType           `json:"type"`
 }
@@ -126,7 +121,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withValidation bool, modRe
 	var modInfo *ModInfo
 
 	if dataFile != nil {
-		modInfo, err = validateDataJSON(archive, dataFile, withValidation)
+		modInfo, err = validateDataJSON(ctx, archive, dataFile, withValidation)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			span.RecordError(err)
@@ -135,7 +130,7 @@ func ExtractModInfo(ctx context.Context, body []byte, withValidation bool, modRe
 	}
 
 	if uPlugin != nil {
-		modInfo, err = validateUPluginJSON(ctx, archive, uPlugin, withValidation, modReference)
+		modInfo, err = validateUPluginJSON(ctx, uPlugin, withValidation, modReference)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			span.RecordError(err)
@@ -181,6 +176,14 @@ func ExtractModInfo(ctx context.Context, body []byte, withValidation bool, modRe
 	}
 
 	modInfo.Semver = version
+
+	modInfo.FilesToScan, err = getFilesToScan(archive)
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		slox.Error(ctx, "error getting files to scan", slog.Any("err", err))
+		return nil, fmt.Errorf("error getting files to scan: %w", err)
+	}
 
 	return modInfo, nil
 }
@@ -287,7 +290,21 @@ func ExtractMetadata(ctx context.Context, data []byte, gameVersion string, modRe
 	return metadata, nil
 }
 
-func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bool) (*ModInfo, error) {
+type DataJSONInfo struct {
+	Dependencies         map[string]string   `json:"dependencies"`
+	OptionalDependencies map[string]string   `json:"optional_dependencies"`
+	ModReference         string              `json:"mod_reference"`
+	Version              string              `json:"version"`
+	SMLVersion           *string             `json:"sml_version"`
+	Objects              []DataJSONModObject `json:"objects"`
+}
+
+type DataJSONModObject struct {
+	Path string `json:"path"`
+	Type string `json:"type"`
+}
+
+func validateDataJSON(ctx context.Context, archive *zip.Reader, dataFile *zip.File, withValidation bool) (*ModInfo, error) {
 	rc, err := dataFile.Open()
 	defer func(rc io.ReadCloser) {
 		_ = rc.Close()
@@ -313,23 +330,23 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 		}
 	}
 
-	var modInfo ModInfo
-	err = json.Unmarshal(dataJSON, &modInfo)
+	var dataJSONInfo DataJSONInfo
+	err = json.Unmarshal(dataJSON, &dataJSONInfo)
 	if err != nil {
 		return nil, errors.New("invalid data.json")
 	}
 
 	if withValidation {
-		if len(modInfo.Dependencies) == 0 {
+		if len(dataJSONInfo.Dependencies) == 0 {
 			return nil, errors.New("data.json doesn't contain SML as a dependency.") //nolint:revive
 		}
 	}
 
-	if smlDep, ok := modInfo.Dependencies["SML"]; ok {
-		modInfo.SMLVersion = &smlDep
+	if smlDep, ok := dataJSONInfo.Dependencies["SML"]; ok {
+		dataJSONInfo.SMLVersion = &smlDep
 	}
 
-	if modInfo.SMLVersion == nil {
+	if dataJSONInfo.SMLVersion == nil {
 		return nil, errors.New("data.json doesn't contain SML as a dependency.") //nolint:revive
 	}
 
@@ -338,7 +355,7 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 		if archiveFile != nil {
 			if strings.HasSuffix(archiveFile.Name, ".dll") || strings.HasSuffix(archiveFile.Name, ".pak") || strings.HasSuffix(archiveFile.Name, ".so") {
 				found := false
-				for _, obj := range modInfo.Objects {
+				for _, obj := range dataJSONInfo.Objects {
 					if obj.Path == archiveFile.Name {
 						found = true
 						break
@@ -352,7 +369,7 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 	}
 
 	// Validate that all objects refer to existing files
-	for _, obj := range modInfo.Objects {
+	for _, obj := range dataJSONInfo.Objects {
 		found := false
 		for _, archiveFile := range archive.File {
 			if obj.Path == archiveFile.Name {
@@ -365,7 +382,21 @@ func validateDataJSON(archive *zip.Reader, dataFile *zip.File, withValidation bo
 		}
 	}
 
-	modInfo.Type = DataJSON
+	modInfo := ModInfo{
+		Dependencies:         dataJSONInfo.Dependencies,
+		OptionalDependencies: dataJSONInfo.OptionalDependencies,
+		ModReference:         dataJSONInfo.ModReference,
+		Version:              dataJSONInfo.Version,
+		RequiredOnRemote:     true,
+		Targets:              []string{"Windows"},
+		Type:                 DataJSON,
+	}
+
+	gameVersion, err := getGameVersionFromSMLVersion(ctx, dataJSONInfo.Dependencies["SML"])
+	if err != nil {
+		return nil, fmt.Errorf("failed to infer FactoryGame version: %w", err)
+	}
+	modInfo.GameVersion = gameVersion
 
 	return &modInfo, nil
 }
@@ -385,7 +416,7 @@ type Plugin struct {
 	SemVersion string `json:"SemVersion"`
 }
 
-func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *zip.File, withValidation bool, modReference string) (*ModInfo, error) {
+func validateUPluginJSON(ctx context.Context, uPluginFile *zip.File, withValidation bool, modReference string) (*ModInfo, error) {
 	rc, err := uPluginFile.Open()
 	defer func(rc io.ReadCloser) {
 		_ = rc.Close()
@@ -419,10 +450,10 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 
 	modInfo := ModInfo{
 		ModReference:         modReference,
-		Objects:              []ModObject{},
 		Dependencies:         map[string]string{},
 		OptionalDependencies: map[string]string{},
 		RequiredOnRemote:     true,
+		Type:                 UEPlugin,
 	}
 
 	if uPlugin.SemVersion != nil {
@@ -452,33 +483,10 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 		}
 	}
 
-	for _, file := range archive.File {
-		if file != nil {
-			splitName := strings.Split(file.Name, ".")
-			extension := splitName[len(splitName)-1]
-			switch extension {
-			case "pak", "utoc", "ucas":
-				modInfo.Objects = append(modInfo.Objects, ModObject{
-					Path: file.Name,
-					Type: "pak",
-				})
-			case "dll", "so":
-				modInfo.Objects = append(modInfo.Objects, ModObject{
-					Path: file.Name,
-					Type: "sml_mod",
-				})
-			}
-		}
-	}
-
-	if smlDep, ok := modInfo.Dependencies["SML"]; ok {
-		modInfo.SMLVersion = &smlDep
-	}
-
 	if uPlugin.GameVersion != "" {
 		modInfo.GameVersion = uPlugin.GameVersion
-	} else if modInfo.SMLVersion != nil {
-		gameVersion, err := getGameVersionFromSMLVersion(ctx, *modInfo.SMLVersion)
+	} else if smlVersion, ok := modInfo.Dependencies["SML"]; ok {
+		gameVersion, err := getGameVersionFromSMLVersion(ctx, smlVersion)
 		if err != nil {
 			return nil, fmt.Errorf("failed to infer FactoryGame version: %w", err)
 		}
@@ -486,8 +494,6 @@ func validateUPluginJSON(ctx context.Context, archive *zip.Reader, uPluginFile *
 	} else {
 		return nil, fmt.Errorf("infering FactoryGame version: %s doesn't contain SML as a dependency", uPluginFile.Name)
 	}
-
-	modInfo.Type = UEPlugin
 
 	return &modInfo, nil
 }
@@ -583,7 +589,7 @@ func validateMultiTargetPlugin(ctx context.Context, archive *zip.Reader, withVal
 	}
 
 	// All the .uplugin files should be the same at this point (assuming validation is enabled)
-	modInfo, err := validateUPluginJSON(ctx, archive, uPluginFiles[0], withValidation, modReference)
+	modInfo, err := validateUPluginJSON(ctx, uPluginFiles[0], withValidation, modReference)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate multi-target plugin: %w", err)
 	}
@@ -592,4 +598,52 @@ func validateMultiTargetPlugin(ctx context.Context, archive *zip.Reader, withVal
 	modInfo.Type = MultiTargetUEPlugin
 
 	return modInfo, nil
+}
+
+func getFilesToScan(archive *zip.Reader) ([]string, error) {
+	filesToScan := make([]string, 0)
+
+	for _, file := range archive.File {
+		if file.Mode().IsDir() {
+			continue
+		}
+
+		scan, err := shouldScanFile(file)
+		if err != nil {
+			return nil, fmt.Errorf("failed to determine if file should be scanned: %w", err)
+		}
+
+		if scan {
+			filesToScan = append(filesToScan, file.Name)
+		}
+	}
+
+	return filesToScan, nil
+}
+
+var scanMimeTypes = []string{
+	"application/vnd.microsoft.portable-executable",
+	"application/x-elf", // shared objects and other elf types are children of this mime type
+}
+
+func shouldScanFile(file *zip.File) (bool, error) {
+	f, err := file.Open()
+	if err != nil {
+		return false, fmt.Errorf("failed to open file %s: %w", file.Name, err)
+	}
+	defer f.Close()
+
+	mime, err := mimetype.DetectReader(f)
+	if err != nil {
+		return false, fmt.Errorf("failed to detect mime type for file %s: %w", file.Name, err)
+	}
+
+	for mime != nil {
+		if mimetype.EqualsAny(mime.String(), scanMimeTypes...) {
+			return true, nil
+		}
+		mime = mime.Parent()
+	}
+
+	return false, nil
 }

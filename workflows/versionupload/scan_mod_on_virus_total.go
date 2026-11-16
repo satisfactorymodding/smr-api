@@ -21,8 +21,9 @@ import (
 )
 
 type ScanModOnVirusTotalArgs struct {
-	ModID     string `json:"mod_id"`
-	VersionID string `json:"version_id"`
+	ModID       string   `json:"mod_id"`
+	VersionID   string   `json:"version_id"`
+	FilesToScan []string `json:"files_to_scan"`
 }
 
 func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTotalArgs) (bool, error) {
@@ -61,24 +62,20 @@ func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTo
 		return false, fmt.Errorf("failed to unzip mod file: %w", err)
 	}
 
-	toScan := make([]io.Reader, 0)
-	names := make([]string, 0)
-	for _, file := range archive.File {
-		if path.Ext(file.Name) == ".dll" || path.Ext(file.Name) == ".so" {
-			open, err := file.Open()
-			if err != nil {
-				span.SetStatus(codes.Error, err.Error())
-				span.RecordError(err)
-				return false, fmt.Errorf("failed to open mod file: %w", err)
-			}
-			defer open.Close()
-
-			toScan = append(toScan, open)
-			names = append(names, path.Base(file.Name))
+	toScan := make([]validation.ScanInput, 0, len(args.FilesToScan))
+	for _, fileToScan := range args.FilesToScan {
+		open, err := archive.Open(fileToScan)
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
+			return false, fmt.Errorf("failed to open mod file: %w", err)
 		}
+		defer open.Close()
+
+		toScan = append(toScan, validation.ScanInput{File: open, Name: path.Base(fileToScan)})
 	}
 
-	success, err := scanAndSaveResults(ctx, toScan, names, args)
+	success, err := scanAndSaveResults(ctx, toScan, args)
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
 		span.RecordError(err)
@@ -88,11 +85,11 @@ func (*A) ScanModOnVirusTotalActivity(ctx context.Context, args ScanModOnVirusTo
 	return success, nil
 }
 
-func scanAndSaveResults(ctx context.Context, toScan []io.Reader, names []string, args ScanModOnVirusTotalArgs) (bool, error) {
+func scanAndSaveResults(ctx context.Context, toScan []validation.ScanInput, args ScanModOnVirusTotalArgs) (bool, error) {
 	ctx, span := otel.Tracer("ficsit-app").Start(ctx, "scanAndSaveResults")
 	defer span.End()
 
-	scanResults, scanErr := validation.ScanFiles(ctx, toScan, names)
+	scanResults, scanErr := validation.ScanFiles(ctx, toScan)
 	// Check error later, because we can have partial results to save, even in the case of an error
 
 	if err := saveScanResults(ctx, scanResults, args); err != nil {
