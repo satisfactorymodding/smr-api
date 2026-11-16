@@ -13,7 +13,7 @@ services:
       - 5432:5432
 
   minio:
-    image: quay.io/minio/minio
+    image: pgsty/silo
     ports:
       - 9000:9000
       - 9001:9001
