@@ -43,8 +43,10 @@ func InitializeWorkflows(ctx context.Context) (context.Context, func()) {
 	w.RegisterActivity(Workflows.Statistics.UpdateStatisticsActivity)
 
 	w.RegisterWorkflow(Workflows.VersionUpload.FinalizeVersionUploadWorkflow)
+	w.RegisterWorkflow(Workflows.VersionUpload.CreateVersionWorkflow)
 	w.RegisterActivity(Workflows.VersionUpload.CompleteUploadMultipartModActivity)
 	w.RegisterActivity(Workflows.VersionUpload.ExtractModInfoActivity)
+	w.RegisterActivity(Workflows.VersionUpload.ValidateVersionActivity)
 	w.RegisterActivity(Workflows.VersionUpload.ExtractMetadataActivity)
 	w.RegisterActivity(Workflows.VersionUpload.RenameVersionActivity)
 	w.RegisterActivity(Workflows.VersionUpload.SeparateModTargetsActivity)
@@ -52,12 +54,11 @@ func InitializeWorkflows(ctx context.Context) (context.Context, func()) {
 	w.RegisterActivity(Workflows.VersionUpload.ApproveAndPublishModActivity)
 	w.RegisterActivity(Workflows.VersionUpload.StoreRedisStateActivity)
 	w.RegisterActivity(Workflows.VersionUpload.ScanModOnVirusTotalActivity)
+	w.RegisterActivity(Workflows.VersionUpload.RemoveModActivity)
+	w.RegisterActivity(Workflows.VersionUpload.RemoveUploadActivity)
 
 	w.RegisterWorkflow(Workflows.UpdateModFromStorage.UpdateModDataFromStorageWorkflow)
 	w.RegisterActivity(Workflows.UpdateModFromStorage.UpdateModDataFromStorageActivity)
-
-	w.RegisterWorkflow(Workflows.RemoveMod.RemoveModWorkflow)
-	w.RegisterActivity(Workflows.RemoveMod.RemoveModActivity)
 
 	if err := w.Start(); err != nil {
 		slox.Error(ctx, "unable to start worker", slog.Any("err", err))

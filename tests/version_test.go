@@ -60,7 +60,26 @@ func TestSameVersion(t *testing.T) {
 	defer stop()
 
 	modID, _, _ := RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", "", "", "")
-	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", modID, "", "this mod already has a published version with this name", "")
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", modID, "this mod already has a published version with this name", "")
+}
+
+func TestSameVersionConcurrent(t *testing.T) {
+	ctx, client, stop := setup()
+	defer stop()
+
+	token, _, err := makeUser(ctx)
+	testza.AssertNoError(t, err)
+
+	modID := createMod(ctx, t, client, "DuplicateMod", token)
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _, _ = RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", modID, "", token)
+	}()
+	time.Sleep(time.Millisecond * 50) // Wait a bit to ensure the first upload has started
+	RunVersionTest(ctx, t, client, "testdata/DuplicateMod.smod", false, "DuplicateMod", "", modID, "another upload for DuplicateMod v0.10.3 is already in progress", token)
+	<-done
 }
 
 func TestDeletedVersionSemverReuse(t *testing.T) {
@@ -182,6 +201,55 @@ func RunVersionTestWrapper(t *testing.T, modFilePath string, executeVirusCheck b
 	RunVersionTest(ctx, t, client, modFilePath, executeVirusCheck, modReference, "", "", expectError, "")
 }
 
+func createMod(ctx context.Context, t *testing.T, client *graphql.Client, modReference string, token string) string {
+	var modID string
+
+	t.Run("Create Satisfactory Version", func(t *testing.T) {
+		createRequest := authRequest(`mutation {
+			createSatisfactoryVersion(input: {
+			version: 123456,
+			engine_version: "5.2"
+			}) {
+			id
+			}
+		}`, token)
+
+		var createResponse struct {
+			CreateSatisfactoryVersion generated.SatisfactoryVersion
+		}
+		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
+		testza.AssertNotEqual(t, "", createResponse.CreateSatisfactoryVersion.ID)
+	})
+
+	t.Run("Create Mod", func(t *testing.T) {
+		createRequest := authRequest(`mutation CreateMod($mod_reference: ModReference!) {
+			createMod(mod: {
+				name: "Hello World",
+				short_description: "Foo Bar 123 Foo Bar 123",
+				full_description: "Lorem ipsum dolor sit amet",
+				mod_reference: $mod_reference
+			}) {
+				id
+			}
+		}`, token)
+		createRequest.Var("mod_reference", modReference)
+
+		var createResponse struct {
+			CreateMod generated.Mod
+		}
+		testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
+		testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
+
+		modID = createResponse.CreateMod.ID
+	})
+
+	t.Run("Set Disclosures", func(t *testing.T) {
+		setModDisclosures(ctx, t, client, modID, token)
+	})
+
+	return modID
+}
+
 func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, modFilePath string, executeVirusCheck bool, modReference string, version string, reuseModID string, expectError string, providedToken string) (string, string, string) {
 	if executeVirusCheck && (!viper.IsSet("virustotal.key") || viper.GetString("virustotal.key") == "") {
 		println("missing virustotal key from config, skipping")
@@ -204,48 +272,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 
 	modID := reuseModID
 	if modID == "" {
-		t.Run("Create Satisfactory Version", func(t *testing.T) {
-			createRequest := authRequest(`mutation {
-			  createSatisfactoryVersion(input: {
-				version: 123456,
-				engine_version: "5.2"
-			  }) {
-				id
-			  }
-			}`, token)
-
-			var createResponse struct {
-				CreateSatisfactoryVersion generated.SatisfactoryVersion
-			}
-			testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-			testza.AssertNotEqual(t, "", createResponse.CreateSatisfactoryVersion.ID)
-		})
-
-		t.Run("Create Mod", func(t *testing.T) {
-			createRequest := authRequest(`mutation CreateMod($mod_reference: ModReference!) {
-				createMod(mod: {
-					name: "Hello World",
-					short_description: "Foo Bar 123 Foo Bar 123",
-					full_description: "Lorem ipsum dolor sit amet",
-					mod_reference: $mod_reference
-				}) {
-					id
-				}
-			}`, token)
-			createRequest.Var("mod_reference", modReference)
-
-			var createResponse struct {
-				CreateMod generated.Mod
-			}
-			testza.AssertNoError(t, client.Run(ctx, createRequest, &createResponse))
-			testza.AssertNotEqual(t, "", createResponse.CreateMod.ID)
-
-			modID = createResponse.CreateMod.ID
-		})
-
-		t.Run("Set Disclosures", func(t *testing.T) {
-			setModDisclosures(ctx, t, client, modID, token)
-		})
+		modID = createMod(ctx, t, client, modReference, token)
 	}
 
 	var uploadID string
@@ -413,6 +440,7 @@ func RunVersionTest(ctx context.Context, t *testing.T, client *graphql.Client, m
 		}
 
 		if expectError != "" && !t.Failed() {
+			t.Error("expected error but upload succeeded")
 			t.Fail()
 			return
 		}
